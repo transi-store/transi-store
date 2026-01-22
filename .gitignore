@@ -15,3 +15,21 @@ node_modules
 
 #!.yarn/cache
 .pnp.*
+
+# Environment variables
+.env
+.env.local
+
+# Build output
+build/
+.react-router/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
