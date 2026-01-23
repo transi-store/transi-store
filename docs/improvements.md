@@ -134,3 +134,80 @@ Remplacer le thème noir et blanc par défaut par un thème coloré utilisant la
 ### Statut
 
 ✅ Terminé
+
+---
+
+## Import de traductions depuis fichiers JSON
+
+**Date** : 2026-01-23
+
+### Objectif
+
+Permettre l'import de traductions depuis des fichiers JSON pour faciliter la migration depuis d'autres outils ou l'ajout de grandes quantités de traductions.
+
+### Fonctionnalités
+
+**Format supporté** : JSON clé/valeur simple
+```json
+{
+  "key.name": "traduction"
+}
+```
+
+**Options d'import** :
+- Sélection de la langue cible parmi les langues du projet
+- Choix de la stratégie :
+  - **Skip** (par défaut) : Conserve les traductions existantes
+  - **Overwrite** : Remplace les traductions existantes
+
+**Validation** :
+- Vérification du format JSON
+- Validation de la structure (objet clé/valeur)
+- Vérification que la langue existe dans le projet
+- Limite de taille : 5 MB
+
+**Feedback** :
+- Statistiques détaillées après import
+- Nombre de clés créées
+- Nombre de traductions créées/mises à jour/ignorées
+- Messages d'erreur clairs en cas de problème
+
+### Implémentation
+
+**Fichiers créés** :
+- `app/lib/import/json.server.ts` - Logique d'import avec transactions
+- `test-import.json` - Fichier de test
+
+**Fichiers modifiés** :
+- `app/routes/orgs.$orgSlug.projects.$projectSlug.keys._index.tsx` - UI et action handler
+
+**Composants UI** :
+- Card avec formulaire d'upload
+- Input file avec validation
+- Select de langue
+- Radio group pour la stratégie
+- Alertes de succès/erreur avec statistiques
+
+**Sécurité** :
+- Transaction base de données (all-or-nothing)
+- Validation multi-niveaux (client, serveur, données, DB)
+- Stratégie "skip" par défaut évite l'écrasement accidentel
+
+### Cas d'usage
+
+1. **Migration** : Import depuis Phrase, Crowdin, POEditor
+2. **Ajout en masse** : Import de nouvelles clés développées offline
+3. **Correction** : Export → Correction → Ré-import
+
+### Résultat
+
+- Import rapide de centaines/milliers de traductions
+- Compatible avec les exports standards JSON
+- Feedback immédiat et détaillé
+- Sécurisé contre les pertes de données
+
+**Voir** : [ADR-005](./decisions/ADR-005-import-traductions-json.md)
+
+### Statut
+
+✅ Terminé

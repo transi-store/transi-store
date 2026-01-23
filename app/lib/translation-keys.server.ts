@@ -175,9 +175,10 @@ export async function deleteTranslation(keyId: string, locale: string) {
 
 // Get all translations for a project grouped by key
 export async function getProjectTranslations(projectId: string) {
-  // Get all keys for this project
+  // Get all keys for this project, sorted alphabetically by keyName
   const keys = await db.query.translationKeys.findMany({
     where: eq(schema.translationKeys.projectId, projectId),
+    orderBy: (translationKeys, { asc }) => [asc(translationKeys.keyName)],
   });
 
   if (keys.length === 0) {

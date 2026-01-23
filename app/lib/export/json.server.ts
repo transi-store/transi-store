@@ -8,6 +8,7 @@ export function exportToJSON(
 ): string {
   const result: Record<string, string> = {};
 
+  // projectTranslations is already sorted alphabetically by keyName in SQL
   for (const key of projectTranslations) {
     const translation = key.translations.find((t) => t.locale === locale);
 

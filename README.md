@@ -178,6 +178,16 @@ Les decisions d'architecture sont documentees dans le dossier `docs/decisions/`.
 
 **Détails** : Voir [ADR-004](./docs/decisions/ADR-004-theme-couleurs-mapado.md)
 
+### ADR-005 : Import de traductions depuis fichiers JSON
+
+**Date** : 2026-01-23
+
+**Contexte** : Besoin d'importer des traductions depuis des services tiers ou fichiers existants. Création manuelle trop fastidieuse pour de gros volumes.
+
+**Decision** : Implémentation d'une fonctionnalité d'import de fichiers JSON (format clé/valeur) avec choix de langue cible et stratégie (skip/overwrite).
+
+**Détails** : Voir [ADR-005](./docs/decisions/ADR-005-import-traductions-json.md)
+
 ## Licence
 
 Proprietaire - Tous droits reserves
