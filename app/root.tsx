@@ -12,6 +12,7 @@ import { ChakraProvider, Box } from "@chakra-ui/react";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
+import { Toaster } from "~/components/ui/toaster";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
@@ -41,6 +42,7 @@ export default function App() {
 
   return (
     <>
+      <Toaster />
       <Header user={user} />
       <Box as="main">
         <Outlet />

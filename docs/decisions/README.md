@@ -98,6 +98,7 @@ Utilisez le template suivant :
 | [ADR-003](./ADR-003-icones-react-icons.md) | Ajout d'icônes avec react-icons | 2026-01-23 | Accepté ✅ |
 | [ADR-004](./ADR-004-theme-couleurs-mapado.md) | Thème personnalisé avec les couleurs Mapado | 2026-01-23 | Accepté ✅ |
 | [ADR-005](./ADR-005-import-traductions-json.md) | Import de traductions depuis fichiers JSON | 2026-01-23 | Accepté ✅ |
+| [ADR-006](./ADR-006-cles-api-export.md) | Clés d'API pour l'export de données | 2026-01-23 | Accepté ✅ |
 
 ## Références
 

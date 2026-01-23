@@ -1,14 +1,64 @@
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.export";
 import { requireUser } from "~/lib/session.server";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
+import {
+  requireOrganizationMembership,
+  getOrganizationBySlug,
+} from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { exportToJSON, exportAllLanguagesToJSON } from "~/lib/export/json.server";
 import { exportToXLIFF } from "~/lib/export/xliff.server";
+import {
+  getOrganizationByApiKey,
+  updateApiKeyLastUsed,
+} from "~/lib/api-keys.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  // Vérifier le header Authorization pour authentification par clé d'API
+  const authHeader = request.headers.get("Authorization");
+  let organization;
+
+  if (authHeader?.startsWith("Bearer ")) {
+    // Mode API Key : authentification par clé d'API
+    const apiKey = authHeader.slice(7); // Retire "Bearer "
+
+    // Vérifier la clé et récupérer l'organisation
+    const org = await getOrganizationByApiKey(apiKey);
+
+    if (!org) {
+      return new Response(
+        JSON.stringify({ error: "Invalid API key" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Vérifier que l'organisation correspond au slug
+    if (org.slug !== params.orgSlug) {
+      return new Response(
+        JSON.stringify({
+          error: "API key does not match organization",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Mettre à jour la date de dernière utilisation (async, sans attendre)
+    updateApiKeyLastUsed(apiKey).catch((err) => {
+      console.error("Failed to update API key last used:", err);
+    });
+
+    organization = org;
+  } else {
+    // Mode session : authentification par session utilisateur (comportement actuel)
+    const user = await requireUser(request);
+    organization = await requireOrganizationMembership(user, params.orgSlug);
+  }
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 

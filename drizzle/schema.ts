@@ -53,6 +53,25 @@ export const organizationMembers = mysqlTable(
   ]
 );
 
+// Clés d'API pour l'authentification automatisée
+export const apiKeys = mysqlTable(
+  "api_keys",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organization_id", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    keyValue: varchar("key_value", { length: 32 }).notNull().unique(),
+    name: varchar("name", { length: 255 }),
+    createdBy: varchar("created_by", { length: 36 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastUsedAt: timestamp("last_used_at"),
+  },
+  (table) => [index("idx_key_value").on(table.keyValue)]
+);
+
 // Projets (appartiennent a une organisation)
 export const projects = mysqlTable(
   "projects",
@@ -135,6 +154,9 @@ export type NewOrganization = typeof organizations.$inferInsert;
 export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type NewOrganizationMember = typeof organizationMembers.$inferInsert;
 
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
+
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
 
@@ -156,6 +178,18 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
   projects: many(projects),
+  apiKeys: many(apiKeys),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [apiKeys.organizationId],
+    references: [organizations.id],
+  }),
+  creator: one(users, {
+    fields: [apiKeys.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const organizationMembersRelations = relations(

@@ -13,7 +13,11 @@ export default [
   // Organizations routes
   route("orgs", "routes/orgs._index.tsx"),
   route("orgs/new", "routes/orgs.new.tsx"),
-  route("orgs/:orgSlug", "routes/orgs.$orgSlug._index.tsx"),
+  route("orgs/:orgSlug", "routes/orgs.$orgSlug.tsx", [
+    index("routes/orgs.$orgSlug._index.tsx"),
+    route("members", "routes/orgs.$orgSlug.members.tsx"),
+    route("settings", "routes/orgs.$orgSlug.settings.tsx"),
+  ]),
 
   // Projects routes
   route("orgs/:orgSlug/projects/new", "routes/orgs.$orgSlug.projects.new.tsx"),

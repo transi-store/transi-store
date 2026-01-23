@@ -189,6 +189,16 @@ Les decisions d'architecture sont documentees dans le dossier `docs/decisions/`.
 
 **Détails** : Voir [ADR-005](./docs/decisions/ADR-005-import-traductions-json.md)
 
+### ADR-006 : Clés d'API pour l'export de données
+
+**Date** : 2026-01-23
+
+**Contexte** : Export des traductions nécessite actuellement une authentification OAuth2, inadaptée pour l'automatisation (CI/CD, scripts).
+
+**Decision** : Implémentation d'un système de clés d'API permettant l'export automatisé des traductions sans interaction humaine. Les clés sont liées à l'organisation et utilisent l'authentification Bearer.
+
+**Détails** : Voir [ADR-006](./docs/decisions/ADR-006-cles-api-export.md)
+
 ## Licence
 
 Proprietaire - Tous droits reserves
