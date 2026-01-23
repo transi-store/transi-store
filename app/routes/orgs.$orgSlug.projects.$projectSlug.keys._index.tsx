@@ -8,12 +8,15 @@ import {
   Table,
   Text,
   HStack,
+  Badge,
+  Progress,
 } from "@chakra-ui/react";
 import { Link, Form, useSearchParams } from "react-router";
+import { LuPlus, LuPencil } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys._index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug } from "~/lib/projects.server";
+import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getTranslationKeys } from "~/lib/translation-keys.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -32,18 +35,23 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const limit = 50;
   const offset = (page - 1) * limit;
 
-  const keys = await getTranslationKeys(project.id, {
-    search,
-    limit,
-    offset,
-  });
+  const [keys, languages] = await Promise.all([
+    getTranslationKeys(project.id, {
+      search,
+      limit,
+      offset,
+    }),
+    getProjectLanguages(project.id),
+  ]);
 
-  return { organization, project, keys, search, page };
+  return { organization, project, keys, languages, search, page };
 }
 
 export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
-  const { organization, project, keys, search, page } = loaderData;
+  const { organization, project, keys, languages, search, page } = loaderData;
   const [searchParams] = useSearchParams();
+
+  const totalLanguages = languages.length;
 
   return (
     <Container maxW="container.xl" py={10}>
@@ -60,9 +68,9 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
           <Button
             as={Link}
             to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
-            colorScheme="blue"
+            colorPalette="brand"
           >
-            Nouvelle clé
+            <LuPlus /> Nouvelle clé
           </Button>
         </HStack>
 
@@ -73,7 +81,7 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
               placeholder="Rechercher une clé..."
               defaultValue={search}
             />
-            <Button type="submit" colorScheme="blue">
+            <Button type="submit" colorPalette="brand">
               Rechercher
             </Button>
             {search && (
@@ -102,29 +110,70 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeader>Nom de la clé</Table.ColumnHeader>
-                  <Table.ColumnHeader>Description</Table.ColumnHeader>
+                  <Table.ColumnHeader w="300px">Traductions</Table.ColumnHeader>
                   <Table.ColumnHeader w="150px">Actions</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {keys.map((key) => (
-                  <Table.Row key={key.id}>
-                    <Table.Cell fontFamily="mono" fontSize="sm">
-                      {key.keyName}
-                    </Table.Cell>
-                    <Table.Cell color="gray.600">{key.description || "-"}</Table.Cell>
-                    <Table.Cell>
-                      <Button
-                        as={Link}
-                        to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}`}
-                        size="sm"
-                        colorScheme="blue"
-                      >
-                        Éditer
-                      </Button>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
+                {keys.map((key) => {
+                  const translatedCount = key.translatedLocales.length;
+                  const progressPercent = totalLanguages > 0
+                    ? (translatedCount / totalLanguages) * 100
+                    : 0;
+
+                  return (
+                    <Table.Row key={key.id}>
+                      <Table.Cell>
+                        <VStack align="stretch" gap={1}>
+                          <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
+                            {key.keyName}
+                          </Text>
+                          {key.description && (
+                            <Text fontSize="xs" color="gray.500">
+                              {key.description}
+                            </Text>
+                          )}
+                        </VStack>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <VStack align="stretch" gap={2}>
+                          <HStack justify="space-between" fontSize="sm">
+                            <Text color="gray.600">
+                              {translatedCount}/{totalLanguages}
+                            </Text>
+                            <Text color="gray.600">
+                              {Math.round(progressPercent)}%
+                            </Text>
+                          </HStack>
+                          <Progress.Root value={progressPercent} size="sm" colorPalette="brand">
+                            <Progress.Track>
+                              <Progress.Range />
+                            </Progress.Track>
+                          </Progress.Root>
+                          {key.translatedLocales.length > 0 && (
+                            <HStack gap={1} flexWrap="wrap">
+                              {key.translatedLocales.map((locale) => (
+                                <Badge key={locale} size="sm" colorPalette="brand">
+                                  {locale.toUpperCase()}
+                                </Badge>
+                              ))}
+                            </HStack>
+                          )}
+                        </VStack>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Button
+                          as={Link}
+                          to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}`}
+                          size="sm"
+                          colorPalette="brand"
+                        >
+                          <LuPencil /> Éditer
+                        </Button>
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })}
               </Table.Body>
             </Table.Root>
 

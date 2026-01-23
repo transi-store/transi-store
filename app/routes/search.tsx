@@ -102,7 +102,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
               </Box>
 
               <Box display="flex" alignItems="flex-end">
-                <Button type="submit" colorScheme="blue" w="full">
+                <Button type="submit" colorPalette="brand" w="full">
                   Rechercher
                 </Button>
               </Box>
@@ -148,7 +148,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                                 {result.matchType === "key" ? "Clé" : "Traduction"}
                               </Badge>
                               {result.translationLocale && (
-                                <Badge colorScheme="blue" size="sm">
+                                <Badge colorPalette="brand" size="sm">
                                   {result.translationLocale.toUpperCase()}
                                 </Badge>
                               )}
@@ -191,7 +191,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                           <Button
                             as={Link}
                             to={`/orgs/${result.organizationSlug}/projects/${result.projectSlug}/keys/${result.keyId}`}
-                            colorScheme="blue"
+                            colorPalette="brand"
                             size="sm"
                           >
                             Éditer

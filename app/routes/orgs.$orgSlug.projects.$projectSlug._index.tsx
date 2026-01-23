@@ -14,6 +14,7 @@ import {
   Separator,
 } from "@chakra-ui/react";
 import { Link, useLoaderData, Form, useActionData, useNavigation } from "react-router";
+import { LuPlus, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug._index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -143,7 +144,7 @@ export default function ProjectDetail() {
                       <Box>
                         <Text fontWeight="medium">{lang.locale}</Text>
                         {lang.isDefault && (
-                          <Badge colorScheme="blue" size="sm">
+                          <Badge colorPalette="brand" size="sm">
                             Par defaut
                           </Badge>
                         )}
@@ -155,10 +156,10 @@ export default function ProjectDetail() {
                           type="submit"
                           size="xs"
                           variant="ghost"
-                          colorScheme="red"
+                          colorPalette="red"
                           disabled={isSubmitting}
                         >
-                          ×
+                          <LuTrash2 />
                         </Button>
                       </Form>
                     </HStack>
@@ -180,10 +181,10 @@ export default function ProjectDetail() {
               </Field.Root>
               <Button
                 type="submit"
-                colorScheme="blue"
+                colorPalette="brand"
                 loading={isSubmitting}
               >
-                Ajouter une langue
+                <LuPlus /> Ajouter une langue
               </Button>
             </HStack>
           </Form>
@@ -199,7 +200,7 @@ export default function ProjectDetail() {
               <Button
                 as={Link}
                 to={`/orgs/${organization.slug}/projects/${project.slug}/keys`}
-                colorScheme="blue"
+                colorPalette="brand"
                 size="sm"
               >
                 Gerer les traductions
@@ -221,7 +222,7 @@ export default function ProjectDetail() {
               <Button
                 as={Link}
                 to={`/orgs/${organization.slug}/projects/${project.slug}/keys`}
-                colorScheme="blue"
+                colorPalette="brand"
               >
                 Voir les traductions
               </Button>
@@ -268,7 +269,7 @@ export default function ProjectDetail() {
                         as="a"
                         href={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&all`}
                         size="sm"
-                        colorScheme="blue"
+                        colorPalette="brand"
                         download
                       >
                         Toutes les langues

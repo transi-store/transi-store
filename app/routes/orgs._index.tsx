@@ -9,6 +9,7 @@ import {
   Card,
 } from "@chakra-ui/react";
 import { Link, useLoaderData } from "react-router";
+import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs._index";
 import { requireUser } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
@@ -30,8 +31,8 @@ export default function OrganizationsIndex() {
           <Heading as="h1" size="2xl">
             Mes organisations
           </Heading>
-          <Button as={Link} to="/orgs/new" colorScheme="blue">
-            Nouvelle organisation
+          <Button as={Link} to="/orgs/new" colorPalette="brand">
+            <LuPlus /> Nouvelle organisation
           </Button>
         </Box>
 
@@ -40,8 +41,8 @@ export default function OrganizationsIndex() {
             <Text fontSize="lg" color="gray.600" mb={4}>
               Vous n'etes membre d'aucune organisation
             </Text>
-            <Button as={Link} to="/orgs/new" colorScheme="blue">
-              Creer ma premiere organisation
+            <Button as={Link} to="/orgs/new" colorPalette="brand">
+              <LuPlus /> Creer ma premiere organisation
             </Button>
           </Box>
         ) : (

@@ -10,6 +10,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { Link, useLoaderData } from "react-router";
+import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug._index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -114,10 +115,10 @@ export default function OrganizationDashboard() {
             <Button
               as={Link}
               to={`/orgs/${organization.slug}/projects/new`}
-              colorScheme="blue"
+              colorPalette="brand"
               size="sm"
             >
-              Nouveau projet
+              <LuPlus /> Nouveau projet
             </Button>
           </HStack>
 
@@ -129,9 +130,9 @@ export default function OrganizationDashboard() {
               <Button
                 as={Link}
                 to={`/orgs/${organization.slug}/projects/new`}
-                colorScheme="blue"
+                colorPalette="brand"
               >
-                Creer le premier projet
+                <LuPlus /> Creer le premier projet
               </Button>
             </Box>
           ) : (

@@ -113,6 +113,16 @@ mapadinternational/
 
 ## Decisions d'architecture
 
+⚠️ **IMPORTANT : Documentation obligatoire**
+
+**Toute décision technique importante doit être documentée** dans le dossier `docs/decisions/` sous forme d'ADR (Architecture Decision Record).
+
+Cela inclut :
+- Choix de bibliothèques ou frameworks
+- Modifications du système de design
+- Changements d'architecture
+- Décisions impactant la base de code
+
 Les decisions d'architecture sont documentees dans le dossier `docs/decisions/`.
 
 ### ADR-001 : Stack technique
@@ -147,6 +157,26 @@ Les decisions d'architecture sont documentees dans le dossier `docs/decisions/`.
 
 - Isolation des donnees entre entreprises
 - Flexibilite pour les utilisateurs travaillant sur plusieurs projets
+
+### ADR-003 : Ajout d'icônes avec react-icons
+
+**Date** : 2026-01-23
+
+**Contexte** : Interface manquant de repères visuels pour différencier les actions.
+
+**Decision** : Utilisation de react-icons avec les icônes Lucide pour tous les boutons d'action.
+
+**Détails** : Voir [ADR-003](./docs/decisions/ADR-003-icones-react-icons.md)
+
+### ADR-004 : Thème personnalisé avec les couleurs Mapado
+
+**Date** : 2026-01-23
+
+**Contexte** : Interface trop neutre, manque d'identité visuelle alignée avec la charte Mapado.
+
+**Decision** : Création d'un système de thème Chakra UI v3 personnalisé intégrant la palette de couleurs officielle Mapado.
+
+**Détails** : Voir [ADR-004](./docs/decisions/ADR-004-theme-couleurs-mapado.md)
 
 ## Licence
 

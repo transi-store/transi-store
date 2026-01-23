@@ -114,7 +114,7 @@ export default function NewTranslationKey({ loaderData }: Route.ComponentProps) 
             <Box display="flex" gap={3}>
               <Button
                 type="submit"
-                colorScheme="blue"
+                colorPalette="brand"
                 loading={isSubmitting}
                 flex={1}
               >

@@ -28,7 +28,24 @@ export async function getTranslationKeys(
     .offset(options?.offset || 0)
     .orderBy(schema.translationKeys.keyName);
 
-  return keys;
+  if (keys.length === 0) {
+    return [];
+  }
+
+  // Get translations for these keys
+  const keyIds = keys.map((k) => k.id);
+  const translations = await db
+    .select()
+    .from(schema.translations)
+    .where(inArray(schema.translations.keyId, keyIds));
+
+  // Combine keys with their translated locales
+  return keys.map((key) => ({
+    ...key,
+    translatedLocales: translations
+      .filter((t) => t.keyId === key.id)
+      .map((t) => t.locale),
+  }));
 }
 
 export async function getTranslationKeyById(keyId: string) {

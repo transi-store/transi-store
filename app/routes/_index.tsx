@@ -52,7 +52,7 @@ export default function Index() {
                 </Form>
               </VStack>
             ) : (
-              <Button as={Link} to="/auth/login" size="sm" colorScheme="blue">
+              <Button as={Link} to="/auth/login" size="sm" colorPalette="brand">
                 Connexion
               </Button>
             )}

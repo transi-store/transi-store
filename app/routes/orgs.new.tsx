@@ -9,6 +9,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { Form, useActionData, useNavigation, redirect } from "react-router";
+import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.new";
 import { requireUser } from "~/lib/session.server";
 import {
@@ -100,11 +101,11 @@ export default function NewOrganization() {
             <Box display="flex" gap={3}>
               <Button
                 type="submit"
-                colorScheme="blue"
+                colorPalette="brand"
                 loading={isSubmitting}
                 flex={1}
               >
-                Creer l'organisation
+                <LuPlus /> Creer l'organisation
               </Button>
               <Button as="a" href="/orgs" variant="outline" disabled={isSubmitting}>
                 Annuler

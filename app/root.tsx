@@ -8,7 +8,8 @@ import {
   useLoaderData,
 } from "react-router";
 import type { Route } from "./+types/root";
-import { ChakraProvider, defaultSystem, Box } from "@chakra-ui/react";
+import { ChakraProvider, Box } from "@chakra-ui/react";
+import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
 
@@ -27,7 +28,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ChakraProvider value={defaultSystem}>{children}</ChakraProvider>
+        <ChakraProvider value={system}>{children}</ChakraProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

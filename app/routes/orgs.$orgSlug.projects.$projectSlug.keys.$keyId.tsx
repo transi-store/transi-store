@@ -10,8 +10,11 @@ import {
   HStack,
   Text,
   Badge,
+  IconButton,
 } from "@chakra-ui/react";
 import { Form, useActionData, useNavigation, redirect, Link } from "react-router";
+import { useState } from "react";
+import { LuPencil, LuPlus, LuSave, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -95,7 +98,9 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
     }
 
-    return { success: "Traductions enregistrées" };
+    return redirect(
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys`
+    );
   }
 
   return { error: "Action inconnue" };
@@ -106,6 +111,7 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   // Create a map of translations by locale for easier lookup
   const translationMap = new Map(
@@ -123,26 +129,45 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
             <Text color="gray.600" mt={2}>
               Projet : {project.name}
             </Text>
+            {key.description && !isEditingDescription && (
+              <HStack mt={2} align="start" gap={1}>
+                <Text fontSize="sm" color="gray.500" flex={1}>
+                  {key.description}
+                </Text>
+                <IconButton
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => setIsEditingDescription(true)}
+                  aria-label="Éditer la description"
+                >
+                  <LuPencil />
+                </IconButton>
+              </HStack>
+            )}
+            {!key.description && !isEditingDescription && (
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => setIsEditingDescription(true)}
+                mt={2}
+              >
+                <LuPlus /> Ajouter une description
+              </Button>
+            )}
           </Box>
           <Form method="post">
             <input type="hidden" name="_action" value="delete" />
             <Button
               type="submit"
-              colorScheme="red"
+              colorPalette="red"
               variant="outline"
               size="sm"
               disabled={isSubmitting}
             >
-              Supprimer
+              <LuTrash2 /> Supprimer
             </Button>
           </Form>
         </HStack>
-
-        {actionData?.success && (
-          <Box p={4} bg="green.100" color="green.700" borderRadius="md">
-            {actionData.success}
-          </Box>
-        )}
 
         {actionData?.error && (
           <Box p={4} bg="red.100" color="red.700" borderRadius="md">
@@ -162,7 +187,7 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
             <Button
               as={Link}
               to={`/orgs/${organization.slug}/projects/${project.slug}`}
-              colorScheme="yellow"
+              colorPalette="yellow"
               mt={4}
             >
               Gérer les langues
@@ -171,20 +196,33 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
         ) : (
           <Form method="post">
             <input type="hidden" name="_action" value="update" />
+            {!isEditingDescription && (
+              <input type="hidden" name="description" value={key.description || ""} />
+            )}
 
             <VStack gap={4} align="stretch">
-              <Field.Root>
-                <Field.Label>Description</Field.Label>
-                <Textarea
-                  name="description"
-                  placeholder="Description de cette clé..."
-                  defaultValue={key.description || ""}
-                  disabled={isSubmitting}
-                  rows={2}
-                />
-              </Field.Root>
+              {isEditingDescription && (
+                <Field.Root>
+                  <Field.Label>Description</Field.Label>
+                  <Textarea
+                    name="description"
+                    placeholder="Description de cette clé..."
+                    defaultValue={key.description || ""}
+                    disabled={isSubmitting}
+                    rows={2}
+                  />
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => setIsEditingDescription(false)}
+                    mt={1}
+                  >
+                    Annuler
+                  </Button>
+                </Field.Root>
+              )}
 
-              <Box mt={4}>
+              <Box>
                 <Heading as="h2" size="lg" mb={4}>
                   Traductions
                 </Heading>
@@ -196,7 +234,7 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
                         <HStack>
                           <Text>{lang.locale.toUpperCase()}</Text>
                           {lang.isDefault && (
-                            <Badge colorScheme="blue" size="sm">
+                            <Badge colorPalette="brand" size="sm">
                               Par défaut
                             </Badge>
                           )}
@@ -217,11 +255,11 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
               <Box display="flex" gap={3} mt={6}>
                 <Button
                   type="submit"
-                  colorScheme="blue"
+                  colorPalette="brand"
                   loading={isSubmitting}
                   flex={1}
                 >
-                  Enregistrer
+                  <LuSave /> Enregistrer
                 </Button>
                 <Button
                   as={Link}

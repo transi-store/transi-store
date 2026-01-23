@@ -9,6 +9,7 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { Form, useActionData, useNavigation, redirect } from "react-router";
+import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.new";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -121,11 +122,11 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
             <Box display="flex" gap={3}>
               <Button
                 type="submit"
-                colorScheme="blue"
+                colorPalette="brand"
                 loading={isSubmitting}
                 flex={1}
               >
-                Creer le projet
+                <LuPlus /> Creer le projet
               </Button>
               <Button
                 as="a"

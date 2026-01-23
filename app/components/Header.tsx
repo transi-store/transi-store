@@ -11,9 +11,9 @@ export function Header({ user }: HeaderProps) {
     <Box
       as="header"
       borderBottomWidth={1}
-      borderColor="gray.200"
+      borderColor="brand.200"
       py={4}
-      bg="white"
+      bg="brand.50"
     >
       <Container maxW="container.xl">
         <HStack justify="space-between">
@@ -23,16 +23,28 @@ export function Header({ user }: HeaderProps) {
               to={user ? "/orgs" : "/"}
               fontSize="xl"
               fontWeight="bold"
+              color="brand.700"
+              _hover={{ color: "brand.600" }}
             >
               mapadinternational
             </Text>
 
             {user && (
               <HStack gap={4} fontSize="sm">
-                <Text as={Link} to="/orgs" _hover={{ textDecoration: "underline" }}>
+                <Text
+                  as={Link}
+                  to="/orgs"
+                  color="brand.600"
+                  _hover={{ textDecoration: "underline", color: "brand.700" }}
+                >
                   Organisations
                 </Text>
-                <Text as={Link} to="/search" _hover={{ textDecoration: "underline" }}>
+                <Text
+                  as={Link}
+                  to="/search"
+                  color="brand.600"
+                  _hover={{ textDecoration: "underline", color: "brand.700" }}
+                >
                   Recherche
                 </Text>
               </HStack>
@@ -52,7 +64,7 @@ export function Header({ user }: HeaderProps) {
                 </Form>
               </>
             ) : (
-              <Button as={Link} to="/auth/login" size="sm" colorScheme="blue">
+              <Button as={Link} to="/auth/login" size="sm" colorPalette="brand">
                 Connexion
               </Button>
             )}
