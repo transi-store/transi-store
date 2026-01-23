@@ -71,7 +71,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   if (action === "delete") {
     await deleteTranslationKey(key.id);
     return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys`
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`
     );
   }
 
@@ -99,7 +99,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
 
     return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys`
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`
     );
   }
 
@@ -263,7 +263,7 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
                 </Button>
                 <Button
                   as={Link}
-                  to={`/orgs/${organization.slug}/projects/${project.slug}/keys`}
+                  to={`/orgs/${organization.slug}/projects/${project.slug}/translations`}
                   variant="outline"
                   disabled={isSubmitting}
                 >

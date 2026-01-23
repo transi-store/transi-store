@@ -16,10 +16,14 @@ export default [
 
   // Projects routes
   route("orgs/:orgSlug/projects/new", "routes/orgs.$orgSlug.projects.new.tsx"),
-  route("orgs/:orgSlug/projects/:projectSlug", "routes/orgs.$orgSlug.projects.$projectSlug._index.tsx"),
+  route("orgs/:orgSlug/projects/:projectSlug", "routes/orgs.$orgSlug.projects.$projectSlug.tsx", [
+    index("routes/orgs.$orgSlug.projects.$projectSlug._index.tsx"),
+    route("translations", "routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx"),
+    route("settings", "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx"),
+    route("import-export", "routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx"),
+  ]),
 
   // Translation keys routes
-  route("orgs/:orgSlug/projects/:projectSlug/keys", "routes/orgs.$orgSlug.projects.$projectSlug.keys._index.tsx"),
   route("orgs/:orgSlug/projects/:projectSlug/keys/new", "routes/orgs.$orgSlug.projects.$projectSlug.keys.new.tsx"),
   route("orgs/:orgSlug/projects/:projectSlug/keys/:keyId", "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx"),
 

@@ -122,7 +122,7 @@ export default function NewTranslationKey({ loaderData }: Route.ComponentProps) 
               </Button>
               <Button
                 as="a"
-                href={`/orgs/${organization.slug}/projects/${project.slug}/keys`}
+                href={`/orgs/${organization.slug}/projects/${project.slug}/translations`}
                 variant="outline"
                 disabled={isSubmitting}
               >
