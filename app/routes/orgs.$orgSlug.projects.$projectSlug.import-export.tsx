@@ -12,10 +12,16 @@ import {
   Separator,
 } from "@chakra-ui/react";
 import { NativeSelect } from "@chakra-ui/react/native-select";
-import { RadioGroup } from "@chakra-ui/react/radio-group";
-import { Form, useActionData, useNavigation, useOutletContext } from "react-router";
+import { FileUpload } from "@chakra-ui/react/file-upload";
+import { Switch } from "@chakra-ui/react/switch";
+import {
+  Form,
+  useActionData,
+  useNavigation,
+  useOutletContext,
+} from "react-router";
 import { LuUpload } from "react-icons/lu";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.import-export";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -34,7 +40,10 @@ type ContextType = {
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -47,7 +56,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -137,11 +149,13 @@ export default function ProjectImportExport() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const importFormRef = useRef<HTMLFormElement>(null);
+  const [shouldOverwrite, setShouldOverwrite] = useState(false);
 
   // Reset form after successful import
   useEffect(() => {
     if (actionData?.success && importFormRef.current) {
       importFormRef.current.reset();
+      setShouldOverwrite(false);
     }
   }, [actionData?.success]);
 
@@ -156,26 +170,39 @@ export default function ProjectImportExport() {
         {languages.length === 0 ? (
           <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
             <Text color="gray.600" mb={4}>
-              Ajoutez au moins une langue dans les paramètres pour importer des traductions
+              Ajoutez au moins une langue dans les paramètres pour importer des
+              traductions
             </Text>
           </Box>
         ) : (
           <Card.Root>
             <Card.Body>
-              <Form method="post" encType="multipart/form-data" ref={importFormRef}>
+              <Form
+                method="post"
+                encType="multipart/form-data"
+                ref={importFormRef}
+              >
                 <input type="hidden" name="_action" value="import" />
 
                 <VStack gap={4} align="stretch">
                   {/* File input */}
                   <Field.Root required>
                     <Field.Label>Fichier JSON</Field.Label>
-                    <Input
-                      type="file"
-                      name="file"
+                    <FileUpload.Root
                       accept="application/json,.json"
                       required
                       disabled={isSubmitting}
-                    />
+                      name="file"
+                      maxFiles={1}
+                    >
+                      <FileUpload.HiddenInput />
+                      <FileUpload.Trigger asChild>
+                        <Button variant="outline" size="sm">
+                          <LuUpload /> Upload file
+                        </Button>
+                      </FileUpload.Trigger>
+                      <FileUpload.List />
+                    </FileUpload.Root>
                     <Field.HelperText>
                       Format attendu : {"{"}"key.name": "traduction"{"}"}
                     </Field.HelperText>
@@ -184,8 +211,11 @@ export default function ProjectImportExport() {
                   {/* Language select */}
                   <Field.Root required>
                     <Field.Label>Langue cible</Field.Label>
-                    <NativeSelect.Root required disabled={isSubmitting}>
-                      <NativeSelect.Field name="locale" placeholder="Choisir une langue">
+                    <NativeSelect.Root disabled={isSubmitting} maxW="300px">
+                      <NativeSelect.Field
+                        name="locale"
+                        placeholder="Choisir une langue"
+                      >
                         {languages.map((lang) => (
                           <option key={lang.id} value={lang.locale}>
                             {lang.locale.toUpperCase()}
@@ -196,34 +226,31 @@ export default function ProjectImportExport() {
                     </NativeSelect.Root>
                   </Field.Root>
 
-                  {/* Strategy radio group */}
-                  <Field.Root required>
-                    <Field.Label>Stratégie d'import</Field.Label>
-                    <RadioGroup.Root defaultValue="skip" name="strategy">
-                      <VStack gap={2} align="stretch">
-                        <RadioGroup.Item value="skip">
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>
-                            <Text fontWeight="medium">Conserver existantes</Text>
-                            <Text fontSize="sm" color="gray.600">
-                              Ne remplace pas les traductions existantes
-                            </Text>
-                          </RadioGroup.ItemText>
-                        </RadioGroup.Item>
+                  {/* Strategy switch */}
+                  <Field.Root>
+                    <input
+                      type="hidden"
+                      name="strategy"
+                      value={shouldOverwrite ? "overwrite" : "skip"}
+                    />
+                    <Switch.Root
+                      checked={shouldOverwrite}
+                      onCheckedChange={(e) => setShouldOverwrite(e.checked)}
+                      disabled={isSubmitting}
+                    >
+                      <Switch.HiddenInput />
+                      <Switch.Control />
+                      <Switch.Label>
+                        Écraser les traductions existantes
+                      </Switch.Label>
+                    </Switch.Root>
 
-                        <RadioGroup.Item value="overwrite">
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>
-                            <Text fontWeight="medium">Écraser existantes</Text>
-                            <Text fontSize="sm" color="gray.600">
-                              Remplace toutes les traductions existantes
-                            </Text>
-                          </RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                      </VStack>
-                    </RadioGroup.Root>
+                    <Box>
+                      <Text fontSize="sm" color="gray.600">
+                        Si actif, les traductions existantes seront écrasées par
+                        les nouvelles valeurs du fichier importé.
+                      </Text>
+                    </Box>
                   </Field.Root>
 
                   <Button
@@ -241,16 +268,32 @@ export default function ProjectImportExport() {
 
         {/* Success feedback */}
         {actionData?.success && actionData.importStats && (
-          <Box p={4} bg="green.50" borderRadius="md" borderWidth={1} borderColor="green.200" mt={4}>
+          <Box
+            p={4}
+            bg="green.50"
+            borderRadius="md"
+            borderWidth={1}
+            borderColor="green.200"
+            mt={4}
+          >
             <Heading as="h4" size="sm" color="green.700" mb={2}>
               ✓ Import réussi !
             </Heading>
             <VStack gap={1} align="stretch" fontSize="sm" color="green.700">
               <Text>• Total : {actionData.importStats.total} entrées</Text>
               <Text>• Clés créées : {actionData.importStats.keysCreated}</Text>
-              <Text>• Traductions créées : {actionData.importStats.translationsCreated}</Text>
-              <Text>• Traductions mises à jour : {actionData.importStats.translationsUpdated}</Text>
-              <Text>• Traductions ignorées : {actionData.importStats.translationsSkipped}</Text>
+              <Text>
+                • Traductions créées :{" "}
+                {actionData.importStats.translationsCreated}
+              </Text>
+              <Text>
+                • Traductions mises à jour :{" "}
+                {actionData.importStats.translationsUpdated}
+              </Text>
+              <Text>
+                • Traductions ignorées :{" "}
+                {actionData.importStats.translationsSkipped}
+              </Text>
             </VStack>
           </Box>
         )}
@@ -322,7 +365,8 @@ export default function ProjectImportExport() {
                       Exportez au format XLIFF 2.0 avec langue source et cible
                     </Text>
                     <Text fontSize="xs" color="gray.500" mb={3}>
-                      Exemple : /api/orgs/{organization.slug}/projects/{project.slug}
+                      Exemple : /api/orgs/{organization.slug}/projects/
+                      {project.slug}
                       /export?format=xliff&source=en&target=fr
                     </Text>
                     <HStack>
@@ -333,7 +377,8 @@ export default function ProjectImportExport() {
                         variant="outline"
                         download
                       >
-                        {languages[0].locale.toUpperCase()} → {languages[1].locale.toUpperCase()}
+                        {languages[0].locale.toUpperCase()} →{" "}
+                        {languages[1].locale.toUpperCase()}
                       </Button>
                     </HStack>
                   </Card.Body>
