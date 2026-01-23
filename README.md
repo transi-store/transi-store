@@ -1,10 +1,10 @@
-# mapadinternational
+# transi-store
 
 Outil de gestion de traductions multi-projets, multi-organisations.
 
 ## Description
 
-mapadinternational est une application web permettant de gerer les traductions de chaines de caracteres en plusieurs langues. Il remplace des outils comme Phrase, Crowdin, Transifex ou POEditor.
+transi-store est une application web permettant de gerer les traductions de chaines de caracteres en plusieurs langues. Il remplace des outils comme Phrase, Crowdin, Transifex ou POEditor.
 
 ## Fonctionnalites
 
@@ -42,7 +42,7 @@ mapadinternational est une application web permettant de gerer les traductions d
 
 ```bash
 git clone <repo-url>
-cd mapadinternational
+cd transi-store
 ```
 
 2. Installer les dependances :
@@ -100,7 +100,7 @@ L'application sera disponible sur http://localhost:5173
 ## Structure du projet
 
 ```
-mapadinternational/
+transi-store/
 ├── app/                    # Code applicatif React Router
 │   ├── routes/            # Routes (file-based routing)
 │   ├── components/        # Composants React
@@ -118,6 +118,7 @@ mapadinternational/
 **Toute décision technique importante doit être documentée** dans le dossier `docs/decisions/` sous forme d'ADR (Architecture Decision Record).
 
 Cela inclut :
+
 - Choix de bibliothèques ou frameworks
 - Modifications du système de design
 - Changements d'architecture

@@ -2,11 +2,11 @@ import { db, schema } from "./db.server";
 import { eq, and } from "drizzle-orm";
 import { createUserSession } from "./session.server";
 import crypto from "node:crypto";
+import { decodeJwt } from "jose";
 
 // Configuration OAuth2 depuis les variables d'environnement
 const OAUTH_AUTHORIZATION_URL = process.env.OAUTH_AUTHORIZATION_URL;
 const OAUTH_TOKEN_URL = process.env.OAUTH_TOKEN_URL;
-const OAUTH_USERINFO_URL = process.env.OAUTH_USERINFO_URL;
 const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID;
 const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
 const OAUTH_REDIRECT_URI = process.env.OAUTH_REDIRECT_URI;
@@ -15,13 +15,12 @@ const OAUTH_SCOPES = process.env.OAUTH_SCOPES || "";
 if (
   !OAUTH_AUTHORIZATION_URL ||
   !OAUTH_TOKEN_URL ||
-  !OAUTH_USERINFO_URL ||
   !OAUTH_CLIENT_ID ||
   !OAUTH_CLIENT_SECRET ||
   !OAUTH_REDIRECT_URI
 ) {
   throw new Error(
-    "Missing OAuth2 environment variables: OAUTH_AUTHORIZATION_URL, OAUTH_TOKEN_URL, OAUTH_USERINFO_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI"
+    "Missing OAuth2 environment variables: OAUTH_AUTHORIZATION_URL, OAUTH_TOKEN_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI",
   );
 }
 
@@ -31,10 +30,7 @@ function generateRandomString(length: number = 43): string {
 }
 
 function generateCodeChallenge(codeVerifier: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(codeVerifier)
-    .digest("base64url");
+  return crypto.createHash("sha256").update(codeVerifier).digest("base64url");
 }
 
 export interface AuthorizationUrlResult {
@@ -77,14 +73,9 @@ interface OAuth2TokenResponse {
   scope?: string;
 }
 
-interface UserInfo {
-  "@id": string; // Ex: "/v1/users/919"
-  "@type": string;
-  "@context": string;
-  firstname?: string;
-  avatar?: string;
-  email: string;
-  fullName?: string;
+interface JWTPayload {
+  sub: string;      // User ID (requis)
+  email?: string;   // Email (optionnel dans JWT)
 }
 
 export async function handleCallback(params: CallbackParams) {
@@ -112,42 +103,30 @@ export async function handleCallback(params: CallbackParams) {
 
   if (!tokenResponse.ok) {
     const errorText = await tokenResponse.text();
-    throw new Error(`Token exchange failed: ${tokenResponse.status} ${errorText}`);
+    throw new Error(
+      `Token exchange failed: ${tokenResponse.status} ${errorText}`,
+    );
   }
 
   const tokens: OAuth2TokenResponse = await tokenResponse.json();
 
-  // Récupérer les informations utilisateur
-  const userInfoResponse = await fetch(OAUTH_USERINFO_URL, {
-    headers: {
-      Authorization: `Bearer ${tokens.access_token}`,
-      Accept: "application/json",
-    },
-  });
-
-  if (!userInfoResponse.ok) {
-    const errorText = await userInfoResponse.text();
-    throw new Error(`User info fetch failed: ${userInfoResponse.status} ${errorText}`);
+  // Décoder le JWT pour extraire l'id utilisateur
+  let decodedToken: JWTPayload;
+  try {
+    decodedToken = decodeJwt(tokens.access_token) as JWTPayload;
+    if (!decodedToken.sub) {
+      throw new Error("Missing sub claim in JWT");
+    }
+  } catch (error) {
+    throw new Error("Failed to decode JWT token");
   }
 
-  const userInfo: UserInfo = await userInfoResponse.json();
-
-  if (!userInfo["@id"] || !userInfo.email) {
-    throw new Error("Missing required user info: @id or email");
-  }
-
-  // Extraire l'ID numérique depuis l'IRI (ex: "/v1/users/919" -> "919")
-  const userId = userInfo["@id"].split("/").pop();
-  if (!userId) {
-    throw new Error("Invalid user @id format");
-  }
-
-  // Créer ou mettre à jour l'utilisateur
+  // Créer ou mettre à jour l'utilisateur (sans name)
   const user = await upsertUser({
     oauthProvider: "oauth2",
-    oauthSubject: userId,
-    email: userInfo.email,
-    name: userInfo.fullName || userInfo.firstname,
+    oauthSubject: decodedToken.sub,
+    email: decodedToken.email || `user-${decodedToken.sub}@unknown.local`, // Fallback si pas d'email
+    name: undefined, // Pas de name depuis JWT
   });
 
   return user;
@@ -165,17 +144,17 @@ async function upsertUser(params: UpsertUserParams) {
   const existingUser = await db.query.users.findFirst({
     where: and(
       eq(schema.users.oauthProvider, params.oauthProvider),
-      eq(schema.users.oauthSubject, params.oauthSubject)
+      eq(schema.users.oauthSubject, params.oauthSubject),
     ),
   });
 
   if (existingUser) {
-    // Mettre à jour l'utilisateur
+    // Mettre à jour l'utilisateur (ne pas écraser le name existant)
     await db
       .update(schema.users)
       .set({
         email: params.email,
-        name: params.name,
+        // On ne met pas à jour le name ici - on garde le name existant
         updatedAt: new Date(),
       })
       .where(eq(schema.users.id, existingUser.id));
@@ -183,7 +162,7 @@ async function upsertUser(params: UpsertUserParams) {
     return {
       id: existingUser.id,
       email: params.email,
-      name: params.name,
+      name: existingUser.name, // Retourner le name existant
     };
   }
 
@@ -200,7 +179,7 @@ async function upsertUser(params: UpsertUserParams) {
   return {
     id: userId,
     email: params.email,
-    name: params.name,
+    name: params.name, // Pour nouveau user, retourner le name du param (undefined si nouveau)
   };
 }
 
@@ -209,7 +188,7 @@ export async function exchangeCodeForUser(
   state: string,
   codeVerifier: string,
   expectedState: string,
-  redirectTo: string = "/"
+  redirectTo: string = "/",
 ) {
   const user = await handleCallback({
     code,
@@ -218,5 +197,28 @@ export async function exchangeCodeForUser(
     expectedState,
   });
 
+  // Rediriger vers complete-profile si pas de name
+  if (!user.name) {
+    const params = new URLSearchParams({ redirectTo });
+    // Créer la session même sans name pour que l'utilisateur soit authentifié
+    return createUserSession(user.id, user.email, undefined, `/auth/complete-profile?${params}`);
+  }
+
   return createUserSession(user.id, user.email, user.name, redirectTo);
+}
+
+export async function getUserById(userId: string) {
+  return await db.query.users.findFirst({
+    where: eq(schema.users.id, userId),
+  });
+}
+
+export async function updateUserName(userId: string, name: string) {
+  await db
+    .update(schema.users)
+    .set({
+      name,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.users.id, userId));
 }

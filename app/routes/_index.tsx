@@ -1,11 +1,19 @@
-import { Box, Heading, Text, Container, VStack, Button, HStack } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  Text,
+  Container,
+  VStack,
+  Button,
+  HStack,
+} from "@chakra-ui/react";
 import { Form, useLoaderData, Link, redirect } from "react-router";
 import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 
 export function meta() {
   return [
-    { title: "mapadinternational - Gestion des traductions" },
+    { title: "transi-store - Gestion des traductions" },
     {
       name: "description",
       content: "Outil de gestion de traductions multi-projets",
@@ -33,7 +41,7 @@ export default function Index() {
         <HStack justify="space-between" align="start">
           <Box>
             <Heading as="h1" size="2xl">
-              mapadinternational
+              transi-store
             </Heading>
             <Text fontSize="xl" color="gray.600">
               Outil de gestion de traductions multi-projets

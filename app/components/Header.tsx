@@ -26,7 +26,7 @@ export function Header({ user }: HeaderProps) {
               color="brand.700"
               _hover={{ color: "brand.600" }}
             >
-              mapadinternational
+              transi-store
             </Text>
 
             {user && (

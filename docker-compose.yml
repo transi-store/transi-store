@@ -1,13 +1,13 @@
 services:
   mariadb:
     image: mariadb:11
-    container_name: mapadinternational-db
+    container_name: transi-store-db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_DATABASE:-mapadinternational}
-      MYSQL_USER: ${DB_USER:-mapadinternational}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-mapadinternational}
+      MYSQL_DATABASE: ${DB_DATABASE:-transi-store}
+      MYSQL_USER: ${DB_USER:-transi-store}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-transi-store}
     ports:
       - "${DB_PORT:-3306}:3306"
     volumes:

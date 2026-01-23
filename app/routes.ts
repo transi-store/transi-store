@@ -8,6 +8,7 @@ export default [
   route("auth/callback", "routes/auth.callback.tsx"),
   route("auth/logout", "routes/auth.logout.tsx"),
   route("auth/debug", "routes/auth.debug.tsx"),
+  route("auth/complete-profile", "routes/auth.complete-profile.tsx"),
 
   // Organizations routes
   route("orgs", "routes/orgs._index.tsx"),
