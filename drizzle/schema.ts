@@ -7,6 +7,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/mysql-core";
+import { relations } from "drizzle-orm";
 
 // Utilisateurs (lies a OAuth)
 export const users = mysqlTable(
@@ -145,3 +146,69 @@ export type NewTranslationKey = typeof translationKeys.$inferInsert;
 
 export type Translation = typeof translations.$inferSelect;
 export type NewTranslation = typeof translations.$inferInsert;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  organizationMemberships: many(organizationMembers),
+  createdProjects: many(projects),
+}));
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  members: many(organizationMembers),
+  projects: many(projects),
+}));
+
+export const organizationMembersRelations = relations(
+  organizationMembers,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [organizationMembers.userId],
+      references: [users.id],
+    }),
+    organization: one(organizations, {
+      fields: [organizationMembers.organizationId],
+      references: [organizations.id],
+    }),
+  })
+);
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [projects.organizationId],
+    references: [organizations.id],
+  }),
+  creator: one(users, {
+    fields: [projects.createdBy],
+    references: [users.id],
+  }),
+  languages: many(projectLanguages),
+  translationKeys: many(translationKeys),
+}));
+
+export const projectLanguagesRelations = relations(
+  projectLanguages,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectLanguages.projectId],
+      references: [projects.id],
+    }),
+  })
+);
+
+export const translationKeysRelations = relations(
+  translationKeys,
+  ({ one, many }) => ({
+    project: one(projects, {
+      fields: [translationKeys.projectId],
+      references: [projects.id],
+    }),
+    translations: many(translations),
+  })
+);
+
+export const translationsRelations = relations(translations, ({ one }) => ({
+  key: one(translationKeys, {
+    fields: [translations.keyId],
+    references: [translationKeys.id],
+  }),
+}));

@@ -5,9 +5,17 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 import type { Route } from "./+types/root";
-import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
+import { ChakraProvider, defaultSystem, Box } from "@chakra-ui/react";
+import { getUserFromSession } from "~/lib/session.server";
+import { Header } from "~/components/Header";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const user = await getUserFromSession(request);
+  return { user };
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,7 +36,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const { user } = useLoaderData<typeof loader>();
+
+  return (
+    <>
+      <Header user={user} />
+      <Box as="main">
+        <Outlet />
+      </Box>
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

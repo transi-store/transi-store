@@ -1,5 +1,5 @@
 import { Box, Heading, Text, Container, VStack, Button, HStack } from "@chakra-ui/react";
-import { Form, useLoaderData, Link } from "react-router";
+import { Form, useLoaderData, Link, redirect } from "react-router";
 import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 
@@ -15,6 +15,12 @@ export function meta() {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
+
+  // Si l'utilisateur est connecté, rediriger vers les organisations
+  if (user) {
+    throw redirect("/orgs");
+  }
+
   return { user };
 }
 
