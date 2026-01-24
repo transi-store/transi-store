@@ -1,5 +1,7 @@
 import { Box, Container, HStack, Text, Button } from "@chakra-ui/react";
+import { Menu, Portal } from "@chakra-ui/react";
 import { Link, Form } from "react-router";
+import { LuChevronDown, LuBuilding2, LuLogOut } from "react-icons/lu";
 import type { SessionData } from "~/lib/session.server";
 
 interface HeaderProps {
@@ -31,14 +33,16 @@ export function Header({ user }: HeaderProps) {
 
             {user && (
               <HStack gap={4} fontSize="sm">
-                <Text
-                  as={Link}
-                  to="/orgs"
-                  color="brand.600"
-                  _hover={{ textDecoration: "underline", color: "brand.700" }}
-                >
-                  Organisations
-                </Text>
+                {user.lastOrganizationSlug && (
+                  <Text
+                    as={Link}
+                    to={`/orgs/${user.lastOrganizationSlug}`}
+                    color="brand.600"
+                    _hover={{ textDecoration: "underline", color: "brand.700" }}
+                  >
+                    Projets
+                  </Text>
+                )}
                 <Text
                   as={Link}
                   to="/search"
@@ -53,16 +57,35 @@ export function Header({ user }: HeaderProps) {
 
           <HStack gap={2}>
             {user ? (
-              <>
-                <Text fontSize="sm" color="gray.600">
-                  {user.name || user.email}
-                </Text>
-                <Form action="/auth/logout" method="post">
-                  <Button type="submit" size="sm" variant="outline">
-                    Deconnexion
+              <Menu.Root>
+                <Menu.Trigger asChild>
+                  <Button variant="ghost" size="sm">
+                    {user.name || user.email}
+                    <LuChevronDown />
                   </Button>
-                </Form>
-              </>
+                </Menu.Trigger>
+                <Portal>
+                  <Menu.Positioner>
+                    <Menu.Content>
+                      <Menu.Item value="organizations" asChild>
+                        <Link to="/orgs">
+                          <LuBuilding2 />
+                          Mes organisations
+                        </Link>
+                      </Menu.Item>
+                      <Menu.Separator />
+                      <Form action="/auth/logout" method="post">
+                        <Menu.Item value="logout" asChild>
+                          <button type="submit" style={{ width: "100%" }}>
+                            <LuLogOut />
+                            Déconnexion
+                          </button>
+                        </Menu.Item>
+                      </Form>
+                    </Menu.Content>
+                  </Menu.Positioner>
+                </Portal>
+              </Menu.Root>
             ) : (
               <Button as={Link} to="/auth/login" size="sm" colorPalette="brand">
                 Connexion

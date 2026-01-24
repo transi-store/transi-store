@@ -113,91 +113,13 @@ transi-store/
 
 ## Decisions d'architecture
 
-⚠️ **IMPORTANT : Documentation obligatoire**
+Les decisions d'architecture sont documentees dans le dossier [`docs/decisions/`](./docs/decisions/).
 
-**Toute décision technique importante doit être documentée** dans le dossier `docs/decisions/` sous forme d'ADR (Architecture Decision Record).
+Consultez le [README des ADR](./docs/decisions/README.md) pour :
 
-Cela inclut :
-
-- Choix de bibliothèques ou frameworks
-- Modifications du système de design
-- Changements d'architecture
-- Décisions impactant la base de code
-
-Les decisions d'architecture sont documentees dans le dossier `docs/decisions/`.
-
-### ADR-001 : Stack technique
-
-**Contexte** : Choix de la stack technique pour le projet.
-
-**Decision** :
-
-- React 19 + TypeScript pour le frontend
-- React Router v7 en mode framework pour le routing et le SSR
-- Chakra UI v3 pour le design system
-- Drizzle ORM pour l'acces a la base de donnees
-- MariaDB comme base de donnees
-
-**Raisons** :
-
-- React Router v7 permet d'avoir un framework full-stack avec loaders/actions
-- Drizzle ORM offre un excellent typage TypeScript
-- Chakra UI v3 est moderne et accessible
-
-### ADR-002 : Multi-tenant avec organisations
-
-**Contexte** : Permettre a plusieurs entreprises d'utiliser l'application.
-
-**Decision** :
-
-- Creer une entite "Organisation"
-- Les projets appartiennent a une organisation
-- Un utilisateur peut etre membre de plusieurs organisations
-
-**Raisons** :
-
-- Isolation des donnees entre entreprises
-- Flexibilite pour les utilisateurs travaillant sur plusieurs projets
-
-### ADR-003 : Ajout d'icônes avec react-icons
-
-**Date** : 2026-01-23
-
-**Contexte** : Interface manquant de repères visuels pour différencier les actions.
-
-**Decision** : Utilisation de react-icons avec les icônes Lucide pour tous les boutons d'action.
-
-**Détails** : Voir [ADR-003](./docs/decisions/ADR-003-icones-react-icons.md)
-
-### ADR-004 : Thème personnalisé avec les couleurs Mapado
-
-**Date** : 2026-01-23
-
-**Contexte** : Interface trop neutre, manque d'identité visuelle alignée avec la charte Mapado.
-
-**Decision** : Création d'un système de thème Chakra UI v3 personnalisé intégrant la palette de couleurs officielle Mapado.
-
-**Détails** : Voir [ADR-004](./docs/decisions/ADR-004-theme-couleurs-mapado.md)
-
-### ADR-005 : Import de traductions depuis fichiers JSON
-
-**Date** : 2026-01-23
-
-**Contexte** : Besoin d'importer des traductions depuis des services tiers ou fichiers existants. Création manuelle trop fastidieuse pour de gros volumes.
-
-**Decision** : Implémentation d'une fonctionnalité d'import de fichiers JSON (format clé/valeur) avec choix de langue cible et stratégie (skip/overwrite).
-
-**Détails** : Voir [ADR-005](./docs/decisions/ADR-005-import-traductions-json.md)
-
-### ADR-006 : Clés d'API pour l'export de données
-
-**Date** : 2026-01-23
-
-**Contexte** : Export des traductions nécessite actuellement une authentification OAuth2, inadaptée pour l'automatisation (CI/CD, scripts).
-
-**Decision** : Implémentation d'un système de clés d'API permettant l'export automatisé des traductions sans interaction humaine. Les clés sont liées à l'organisation et utilisent l'authentification Bearer.
-
-**Détails** : Voir [ADR-006](./docs/decisions/ADR-006-cles-api-export.md)
+- La liste complete des decisions architecturales
+- Le processus de creation d'un nouvel ADR
+- Le template a utiliser
 
 ## Licence
 

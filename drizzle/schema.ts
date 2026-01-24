@@ -18,12 +18,13 @@ export const users = mysqlTable(
     name: varchar("name", { length: 255 }),
     oauthProvider: varchar("oauth_provider", { length: 50 }).notNull(),
     oauthSubject: varchar("oauth_subject", { length: 255 }).notNull(),
+    lastOrganizationId: varchar("last_organization_id", { length: 36 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
   (table) => [
     uniqueIndex("unique_oauth").on(table.oauthProvider, table.oauthSubject),
-  ]
+  ],
 );
 
 // Organisations
@@ -50,7 +51,7 @@ export const organizationMembers = mysqlTable(
   },
   (table) => [
     uniqueIndex("unique_org_user").on(table.organizationId, table.userId),
-  ]
+  ],
 );
 
 // Clés d'API pour l'authentification automatisée
@@ -69,7 +70,7 @@ export const apiKeys = mysqlTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     lastUsedAt: timestamp("last_used_at"),
   },
-  (table) => [index("idx_key_value").on(table.keyValue)]
+  (table) => [index("idx_key_value").on(table.keyValue)],
 );
 
 // Projets (appartiennent a une organisation)
@@ -89,7 +90,7 @@ export const projects = mysqlTable(
   },
   (table) => [
     uniqueIndex("unique_org_slug").on(table.organizationId, table.slug),
-  ]
+  ],
 );
 
 // Langues disponibles par projet
@@ -106,7 +107,7 @@ export const projectLanguages = mysqlTable(
   },
   (table) => [
     uniqueIndex("unique_project_locale").on(table.projectId, table.locale),
-  ]
+  ],
 );
 
 // Cles de traduction
@@ -125,7 +126,7 @@ export const translationKeys = mysqlTable(
   (table) => [
     uniqueIndex("unique_project_key").on(table.projectId, table.keyName),
     index("idx_keys_name").on(table.keyName),
-  ]
+  ],
 );
 
 // Traductions
@@ -141,7 +142,7 @@ export const translations = mysqlTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [uniqueIndex("unique_key_locale").on(table.keyId, table.locale)]
+  (table) => [uniqueIndex("unique_key_locale").on(table.keyId, table.locale)],
 );
 
 // Types inferes pour TypeScript
@@ -203,7 +204,7 @@ export const organizationMembersRelations = relations(
       fields: [organizationMembers.organizationId],
       references: [organizations.id],
     }),
-  })
+  }),
 );
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -226,7 +227,7 @@ export const projectLanguagesRelations = relations(
       fields: [projectLanguages.projectId],
       references: [projects.id],
     }),
-  })
+  }),
 );
 
 export const translationKeysRelations = relations(
@@ -237,7 +238,7 @@ export const translationKeysRelations = relations(
       references: [projects.id],
     }),
     translations: many(translations),
-  })
+  }),
 );
 
 export const translationsRelations = relations(translations, ({ one }) => ({

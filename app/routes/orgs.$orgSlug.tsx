@@ -9,15 +9,17 @@ import {
   Card,
   HStack,
 } from "@chakra-ui/react";
-import { Link, NavLink, Outlet, useLoaderData } from "react-router";
-import {
-  LuFolderOpen,
-  LuUsers,
-  LuSettings,
-} from "react-icons/lu";
+import { Link, NavLink, Outlet, useLoaderData, data } from "react-router";
+import { LuFolderOpen, LuUsers, LuSettings } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug";
-import { requireUser } from "~/lib/session.server";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
+import {
+  requireUser,
+  updateSessionLastOrganization,
+} from "~/lib/session.server";
+import {
+  requireOrganizationMembership,
+  updateUserLastOrganization,
+} from "~/lib/organizations.server";
 import { db, schema } from "~/lib/db.server";
 import { eq } from "drizzle-orm";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
@@ -28,6 +30,18 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     user,
     params.orgSlug,
   );
+
+  // Mettre à jour la dernière organisation visitée (en DB et en session)
+  const headers: HeadersInit = {};
+  if (user.lastOrganizationId !== organization.id) {
+    await updateUserLastOrganization(user.userId, organization.id);
+    const setCookie = await updateSessionLastOrganization(
+      request,
+      organization.id,
+      organization.slug,
+    );
+    headers["Set-Cookie"] = setCookie;
+  }
 
   // Récupérer les statistiques pour l'en-tête
   const projects = await db.query.projects.findMany({
@@ -40,14 +54,17 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   const apiKeys = await getOrganizationApiKeys(organization.id);
 
-  return {
-    organization,
-    stats: {
-      projectsCount: projects.length,
-      membersCount: memberships.length,
-      apiKeysCount: apiKeys.length,
+  return data(
+    {
+      organization,
+      stats: {
+        projectsCount: projects.length,
+        membersCount: memberships.length,
+        apiKeysCount: apiKeys.length,
+      },
     },
-  };
+    { headers },
+  );
 }
 
 export default function OrganizationLayout() {
@@ -117,8 +134,12 @@ export default function OrganizationLayout() {
                 gap: "0.5rem",
                 padding: "0.75rem 1rem",
                 borderBottom: isActive ? "2px solid" : "2px solid transparent",
-                borderColor: isActive ? "var(--chakra-colors-brand-500)" : "transparent",
-                color: isActive ? "var(--chakra-colors-brand-600)" : "var(--chakra-colors-gray-600)",
+                borderColor: isActive
+                  ? "var(--chakra-colors-brand-500)"
+                  : "transparent",
+                color: isActive
+                  ? "var(--chakra-colors-brand-600)"
+                  : "var(--chakra-colors-gray-600)",
                 fontWeight: isActive ? "600" : "400",
                 textDecoration: "none",
                 transition: "all 0.2s",
@@ -134,8 +155,12 @@ export default function OrganizationLayout() {
                 gap: "0.5rem",
                 padding: "0.75rem 1rem",
                 borderBottom: isActive ? "2px solid" : "2px solid transparent",
-                borderColor: isActive ? "var(--chakra-colors-brand-500)" : "transparent",
-                color: isActive ? "var(--chakra-colors-brand-600)" : "var(--chakra-colors-gray-600)",
+                borderColor: isActive
+                  ? "var(--chakra-colors-brand-500)"
+                  : "transparent",
+                color: isActive
+                  ? "var(--chakra-colors-brand-600)"
+                  : "var(--chakra-colors-gray-600)",
                 fontWeight: isActive ? "600" : "400",
                 textDecoration: "none",
                 transition: "all 0.2s",
@@ -151,8 +176,12 @@ export default function OrganizationLayout() {
                 gap: "0.5rem",
                 padding: "0.75rem 1rem",
                 borderBottom: isActive ? "2px solid" : "2px solid transparent",
-                borderColor: isActive ? "var(--chakra-colors-brand-500)" : "transparent",
-                color: isActive ? "var(--chakra-colors-brand-600)" : "var(--chakra-colors-gray-600)",
+                borderColor: isActive
+                  ? "var(--chakra-colors-brand-500)"
+                  : "transparent",
+                color: isActive
+                  ? "var(--chakra-colors-brand-600)"
+                  : "var(--chakra-colors-gray-600)",
                 fontWeight: isActive ? "600" : "400",
                 textDecoration: "none",
                 transition: "all 0.2s",

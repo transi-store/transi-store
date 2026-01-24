@@ -34,12 +34,12 @@ export async function getOrganizationBySlug(slug: string) {
 
 export async function isUserMemberOfOrganization(
   userId: string,
-  organizationId: string
+  organizationId: string,
 ): Promise<boolean> {
   const membership = await db.query.organizationMembers.findFirst({
     where: and(
       eq(schema.organizationMembers.userId, userId),
-      eq(schema.organizationMembers.organizationId, organizationId)
+      eq(schema.organizationMembers.organizationId, organizationId),
     ),
   });
 
@@ -48,7 +48,7 @@ export async function isUserMemberOfOrganization(
 
 export async function requireOrganizationMembership(
   user: SessionData,
-  organizationSlug: string
+  organizationSlug: string,
 ) {
   const organization = await getOrganizationBySlug(organizationSlug);
 
@@ -56,7 +56,10 @@ export async function requireOrganizationMembership(
     throw new Response("Organization not found", { status: 404 });
   }
 
-  const isMember = await isUserMemberOfOrganization(user.userId, organization.id);
+  const isMember = await isUserMemberOfOrganization(
+    user.userId,
+    organization.id,
+  );
 
   if (!isMember) {
     throw new Response("Forbidden", { status: 403 });
@@ -99,4 +102,23 @@ export async function isSlugAvailable(slug: string): Promise<boolean> {
   });
 
   return !existing;
+}
+
+export async function updateUserLastOrganization(
+  userId: string,
+  organizationId: string,
+): Promise<void> {
+  await db
+    .update(schema.users)
+    .set({
+      lastOrganizationId: organizationId,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.users.id, userId));
+}
+
+export async function getOrganizationById(organizationId: string) {
+  return await db.query.organizations.findFirst({
+    where: eq(schema.organizations.id, organizationId),
+  });
 }

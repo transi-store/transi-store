@@ -20,13 +20,15 @@ export interface SessionData {
   userId: string;
   email: string;
   name?: string;
+  lastOrganizationId?: string;
+  lastOrganizationSlug?: string;
 }
 
 export async function createUserSession(
   userId: string,
   email: string,
   name: string | undefined,
-  redirectTo: string
+  redirectTo: string,
 ) {
   const session = await sessionStorage.getSession();
   session.set("userId", userId);
@@ -50,18 +52,20 @@ export async function getUserSession(request: Request) {
 }
 
 export async function getUserFromSession(
-  request: Request
+  request: Request,
 ): Promise<SessionData | null> {
   const session = await getUserSession(request);
   const userId = session.get("userId");
   const email = session.get("email");
   const name = session.get("name");
+  const lastOrganizationId = session.get("lastOrganizationId");
+  const lastOrganizationSlug = session.get("lastOrganizationSlug");
 
   if (!userId || !email) {
     return null;
   }
 
-  return { userId, email, name };
+  return { userId, email, name, lastOrganizationId, lastOrganizationSlug };
 }
 
 export async function requireUser(request: Request): Promise<SessionData> {
@@ -81,4 +85,15 @@ export async function logout(request: Request) {
       "Set-Cookie": await sessionStorage.destroySession(session),
     },
   });
+}
+
+export async function updateSessionLastOrganization(
+  request: Request,
+  organizationId: string,
+  organizationSlug: string,
+): Promise<string> {
+  const session = await getUserSession(request);
+  session.set("lastOrganizationId", organizationId);
+  session.set("lastOrganizationSlug", organizationSlug);
+  return sessionStorage.commitSession(session);
 }
