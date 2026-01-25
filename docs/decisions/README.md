@@ -106,6 +106,8 @@ Utilisez le template suivant :
 | [ADR-008](./ADR-008-migration-postgresql-drizzle-v1.md)             | Migration vers PostgreSQL avec Drizzle ORM v1                        | 2026-01-24 | Accepté ✅ |
 | [ADR-009](./ADR-009-editeur-icu-codemirror.md)                      | Éditeur ICU avec CodeMirror                                          | 2026-01-25 | Accepté ✅ |
 | [ADR-010](./ADR-010-fuzzy-search.md)                                | Recherche floue avec PostgreSQL pg_trgm                              | 2026-01-25 | Accepté ✅ |
+| [ADR-011](./ADR-011-multi-provider-oauth.md)                        | Support multi-provider OAuth                                         | 2026-01-25 | Accepté ✅ |
+| [ADR-012](./ADR-012-gestion-multi-utilisateurs-organisations.md)    | Gestion multi-utilisateurs des organisations                         | 2026-01-25 | Accepté ✅ |
 
 ## Références
 

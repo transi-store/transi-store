@@ -16,6 +16,7 @@ export default [
   // Organizations routes
   route("orgs", "routes/orgs._index.tsx"),
   route("orgs/new", "routes/orgs.new.tsx"),
+  route("orgs/invite/:code", "routes/orgs.invite.$code.tsx"),
   route("orgs/:orgSlug", "routes/orgs.$orgSlug.tsx", [
     index("routes/orgs.$orgSlug._index.tsx"),
     route("members", "routes/orgs.$orgSlug.members.tsx"),

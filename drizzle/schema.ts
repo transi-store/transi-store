@@ -53,6 +53,35 @@ export const organizationMembers = pgTable(
   ],
 );
 
+// Invitations d'organisation
+export const organizationInvitations = pgTable(
+  "organization_invitations",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organization_id", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    invitationCode: varchar("invitation_code", { length: 32 })
+      .notNull()
+      .unique(),
+    invitedEmail: varchar("invited_email", { length: 255 }).notNull(),
+    invitedBy: varchar("invited_by", { length: 36 })
+      .notNull()
+      .references(() => users.id),
+    status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'accepted', 'cancelled'
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    acceptedAt: timestamp("accepted_at"),
+  },
+  (table) => [
+    uniqueIndex("unique_org_email_pending").on(
+      table.organizationId,
+      table.invitedEmail,
+      table.status,
+    ),
+    index("idx_invitation_code").on(table.invitationCode),
+  ],
+);
+
 // Clés d'API pour l'authentification automatisée
 export const apiKeys = pgTable(
   "api_keys",
@@ -157,6 +186,11 @@ export type NewOrganization = typeof organizations.$inferInsert;
 
 export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type NewOrganizationMember = typeof organizationMembers.$inferInsert;
+
+export type OrganizationInvitation =
+  typeof organizationInvitations.$inferSelect;
+export type NewOrganizationInvitation =
+  typeof organizationInvitations.$inferInsert;
 
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type NewApiKey = typeof apiKeys.$inferInsert;
