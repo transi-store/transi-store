@@ -20,8 +20,7 @@ import {
   requireOrganizationMembership,
   updateUserLastOrganization,
 } from "~/lib/organizations.server";
-import { db, schema } from "~/lib/db.server";
-import { eq } from "drizzle-orm";
+import { db } from "~/lib/db.server";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -45,11 +44,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   // Récupérer les statistiques pour l'en-tête
   const projects = await db.query.projects.findMany({
-    where: eq(schema.projects.organizationId, organization.id),
+    where: { organizationId: organization.id },
   });
 
   const memberships = await db.query.organizationMembers.findMany({
-    where: eq(schema.organizationMembers.organizationId, organization.id),
+    where: { organizationId: organization.id },
   });
 
   const apiKeys = await getOrganizationApiKeys(organization.id);

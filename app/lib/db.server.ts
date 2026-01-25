@@ -1,6 +1,6 @@
-import { drizzle } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../../drizzle/schema";
+import { relations } from "../../drizzle/relations";
 
 const getDatabaseUrl = (): string => {
   const url = process.env.DATABASE_URL;
@@ -10,13 +10,6 @@ const getDatabaseUrl = (): string => {
   return url;
 };
 
-const pool = mysql.createPool({
-  uri: getDatabaseUrl(),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
-
-export const db = drizzle(pool, { schema, mode: "default" });
+export const db = drizzle(getDatabaseUrl(), { relations });
 
 export { schema };

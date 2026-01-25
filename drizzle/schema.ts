@@ -1,16 +1,15 @@
 import {
-  mysqlTable,
+  pgTable,
   varchar,
   text,
   boolean,
   timestamp,
   uniqueIndex,
   index,
-} from "drizzle-orm/mysql-core";
-import { relations } from "drizzle-orm";
+} from "drizzle-orm/pg-core";
 
 // Utilisateurs (lies a OAuth)
-export const users = mysqlTable(
+export const users = pgTable(
   "users",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
@@ -20,7 +19,7 @@ export const users = mysqlTable(
     oauthSubject: varchar("oauth_subject", { length: 255 }).notNull(),
     lastOrganizationId: varchar("last_organization_id", { length: 36 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("unique_oauth").on(table.oauthProvider, table.oauthSubject),
@@ -28,16 +27,16 @@ export const users = mysqlTable(
 );
 
 // Organisations
-export const organizations = mysqlTable("organizations", {
+export const organizations = pgTable("organizations", {
   id: varchar("id", { length: 36 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Membres d'organisation (relation N-N users <-> organizations)
-export const organizationMembers = mysqlTable(
+export const organizationMembers = pgTable(
   "organization_members",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
@@ -55,7 +54,7 @@ export const organizationMembers = mysqlTable(
 );
 
 // Clés d'API pour l'authentification automatisée
-export const apiKeys = mysqlTable(
+export const apiKeys = pgTable(
   "api_keys",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
@@ -74,7 +73,7 @@ export const apiKeys = mysqlTable(
 );
 
 // Projets (appartiennent a une organisation)
-export const projects = mysqlTable(
+export const projects = pgTable(
   "projects",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
@@ -86,7 +85,7 @@ export const projects = mysqlTable(
     description: text("description"),
     createdBy: varchar("created_by", { length: 36 }).references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("unique_org_slug").on(table.organizationId, table.slug),
@@ -94,7 +93,7 @@ export const projects = mysqlTable(
 );
 
 // Langues disponibles par projet
-export const projectLanguages = mysqlTable(
+export const projectLanguages = pgTable(
   "project_languages",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
@@ -111,7 +110,7 @@ export const projectLanguages = mysqlTable(
 );
 
 // Cles de traduction
-export const translationKeys = mysqlTable(
+export const translationKeys = pgTable(
   "translation_keys",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
@@ -121,7 +120,7 @@ export const translationKeys = mysqlTable(
     keyName: varchar("key_name", { length: 500 }).notNull(),
     description: text("description"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("unique_project_key").on(table.projectId, table.keyName),
@@ -130,7 +129,7 @@ export const translationKeys = mysqlTable(
 );
 
 // Traductions
-export const translations = mysqlTable(
+export const translations = pgTable(
   "translations",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
@@ -140,7 +139,7 @@ export const translations = mysqlTable(
     locale: varchar("locale", { length: 10 }).notNull(),
     value: text("value").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [uniqueIndex("unique_key_locale").on(table.keyId, table.locale)],
 );
@@ -169,81 +168,3 @@ export type NewTranslationKey = typeof translationKeys.$inferInsert;
 
 export type Translation = typeof translations.$inferSelect;
 export type NewTranslation = typeof translations.$inferInsert;
-
-// Relations
-export const usersRelations = relations(users, ({ many }) => ({
-  organizationMemberships: many(organizationMembers),
-  createdProjects: many(projects),
-}));
-
-export const organizationsRelations = relations(organizations, ({ many }) => ({
-  members: many(organizationMembers),
-  projects: many(projects),
-  apiKeys: many(apiKeys),
-}));
-
-export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [apiKeys.organizationId],
-    references: [organizations.id],
-  }),
-  creator: one(users, {
-    fields: [apiKeys.createdBy],
-    references: [users.id],
-  }),
-}));
-
-export const organizationMembersRelations = relations(
-  organizationMembers,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [organizationMembers.userId],
-      references: [users.id],
-    }),
-    organization: one(organizations, {
-      fields: [organizationMembers.organizationId],
-      references: [organizations.id],
-    }),
-  }),
-);
-
-export const projectsRelations = relations(projects, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [projects.organizationId],
-    references: [organizations.id],
-  }),
-  creator: one(users, {
-    fields: [projects.createdBy],
-    references: [users.id],
-  }),
-  languages: many(projectLanguages),
-  translationKeys: many(translationKeys),
-}));
-
-export const projectLanguagesRelations = relations(
-  projectLanguages,
-  ({ one }) => ({
-    project: one(projects, {
-      fields: [projectLanguages.projectId],
-      references: [projects.id],
-    }),
-  }),
-);
-
-export const translationKeysRelations = relations(
-  translationKeys,
-  ({ one, many }) => ({
-    project: one(projects, {
-      fields: [translationKeys.projectId],
-      references: [projects.id],
-    }),
-    translations: many(translations),
-  }),
-);
-
-export const translationsRelations = relations(translations, ({ one }) => ({
-  key: one(translationKeys, {
-    fields: [translations.keyId],
-    references: [translationKeys.id],
-  }),
-}));

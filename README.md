@@ -24,7 +24,7 @@ transi-store est une application web permettant de gerer les traductions de chai
 | Routing         | React Router v7 (mode framework) |
 | Design System   | Chakra UI v3                     |
 | Package Manager | Yarn Berry (v4)                  |
-| Base de donnees | MariaDB                          |
+| Base de donnees | PostgreSQL                       |
 | ORM             | Drizzle ORM                      |
 | Auth            | OAuth2/OIDC                      |
 
@@ -59,13 +59,13 @@ cp .env.example .env
 
 4. Configurer les variables d'environnement dans `.env` :
 
-- `DATABASE_URL` : URL de connexion a MariaDB
+- `DATABASE_URL` : URL de connexion a la base de données
 - `OIDC_ISSUER` : URL de l'issuer OIDC
 - `OIDC_CLIENT_ID` : Client ID OAuth
 - `OIDC_CLIENT_SECRET` : Client Secret OAuth
 - `SESSION_SECRET` : Secret pour les sessions
 
-5. Demarrer MariaDB :
+5. Demarrer PostgreSQL :
 
 ```bash
 docker compose up -d

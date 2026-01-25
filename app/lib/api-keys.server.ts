@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from "crypto";
 import { db, schema } from "./db.server";
 import { eq, and } from "drizzle-orm";
-import type { ApiKey } from "drizzle/schema";
+import type { ApiKey } from "../../drizzle/schema";
 
 /**
  * Génère une clé d'API aléatoire de 32 caractères alphanumériques
@@ -21,7 +21,7 @@ interface CreateApiKeyParams {
  * Crée une nouvelle clé d'API pour une organisation
  */
 export async function createApiKey(
-  params: CreateApiKeyParams
+  params: CreateApiKeyParams,
 ): Promise<{ id: string; keyValue: string }> {
   const id = randomUUID();
   const keyValue = generateApiKey();
@@ -42,7 +42,7 @@ export async function createApiKey(
  * Note: Ne retourne pas les valeurs des clés (keyValue) pour des raisons de sécurité
  */
 export async function getOrganizationApiKeys(
-  organizationId: string
+  organizationId: string,
 ): Promise<Omit<ApiKey, "keyValue">[]> {
   const keys = await db
     .select({
@@ -66,15 +66,15 @@ export async function getOrganizationApiKeys(
  */
 export async function deleteApiKey(
   id: string,
-  organizationId: string
+  organizationId: string,
 ): Promise<void> {
   await db
     .delete(schema.apiKeys)
     .where(
       and(
         eq(schema.apiKeys.id, id),
-        eq(schema.apiKeys.organizationId, organizationId)
-      )
+        eq(schema.apiKeys.organizationId, organizationId),
+      ),
     );
 }
 
@@ -83,7 +83,7 @@ export async function deleteApiKey(
  * Retourne null si la clé n'existe pas
  */
 export async function getOrganizationByApiKey(
-  keyValue: string
+  keyValue: string,
 ): Promise<{ id: string; slug: string; name: string } | null> {
   const result = await db
     .select({
@@ -94,7 +94,7 @@ export async function getOrganizationByApiKey(
     .from(schema.apiKeys)
     .innerJoin(
       schema.organizations,
-      eq(schema.apiKeys.organizationId, schema.organizations.id)
+      eq(schema.apiKeys.organizationId, schema.organizations.id),
     )
     .where(eq(schema.apiKeys.keyValue, keyValue))
     .limit(1);
@@ -117,7 +117,7 @@ export async function updateApiKeyLastUsed(keyValue: string): Promise<void> {
  */
 export async function validateApiKey(
   keyValue: string,
-  organizationSlug: string
+  organizationSlug: string,
 ): Promise<boolean> {
   const org = await getOrganizationByApiKey(keyValue);
   return org !== null && org.slug === organizationSlug;

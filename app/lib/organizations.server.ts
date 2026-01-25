@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { SessionData } from "./session.server";
 
 export async function getUserOrganizations(userId: string) {
@@ -28,7 +28,7 @@ export async function getUserOrganizations(userId: string) {
 
 export async function getOrganizationBySlug(slug: string) {
   return await db.query.organizations.findFirst({
-    where: eq(schema.organizations.slug, slug),
+    where: { slug },
   });
 }
 
@@ -37,10 +37,7 @@ export async function isUserMemberOfOrganization(
   organizationId: string,
 ): Promise<boolean> {
   const membership = await db.query.organizationMembers.findFirst({
-    where: and(
-      eq(schema.organizationMembers.userId, userId),
-      eq(schema.organizationMembers.organizationId, organizationId),
-    ),
+    where: { userId, organizationId },
   });
 
   return !!membership;
@@ -98,7 +95,7 @@ export async function createOrganization(params: CreateOrganizationParams) {
 
 export async function isSlugAvailable(slug: string): Promise<boolean> {
   const existing = await db.query.organizations.findFirst({
-    where: eq(schema.organizations.slug, slug),
+    where: { slug },
   });
 
   return !existing;
@@ -119,6 +116,6 @@ export async function updateUserLastOrganization(
 
 export async function getOrganizationById(organizationId: string) {
   return await db.query.organizations.findFirst({
-    where: eq(schema.organizations.id, organizationId),
+    where: { id: organizationId },
   });
 }

@@ -1,10 +1,9 @@
-import { db, schema } from "~/lib/db.server";
+import { db } from "~/lib/db.server";
 import {
   getTranslationKeyByName,
   createTranslationKey,
   upsertTranslation,
 } from "~/lib/translation-keys.server";
-import { and, eq } from "drizzle-orm";
 
 interface ImportParams {
   projectId: string;
@@ -141,7 +140,7 @@ export async function importTranslations(
 
             // Reload the key to get full data
             translationKey = await db.query.translationKeys.findFirst({
-              where: eq(schema.translationKeys.id, keyId),
+              where: { id: keyId },
             });
 
             if (!translationKey) {
@@ -153,10 +152,7 @@ export async function importTranslations(
 
           // 3. Check if translation already exists
           const existingTranslation = await db.query.translations.findFirst({
-            where: and(
-              eq(schema.translations.keyId, translationKey.id),
-              eq(schema.translations.locale, locale)
-            ),
+            where: { keyId: translationKey.id, locale },
           });
 
           // 4. Apply strategy

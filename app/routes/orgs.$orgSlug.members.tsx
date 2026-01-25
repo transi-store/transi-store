@@ -8,8 +8,7 @@ import { useLoaderData } from "react-router";
 import type { Route } from "./+types/orgs.$orgSlug.members";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { db, schema } from "~/lib/db.server";
-import { eq, inArray } from "drizzle-orm";
+import { db } from "~/lib/db.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -20,7 +19,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   // Récupérer les membres
   const memberships = await db.query.organizationMembers.findMany({
-    where: eq(schema.organizationMembers.organizationId, organization.id),
+    where: { organizationId: organization.id },
   });
 
   // Récupérer les utilisateurs correspondants
@@ -28,7 +27,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const users =
     userIds.length > 0
       ? await db.query.users.findMany({
-          where: inArray(schema.users.id, userIds),
+          where: { id: { in: userIds } },
         })
       : [];
 

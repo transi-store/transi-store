@@ -3,10 +3,7 @@ import { eq, and } from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: string, slug: string) {
   return await db.query.projects.findFirst({
-    where: and(
-      eq(schema.projects.organizationId, organizationId),
-      eq(schema.projects.slug, slug)
-    ),
+    where: { organizationId, slug },
   });
 }
 
@@ -35,13 +32,10 @@ export async function createProject(params: CreateProjectParams) {
 
 export async function isProjectSlugAvailable(
   organizationId: string,
-  slug: string
+  slug: string,
 ): Promise<boolean> {
   const existing = await db.query.projects.findFirst({
-    where: and(
-      eq(schema.projects.organizationId, organizationId),
-      eq(schema.projects.slug, slug)
-    ),
+    where: { organizationId, slug },
   });
 
   return !existing;
@@ -49,7 +43,7 @@ export async function isProjectSlugAvailable(
 
 export async function getProjectLanguages(projectId: string) {
   return await db.query.projectLanguages.findMany({
-    where: eq(schema.projectLanguages.projectId, projectId),
+    where: { projectId },
   });
 }
 
@@ -72,13 +66,16 @@ export async function addLanguageToProject(params: AddLanguageParams) {
   return languageId;
 }
 
-export async function removeLanguageFromProject(projectId: string, locale: string) {
+export async function removeLanguageFromProject(
+  projectId: string,
+  locale: string,
+) {
   await db
     .delete(schema.projectLanguages)
     .where(
       and(
         eq(schema.projectLanguages.projectId, projectId),
-        eq(schema.projectLanguages.locale, locale)
-      )
+        eq(schema.projectLanguages.locale, locale),
+      ),
     );
 }

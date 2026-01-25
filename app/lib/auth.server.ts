@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createUserSession } from "./session.server";
 import crypto from "node:crypto";
 import { decodeJwt } from "jose";
@@ -142,10 +142,10 @@ interface UpsertUserParams {
 async function upsertUser(params: UpsertUserParams) {
   // Chercher l'utilisateur existant
   const existingUser = await db.query.users.findFirst({
-    where: and(
-      eq(schema.users.oauthProvider, params.oauthProvider),
-      eq(schema.users.oauthSubject, params.oauthSubject),
-    ),
+    where: {
+      oauthProvider: params.oauthProvider,
+      oauthSubject: params.oauthSubject,
+    },
   });
 
   if (existingUser) {
@@ -209,7 +209,7 @@ export async function exchangeCodeForUser(
 
 export async function getUserById(userId: string) {
   return await db.query.users.findFirst({
-    where: eq(schema.users.id, userId),
+    where: { id: userId },
   });
 }
 

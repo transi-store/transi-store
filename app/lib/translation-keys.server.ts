@@ -7,7 +7,7 @@ export async function getTranslationKeys(
     search?: string;
     limit?: number;
     offset?: number;
-  }
+  },
 ) {
   const conditions = [eq(schema.translationKeys.projectId, projectId)];
 
@@ -15,8 +15,8 @@ export async function getTranslationKeys(
     conditions.push(
       or(
         like(schema.translationKeys.keyName, `%${options.search}%`),
-        like(schema.translationKeys.description, `%${options.search}%`)
-      )!
+        like(schema.translationKeys.description, `%${options.search}%`),
+      )!,
     );
   }
 
@@ -50,19 +50,16 @@ export async function getTranslationKeys(
 
 export async function getTranslationKeyById(keyId: string) {
   return await db.query.translationKeys.findFirst({
-    where: eq(schema.translationKeys.id, keyId),
+    where: { id: keyId },
   });
 }
 
 export async function getTranslationKeyByName(
   projectId: string,
-  keyName: string
+  keyName: string,
 ) {
   return await db.query.translationKeys.findFirst({
-    where: and(
-      eq(schema.translationKeys.projectId, projectId),
-      eq(schema.translationKeys.keyName, keyName)
-    ),
+    where: { projectId, keyName },
   });
 }
 
@@ -120,7 +117,7 @@ export async function deleteTranslationKey(keyId: string) {
 
 export async function getTranslationsForKey(keyId: string) {
   return await db.query.translations.findMany({
-    where: eq(schema.translations.keyId, keyId),
+    where: { keyId },
   });
 }
 
@@ -133,10 +130,7 @@ interface UpsertTranslationParams {
 export async function upsertTranslation(params: UpsertTranslationParams) {
   // Check if translation exists
   const existing = await db.query.translations.findFirst({
-    where: and(
-      eq(schema.translations.keyId, params.keyId),
-      eq(schema.translations.locale, params.locale)
-    ),
+    where: { keyId: params.keyId, locale: params.locale },
   });
 
   if (existing) {
@@ -168,8 +162,8 @@ export async function deleteTranslation(keyId: string, locale: string) {
     .where(
       and(
         eq(schema.translations.keyId, keyId),
-        eq(schema.translations.locale, locale)
-      )
+        eq(schema.translations.locale, locale),
+      ),
     );
 }
 
@@ -177,8 +171,8 @@ export async function deleteTranslation(keyId: string, locale: string) {
 export async function getProjectTranslations(projectId: string) {
   // Get all keys for this project, sorted alphabetically by keyName
   const keys = await db.query.translationKeys.findMany({
-    where: eq(schema.translationKeys.projectId, projectId),
-    orderBy: (translationKeys, { asc }) => [asc(translationKeys.keyName)],
+    where: { projectId },
+    orderBy: { keyName: "asc" },
   });
 
   if (keys.length === 0) {
@@ -189,7 +183,7 @@ export async function getProjectTranslations(projectId: string) {
 
   // Get all translations for these keys
   const translations = await db.query.translations.findMany({
-    where: inArray(schema.translations.keyId, keyIds),
+    where: { keyId: { in: keyIds } },
   });
 
   // Combine in JavaScript

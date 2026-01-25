@@ -13,8 +13,7 @@ import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug._index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { db, schema } from "~/lib/db.server";
-import { eq } from "drizzle-orm";
+import { db } from "~/lib/db.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -25,7 +24,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   // Récupérer les projets de l'organisation
   const projects = await db.query.projects.findMany({
-    where: eq(schema.projects.organizationId, organization.id),
+    where: { organizationId: organization.id },
   });
 
   return { organization, projects };

@@ -1,22 +1,21 @@
 services:
-  mariadb:
-    image: mariadb:11
+  postgres:
+    image: postgres:16
     container_name: transi-store-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_DATABASE:-transi-store}
-      MYSQL_USER: ${DB_USER:-transi-store}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-transi-store}
+      POSTGRES_DB: ${DB_DATABASE:-transistore}
+      POSTGRES_USER: ${DB_USER:-transistore}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-transistore}
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-transistore} -d ${DB_DATABASE:-transistore}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
-  mariadb_data:
+  postgres_data:
