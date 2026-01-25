@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:setup-search": "./scripts/enable-fuzzy-search.sh"
+    "db:setup-search": "./scripts/enable-fuzzy-search.sh",
+    "prepare": "husky"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.3.1",
@@ -43,8 +44,13 @@
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "drizzle-kit": "1.0.0-beta.12-a5629fb",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "typescript": "^5.7.3",
     "vite": "^6.0.7"
+  },
+  "lint-staged": {
+    "{app,docs,drizzle,scripts}/**/*": "prettier --write"
   }
 }
