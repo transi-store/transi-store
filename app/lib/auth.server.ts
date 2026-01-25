@@ -3,77 +3,32 @@ import { eq } from "drizzle-orm";
 import { createUserSession } from "./session.server";
 import crypto from "node:crypto";
 import { decodeJwt } from "jose";
+import {
+  type OAuthProvider,
+  generateOAuth2AuthorizationUrl,
+  exchangeOAuth2Code,
+  generateGoogleAuthorizationUrl,
+  exchangeGoogleCode,
+  getGoogleUserInfo,
+  type AuthorizationUrlResult,
+} from "./auth-providers.server";
 
-// Configuration OAuth2 depuis les variables d'environnement
-const OAUTH_AUTHORIZATION_URL = process.env.OAUTH_AUTHORIZATION_URL;
-const OAUTH_TOKEN_URL = process.env.OAUTH_TOKEN_URL;
-const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
-const OAUTH_REDIRECT_URI = process.env.OAUTH_REDIRECT_URI;
-const OAUTH_SCOPES = process.env.OAUTH_SCOPES || "";
+export type { OAuthProvider, AuthorizationUrlResult };
 
-if (
-  !OAUTH_AUTHORIZATION_URL ||
-  !OAUTH_TOKEN_URL ||
-  !OAUTH_CLIENT_ID ||
-  !OAUTH_CLIENT_SECRET ||
-  !OAUTH_REDIRECT_URI
-) {
-  throw new Error(
-    "Missing OAuth2 environment variables: OAUTH_AUTHORIZATION_URL, OAUTH_TOKEN_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI",
-  );
-}
-
-// Helpers pour générer code_verifier et state
-function generateRandomString(length: number = 43): string {
-  return crypto.randomBytes(length).toString("base64url").slice(0, length);
-}
-
-function generateCodeChallenge(codeVerifier: string): string {
-  return crypto.createHash("sha256").update(codeVerifier).digest("base64url");
-}
-
-export interface AuthorizationUrlResult {
-  url: string;
-  codeVerifier: string;
-  state: string;
-}
-
+// Pour compatibilité avec le code existant - OAuth2 générique
 export async function generateAuthorizationUrl(): Promise<AuthorizationUrlResult> {
-  const codeVerifier = generateRandomString();
-  const codeChallenge = generateCodeChallenge(codeVerifier);
-  const state = generateRandomString();
-
-  const authorizationUrl = new URL(OAUTH_AUTHORIZATION_URL);
-  authorizationUrl.searchParams.set("client_id", OAUTH_CLIENT_ID);
-  authorizationUrl.searchParams.set("redirect_uri", OAUTH_REDIRECT_URI);
-  authorizationUrl.searchParams.set("response_type", "code");
-  if (OAUTH_SCOPES) {
-    authorizationUrl.searchParams.set("scope", OAUTH_SCOPES);
-  }
-  authorizationUrl.searchParams.set("state", state);
-  authorizationUrl.searchParams.set("code_challenge", codeChallenge);
-  authorizationUrl.searchParams.set("code_challenge_method", "S256");
-
-  return { url: authorizationUrl.toString(), codeVerifier, state };
+  return generateOAuth2AuthorizationUrl();
 }
 
 export interface CallbackParams {
   code: string;
   state: string;
-  codeVerifier: string;
+  codeVerifier?: string;
   expectedState: string;
+  provider: OAuthProvider;
 }
 
-interface OAuth2TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in?: number;
-  refresh_token?: string;
-  scope?: string;
-}
-
-interface JWTPayload {
+interface OAuth2JWTPayload {
   sub: string; // User ID (requis)
   email?: string; // Email (optionnel dans JWT)
 }
@@ -84,36 +39,56 @@ export async function handleCallback(params: CallbackParams) {
     throw new Error("State mismatch");
   }
 
-  // Échanger le code contre un access token
-  const tokenResponse = await fetch(OAUTH_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code: params.code,
-      redirect_uri: OAUTH_REDIRECT_URI,
-      client_id: OAUTH_CLIENT_ID,
-      client_secret: OAUTH_CLIENT_SECRET,
-      code_verifier: params.codeVerifier,
-    }),
-  });
-
-  if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    throw new Error(
-      `Token exchange failed: ${tokenResponse.status} ${errorText}`,
-    );
+  if (params.provider === "google") {
+    return handleGoogleCallback(params);
+  } else if (params.provider === "mapado") {
+    return handleOAuth2Callback(params);
   }
 
-  const tokens: OAuth2TokenResponse = await tokenResponse.json();
+  throw new Error(`Unknown OAuth provider: ${params.provider}`);
+}
+
+async function handleGoogleCallback(params: CallbackParams) {
+  if (!params.codeVerifier) {
+    throw new Error("Code verifier is required for Google OAuth");
+  }
+
+  // Échanger le code contre un access token
+  const tokens = await exchangeGoogleCode(params.code, params.codeVerifier);
+
+  // Récupérer les infos utilisateur depuis Google
+  const userInfo = await getGoogleUserInfo(tokens.accessToken);
+
+  if (!userInfo.sub) {
+    throw new Error("Missing user ID from Google");
+  }
+
+  // Créer ou mettre à jour l'utilisateur
+  const user = await upsertUser({
+    oauthProvider: "google",
+    oauthSubject: userInfo.sub,
+    email: userInfo.email || `user-${userInfo.sub}@google.com`,
+    name: userInfo.name || userInfo.given_name,
+  });
+
+  return user;
+}
+
+async function handleOAuth2Callback(params: CallbackParams) {
+  if (!params.codeVerifier) {
+    throw new Error("Code verifier is required for OAuth2");
+  }
+
+  // Échanger le code contre un access token
+  const accessToken = await exchangeOAuth2Code(
+    params.code,
+    params.codeVerifier,
+  );
 
   // Décoder le JWT pour extraire l'id utilisateur
-  let decodedToken: JWTPayload;
+  let decodedToken: OAuth2JWTPayload;
   try {
-    decodedToken = decodeJwt(tokens.access_token) as JWTPayload;
+    decodedToken = decodeJwt(accessToken) as OAuth2JWTPayload;
     if (!decodedToken.sub) {
       throw new Error("Missing sub claim in JWT");
     }
@@ -123,10 +98,10 @@ export async function handleCallback(params: CallbackParams) {
 
   // Créer ou mettre à jour l'utilisateur (sans name)
   const user = await upsertUser({
-    oauthProvider: "oauth2",
+    oauthProvider: "mapado",
     oauthSubject: decodedToken.sub,
-    email: decodedToken.email || `user-${decodedToken.sub}@unknown.local`, // Fallback si pas d'email
-    name: undefined, // Pas de name depuis JWT
+    email: decodedToken.email || `user-${decodedToken.sub}@unknown.local`,
+    name: undefined,
   });
 
   return user;
@@ -186,15 +161,17 @@ async function upsertUser(params: UpsertUserParams) {
 export async function exchangeCodeForUser(
   code: string,
   state: string,
-  codeVerifier: string,
+  codeVerifier: string | undefined,
   expectedState: string,
   redirectTo: string = "/",
+  provider: OAuthProvider = "mapado",
 ) {
   const user = await handleCallback({
     code,
     state,
     codeVerifier,
     expectedState,
+    provider,
   });
 
   // Rediriger vers complete-profile si pas de name

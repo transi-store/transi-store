@@ -57,7 +57,7 @@ export default function Index() {
             </Text>
           </Box>
           <Box>
-            {user ? (
+            {user && (
               <VStack align="end" gap={2}>
                 <Text fontSize="sm" color="gray.600">
                   Connecte en tant que {user.name || user.email}
@@ -68,10 +68,6 @@ export default function Index() {
                   </Button>
                 </Form>
               </VStack>
-            ) : (
-              <Button as={Link} to="/auth/login" size="sm" colorPalette="brand">
-                Connexion
-              </Button>
             )}
           </Box>
         </HStack>

@@ -5,7 +5,10 @@ export default [
 
   // Authentication routes
   route("auth/login", "routes/auth.login.tsx"),
-  route("auth/callback", "routes/auth.callback.tsx"),
+  route("auth/google/login", "routes/auth.google.login.tsx"),
+  route("auth/google/callback", "routes/auth.google.callback.tsx"),
+  route("auth/mapado/login", "routes/auth.mapado.login.tsx"),
+  route("auth/mapado/callback", "routes/auth.mapado.callback.tsx"),
   route("auth/logout", "routes/auth.logout.tsx"),
   route("auth/debug", "routes/auth.debug.tsx"),
   route("auth/complete-profile", "routes/auth.complete-profile.tsx"),

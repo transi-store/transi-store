@@ -1,8 +1,7 @@
-import type { Route } from "./+types/auth.callback";
+import type { Route } from "./+types/auth.mapado.callback";
 import { exchangeCodeForUser } from "~/lib/auth.server";
 import { getOAuthState, clearOAuthState } from "~/lib/oauth-state.server";
 
-// Route de compatibilité - redirige vers OAuth2
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -19,14 +18,13 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const redirectTo = oauthState.redirectTo || "/";
 
-  // Par défaut, on assume que c'est OAuth2 pour la rétrocompatibilité
   const response = await exchangeCodeForUser(
     code,
     state,
     oauthState.codeVerifier,
     oauthState.state,
     redirectTo,
-    "oauth2",
+    "mapado",
   );
 
   // Supprimer le cookie d'état OAuth
