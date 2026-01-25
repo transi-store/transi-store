@@ -24,7 +24,9 @@ export async function setOAuthState(state: OAuthState) {
   return await oauthStateCookie.serialize(state);
 }
 
-export async function getOAuthState(request: Request): Promise<OAuthState | null> {
+export async function getOAuthState(
+  request: Request,
+): Promise<OAuthState | null> {
   const cookie = request.headers.get("Cookie");
   const state = await oauthStateCookie.parse(cookie);
   return state || null;

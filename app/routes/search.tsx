@@ -128,9 +128,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
 
             {results.length === 0 ? (
               <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-                <Text color="gray.600">
-                  Aucun résultat pour "{query}"
-                </Text>
+                <Text color="gray.600">Aucun résultat pour "{query}"</Text>
                 <Text color="gray.500" fontSize="sm" mt={2}>
                   Essayez avec d'autres mots-clés ou modifiez les filtres
                 </Text>
@@ -145,7 +143,9 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                           <Box flex={1}>
                             <HStack mb={2}>
                               <Badge colorScheme="purple" size="sm">
-                                {result.matchType === "key" ? "Clé" : "Traduction"}
+                                {result.matchType === "key"
+                                  ? "Clé"
+                                  : "Traduction"}
                               </Badge>
                               {result.translationLocale && (
                                 <Badge colorPalette="brand" size="sm">
@@ -177,7 +177,9 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                                 borderLeftWidth={3}
                                 borderLeftColor="blue.500"
                               >
-                                <Text fontSize="sm">{result.translationValue}</Text>
+                                <Text fontSize="sm">
+                                  {result.translationValue}
+                                </Text>
                               </Box>
                             )}
 
@@ -210,8 +212,8 @@ export default function Search({ loaderData }: Route.ComponentProps) {
               Saisissez au moins 2 caractères pour lancer une recherche
             </Text>
             <Text color="gray.500" fontSize="sm" mt={2}>
-              La recherche s'effectue dans les noms de clés, descriptions et valeurs
-              de traduction
+              La recherche s'effectue dans les noms de clés, descriptions et
+              valeurs de traduction
             </Text>
           </Box>
         )}

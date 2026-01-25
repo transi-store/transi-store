@@ -20,7 +20,10 @@ import {
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -33,7 +36,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -59,15 +65,18 @@ export async function action({ request, params }: Route.ActionArgs) {
   const keyId = await createTranslationKey({
     projectId: project.id,
     keyName,
-    description: description && typeof description === "string" ? description : undefined,
+    description:
+      description && typeof description === "string" ? description : undefined,
   });
 
   return redirect(
-    `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys/${keyId}`
+    `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys/${keyId}`,
   );
 }
 
-export default function NewTranslationKey({ loaderData }: Route.ComponentProps) {
+export default function NewTranslationKey({
+  loaderData,
+}: Route.ComponentProps) {
   const { organization, project } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
@@ -97,7 +106,8 @@ export default function NewTranslationKey({ loaderData }: Route.ComponentProps) 
                 fontFamily="mono"
               />
               <Field.HelperText>
-                Utilisez des points pour structurer vos clés (ex: app.welcome.title)
+                Utilisez des points pour structurer vos clés (ex:
+                app.welcome.title)
               </Field.HelperText>
             </Field.Root>
 

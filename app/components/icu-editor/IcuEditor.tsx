@@ -4,15 +4,31 @@
  */
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { Box, VStack, Text, Badge, HStack, Collapsible } from "@chakra-ui/react";
-import { EditorView, keymap, placeholder as placeholderExt } from "@codemirror/view";
+import {
+  Box,
+  VStack,
+  Text,
+  Badge,
+  HStack,
+  Collapsible,
+} from "@chakra-ui/react";
+import {
+  EditorView,
+  keymap,
+  placeholder as placeholderExt,
+} from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import type { Extension } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { icuLanguage } from "./icu-language";
 import { icuLinter, validateIcuMessage, extractVariables } from "./icu-linter";
 import { IcuPreview } from "./IcuPreview";
-import { LuChevronDown, LuChevronRight, LuCircleAlert, LuCircleCheck } from "react-icons/lu";
+import {
+  LuChevronDown,
+  LuChevronRight,
+  LuCircleAlert,
+  LuCircleCheck,
+} from "react-icons/lu";
 
 interface IcuEditorProps {
   /** Initial value */
@@ -78,7 +94,7 @@ export function IcuEditor({
       setInternalValue(newValue);
       onChange(newValue);
     },
-    [onChange]
+    [onChange],
   );
 
   // Initialize CodeMirror
@@ -89,27 +105,27 @@ export function IcuEditor({
       // Basic setup
       history(),
       keymap.of([...defaultKeymap, ...historyKeymap]),
-      
+
       // ICU language support
       icuLanguage(),
       icuLinter(),
-      
+
       // Placeholder
       placeholderExt(placeholder),
-      
+
       // Update listener
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           handleChange(update.state.doc.toString());
         }
       }),
-      
+
       // Editable state
       EditorView.editable.of(!disabled),
-      
+
       // Line wrapping
       EditorView.lineWrapping,
-      
+
       // Custom styling
       EditorView.theme({
         "&": {
@@ -173,7 +189,7 @@ export function IcuEditor({
             </HStack>
           )}
         </HStack>
-        
+
         <HStack gap={1}>
           {variables.map((v) => (
             <Badge key={v} size="sm" colorPalette="blue" variant="subtle">
@@ -204,7 +220,7 @@ export function IcuEditor({
               Aperçu de la traduction
             </Text>
           </Box>
-          
+
           <Collapsible.Root open={isPreviewOpen}>
             <Collapsible.Content>
               <Box p={3}>

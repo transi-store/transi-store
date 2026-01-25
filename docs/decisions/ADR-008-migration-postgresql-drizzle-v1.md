@@ -25,7 +25,7 @@ Drizzle-kit ne détecte pas correctement les clés primaires existantes dans Mar
 
 1. **Ajout manuel des contraintes manquantes** : Les foreign keys manquantes sur la table `api_keys` ont été ajoutées, mais le problème de détection des clés primaires persistait.
 
-2. **Migration vers Drizzle ORM v1 beta** : 
+2. **Migration vers Drizzle ORM v1 beta** :
    - Upgrade vers `drizzle-orm@1.0.0-beta.12` et `drizzle-kit@1.0.0-beta.12`
    - Migration complète de RQB v1 vers RQB v2 (nouvelle syntaxe des relations et requêtes)
    - Le bug de détection des clés primaires persistait même avec la version beta
@@ -46,12 +46,14 @@ Drizzle-kit ne détecte pas correctement les clés primaires existantes dans Mar
 #### 1. Migration du driver de base de données
 
 **Avant** (MySQL/MariaDB) :
+
 ```typescript
 import { drizzle } from "drizzle-orm/mysql2";
 export const db = drizzle(getDatabaseUrl(), { schema, mode: "default" });
 ```
 
 **Après** (PostgreSQL) :
+
 ```typescript
 import { drizzle } from "drizzle-orm/node-postgres";
 export const db = drizzle(getDatabaseUrl(), { relations });
@@ -60,11 +62,13 @@ export const db = drizzle(getDatabaseUrl(), { relations });
 #### 2. Migration du schéma
 
 **Changements dans `drizzle/schema.ts`** :
+
 - `mysqlTable` → `pgTable`
 - `timestamp().defaultNow().onUpdateNow()` → `timestamp().defaultNow()` (PostgreSQL ne supporte pas `onUpdateNow` natif)
 - Ajout de triggers si nécessaire pour les `updated_at` automatiques
 
 **Exemple** :
+
 ```typescript
 // Avant (MySQL)
 import { mysqlTable, varchar, timestamp } from "drizzle-orm/mysql-core";
@@ -84,6 +88,7 @@ export const organizations = pgTable("organizations", {
 #### 3. Configuration Docker
 
 **docker-compose.yml** :
+
 ```yaml
 services:
   postgres:
@@ -100,6 +105,7 @@ services:
 #### 4. Variables d'environnement
 
 **.env** :
+
 ```bash
 DB_PORT=5432  # Au lieu de 3306
 DATABASE_URL=postgresql://transi-store:transi-store@localhost:5432/transi-store
@@ -127,6 +133,7 @@ const user = await db.query.users.findFirst({
 ```
 
 **Relations** :
+
 ```typescript
 // drizzle/relations.ts (nouveau fichier)
 import { defineRelations } from "drizzle-orm";
@@ -143,6 +150,7 @@ export const relations = defineRelations(schema, (r) => ({
 #### 6. Dépendances
 
 **package.json** :
+
 ```json
 {
   "dependencies": {

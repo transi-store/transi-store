@@ -30,9 +30,10 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: "Le nom est requis" };
   }
 
-  const slug = customSlug && typeof customSlug === "string"
-    ? customSlug
-    : generateSlug(name);
+  const slug =
+    customSlug && typeof customSlug === "string"
+      ? customSlug
+      : generateSlug(name);
 
   // Vérifier que le slug est disponible
   const available = await isSlugAvailable(slug);
@@ -107,7 +108,12 @@ export default function NewOrganization() {
               >
                 <LuPlus /> Creer l'organisation
               </Button>
-              <Button as="a" href="/orgs" variant="outline" disabled={isSubmitting}>
+              <Button
+                as="a"
+                href="/orgs"
+                variant="outline"
+                disabled={isSubmitting}
+              >
                 Annuler
               </Button>
             </Box>

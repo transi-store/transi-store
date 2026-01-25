@@ -16,36 +16,36 @@ Nous avons créé un **système de thème personnalisé** pour Chakra UI v3 int�
 
 #### Couleurs primaires
 
-| Couleur | Hex | Variable | Usage |
-|---------|-----|----------|-------|
-| **Blue** (brand) | `#00859c` | `$primaryBlue` | Couleur principale, boutons, liens |
+| Couleur             | Hex       | Variable         | Usage                               |
+| ------------------- | --------- | ---------------- | ----------------------------------- |
+| **Blue** (brand)    | `#00859c` | `$primaryBlue`   | Couleur principale, boutons, liens  |
 | **Orange** (accent) | `#ff4024` | `$primaryOrange` | Actions secondaires, CTA importants |
-| **Green** | `#30bf97` | `$primaryGreen` | Succès, validations |
+| **Green**           | `#30bf97` | `$primaryGreen`  | Succès, validations                 |
 
 #### Couleurs sémantiques
 
-| Couleur | Hex | Variable | Usage |
-|---------|-----|----------|-------|
-| **Yellow** | `#ec8d00` | `$alertYellow` | Avertissements |
-| **Red** | `#cf1b01` | `$alertRed` | Erreurs, suppressions |
+| Couleur    | Hex       | Variable       | Usage                 |
+| ---------- | --------- | -------------- | --------------------- |
+| **Yellow** | `#ec8d00` | `$alertYellow` | Avertissements        |
+| **Red**    | `#cf1b01` | `$alertRed`    | Erreurs, suppressions |
 
 #### Couleurs secondaires
 
-| Couleur | Hex | Variable |
-|---------|-----|----------|
-| **Black** | `#001c3c` | `$primaryBlack` |
-| **Gray** | `#49658d` | `$secondaryGray` |
+| Couleur        | Hex       | Variable              |
+| -------------- | --------- | --------------------- |
+| **Black**      | `#001c3c` | `$primaryBlack`       |
+| **Gray**       | `#49658d` | `$secondaryGray`      |
 | **Light gray** | `#d2d7dc` | `$secondaryLightGray` |
-| **White** | `#f7f5f7` | `$secondaryWhite` |
+| **White**      | `#f7f5f7` | `$secondaryWhite`     |
 
 #### Couleurs tertiaires
 
-| Couleur | Hex | Variable |
-|---------|-----|----------|
+| Couleur    | Hex       | Variable          |
+| ---------- | --------- | ----------------- |
 | **Purple** | `#a6427f` | `$tertiaryPurple` |
-| **Gold** | `#c47618` | `$tertiaryGold` |
-| **Cyan** | `#00a7af` | `$tertiaryCyan` |
-| **Iris** | `#6263b3` | `$tertiaryIris` |
+| **Gold**   | `#c47618` | `$tertiaryGold`   |
+| **Cyan**   | `#00a7af` | `$tertiaryCyan`   |
+| **Iris**   | `#6263b3` | `$tertiaryIris`   |
 
 ### Structure du thème
 
@@ -73,7 +73,12 @@ const config = defineConfig({
         brand: {
           solid: { value: "{colors.brand.500}" },
           contrast: { value: "white" },
-          fg: { value: { _light: "{colors.brand.700}", _dark: "{colors.brand.300}" }},
+          fg: {
+            value: {
+              _light: "{colors.brand.700}",
+              _dark: "{colors.brand.300}",
+            },
+          },
           // ...
         },
       },
@@ -105,9 +110,7 @@ Le thème est appliqué globalement via le `ChakraProvider` :
 // app/root.tsx
 import { system } from "~/theme";
 
-<ChakraProvider value={system}>
-  {children}
-</ChakraProvider>
+<ChakraProvider value={system}>{children}</ChakraProvider>;
 ```
 
 ### Composants mis à jour
@@ -137,6 +140,7 @@ import { system } from "~/theme";
 ## Conséquences
 
 ### Positives
+
 - Interface visuellement cohérente avec la marque Mapado
 - Meilleure distinction des actions (création, modification, suppression)
 - Tokens réutilisables dans toute l'application
@@ -144,6 +148,7 @@ import { system } from "~/theme";
 - Auto-complétion TypeScript grâce aux typages générés
 
 ### Négatives
+
 - Nécessite de régénérer les types à chaque modification (`npx @chakra-ui/cli typegen`)
 - Courbe d'apprentissage pour comprendre le système de tokens
 
@@ -166,9 +171,11 @@ npx @chakra-ui/cli typegen app/theme.ts
 ## Fichiers créés/modifiés
 
 ### Créés
+
 - `app/theme.ts` : Configuration du système de thème
 
 ### Modifiés
+
 - `app/root.tsx` : Import et application du thème personnalisé
 - `app/components/Header.tsx` : Couleurs brand
 - Tous les fichiers dans `app/routes/` : Migration `colorScheme` → `colorPalette`

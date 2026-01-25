@@ -4,7 +4,7 @@ type ProjectTranslations = Awaited<ReturnType<typeof getProjectTranslations>>;
 
 export function exportToJSON(
   projectTranslations: ProjectTranslations,
-  locale: string
+  locale: string,
 ): string {
   const result: Record<string, string> = {};
 
@@ -22,7 +22,7 @@ export function exportToJSON(
 
 export function exportAllLanguagesToJSON(
   projectTranslations: ProjectTranslations,
-  locales: string[]
+  locales: string[],
 ): string {
   const result: Record<string, Record<string, string>> = {};
 

@@ -11,22 +11,40 @@ import {
   Input,
   Field,
 } from "@chakra-ui/react";
-import { Form, useActionData, useNavigation, useOutletContext } from "react-router";
+import {
+  Form,
+  useActionData,
+  useNavigation,
+  useOutletContext,
+} from "react-router";
 import { LuPlus, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.settings";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug, getProjectLanguages, addLanguageToProject, removeLanguageFromProject } from "~/lib/projects.server";
+import {
+  getProjectBySlug,
+  getProjectLanguages,
+  addLanguageToProject,
+  removeLanguageFromProject,
+} from "~/lib/projects.server";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
-  project: { id: string; slug: string; name: string; description: string | null };
+  project: {
+    id: string;
+    slug: string;
+    name: string;
+    description: string | null;
+  };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
 };
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
@@ -38,7 +56,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
@@ -143,7 +164,13 @@ export default function ProjectSettings() {
         )}
 
         {languages.length === 0 ? (
-          <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg" mb={4}>
+          <Box
+            p={10}
+            textAlign="center"
+            borderWidth={1}
+            borderRadius="lg"
+            mb={4}
+          >
             <Text color="gray.600" mb={4}>
               Aucune langue configuree
             </Text>
@@ -163,7 +190,11 @@ export default function ProjectSettings() {
                       )}
                     </Box>
                     <Form method="post">
-                      <input type="hidden" name="_action" value="remove_language" />
+                      <input
+                        type="hidden"
+                        name="_action"
+                        value="remove_language"
+                      />
                       <input type="hidden" name="locale" value={lang.locale} />
                       <Button
                         type="submit"
@@ -192,11 +223,7 @@ export default function ProjectSettings() {
                 disabled={isSubmitting}
               />
             </Field.Root>
-            <Button
-              type="submit"
-              colorPalette="brand"
-              loading={isSubmitting}
-            >
+            <Button type="submit" colorPalette="brand" loading={isSubmitting}>
               <LuPlus /> Ajouter une langue
             </Button>
           </HStack>

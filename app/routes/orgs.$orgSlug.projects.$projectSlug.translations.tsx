@@ -26,7 +26,10 @@ type ContextType = {
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -49,7 +52,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { keys, search, page };
 }
 
-export default function ProjectTranslations({ loaderData }: Route.ComponentProps) {
+export default function ProjectTranslations({
+  loaderData,
+}: Route.ComponentProps) {
   const { keys, search, page } = loaderData;
   const { organization, project, languages } = useOutletContext<ContextType>();
   const [searchParams] = useSearchParams();
@@ -103,7 +108,8 @@ export default function ProjectTranslations({ loaderData }: Route.ComponentProps
       {languages.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
           <Text color="gray.600" mb={4}>
-            Ajoutez au moins une langue dans les paramètres pour commencer à traduire
+            Ajoutez au moins une langue dans les paramètres pour commencer à
+            traduire
           </Text>
           <Button
             as={Link}
@@ -134,15 +140,20 @@ export default function ProjectTranslations({ loaderData }: Route.ComponentProps
             <Table.Body>
               {keys.map((key) => {
                 const translatedCount = key.translatedLocales.length;
-                const progressPercent = totalLanguages > 0
-                  ? (translatedCount / totalLanguages) * 100
-                  : 0;
+                const progressPercent =
+                  totalLanguages > 0
+                    ? (translatedCount / totalLanguages) * 100
+                    : 0;
 
                 return (
                   <Table.Row key={key.id}>
                     <Table.Cell>
                       <VStack align="stretch" gap={1}>
-                        <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
+                        <Text
+                          fontFamily="mono"
+                          fontSize="sm"
+                          fontWeight="medium"
+                        >
                           {key.keyName}
                         </Text>
                         {key.description && (
@@ -162,7 +173,11 @@ export default function ProjectTranslations({ loaderData }: Route.ComponentProps
                             {Math.round(progressPercent)}%
                           </Text>
                         </HStack>
-                        <Progress.Root value={progressPercent} size="sm" colorPalette="brand">
+                        <Progress.Root
+                          value={progressPercent}
+                          size="sm"
+                          colorPalette="brand"
+                        >
                           <Progress.Track>
                             <Progress.Range />
                           </Progress.Track>
@@ -170,7 +185,11 @@ export default function ProjectTranslations({ loaderData }: Route.ComponentProps
                         {key.translatedLocales.length > 0 && (
                           <HStack gap={1} flexWrap="wrap">
                             {key.translatedLocales.map((locale) => (
-                              <Badge key={locale} size="sm" colorPalette="brand">
+                              <Badge
+                                key={locale}
+                                size="sm"
+                                colorPalette="brand"
+                              >
                                 {locale.toUpperCase()}
                               </Badge>
                             ))}
@@ -199,10 +218,12 @@ export default function ProjectTranslations({ loaderData }: Route.ComponentProps
               {page > 1 && (
                 <Button
                   as={Link}
-                  to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams({
-                    ...(search && { search }),
-                    page: String(page - 1),
-                  })}`}
+                  to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
+                    {
+                      ...(search && { search }),
+                      page: String(page - 1),
+                    },
+                  )}`}
                 >
                   Page précédente
                 </Button>
@@ -210,10 +231,12 @@ export default function ProjectTranslations({ loaderData }: Route.ComponentProps
               <Text>Page {page}</Text>
               <Button
                 as={Link}
-                to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams({
-                  ...(search && { search }),
-                  page: String(page + 1),
-                })}`}
+                to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
+                  {
+                    ...(search && { search }),
+                    page: String(page + 1),
+                  },
+                )}`}
               >
                 Page suivante
               </Button>

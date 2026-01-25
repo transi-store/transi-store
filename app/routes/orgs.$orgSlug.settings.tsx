@@ -22,18 +22,9 @@ import {
   DialogPositioner,
   Portal,
 } from "@chakra-ui/react";
-import {
-  useLoaderData,
-  Form,
-  useActionData,
-} from "react-router";
+import { useLoaderData, Form, useActionData } from "react-router";
 import React from "react";
-import {
-  LuPlus,
-  LuTrash2,
-  LuCopy,
-  LuTriangleAlert,
-} from "react-icons/lu";
+import { LuPlus, LuTrash2, LuCopy, LuTriangleAlert } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.settings";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -134,8 +125,8 @@ export default function OrganizationSettings() {
             Clés d'API
           </Heading>
           <Text color="gray.600" mb={4}>
-            Les clés d'API permettent d'exporter les traductions de
-            manière automatisée (CI/CD, scripts).
+            Les clés d'API permettent d'exporter les traductions de manière
+            automatisée (CI/CD, scripts).
           </Text>
 
           {/* Affichage de la clé nouvellement créée */}
@@ -149,8 +140,7 @@ export default function OrganizationSettings() {
                 <Alert.Description>
                   <VStack align="stretch" gap={2} mt={2}>
                     <Text fontSize="sm">
-                      Copiez cette clé maintenant, elle ne sera plus
-                      affichée.
+                      Copiez cette clé maintenant, elle ne sera plus affichée.
                     </Text>
                     <HStack>
                       <Code
@@ -164,9 +154,7 @@ export default function OrganizationSettings() {
                       </Code>
                       <Button
                         size="sm"
-                        onClick={() =>
-                          handleCopyKey(actionData.keyValue!)
-                        }
+                        onClick={() => handleCopyKey(actionData.keyValue!)}
                         colorPalette="gray"
                       >
                         <LuCopy /> Copier
@@ -194,27 +182,19 @@ export default function OrganizationSettings() {
           ) : (
             <VStack align="stretch" gap={2}>
               {apiKeys.map((key) => (
-                <Box
-                  key={key.id}
-                  p={4}
-                  borderWidth={1}
-                  borderRadius="md"
-                >
+                <Box key={key.id} p={4} borderWidth={1} borderRadius="md">
                   <HStack justify="space-between">
                     <Box flex={1}>
                       <Text fontWeight="medium">
                         {key.name || "Clé sans nom"}
                       </Text>
                       <Text fontSize="sm" color="gray.600">
-                        Créée le{" "}
-                        {new Date(key.createdAt).toLocaleDateString()}
+                        Créée le {new Date(key.createdAt).toLocaleDateString()}
                         {key.lastUsedAt && (
                           <>
                             {" • "}
                             Dernière utilisation:{" "}
-                            {new Date(
-                              key.lastUsedAt,
-                            ).toLocaleDateString()}
+                            {new Date(key.lastUsedAt).toLocaleDateString()}
                           </>
                         )}
                       </Text>
@@ -225,11 +205,7 @@ export default function OrganizationSettings() {
                         name="intent"
                         value="delete-api-key"
                       />
-                      <input
-                        type="hidden"
-                        name="keyId"
-                        value={key.id}
-                      />
+                      <input type="hidden" name="keyId" value={key.id} />
                       <IconButton
                         type="submit"
                         variant="ghost"
@@ -272,11 +248,7 @@ export default function OrganizationSettings() {
                   </DialogHeader>
                   <DialogCloseTrigger />
                   <Form method="post">
-                    <input
-                      type="hidden"
-                      name="intent"
-                      value="create-api-key"
-                    />
+                    <input type="hidden" name="intent" value="create-api-key" />
                     <DialogBody pb={6}>
                       <VStack align="stretch" gap={4}>
                         <Box>
@@ -312,20 +284,13 @@ export default function OrganizationSettings() {
           </DialogRoot>
 
           {/* Documentation d'utilisation */}
-          <Box
-            mt={6}
-            p={4}
-            borderWidth={1}
-            borderRadius="lg"
-            bg="gray.50"
-          >
+          <Box mt={6} p={4} borderWidth={1} borderRadius="lg" bg="gray.50">
             <Heading as="h4" size="sm" mb={2}>
               Comment utiliser une clé d'API ?
             </Heading>
             <Text fontSize="sm" color="gray.700" mb={2}>
-              Utilisez le header{" "}
-              <Code>Authorization: Bearer YOUR_API_KEY</Code> dans vos
-              requêtes HTTP :
+              Utilisez le header <Code>Authorization: Bearer YOUR_API_KEY</Code>{" "}
+              dans vos requêtes HTTP :
             </Text>
             <Code
               display="block"

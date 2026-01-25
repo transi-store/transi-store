@@ -13,23 +13,26 @@ import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.new";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import {
-  createProject,
-  isProjectSlugAvailable,
-} from "~/lib/projects.server";
+import { createProject, isProjectSlugAvailable } from "~/lib/projects.server";
 import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   return { organization };
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const formData = await request.formData();
   const name = formData.get("name");
@@ -48,7 +51,9 @@ export async function action({ request, params }: Route.ActionArgs) {
   // Vérifier que le slug est disponible dans cette organisation
   const available = await isProjectSlugAvailable(organization.id, slug);
   if (!available) {
-    return { error: `Le slug "${slug}" est deja utilise dans cette organisation` };
+    return {
+      error: `Le slug "${slug}" est deja utilise dans cette organisation`,
+    };
   }
 
   // Créer le projet
@@ -56,7 +61,8 @@ export async function action({ request, params }: Route.ActionArgs) {
     organizationId: organization.id,
     name,
     slug,
-    description: description && typeof description === "string" ? description : undefined,
+    description:
+      description && typeof description === "string" ? description : undefined,
     createdBy: user.userId,
   });
 

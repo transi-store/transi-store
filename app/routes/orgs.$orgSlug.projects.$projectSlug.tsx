@@ -15,7 +15,10 @@ import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {

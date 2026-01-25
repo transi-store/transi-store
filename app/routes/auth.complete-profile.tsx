@@ -8,7 +8,14 @@ import {
   Box,
   Text,
 } from "@chakra-ui/react";
-import { Form, useActionData, useNavigation, redirect, useSearchParams, useLoaderData } from "react-router";
+import {
+  Form,
+  useActionData,
+  useNavigation,
+  redirect,
+  useSearchParams,
+  useLoaderData,
+} from "react-router";
 import type { Route } from "./+types/auth.complete-profile";
 import { requireUser } from "~/lib/session.server";
 import { updateUserName, getUserById } from "~/lib/auth.server";
@@ -56,7 +63,7 @@ export async function action({ request }: Route.ActionArgs) {
     sessionUser.userId,
     sessionUser.email,
     name.trim(),
-    typeof redirectTo === "string" ? redirectTo : "/orgs"
+    typeof redirectTo === "string" ? redirectTo : "/orgs",
   );
 }
 

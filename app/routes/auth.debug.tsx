@@ -42,7 +42,12 @@ export default function AuthDebug() {
               <Heading as="h2" size="md" mb={2}>
                 Generated Authorization URL:
               </Heading>
-              <Code p={4} display="block" whiteSpace="pre-wrap" wordBreak="break-all">
+              <Code
+                p={4}
+                display="block"
+                whiteSpace="pre-wrap"
+                wordBreak="break-all"
+              >
                 {data.url}
               </Code>
             </Box>

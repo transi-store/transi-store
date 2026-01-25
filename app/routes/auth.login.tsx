@@ -6,7 +6,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const redirectTo = url.searchParams.get("redirectTo") || "/";
 
-  const { url: authUrl, codeVerifier, state } = await generateAuthorizationUrl();
+  const {
+    url: authUrl,
+    codeVerifier,
+    state,
+  } = await generateAuthorizationUrl();
 
   const stateCookie = await setOAuthState({
     state,

@@ -71,6 +71,7 @@ Améliorer l'UX en ajoutant des repères visuels sur tous les boutons pour facil
 **Bibliothèque** : react-icons (Lucide Icons)
 
 **Icônes ajoutées** :
+
 - 📝 `LuPencil` : Boutons "Modifier" / "Éditer"
 - ➕ `LuPlus` : Boutons "Ajouter" / "Créer" / "Nouveau"
 - 💾 `LuSave` : Boutons "Enregistrer"
@@ -105,6 +106,7 @@ Remplacer le thème noir et blanc par défaut par un thème coloré utilisant la
 **Fichier créé** : `app/theme.ts`
 
 **Couleurs principales intégrées** :
+
 - 🔵 **Blue (brand)** : #00859c - Couleur principale
 - 🟠 **Orange (accent)** : #ff4024 - Actions secondaires
 - 🟢 **Green** : #30bf97 - Succès
@@ -116,6 +118,7 @@ Remplacer le thème noir et blanc par défaut par un thème coloré utilisant la
 **Migration** : `colorScheme` → `colorPalette` (Chakra UI v3)
 
 **Composants mis à jour** :
+
 - Header : Fond `brand.50`, bordure `brand.200`
 - Tous les boutons principaux : `colorPalette="brand"`
 - Progress bar : `colorPalette="brand"`
@@ -148,6 +151,7 @@ Permettre l'import de traductions depuis des fichiers JSON pour faciliter la mig
 ### Fonctionnalités
 
 **Format supporté** : JSON clé/valeur simple
+
 ```json
 {
   "key.name": "traduction"
@@ -155,18 +159,21 @@ Permettre l'import de traductions depuis des fichiers JSON pour faciliter la mig
 ```
 
 **Options d'import** :
+
 - Sélection de la langue cible parmi les langues du projet
 - Choix de la stratégie :
   - **Skip** (par défaut) : Conserve les traductions existantes
   - **Overwrite** : Remplace les traductions existantes
 
 **Validation** :
+
 - Vérification du format JSON
 - Validation de la structure (objet clé/valeur)
 - Vérification que la langue existe dans le projet
 - Limite de taille : 5 MB
 
 **Feedback** :
+
 - Statistiques détaillées après import
 - Nombre de clés créées
 - Nombre de traductions créées/mises à jour/ignorées
@@ -175,13 +182,16 @@ Permettre l'import de traductions depuis des fichiers JSON pour faciliter la mig
 ### Implémentation
 
 **Fichiers créés** :
+
 - `app/lib/import/json.server.ts` - Logique d'import avec transactions
 - `test-import.json` - Fichier de test
 
 **Fichiers modifiés** :
+
 - `app/routes/orgs.$orgSlug.projects.$projectSlug.keys._index.tsx` - UI et action handler
 
 **Composants UI** :
+
 - Card avec formulaire d'upload
 - Input file avec validation
 - Select de langue
@@ -189,6 +199,7 @@ Permettre l'import de traductions depuis des fichiers JSON pour faciliter la mig
 - Alertes de succès/erreur avec statistiques
 
 **Sécurité** :
+
 - Transaction base de données (all-or-nothing)
 - Validation multi-niveaux (client, serveur, données, DB)
 - Stratégie "skip" par défaut évite l'écrasement accidentel

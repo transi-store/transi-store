@@ -15,7 +15,13 @@ import {
 } from "@chakra-ui/react";
 import { NativeSelect } from "@chakra-ui/react/native-select";
 import { RadioGroup } from "@chakra-ui/react/radio-group";
-import { Link, Form, useSearchParams, useActionData, useNavigation } from "react-router";
+import {
+  Link,
+  Form,
+  useSearchParams,
+  useActionData,
+  useNavigation,
+} from "react-router";
 import { LuPlus, LuPencil, LuUpload } from "react-icons/lu";
 import { useEffect, useRef } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys._index";
@@ -31,7 +37,10 @@ import {
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -59,7 +68,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -211,7 +223,11 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
                 Importer des traductions
               </Heading>
 
-              <Form method="post" encType="multipart/form-data" ref={importFormRef}>
+              <Form
+                method="post"
+                encType="multipart/form-data"
+                ref={importFormRef}
+              >
                 <input type="hidden" name="_action" value="import" />
 
                 <VStack gap={4} align="stretch">
@@ -234,7 +250,10 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
                   <Field.Root required>
                     <Field.Label>Langue cible</Field.Label>
                     <NativeSelect.Root required disabled={isSubmitting}>
-                      <NativeSelect.Field name="locale" placeholder="Choisir une langue">
+                      <NativeSelect.Field
+                        name="locale"
+                        placeholder="Choisir une langue"
+                      >
                         {languages.map((lang) => (
                           <option key={lang.id} value={lang.locale}>
                             {lang.locale.toUpperCase()}
@@ -254,7 +273,9 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
                           <RadioGroup.ItemHiddenInput />
                           <RadioGroup.ItemIndicator />
                           <RadioGroup.ItemText>
-                            <Text fontWeight="medium">Conserver existantes</Text>
+                            <Text fontWeight="medium">
+                              Conserver existantes
+                            </Text>
                             <Text fontSize="sm" color="gray.600">
                               Ne remplace pas les traductions existantes
                             </Text>
@@ -290,16 +311,31 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
 
         {/* Success feedback */}
         {actionData?.success && actionData.importStats && (
-          <Box p={4} bg="green.50" borderRadius="md" borderWidth={1} borderColor="green.200">
+          <Box
+            p={4}
+            bg="green.50"
+            borderRadius="md"
+            borderWidth={1}
+            borderColor="green.200"
+          >
             <Heading as="h4" size="sm" color="green.700" mb={2}>
               ✓ Import réussi !
             </Heading>
             <VStack gap={1} align="stretch" fontSize="sm" color="green.700">
               <Text>• Total : {actionData.importStats.total} entrées</Text>
               <Text>• Clés créées : {actionData.importStats.keysCreated}</Text>
-              <Text>• Traductions créées : {actionData.importStats.translationsCreated}</Text>
-              <Text>• Traductions mises à jour : {actionData.importStats.translationsUpdated}</Text>
-              <Text>• Traductions ignorées : {actionData.importStats.translationsSkipped}</Text>
+              <Text>
+                • Traductions créées :{" "}
+                {actionData.importStats.translationsCreated}
+              </Text>
+              <Text>
+                • Traductions mises à jour :{" "}
+                {actionData.importStats.translationsUpdated}
+              </Text>
+              <Text>
+                • Traductions ignorées :{" "}
+                {actionData.importStats.translationsSkipped}
+              </Text>
             </VStack>
           </Box>
         )}
@@ -332,15 +368,20 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
               <Table.Body>
                 {keys.map((key) => {
                   const translatedCount = key.translatedLocales.length;
-                  const progressPercent = totalLanguages > 0
-                    ? (translatedCount / totalLanguages) * 100
-                    : 0;
+                  const progressPercent =
+                    totalLanguages > 0
+                      ? (translatedCount / totalLanguages) * 100
+                      : 0;
 
                   return (
                     <Table.Row key={key.id}>
                       <Table.Cell>
                         <VStack align="stretch" gap={1}>
-                          <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
+                          <Text
+                            fontFamily="mono"
+                            fontSize="sm"
+                            fontWeight="medium"
+                          >
                             {key.keyName}
                           </Text>
                           {key.description && (
@@ -360,7 +401,11 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
                               {Math.round(progressPercent)}%
                             </Text>
                           </HStack>
-                          <Progress.Root value={progressPercent} size="sm" colorPalette="brand">
+                          <Progress.Root
+                            value={progressPercent}
+                            size="sm"
+                            colorPalette="brand"
+                          >
                             <Progress.Track>
                               <Progress.Range />
                             </Progress.Track>
@@ -368,7 +413,11 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
                           {key.translatedLocales.length > 0 && (
                             <HStack gap={1} flexWrap="wrap">
                               {key.translatedLocales.map((locale) => (
-                                <Badge key={locale} size="sm" colorPalette="brand">
+                                <Badge
+                                  key={locale}
+                                  size="sm"
+                                  colorPalette="brand"
+                                >
                                   {locale.toUpperCase()}
                                 </Badge>
                               ))}
@@ -397,10 +446,12 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
                 {page > 1 && (
                   <Button
                     as={Link}
-                    to={`/orgs/${organization.slug}/projects/${project.slug}/keys?${new URLSearchParams({
-                      ...(search && { search }),
-                      page: String(page - 1),
-                    })}`}
+                    to={`/orgs/${organization.slug}/projects/${project.slug}/keys?${new URLSearchParams(
+                      {
+                        ...(search && { search }),
+                        page: String(page - 1),
+                      },
+                    )}`}
                   >
                     Page précédente
                   </Button>
@@ -408,10 +459,12 @@ export default function ProjectKeys({ loaderData }: Route.ComponentProps) {
                 <Text>Page {page}</Text>
                 <Button
                   as={Link}
-                  to={`/orgs/${organization.slug}/projects/${project.slug}/keys?${new URLSearchParams({
-                    ...(search && { search }),
-                    page: String(page + 1),
-                  })}`}
+                  to={`/orgs/${organization.slug}/projects/${project.slug}/keys?${new URLSearchParams(
+                    {
+                      ...(search && { search }),
+                      page: String(page + 1),
+                    },
+                  )}`}
                 >
                   Page suivante
                 </Button>

@@ -15,7 +15,7 @@ export function exportToXLIFF(
   projectTranslations: ProjectTranslations,
   sourceLocale: string,
   targetLocale: string,
-  projectName: string
+  projectName: string,
 ): string {
   const xml: string[] = [];
 
@@ -25,42 +25,50 @@ export function exportToXLIFF(
       escapeXml(sourceLocale) +
       '" trgLang="' +
       escapeXml(targetLocale) +
-      '">'
+      '">',
   );
   xml.push('  <file id="' + escapeXml(projectName) + '">');
 
   for (const key of projectTranslations) {
-    const sourceTranslation = key.translations.find((t) => t.locale === sourceLocale);
-    const targetTranslation = key.translations.find((t) => t.locale === targetLocale);
+    const sourceTranslation = key.translations.find(
+      (t) => t.locale === sourceLocale,
+    );
+    const targetTranslation = key.translations.find(
+      (t) => t.locale === targetLocale,
+    );
 
     if (sourceTranslation || targetTranslation) {
       xml.push('    <unit id="' + escapeXml(key.keyName) + '">');
 
       if (key.description) {
-        xml.push('      <notes>');
-        xml.push('        <note>' + escapeXml(key.description) + '</note>');
-        xml.push('      </notes>');
+        xml.push("      <notes>");
+        xml.push("        <note>" + escapeXml(key.description) + "</note>");
+        xml.push("      </notes>");
       }
 
-      xml.push('      <segment>');
+      xml.push("      <segment>");
 
       if (sourceTranslation) {
-        xml.push('        <source>' + escapeXml(sourceTranslation.value) + '</source>');
+        xml.push(
+          "        <source>" + escapeXml(sourceTranslation.value) + "</source>",
+        );
       } else {
-        xml.push('        <source></source>');
+        xml.push("        <source></source>");
       }
 
       if (targetTranslation) {
-        xml.push('        <target>' + escapeXml(targetTranslation.value) + '</target>');
+        xml.push(
+          "        <target>" + escapeXml(targetTranslation.value) + "</target>",
+        );
       }
 
-      xml.push('      </segment>');
-      xml.push('    </unit>');
+      xml.push("      </segment>");
+      xml.push("    </unit>");
     }
   }
 
-  xml.push('  </file>');
-  xml.push('</xliff>');
+  xml.push("  </file>");
+  xml.push("</xliff>");
 
   return xml.join("\n");
 }

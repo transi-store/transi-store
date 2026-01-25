@@ -23,7 +23,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     state,
     oauthState.codeVerifier,
     oauthState.state,
-    redirectTo
+    redirectTo,
   );
 
   // Supprimer le cookie d'état OAuth

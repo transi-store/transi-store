@@ -14,12 +14,12 @@ Nous avons décidé d'ajouter des icônes à tous les boutons d'action en utilis
 
 ### Icônes ajoutées
 
-| Action | Icône | Composant |
-|--------|-------|-----------|
-| Modifier/Éditer | `LuPencil` | Boutons d'édition |
-| Ajouter/Créer | `LuPlus` | Boutons de création |
-| Enregistrer | `LuSave` | Boutons de sauvegarde |
-| Supprimer | `LuTrash2` | Boutons de suppression |
+| Action          | Icône      | Composant              |
+| --------------- | ---------- | ---------------------- |
+| Modifier/Éditer | `LuPencil` | Boutons d'édition      |
+| Ajouter/Créer   | `LuPlus`   | Boutons de création    |
+| Enregistrer     | `LuSave`   | Boutons de sauvegarde  |
+| Supprimer       | `LuTrash2` | Boutons de suppression |
 
 ### Implémentation
 
@@ -29,7 +29,7 @@ import { LuPencil, LuPlus, LuSave, LuTrash2 } from "react-icons/lu";
 // Exemple : Bouton avec icône
 <Button colorPalette="brand">
   <LuPlus /> Nouvelle clé
-</Button>
+</Button>;
 ```
 
 ### Modification spécifique
@@ -65,12 +65,14 @@ Pour le bouton d'édition de description, nous avons utilisé un `IconButton` au
 ## Conséquences
 
 ### Positives
+
 - Interface plus intuitive et moderne
 - Meilleure différenciation visuelle des actions
 - Amélioration de l'expérience utilisateur
 - Facilité d'ajout de nouvelles icônes
 
 ### Négatives
+
 - Dépendance supplémentaire (~82 MB, mais tree-shaking efficace)
 - Légère augmentation du bundle (quelques KB)
 

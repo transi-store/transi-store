@@ -21,20 +21,42 @@ export default [
 
   // Projects routes
   route("orgs/:orgSlug/projects/new", "routes/orgs.$orgSlug.projects.new.tsx"),
-  route("orgs/:orgSlug/projects/:projectSlug", "routes/orgs.$orgSlug.projects.$projectSlug.tsx", [
-    index("routes/orgs.$orgSlug.projects.$projectSlug._index.tsx"),
-    route("translations", "routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx"),
-    route("settings", "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx"),
-    route("import-export", "routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx"),
-  ]),
+  route(
+    "orgs/:orgSlug/projects/:projectSlug",
+    "routes/orgs.$orgSlug.projects.$projectSlug.tsx",
+    [
+      index("routes/orgs.$orgSlug.projects.$projectSlug._index.tsx"),
+      route(
+        "translations",
+        "routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx",
+      ),
+      route(
+        "settings",
+        "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
+      ),
+      route(
+        "import-export",
+        "routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx",
+      ),
+    ],
+  ),
 
   // Translation keys routes
-  route("orgs/:orgSlug/projects/:projectSlug/keys/new", "routes/orgs.$orgSlug.projects.$projectSlug.keys.new.tsx"),
-  route("orgs/:orgSlug/projects/:projectSlug/keys/:keyId", "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx"),
+  route(
+    "orgs/:orgSlug/projects/:projectSlug/keys/new",
+    "routes/orgs.$orgSlug.projects.$projectSlug.keys.new.tsx",
+  ),
+  route(
+    "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
+    "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
+  ),
 
   // Search
   route("search", "routes/search.tsx"),
 
   // API routes
-  route("api/orgs/:orgSlug/projects/:projectSlug/export", "routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx"),
+  route(
+    "api/orgs/:orgSlug/projects/:projectSlug/export",
+    "routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx",
+  ),
 ] satisfies RouteConfig;

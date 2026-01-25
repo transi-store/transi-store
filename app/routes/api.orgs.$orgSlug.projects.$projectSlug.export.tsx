@@ -6,7 +6,10 @@ import {
 } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
-import { exportToJSON, exportAllLanguagesToJSON } from "~/lib/export/json.server";
+import {
+  exportToJSON,
+  exportAllLanguagesToJSON,
+} from "~/lib/export/json.server";
 import { exportToXLIFF } from "~/lib/export/xliff.server";
 import {
   getOrganizationByApiKey,
@@ -26,13 +29,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     const org = await getOrganizationByApiKey(apiKey);
 
     if (!org) {
-      return new Response(
-        JSON.stringify({ error: "Invalid API key" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Invalid API key" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Vérifier que l'organisation correspond au slug
@@ -44,7 +44,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         {
           status: 403,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -82,7 +82,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -103,12 +103,13 @@ export async function loader({ request, params }: Route.LoaderArgs) {
       if (!locale) {
         return new Response(
           JSON.stringify({
-            error: "Missing 'locale' parameter. Use ?format=json&locale=fr or ?format=json&all",
+            error:
+              "Missing 'locale' parameter. Use ?format=json&locale=fr or ?format=json&all",
           }),
           {
             status: 400,
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -121,7 +122,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
           {
             status: 400,
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -141,12 +142,13 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     if (!sourceLocale || !targetLocale) {
       return new Response(
         JSON.stringify({
-          error: "Missing 'source' and 'target' parameters. Use ?format=xliff&source=en&target=fr",
+          error:
+            "Missing 'source' and 'target' parameters. Use ?format=xliff&source=en&target=fr",
         }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -159,7 +161,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -171,7 +173,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -179,7 +181,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
       projectTranslations,
       sourceLocale,
       targetLocale,
-      project.name
+      project.name,
     );
 
     const filename = `${project.slug}-${sourceLocale}-${targetLocale}.xliff`;
@@ -199,6 +201,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     {
       status: 400,
       headers: { "Content-Type": "application/json" },
-    }
+    },
   );
 }
