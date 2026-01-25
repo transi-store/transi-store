@@ -10,12 +10,8 @@ if [ -f .env ]; then
   export $(cat .env | grep -v '^#' | xargs)
 fi
 
-# Utiliser les valeurs par défaut si les variables ne sont pas définies
-DB_USER=${DB_USER:-transi-store}
-DB_NAME=${DB_DATABASE:-transi-store}
-
-# Exécuter la migration via Docker
-docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" << 'EOF'
+# SQL à exécuter
+SQL_COMMANDS=$(cat << 'EOF'
 -- Enable pg_trgm extension for fuzzy search
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
@@ -38,8 +34,25 @@ SELECT indexname, tablename FROM pg_indexes
 WHERE indexname LIKE '%_trgm' 
 ORDER BY tablename, indexname;
 EOF
+)
 
-if [ $? -eq 0 ]; then
+# Déterminer comment se connecter à la base de données
+if [ -n "$DATABASE_URL" ]; then
+  # Utiliser DATABASE_URL si défini (connexion distante via Docker)
+  echo "📡 Connexion à la base de données distante via DATABASE_URL..."
+  
+  echo "$SQL_COMMANDS" | docker run --rm -i postgres:17 psql "$FINAL_URL"
+  EXIT_CODE=$?
+else
+  # Utiliser Docker Compose (défaut)
+  echo "🐳 Connexion à la base de données via Docker Compose..."
+  DB_USER=${DB_USER:-transi-store}
+  DB_NAME=${DB_DATABASE:-transi-store}
+  echo "$SQL_COMMANDS" | docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME"
+  EXIT_CODE=$?
+fi
+
+if [ $EXIT_CODE -eq 0 ]; then
   echo "✅ Extension pg_trgm et index GIN créés avec succès!"
   echo ""
   echo "La recherche floue est maintenant activée."
