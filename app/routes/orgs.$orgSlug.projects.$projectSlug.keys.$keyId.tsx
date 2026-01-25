@@ -3,16 +3,20 @@ import {
   Heading,
   VStack,
   Button,
-  Input,
   Field,
   Box,
-  Textarea,
   HStack,
   Text,
   Badge,
   IconButton,
 } from "@chakra-ui/react";
-import { Form, useActionData, useNavigation, redirect, Link } from "react-router";
+import {
+  Form,
+  useActionData,
+  useNavigation,
+  redirect,
+  Link,
+} from "react-router";
 import { useState } from "react";
 import { LuPencil, LuPlus, LuSave, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
@@ -26,10 +30,14 @@ import {
   deleteTranslationKey,
   updateTranslationKey,
 } from "~/lib/translation-keys.server";
+import { IcuEditorClient } from "~/components/icu-editor";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -51,7 +59,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -71,7 +82,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   if (action === "delete") {
     await deleteTranslationKey(key.id);
     return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`,
     );
   }
 
@@ -80,7 +91,10 @@ export async function action({ request, params }: Route.ActionArgs) {
 
     await updateTranslationKey({
       keyId: key.id,
-      description: description && typeof description === "string" ? description : undefined,
+      description:
+        description && typeof description === "string"
+          ? description
+          : undefined,
     });
 
     // Update translations
@@ -99,14 +113,16 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
 
     return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`,
     );
   }
 
   return { error: "Action inconnue" };
 }
 
-export default function EditTranslationKey({ loaderData }: Route.ComponentProps) {
+export default function EditTranslationKey({
+  loaderData,
+}: Route.ComponentProps) {
   const { organization, project, key, languages, translations } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
@@ -114,9 +130,22 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
   const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   // Create a map of translations by locale for easier lookup
-  const translationMap = new Map(
-    translations.map((t) => [t.locale, t.value])
-  );
+  const translationMap = new Map(translations.map((t) => [t.locale, t.value]));
+
+  // State for translation values (for ICU editor)
+  const [translationValues, setTranslationValues] = useState<
+    Record<string, string>
+  >(() => {
+    const initial: Record<string, string> = {};
+    for (const lang of languages) {
+      initial[lang.locale] = translationMap.get(lang.locale) || "";
+    }
+    return initial;
+  });
+
+  const handleTranslationChange = (locale: string, value: string) => {
+    setTranslationValues((prev) => ({ ...prev, [locale]: value }));
+  };
 
   return (
     <Container maxW="container.md" py={10}>
@@ -181,8 +210,8 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
               Aucune langue configurée pour ce projet
             </Text>
             <Text color="yellow.600" mt={2}>
-              Ajoutez des langues dans les paramètres du projet avant de créer des
-              traductions.
+              Ajoutez des langues dans les paramètres du projet avant de créer
+              des traductions.
             </Text>
             <Button
               as={Link}
@@ -197,7 +226,11 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
           <Form method="post">
             <input type="hidden" name="_action" value="update" />
             {!isEditingDescription && (
-              <input type="hidden" name="description" value={key.description || ""} />
+              <input
+                type="hidden"
+                name="description"
+                value={key.description || ""}
+              />
             )}
 
             <VStack gap={4} align="stretch">
@@ -227,7 +260,7 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
                   Traductions
                 </Heading>
 
-                <VStack gap={4} align="stretch">
+                <VStack gap={6} align="stretch">
                   {languages.map((lang) => (
                     <Field.Root key={lang.id}>
                       <Field.Label>
@@ -240,12 +273,16 @@ export default function EditTranslationKey({ loaderData }: Route.ComponentProps)
                           )}
                         </HStack>
                       </Field.Label>
-                      <Textarea
+                      <IcuEditorClient
                         name={`translation_${lang.locale}`}
+                        value={translationValues[lang.locale] || ""}
+                        onChange={(value) =>
+                          handleTranslationChange(lang.locale, value)
+                        }
                         placeholder={`Traduction en ${lang.locale}...`}
-                        defaultValue={translationMap.get(lang.locale) || ""}
                         disabled={isSubmitting}
-                        rows={3}
+                        locale={lang.locale}
+                        showPreview={true}
                       />
                     </Field.Root>
                   ))}
