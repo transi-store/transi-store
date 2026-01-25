@@ -6,18 +6,22 @@ import {
   timestamp,
   uniqueIndex,
   index,
+  serial,
+  integer,
 } from "drizzle-orm/pg-core";
 
 // Utilisateurs (lies a OAuth)
 export const users = pgTable(
   "users",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
+    id: serial("id").primaryKey(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     name: varchar("name", { length: 255 }),
     oauthProvider: varchar("oauth_provider", { length: 50 }).notNull(),
     oauthSubject: varchar("oauth_subject", { length: 255 }).notNull(),
-    lastOrganizationId: varchar("last_organization_id", { length: 36 }),
+    lastOrganizationId: integer("last_organization_id").references(
+      () => organizations.id,
+    ),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -28,7 +32,7 @@ export const users = pgTable(
 
 // Organisations
 export const organizations = pgTable("organizations", {
-  id: varchar("id", { length: 36 }).primaryKey(),
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -39,11 +43,11 @@ export const organizations = pgTable("organizations", {
 export const organizationMembers = pgTable(
   "organization_members",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
-    organizationId: varchar("organization_id", { length: 36 })
+    id: serial("id").primaryKey(),
+    organizationId: integer("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    userId: varchar("user_id", { length: 36 })
+    userId: integer("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -57,15 +61,15 @@ export const organizationMembers = pgTable(
 export const organizationInvitations = pgTable(
   "organization_invitations",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
-    organizationId: varchar("organization_id", { length: 36 })
+    id: serial("id").primaryKey(),
+    organizationId: integer("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     invitationCode: varchar("invitation_code", { length: 32 })
       .notNull()
       .unique(),
     invitedEmail: varchar("invited_email", { length: 255 }).notNull(),
-    invitedBy: varchar("invited_by", { length: 36 })
+    invitedBy: integer("invited_by")
       .notNull()
       .references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -83,13 +87,13 @@ export const organizationInvitations = pgTable(
 export const apiKeys = pgTable(
   "api_keys",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
-    organizationId: varchar("organization_id", { length: 36 })
+    id: serial("id").primaryKey(),
+    organizationId: integer("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     keyValue: varchar("key_value", { length: 32 }).notNull().unique(),
     name: varchar("name", { length: 255 }),
-    createdBy: varchar("created_by", { length: 36 })
+    createdBy: integer("created_by")
       .notNull()
       .references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -102,14 +106,14 @@ export const apiKeys = pgTable(
 export const projects = pgTable(
   "projects",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
-    organizationId: varchar("organization_id", { length: 36 })
+    id: serial("id").primaryKey(),
+    organizationId: integer("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     slug: varchar("slug", { length: 255 }).notNull(),
     description: text("description"),
-    createdBy: varchar("created_by", { length: 36 }).references(() => users.id),
+    createdBy: integer("created_by").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -122,8 +126,8 @@ export const projects = pgTable(
 export const projectLanguages = pgTable(
   "project_languages",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
-    projectId: varchar("project_id", { length: 36 })
+    id: serial("id").primaryKey(),
+    projectId: integer("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     locale: varchar("locale", { length: 10 }).notNull(), // 'fr', 'en', 'de', etc.
@@ -139,8 +143,8 @@ export const projectLanguages = pgTable(
 export const translationKeys = pgTable(
   "translation_keys",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
-    projectId: varchar("project_id", { length: 36 })
+    id: serial("id").primaryKey(),
+    projectId: integer("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     keyName: varchar("key_name", { length: 500 }).notNull(),
@@ -159,8 +163,8 @@ export const translationKeys = pgTable(
 export const translations = pgTable(
   "translations",
   {
-    id: varchar("id", { length: 36 }).primaryKey(),
-    keyId: varchar("key_id", { length: 36 })
+    id: serial("id").primaryKey(),
+    keyId: integer("key_id")
       .notNull()
       .references(() => translationKeys.id, { onDelete: "cascade" }),
     locale: varchar("locale", { length: 10 }).notNull(),

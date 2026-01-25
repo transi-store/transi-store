@@ -52,6 +52,6 @@
     "vite": "^6.0.7"
   },
   "lint-staged": {
-    "{app,docs,drizzle,scripts}/**/*": "prettier --write"
+    "{app,docs,drizzle,scripts}/**/*.{js,ts,tsx,json,css,md}": "prettier --write"
   }
 }
