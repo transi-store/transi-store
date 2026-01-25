@@ -5,9 +5,8 @@ import crypto from "node:crypto";
 import { decodeJwt } from "jose";
 import {
   type OAuthProvider,
-  generateOAuth2AuthorizationUrl,
-  exchangeOAuth2Code,
-  generateGoogleAuthorizationUrl,
+  generateMapadoAuthorizationUrl,
+  exchangeMapadoCode,
   exchangeGoogleCode,
   getGoogleUserInfo,
   type AuthorizationUrlResult,
@@ -15,9 +14,9 @@ import {
 
 export type { OAuthProvider, AuthorizationUrlResult };
 
-// Pour compatibilité avec le code existant - OAuth2 générique
+// Pour compatibilité avec le code existant - Mapado OAuth
 export async function generateAuthorizationUrl(): Promise<AuthorizationUrlResult> {
-  return generateOAuth2AuthorizationUrl();
+  return generateMapadoAuthorizationUrl();
 }
 
 export interface CallbackParams {
@@ -42,7 +41,7 @@ export async function handleCallback(params: CallbackParams) {
   if (params.provider === "google") {
     return handleGoogleCallback(params);
   } else if (params.provider === "mapado") {
-    return handleOAuth2Callback(params);
+    return handleMapadoCallback(params);
   }
 
   throw new Error(`Unknown OAuth provider: ${params.provider}`);
@@ -74,13 +73,13 @@ async function handleGoogleCallback(params: CallbackParams) {
   return user;
 }
 
-async function handleOAuth2Callback(params: CallbackParams) {
+async function handleMapadoCallback(params: CallbackParams) {
   if (!params.codeVerifier) {
-    throw new Error("Code verifier is required for OAuth2");
+    throw new Error("Code verifier is required for Mapado OAuth");
   }
 
   // Échanger le code contre un access token
-  const accessToken = await exchangeOAuth2Code(
+  const accessToken = await exchangeMapadoCode(
     params.code,
     params.codeVerifier,
   );

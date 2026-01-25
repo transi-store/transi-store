@@ -1,4 +1,4 @@
-import { Google } from "arctic";
+import { Google, OAuth2Client } from "arctic";
 import crypto from "node:crypto";
 
 // Configuration OAuth2 générique (existant)
@@ -50,10 +50,6 @@ function generateRandomString(length: number = 43): string {
   return crypto.randomBytes(length).toString("base64url").slice(0, length);
 }
 
-function generateCodeChallenge(codeVerifier: string): string {
-  return crypto.createHash("sha256").update(codeVerifier).digest("base64url");
-}
-
 export interface AuthorizationUrlResult {
   url: string;
   codeVerifier?: string;
@@ -67,6 +63,22 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_REDIRECT_URI) {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URI,
+  );
+}
+
+// Mapado OAuth (via OAuth2Client générique d'Arctic)
+let mapadoClient: OAuth2Client | null = null;
+if (
+  OAUTH_AUTHORIZATION_URL &&
+  OAUTH_TOKEN_URL &&
+  OAUTH_CLIENT_ID &&
+  OAUTH_CLIENT_SECRET &&
+  OAUTH_REDIRECT_URI
+) {
+  mapadoClient = new OAuth2Client(
+    OAUTH_CLIENT_ID,
+    OAUTH_CLIENT_SECRET,
+    OAUTH_REDIRECT_URI,
   );
 }
 
@@ -152,82 +164,43 @@ export async function getGoogleUserInfo(
   return await response.json();
 }
 
-// OAuth2 générique (existant)
-export async function generateOAuth2AuthorizationUrl(): Promise<AuthorizationUrlResult> {
-  if (
-    !OAUTH_AUTHORIZATION_URL ||
-    !OAUTH_TOKEN_URL ||
-    !OAUTH_CLIENT_ID ||
-    !OAUTH_CLIENT_SECRET ||
-    !OAUTH_REDIRECT_URI
-  ) {
+// Mapado OAuth (OAuth2 avec JWT)
+export async function generateMapadoAuthorizationUrl(): Promise<AuthorizationUrlResult> {
+  if (!mapadoClient || !OAUTH_AUTHORIZATION_URL) {
     throw new Error(
-      "OAuth2 is not configured. Missing environment variables: OAUTH_AUTHORIZATION_URL, OAUTH_TOKEN_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI",
+      "Mapado OAuth is not configured. Missing environment variables: OAUTH_AUTHORIZATION_URL, OAUTH_TOKEN_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI",
     );
   }
 
-  const codeVerifier = generateRandomString();
-  const codeChallenge = generateCodeChallenge(codeVerifier);
   const state = generateRandomString();
+  const codeVerifier = generateRandomString();
 
-  const authorizationUrl = new URL(OAUTH_AUTHORIZATION_URL);
-  authorizationUrl.searchParams.set("client_id", OAUTH_CLIENT_ID);
-  authorizationUrl.searchParams.set("redirect_uri", OAUTH_REDIRECT_URI);
-  authorizationUrl.searchParams.set("response_type", "code");
-  if (OAUTH_SCOPES) {
-    authorizationUrl.searchParams.set("scope", OAUTH_SCOPES);
-  }
-  authorizationUrl.searchParams.set("state", state);
-  authorizationUrl.searchParams.set("code_challenge", codeChallenge);
-  authorizationUrl.searchParams.set("code_challenge_method", "S256");
+  // Créer l'URL d'autorisation avec PKCE
+  const scopes = OAUTH_SCOPES ? OAUTH_SCOPES.split(" ") : [];
+  const url = mapadoClient.createAuthorizationURLWithPKCE(
+    OAUTH_AUTHORIZATION_URL,
+    state,
+    0, // CodeChallengeMethod.S256
+    codeVerifier,
+    scopes,
+  );
 
-  return { url: authorizationUrl.toString(), codeVerifier, state };
+  return { url: url.toString(), codeVerifier, state };
 }
 
-interface OAuth2TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in?: number;
-  refresh_token?: string;
-  scope?: string;
-}
-
-export async function exchangeOAuth2Code(
+export async function exchangeMapadoCode(
   code: string,
   codeVerifier: string,
 ): Promise<string> {
-  if (
-    !OAUTH_TOKEN_URL ||
-    !OAUTH_CLIENT_ID ||
-    !OAUTH_CLIENT_SECRET ||
-    !OAUTH_REDIRECT_URI
-  ) {
-    throw new Error("OAuth2 is not configured");
+  if (!mapadoClient || !OAUTH_TOKEN_URL) {
+    throw new Error("Mapado OAuth is not configured");
   }
 
-  const tokenResponse = await fetch(OAUTH_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: OAUTH_REDIRECT_URI,
-      client_id: OAUTH_CLIENT_ID,
-      client_secret: OAUTH_CLIENT_SECRET,
-      code_verifier: codeVerifier,
-    }),
-  });
+  const tokens = await mapadoClient.validateAuthorizationCode(
+    OAUTH_TOKEN_URL,
+    code,
+    codeVerifier,
+  );
 
-  if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    throw new Error(
-      `Token exchange failed: ${tokenResponse.status} ${errorText}`,
-    );
-  }
-
-  const tokens: OAuth2TokenResponse = await tokenResponse.json();
-  return tokens.access_token;
+  return tokens.accessToken();
 }

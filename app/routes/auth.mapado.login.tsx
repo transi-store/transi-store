@@ -1,5 +1,5 @@
 import type { Route } from "./+types/auth.mapado.login";
-import { generateOAuth2AuthorizationUrl } from "~/lib/auth-providers.server";
+import { generateMapadoAuthorizationUrl } from "~/lib/auth-providers.server";
 import { setOAuthState } from "~/lib/oauth-state.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -10,7 +10,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     url: authUrl,
     codeVerifier,
     state,
-  } = await generateOAuth2AuthorizationUrl();
+  } = await generateMapadoAuthorizationUrl();
 
   const stateCookie = await setOAuthState({
     state,
