@@ -32,7 +32,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Si a déjà un name, redirect
   if (dbUser.name) {
     const url = new URL(request.url);
-    const redirectTo = url.searchParams.get("redirectTo") || "/orgs";
+    const redirectTo = url.searchParams.get("redirectTo") || "/";
     return redirect(redirectTo);
   }
 
@@ -44,7 +44,7 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name");
-  const redirectTo = formData.get("redirectTo") || "/orgs";
+  const redirectTo = formData.get("redirectTo") || "/";
 
   // Validation
   if (!name || typeof name !== "string" || name.trim().length === 0) {
@@ -63,7 +63,7 @@ export async function action({ request }: Route.ActionArgs) {
     sessionUser.userId,
     sessionUser.email,
     name.trim(),
-    typeof redirectTo === "string" ? redirectTo : "/orgs",
+    typeof redirectTo === "string" ? redirectTo : "/",
   );
 }
 
@@ -73,7 +73,7 @@ export default function CompleteProfile() {
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
   const isSubmitting = navigation.state === "submitting";
-  const redirectTo = searchParams.get("redirectTo") || "/orgs";
+  const redirectTo = searchParams.get("redirectTo") || "/";
 
   return (
     <Container maxW="container.sm" py={10}>

@@ -8,7 +8,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { FaGoogle } from "react-icons/fa";
 
 export async function loader() {
@@ -17,6 +17,9 @@ export async function loader() {
 
 export default function Login({ loaderData }: Route.ComponentProps) {
   const { providers } = loaderData;
+  const [searchParams] = useSearchParams();
+  const redirectTo =
+    searchParams.get("redirect") || searchParams.get("redirectTo") || "/orgs";
   const enabledProviders = providers.filter((p) => p.enabled);
 
   if (enabledProviders.length === 0) {
@@ -56,7 +59,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                     <Button
                       key={provider.type}
                       as={Link}
-                      to="/auth/google/login"
+                      to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
                       width="full"
                       colorPalette="blue"
                       size="lg"
@@ -70,7 +73,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                     <Button
                       key={provider.type}
                       as={Link}
-                      to="/auth/mapado/login"
+                      to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
                       width="full"
                       colorPalette="brand"
                       size="lg"

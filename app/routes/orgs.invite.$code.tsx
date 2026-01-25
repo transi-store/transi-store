@@ -5,6 +5,7 @@ import {
   Button,
   Box,
   Text,
+  Alert,
 } from "@chakra-ui/react";
 import {
   useLoaderData,
@@ -12,6 +13,7 @@ import {
   Link,
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
+  useActionData,
 } from "react-router";
 import { getUserFromSession } from "~/lib/session.server";
 import {
@@ -57,15 +59,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response("Invitation introuvable", { status: 404 });
   }
 
-  if (invitation.status !== "pending") {
-    throw new Response("Cette invitation n'est plus valide", { status: 410 });
-  }
-
   return { invitation, sessionUser };
 }
 
 export default function AcceptInvitation() {
   const { invitation, sessionUser } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
   return (
     <Container maxW="container.md" py={20}>
@@ -78,6 +77,16 @@ export default function AcceptInvitation() {
             Vous avez été invité à rejoindre l'organisation
           </Text>
         </Box>
+
+        {actionData?.error && (
+          <Alert.Root status="error">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Erreur</Alert.Title>
+              <Alert.Description>{actionData.error}</Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        )}
 
         <Box
           p={8}

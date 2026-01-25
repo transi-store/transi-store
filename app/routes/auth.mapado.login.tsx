@@ -4,7 +4,10 @@ import { setOAuthState } from "~/lib/oauth-state.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const redirectTo = url.searchParams.get("redirectTo") || "/";
+  const redirectTo =
+    url.searchParams.get("redirect") ||
+    url.searchParams.get("redirectTo") ||
+    "/";
 
   const {
     url: authUrl,

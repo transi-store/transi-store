@@ -17,10 +17,10 @@ export async function createInvitation(params: {
   invitedEmail: string;
   invitedBy: string;
 }) {
-  // Vérifier si une invitation en attente existe déjà pour cet email
-  const existingInvitation = await db
-    .select()
-    .from(schema.organizationInvitations)
+  // Supprimer toutes les invitations existantes pour cet email
+  // (les anciennes invitations ne sont plus valides)
+  await db
+    .delete(schema.organizationInvitations)
     .where(
       and(
         eq(
@@ -28,16 +28,8 @@ export async function createInvitation(params: {
           params.organizationId,
         ),
         eq(schema.organizationInvitations.invitedEmail, params.invitedEmail),
-        eq(schema.organizationInvitations.status, "pending"),
       ),
-    )
-    .limit(1);
-
-  if (existingInvitation.length > 0) {
-    throw new Error(
-      "Une invitation en attente existe déjà pour cet utilisateur",
     );
-  }
 
   const invitationCode = generateInvitationCode();
 
@@ -49,7 +41,6 @@ export async function createInvitation(params: {
       invitedEmail: params.invitedEmail,
       invitedBy: params.invitedBy,
       invitationCode,
-      status: "pending",
     })
     .returning();
 
@@ -63,12 +54,7 @@ export async function getPendingInvitations(organizationId: string) {
   const invitations = await db
     .select()
     .from(schema.organizationInvitations)
-    .where(
-      and(
-        eq(schema.organizationInvitations.organizationId, organizationId),
-        eq(schema.organizationInvitations.status, "pending"),
-      ),
-    );
+    .where(eq(schema.organizationInvitations.organizationId, organizationId));
 
   // Récupérer les utilisateurs qui ont invité
   const inviterIds = invitations.map((i) => i.invitedBy);
@@ -141,10 +127,6 @@ export async function acceptInvitation(invitationCode: string, userId: string) {
     throw new Error("Invitation introuvable");
   }
 
-  if (invitation.status !== "pending") {
-    throw new Error("Cette invitation n'est plus valide");
-  }
-
   // Vérifier si l'utilisateur n'est pas déjà membre
   const existingMembership = await db
     .select()
@@ -161,19 +143,15 @@ export async function acceptInvitation(invitationCode: string, userId: string) {
     .limit(1);
 
   if (existingMembership.length > 0) {
-    // Marquer l'invitation comme acceptée même si déjà membre
+    // Déjà membre, on supprime l'invitation et on retourne
     await db
-      .update(schema.organizationInvitations)
-      .set({
-        status: "accepted",
-        acceptedAt: new Date(),
-      })
+      .delete(schema.organizationInvitations)
       .where(eq(schema.organizationInvitations.id, invitation.id));
 
     return invitation.organization!;
   }
 
-  // Transaction : ajouter le membre et marquer l'invitation comme acceptée
+  // Transaction : ajouter le membre et supprimer l'invitation
   await db.transaction(async (tx) => {
     // Ajouter l'utilisateur comme membre
     await tx.insert(schema.organizationMembers).values({
@@ -182,13 +160,9 @@ export async function acceptInvitation(invitationCode: string, userId: string) {
       userId,
     });
 
-    // Marquer l'invitation comme acceptée
+    // Supprimer l'invitation (elle a été utilisée)
     await tx
-      .update(schema.organizationInvitations)
-      .set({
-        status: "accepted",
-        acceptedAt: new Date(),
-      })
+      .delete(schema.organizationInvitations)
       .where(eq(schema.organizationInvitations.id, invitation.id));
   });
 
@@ -196,7 +170,7 @@ export async function acceptInvitation(invitationCode: string, userId: string) {
 }
 
 /**
- * Annule une invitation
+ * Annule une invitation (la supprime)
  */
 export async function cancelInvitation(
   invitationId: string,
@@ -215,15 +189,8 @@ export async function cancelInvitation(
     throw new Error("Invitation introuvable");
   }
 
-  if (invitation[0].status !== "pending") {
-    throw new Error("Cette invitation ne peut plus être annulée");
-  }
-
   await db
-    .update(schema.organizationInvitations)
-    .set({
-      status: "cancelled",
-    })
+    .delete(schema.organizationInvitations)
     .where(eq(schema.organizationInvitations.id, invitationId));
 }
 

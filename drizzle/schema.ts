@@ -68,15 +68,12 @@ export const organizationInvitations = pgTable(
     invitedBy: varchar("invited_by", { length: 36 })
       .notNull()
       .references(() => users.id),
-    status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'accepted', 'cancelled'
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    acceptedAt: timestamp("accepted_at"),
   },
   (table) => [
-    uniqueIndex("unique_org_email_pending").on(
+    uniqueIndex("unique_org_email").on(
       table.organizationId,
       table.invitedEmail,
-      table.status,
     ),
     index("idx_invitation_code").on(table.invitationCode),
   ],
