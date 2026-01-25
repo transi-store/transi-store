@@ -50,12 +50,7 @@ export default function OrganizationProjects() {
       </HStack>
 
       {projects.length === 0 ? (
-        <Box
-          p={10}
-          textAlign="center"
-          borderWidth={1}
-          borderRadius="lg"
-        >
+        <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
           <Text color="gray.600" mb={4}>
             Aucun projet dans cette organisation
           </Text>
@@ -71,9 +66,7 @@ export default function OrganizationProjects() {
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
           {projects.map((project) => (
             <Card.Root key={project.id} asChild>
-              <Link
-                to={`/orgs/${organization.slug}/projects/${project.slug}`}
-              >
+              <Link to={`/orgs/${organization.slug}/projects/${project.slug}`}>
                 <Card.Body>
                   <Heading as="h3" size="md" mb={2}>
                     {project.name}

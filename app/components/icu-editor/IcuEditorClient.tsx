@@ -7,8 +7,8 @@ import { Suspense, lazy } from "react";
 import { Box, Textarea, Spinner } from "@chakra-ui/react";
 
 // Lazy load the editor only on client
-const IcuEditorLazy = lazy(() => 
-  import("./IcuEditor").then((mod) => ({ default: mod.IcuEditor }))
+const IcuEditorLazy = lazy(() =>
+  import("./IcuEditor").then((mod) => ({ default: mod.IcuEditor })),
 );
 
 interface IcuEditorClientProps {
@@ -31,11 +31,11 @@ interface IcuEditorClientProps {
 }
 
 // Fallback during loading
-function EditorFallback({ 
-  value, 
-  placeholder, 
-  disabled, 
-  name 
+function EditorFallback({
+  value,
+  placeholder,
+  disabled,
+  name,
 }: Pick<IcuEditorClientProps, "value" | "placeholder" | "disabled" | "name">) {
   return (
     <Box position="relative">
@@ -47,10 +47,10 @@ function EditorFallback({
         rows={3}
         readOnly
       />
-      <Box 
-        position="absolute" 
-        top="50%" 
-        left="50%" 
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
         transform="translate(-50%, -50%)"
       >
         <Spinner size="sm" color="brand.500" />
@@ -63,8 +63,8 @@ export function IcuEditorClient(props: IcuEditorClientProps) {
   // Check if we're on the client
   if (typeof window === "undefined") {
     return (
-      <EditorFallback 
-        value={props.value} 
+      <EditorFallback
+        value={props.value}
         placeholder={props.placeholder}
         disabled={props.disabled}
         name={props.name}
@@ -75,8 +75,8 @@ export function IcuEditorClient(props: IcuEditorClientProps) {
   return (
     <Suspense
       fallback={
-        <EditorFallback 
-          value={props.value} 
+        <EditorFallback
+          value={props.value}
           placeholder={props.placeholder}
           disabled={props.disabled}
           name={props.name}

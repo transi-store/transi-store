@@ -9,6 +9,7 @@
 L'éditeur de traduction actuel était un simple `<Textarea>` HTML. Pour un outil de traduction professionnel, il est nécessaire de fournir un éditeur plus avancé qui comprend le format ICU MessageFormat utilisé pour l'internationalisation.
 
 Les besoins identifiés étaient :
+
 - Support du ICU message format
 - Coloration syntaxique des éléments variables (`{username}`, `{count, plural, ...}`)
 - Validation en temps réel de la syntaxe ICU
@@ -22,17 +23,18 @@ Nous avons développé un éditeur personnalisé basé sur **CodeMirror 6** avec
 
 #### Pourquoi CodeMirror 6 plutôt que Monaco Editor
 
-| Critère | CodeMirror 6 | Monaco Editor |
-|---------|--------------|---------------|
-| **Taille bundle** | ~150KB | ~2MB |
-| **Modularité** | Très modulaire | Monolithique |
-| **SSR** | Supporte lazy loading | Difficile avec SSR |
-| **Personnalisation** | Extensions faciles | Plus complexe |
-| **React** | Via refs, léger | Package react-monaco-editor lourd |
+| Critère              | CodeMirror 6          | Monaco Editor                     |
+| -------------------- | --------------------- | --------------------------------- |
+| **Taille bundle**    | ~150KB                | ~2MB                              |
+| **Modularité**       | Très modulaire        | Monolithique                      |
+| **SSR**              | Supporte lazy loading | Difficile avec SSR                |
+| **Personnalisation** | Extensions faciles    | Plus complexe                     |
+| **React**            | Via refs, léger       | Package react-monaco-editor lourd |
 
 #### Parser ICU
 
 **Package utilisé** : `@formatjs/icu-messageformat-parser`
+
 - 9M+ téléchargements/semaine
 - Maintenu par l'équipe formatjs
 - Compatible avec intl-messageformat pour le rendu
@@ -57,12 +59,12 @@ app/components/icu-editor/
 
 Le tokenizer personnalisé identifie et colore :
 
-| Élément | Couleur | Exemple |
-|---------|---------|---------|
-| Variables | Bleu (`#0550ae`) | `{username}` |
-| Keywords plural/select | Violet (`#8250df`) | `plural`, `select` |
-| Arguments | Vert (`#116329`) | `one`, `other`, `male` |
-| Accolades | Gris (`#6e7781`) | `{`, `}` |
+| Élément                | Couleur            | Exemple                |
+| ---------------------- | ------------------ | ---------------------- |
+| Variables              | Bleu (`#0550ae`)   | `{username}`           |
+| Keywords plural/select | Violet (`#8250df`) | `plural`, `select`     |
+| Arguments              | Vert (`#116329`)   | `one`, `other`, `male` |
+| Accolades              | Gris (`#6e7781`)   | `{`, `}`               |
 
 #### 2. Validation en temps réel
 
@@ -99,14 +101,16 @@ import { linter } from "@codemirror/lint";
 ```typescript
 // icu-language.ts
 function createIcuDecorator() {
-  return ViewPlugin.fromClass(class {
-    decorations: DecorationSet;
-    
-    buildDecorations(view: EditorView): DecorationSet {
-      const tokens = tokenizeIcu(doc);
-      // Applique les décorations CSS selon le type de token
-    }
-  });
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+
+      buildDecorations(view: EditorView): DecorationSet {
+        const tokens = tokenizeIcu(doc);
+        // Applique les décorations CSS selon le type de token
+      }
+    },
+  );
 }
 ```
 
@@ -117,7 +121,7 @@ function createIcuDecorator() {
 export function icuLinter(): Extension {
   return linter((view) => {
     const errors = validateIcuMessage(text);
-    return errors.map(e => ({
+    return errors.map((e) => ({
       from: e.location?.start.offset ?? 0,
       to: e.location?.end.offset ?? 0,
       severity: "error",
@@ -139,7 +143,7 @@ import { IcuEditorClient } from "~/components/icu-editor";
   placeholder="Traduction en français..."
   locale="fr"
   showPreview={true}
-/>
+/>;
 ```
 
 ### Gestion SSR

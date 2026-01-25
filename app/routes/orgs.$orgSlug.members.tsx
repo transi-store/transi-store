@@ -1,9 +1,4 @@
-import {
-  Heading,
-  VStack,
-  Box,
-  Text,
-} from "@chakra-ui/react";
+import { Heading, VStack, Box, Text } from "@chakra-ui/react";
 import { useLoaderData } from "react-router";
 import type { Route } from "./+types/orgs.$orgSlug.members";
 import { requireUser } from "~/lib/session.server";

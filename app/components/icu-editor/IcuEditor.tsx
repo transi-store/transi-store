@@ -142,7 +142,7 @@ export function IcuEditor({
   const isValid = errors.length === 0;
 
   return (
-    <VStack align="stretch" gap={2}>
+    <VStack align="stretch" gap={2} w="full">
       {/* Hidden input for form submission */}
       {name && <input type="hidden" name={name} value={internalValue} />}
 

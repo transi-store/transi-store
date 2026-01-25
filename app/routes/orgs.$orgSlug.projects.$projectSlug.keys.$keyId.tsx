@@ -9,6 +9,8 @@ import {
   Text,
   Badge,
   IconButton,
+  SimpleGrid,
+  GridItem,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -260,33 +262,62 @@ export default function EditTranslationKey({
                   Traductions
                 </Heading>
 
-                <VStack gap={6} align="stretch">
-                  {languages.map((lang) => (
-                    <Field.Root key={lang.id}>
-                      <Field.Label>
-                        <HStack>
-                          <Text>{lang.locale.toUpperCase()}</Text>
-                          {lang.isDefault && (
-                            <Badge colorPalette="brand" size="sm">
-                              Par défaut
-                            </Badge>
-                          )}
-                        </HStack>
-                      </Field.Label>
-                      <IcuEditorClient
-                        name={`translation_${lang.locale}`}
-                        value={translationValues[lang.locale] || ""}
-                        onChange={(value) =>
-                          handleTranslationChange(lang.locale, value)
-                        }
-                        placeholder={`Traduction en ${lang.locale}...`}
-                        disabled={isSubmitting}
-                        locale={lang.locale}
-                        showPreview={true}
-                      />
-                    </Field.Root>
-                  ))}
-                </VStack>
+                <SimpleGrid columns={2} gap={6}>
+                  {/* Langue par défaut en premier */}
+                  {languages
+                    .filter((lang) => lang.isDefault)
+                    .map((lang) => (
+                      <GridItem key={lang.id}>
+                        <Field.Root>
+                          <Field.Label>
+                            <HStack>
+                              <Text>{lang.locale.toUpperCase()}</Text>
+                              <Badge colorPalette="brand" size="sm">
+                                Par défaut
+                              </Badge>
+                            </HStack>
+                          </Field.Label>
+                          <IcuEditorClient
+                            name={`translation_${lang.locale}`}
+                            value={translationValues[lang.locale] || ""}
+                            onChange={(value) =>
+                              handleTranslationChange(lang.locale, value)
+                            }
+                            placeholder={`Traduction en ${lang.locale}...`}
+                            disabled={isSubmitting}
+                            locale={lang.locale}
+                            showPreview={true}
+                          />
+                        </Field.Root>
+                      </GridItem>
+                    ))}
+
+                  {/* Autres langues */}
+                  {languages
+                    .filter((lang) => !lang.isDefault)
+                    .map((lang) => (
+                      <GridItem key={lang.id}>
+                        <Field.Root>
+                          <Field.Label>
+                            <HStack>
+                              <Text>{lang.locale.toUpperCase()}</Text>
+                            </HStack>
+                          </Field.Label>
+                          <IcuEditorClient
+                            name={`translation_${lang.locale}`}
+                            value={translationValues[lang.locale] || ""}
+                            onChange={(value) =>
+                              handleTranslationChange(lang.locale, value)
+                            }
+                            placeholder={`Traduction en ${lang.locale}...`}
+                            disabled={isSubmitting}
+                            locale={lang.locale}
+                            showPreview={true}
+                          />
+                        </Field.Root>
+                      </GridItem>
+                    ))}
+                </SimpleGrid>
               </Box>
 
               <Box display="flex" gap={3} mt={6}>

@@ -48,10 +48,15 @@ export function parseImportJSON(fileContent: string): ParseResult {
     const parsed = JSON.parse(fileContent);
 
     // Validate structure: must be an object
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
       return {
         success: false,
-        error: "Le fichier doit contenir un objet JSON avec des paires clé/valeur",
+        error:
+          "Le fichier doit contenir un objet JSON avec des paires clé/valeur",
       };
     }
 
@@ -88,12 +93,16 @@ export function validateImportData(data: Record<string, string>): string[] {
 
     // Check key length (database limit is 500)
     if (key.length > 500) {
-      errors.push(`La clé "${key.substring(0, 50)}..." est trop longue (maximum 500 caractères)`);
+      errors.push(
+        `La clé "${key.substring(0, 50)}..." est trop longue (maximum 500 caractères)`,
+      );
     }
 
     // Check value is a string
     if (typeof value !== "string") {
-      errors.push(`La valeur pour la clé "${key}" doit être une chaîne de caractères`);
+      errors.push(
+        `La valeur pour la clé "${key}" doit être une chaîne de caractères`,
+      );
     }
   }
 
@@ -105,7 +114,7 @@ export function validateImportData(data: Record<string, string>): string[] {
  * Processes all keys in a transaction (all or nothing)
  */
 export async function importTranslations(
-  params: ImportParams
+  params: ImportParams,
 ): Promise<ImportResult> {
   const { projectId, locale, data, strategy } = params;
 
@@ -128,7 +137,10 @@ export async function importTranslations(
       for (const [keyName, value] of entries) {
         try {
           // 1. Check if translation key exists
-          let translationKey = await getTranslationKeyByName(projectId, keyName);
+          let translationKey = await getTranslationKeyByName(
+            projectId,
+            keyName,
+          );
 
           // 2. Create key if it doesn't exist
           if (!translationKey) {

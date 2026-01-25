@@ -4,7 +4,15 @@
  */
 
 import { useMemo, useState } from "react";
-import { Box, VStack, HStack, Input, Text, Badge, Field } from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  HStack,
+  Input,
+  Text,
+  Badge,
+  Field,
+} from "@chakra-ui/react";
 import { IntlMessageFormat } from "intl-messageformat";
 import { extractVariables } from "./icu-linter";
 
@@ -15,11 +23,15 @@ interface IcuPreviewProps {
 
 export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
   const variables = useMemo(() => extractVariables(message), [message]);
-  
+
   // Default values for common variable types
   const getDefaultValue = (varName: string): string | number => {
     const lowerName = varName.toLowerCase();
-    if (lowerName.includes("count") || lowerName.includes("number") || lowerName.includes("qty")) {
+    if (
+      lowerName.includes("count") ||
+      lowerName.includes("number") ||
+      lowerName.includes("qty")
+    ) {
       return 5;
     }
     if (lowerName.includes("name") || lowerName.includes("user")) {
@@ -61,11 +73,14 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
     try {
       const formatter = new IntlMessageFormat(message, locale);
       const result = formatter.format(values);
-      return { formatted: typeof result === "string" ? result : String(result), error: null };
+      return {
+        formatted: typeof result === "string" ? result : String(result),
+        error: null,
+      };
     } catch (e) {
-      return { 
-        formatted: "", 
-        error: e instanceof Error ? e.message : "Erreur de formatage" 
+      return {
+        formatted: "",
+        error: e instanceof Error ? e.message : "Erreur de formatage",
       };
     }
   }, [message, locale, values]);
@@ -94,7 +109,13 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
     <VStack align="stretch" gap={3}>
       {/* Variables input */}
       {variables.length > 0 && (
-        <Box p={3} bg="blue.50" borderRadius="md" borderWidth={1} borderColor="blue.200">
+        <Box
+          p={3}
+          bg="blue.50"
+          borderRadius="md"
+          borderWidth={1}
+          borderColor="blue.200"
+        >
           <Text fontSize="sm" fontWeight="medium" color="blue.700" mb={2}>
             Variables détectées :
           </Text>
@@ -120,18 +141,25 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
       )}
 
       {/* Preview */}
-      <Box 
-        p={3} 
-        bg={error ? "red.50" : "green.50"} 
-        borderRadius="md" 
+      <Box
+        p={3}
+        bg={error ? "red.50" : "green.50"}
+        borderRadius="md"
         borderWidth={1}
         borderColor={error ? "red.200" : "green.200"}
       >
-        <Text fontSize="sm" fontWeight="medium" color={error ? "red.700" : "green.700"} mb={1}>
+        <Text
+          fontSize="sm"
+          fontWeight="medium"
+          color={error ? "red.700" : "green.700"}
+          mb={1}
+        >
           {error ? "Erreur :" : "Aperçu :"}
         </Text>
         {error ? (
-          <Text color="red.600" fontSize="sm">{error}</Text>
+          <Text color="red.600" fontSize="sm">
+            {error}
+          </Text>
         ) : (
           <Text color="green.800">{formatted || <em>Message vide</em>}</Text>
         )}

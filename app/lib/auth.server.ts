@@ -74,8 +74,8 @@ interface OAuth2TokenResponse {
 }
 
 interface JWTPayload {
-  sub: string;      // User ID (requis)
-  email?: string;   // Email (optionnel dans JWT)
+  sub: string; // User ID (requis)
+  email?: string; // Email (optionnel dans JWT)
 }
 
 export async function handleCallback(params: CallbackParams) {
@@ -201,7 +201,12 @@ export async function exchangeCodeForUser(
   if (!user.name) {
     const params = new URLSearchParams({ redirectTo });
     // Créer la session même sans name pour que l'utilisateur soit authentifié
-    return createUserSession(user.id, user.email, undefined, `/auth/complete-profile?${params}`);
+    return createUserSession(
+      user.id,
+      user.email,
+      undefined,
+      `/auth/complete-profile?${params}`,
+    );
   }
 
   return createUserSession(user.id, user.email, user.name, redirectTo);
