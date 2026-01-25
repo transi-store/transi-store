@@ -9,6 +9,7 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { Form, useActionData, useNavigation, redirect } from "react-router";
+import { IcuEditorClient } from "~/components/icu-editor";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.new";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -17,6 +18,7 @@ import {
   createTranslationKey,
   getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
+import { getTranslationsUrl, getKeyUrl } from "~/lib/routes-helpers";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -69,8 +71,16 @@ export async function action({ request, params }: Route.ActionArgs) {
       description && typeof description === "string" ? description : undefined,
   });
 
+  // Construire l'URL de redirection vers la recherche
+  const redirectUrl = getTranslationsUrl(
+    params.orgSlug,
+    params.projectSlug,
+    keyName,
+  );
+
+  // Rediriger vers la page de modification de la clé avec l'URL de recherche en redirect
   return redirect(
-    `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys/${keyId}`,
+    `${getKeyUrl(params.orgSlug, params.projectSlug, keyId)}?redirect=${encodeURIComponent(redirectUrl)}`,
   );
 }
 
@@ -132,7 +142,7 @@ export default function NewTranslationKey({
               </Button>
               <Button
                 as="a"
-                href={`/orgs/${organization.slug}/projects/${project.slug}/translations`}
+                href={getTranslationsUrl(organization.slug, project.slug)}
                 variant="outline"
                 disabled={isSubmitting}
               >

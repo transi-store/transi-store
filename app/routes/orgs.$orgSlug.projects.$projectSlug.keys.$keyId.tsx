@@ -33,6 +33,11 @@ import {
   updateTranslationKey,
 } from "~/lib/translation-keys.server";
 import { IcuEditorClient } from "~/components/icu-editor";
+import {
+  getTranslationsUrl,
+  getRedirectUrlFromRequest,
+  getRedirectUrlFromFormData,
+} from "~/lib/routes-helpers";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -56,7 +61,13 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const languages = await getProjectLanguages(project.id);
   const translations = await getTranslationsForKey(key.id);
 
-  return { organization, project, key, languages, translations };
+  const redirectUrl = getRedirectUrlFromRequest(
+    request,
+    params.orgSlug,
+    params.projectSlug,
+  );
+
+  return { organization, project, key, languages, translations, redirectUrl };
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -83,9 +94,14 @@ export async function action({ request, params }: Route.ActionArgs) {
 
   if (action === "delete") {
     await deleteTranslationKey(key.id);
-    return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`,
+
+    const redirectUrl = getRedirectUrlFromFormData(
+      formData,
+      params.orgSlug,
+      params.projectSlug,
     );
+
+    return redirect(redirectUrl);
   }
 
   if (action === "update") {
@@ -114,9 +130,13 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
     }
 
-    return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations`,
+    const redirectUrl = getRedirectUrlFromFormData(
+      formData,
+      params.orgSlug,
+      params.projectSlug,
     );
+
+    return redirect(redirectUrl);
   }
 
   return { error: "Action inconnue" };
@@ -125,7 +145,8 @@ export async function action({ request, params }: Route.ActionArgs) {
 export default function EditTranslationKey({
   loaderData,
 }: Route.ComponentProps) {
-  const { organization, project, key, languages, translations } = loaderData;
+  const { organization, project, key, languages, translations, redirectUrl } =
+    loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -188,6 +209,7 @@ export default function EditTranslationKey({
           </Box>
           <Form method="post">
             <input type="hidden" name="_action" value="delete" />
+            <input type="hidden" name="redirectUrl" value={redirectUrl} />
             <Button
               type="submit"
               colorPalette="red"
@@ -227,6 +249,7 @@ export default function EditTranslationKey({
         ) : (
           <Form method="post">
             <input type="hidden" name="_action" value="update" />
+            <input type="hidden" name="redirectUrl" value={redirectUrl} />
             {!isEditingDescription && (
               <input
                 type="hidden"
@@ -331,7 +354,7 @@ export default function EditTranslationKey({
                 </Button>
                 <Button
                   as={Link}
-                  to={`/orgs/${organization.slug}/projects/${project.slug}/translations`}
+                  to={getTranslationsUrl(organization.slug, project.slug)}
                   variant="outline"
                   disabled={isSubmitting}
                 >
