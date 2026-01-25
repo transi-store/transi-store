@@ -17,15 +17,15 @@ const sessionStorage = createCookieSessionStorage({
 });
 
 export interface SessionData {
-  userId: string;
+  userId: number;
   email: string;
   name?: string;
-  lastOrganizationId?: string;
+  lastOrganizationId?: number;
   lastOrganizationSlug?: string;
 }
 
 export async function createUserSession(
-  userId: string,
+  userId: number,
   email: string,
   name: string | undefined,
   redirectTo: string,
@@ -89,7 +89,7 @@ export async function logout(request: Request) {
 
 export async function updateSessionLastOrganization(
   request: Request,
-  organizationId: string,
+  organizationId: number,
   organizationSlug: string,
 ): Promise<string> {
   const session = await getUserSession(request);

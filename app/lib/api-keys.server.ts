@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "crypto";
+import { randomBytes } from "crypto";
 import { db, schema } from "./db.server";
 import { eq, and } from "drizzle-orm";
 import type { ApiKey } from "../../drizzle/schema";
@@ -12,9 +12,9 @@ export function generateApiKey(): string {
 }
 
 interface CreateApiKeyParams {
-  organizationId: string;
+  organizationId: number;
   name?: string;
-  createdBy: string;
+  createdBy: number;
 }
 
 /**
@@ -22,19 +22,20 @@ interface CreateApiKeyParams {
  */
 export async function createApiKey(
   params: CreateApiKeyParams,
-): Promise<{ id: string; keyValue: string }> {
-  const id = randomUUID();
+): Promise<{ id: number; keyValue: string }> {
   const keyValue = generateApiKey();
 
-  await db.insert(schema.apiKeys).values({
-    id,
-    organizationId: params.organizationId,
-    keyValue,
-    name: params.name || null,
-    createdBy: params.createdBy,
-  });
+  const [apiKey] = await db
+    .insert(schema.apiKeys)
+    .values({
+      organizationId: params.organizationId,
+      keyValue,
+      name: params.name || null,
+      createdBy: params.createdBy,
+    })
+    .returning();
 
-  return { id, keyValue };
+  return { id: apiKey.id, keyValue };
 }
 
 /**
@@ -42,7 +43,7 @@ export async function createApiKey(
  * Note: Ne retourne pas les valeurs des clés (keyValue) pour des raisons de sécurité
  */
 export async function getOrganizationApiKeys(
-  organizationId: string,
+  organizationId: number,
 ): Promise<Omit<ApiKey, "keyValue">[]> {
   const keys = await db
     .select({
@@ -65,8 +66,8 @@ export async function getOrganizationApiKeys(
  * Vérifie que la clé appartient bien à l'organisation spécifiée
  */
 export async function deleteApiKey(
-  id: string,
-  organizationId: string,
+  id: number,
+  organizationId: number,
 ): Promise<void> {
   await db
     .delete(schema.apiKeys)
@@ -84,7 +85,7 @@ export async function deleteApiKey(
  */
 export async function getOrganizationByApiKey(
   keyValue: string,
-): Promise<{ id: string; slug: string; name: string } | null> {
+): Promise<{ id: number; slug: string; name: string } | null> {
   const result = await db
     .select({
       id: schema.organizations.id,

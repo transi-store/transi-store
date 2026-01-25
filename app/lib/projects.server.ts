@@ -1,37 +1,37 @@
 import { db, schema } from "./db.server";
 import { eq, and } from "drizzle-orm";
 
-export async function getProjectBySlug(organizationId: string, slug: string) {
+export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
     where: { organizationId, slug },
   });
 }
 
 interface CreateProjectParams {
-  organizationId: string;
+  organizationId: number;
   name: string;
   slug: string;
   description?: string;
-  createdBy: string;
+  createdBy: number;
 }
 
 export async function createProject(params: CreateProjectParams) {
-  const projectId = crypto.randomUUID();
+  const [project] = await db
+    .insert(schema.projects)
+    .values({
+      organizationId: params.organizationId,
+      name: params.name,
+      slug: params.slug,
+      description: params.description,
+      createdBy: params.createdBy,
+    })
+    .returning();
 
-  await db.insert(schema.projects).values({
-    id: projectId,
-    organizationId: params.organizationId,
-    name: params.name,
-    slug: params.slug,
-    description: params.description,
-    createdBy: params.createdBy,
-  });
-
-  return projectId;
+  return project.id;
 }
 
 export async function isProjectSlugAvailable(
-  organizationId: string,
+  organizationId: number,
   slug: string,
 ): Promise<boolean> {
   const existing = await db.query.projects.findFirst({
@@ -41,33 +41,33 @@ export async function isProjectSlugAvailable(
   return !existing;
 }
 
-export async function getProjectLanguages(projectId: string) {
+export async function getProjectLanguages(projectId: number) {
   return await db.query.projectLanguages.findMany({
     where: { projectId },
   });
 }
 
 interface AddLanguageParams {
-  projectId: string;
+  projectId: number;
   locale: string;
   isDefault?: boolean;
 }
 
 export async function addLanguageToProject(params: AddLanguageParams) {
-  const languageId = crypto.randomUUID();
+  const [language] = await db
+    .insert(schema.projectLanguages)
+    .values({
+      projectId: params.projectId,
+      locale: params.locale,
+      isDefault: params.isDefault || false,
+    })
+    .returning();
 
-  await db.insert(schema.projectLanguages).values({
-    id: languageId,
-    projectId: params.projectId,
-    locale: params.locale,
-    isDefault: params.isDefault || false,
-  });
-
-  return languageId;
+  return language.id;
 }
 
 export async function removeLanguageFromProject(
-  projectId: string,
+  projectId: number,
   locale: string,
 ) {
   await db

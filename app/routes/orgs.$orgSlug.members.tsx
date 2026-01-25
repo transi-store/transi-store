@@ -88,7 +88,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   if (intent === "cancel-invitation") {
-    const invitationId = formData.get("invitationId") as string;
+    const invitationId = parseInt(formData.get("invitationId") as string, 10);
 
     try {
       await cancelInvitation(invitationId, organization.id);
@@ -105,7 +105,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   if (intent === "remove-member") {
-    const membershipId = formData.get("membershipId") as string;
+    const membershipId = parseInt(formData.get("membershipId") as string, 10);
 
     try {
       await removeMemberFromOrganization(membershipId, organization.id);

@@ -2,7 +2,7 @@ import { db, schema } from "./db.server";
 import { eq, inArray } from "drizzle-orm";
 import type { SessionData } from "./session.server";
 
-export async function getUserOrganizations(userId: string) {
+export async function getUserOrganizations(userId: number) {
   // Récupérer les IDs des organisations dont l'utilisateur est membre
   const memberships = await db
     .select({
@@ -33,8 +33,8 @@ export async function getOrganizationBySlug(slug: string) {
 }
 
 export async function isUserMemberOfOrganization(
-  userId: string,
-  organizationId: string,
+  userId: number,
+  organizationId: number,
 ): Promise<boolean> {
   const membership = await db.query.organizationMembers.findFirst({
     where: { userId, organizationId },
@@ -68,29 +68,32 @@ export async function requireOrganizationMembership(
 interface CreateOrganizationParams {
   name: string;
   slug: string;
-  createdBy: string;
+  createdBy: number;
 }
 
 export async function createOrganization(params: CreateOrganizationParams) {
-  const organizationId = crypto.randomUUID();
+  let organizationId: number;
 
   await db.transaction(async (tx) => {
     // Créer l'organisation
-    await tx.insert(schema.organizations).values({
-      id: organizationId,
-      name: params.name,
-      slug: params.slug,
-    });
+    const [org] = await tx
+      .insert(schema.organizations)
+      .values({
+        name: params.name,
+        slug: params.slug,
+      })
+      .returning();
+
+    organizationId = org.id;
 
     // Ajouter le créateur comme membre
     await tx.insert(schema.organizationMembers).values({
-      id: crypto.randomUUID(),
-      organizationId,
+      organizationId: org.id,
       userId: params.createdBy,
     });
   });
 
-  return organizationId;
+  return organizationId!;
 }
 
 export async function isSlugAvailable(slug: string): Promise<boolean> {
@@ -102,8 +105,8 @@ export async function isSlugAvailable(slug: string): Promise<boolean> {
 }
 
 export async function updateUserLastOrganization(
-  userId: string,
-  organizationId: string,
+  userId: number,
+  organizationId: number,
 ): Promise<void> {
   await db
     .update(schema.users)
@@ -114,7 +117,7 @@ export async function updateUserLastOrganization(
     .where(eq(schema.users.id, userId));
 }
 
-export async function getOrganizationById(organizationId: string) {
+export async function getOrganizationById(organizationId: number) {
   return await db.query.organizations.findFirst({
     where: { id: organizationId },
   });

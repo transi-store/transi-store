@@ -2,13 +2,13 @@ import { db, schema } from "./db.server";
 import { eq, and, or, inArray, sql, desc } from "drizzle-orm";
 
 export interface SearchResult {
-  keyId: string;
+  keyId: number;
   keyName: string;
   keyDescription: string | null;
-  projectId: string;
+  projectId: number;
   projectName: string;
   projectSlug: string;
-  organizationId: string;
+  organizationId: number;
   organizationName: string;
   organizationSlug: string;
   translationLocale?: string;
@@ -18,11 +18,11 @@ export interface SearchResult {
 }
 
 export async function globalSearch(
-  userId: string,
+  userId: number,
   query: string,
   options?: {
-    organizationId?: string;
-    projectId?: string;
+    organizationId?: number;
+    projectId?: number;
     locale?: string;
     limit?: number;
   },

@@ -52,7 +52,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     throw new Response("Project not found", { status: 404 });
   }
 
-  const key = await getTranslationKeyById(params.keyId);
+  const key = await getTranslationKeyById(parseInt(params.keyId, 10));
 
   if (!key || key.projectId !== project.id) {
     throw new Response("Translation key not found", { status: 404 });
@@ -83,7 +83,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     throw new Response("Project not found", { status: 404 });
   }
 
-  const key = await getTranslationKeyById(params.keyId);
+  const key = await getTranslationKeyById(parseInt(params.keyId, 10));
 
   if (!key || key.projectId !== project.id) {
     throw new Response("Translation key not found", { status: 404 });

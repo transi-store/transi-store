@@ -1,7 +1,6 @@
 import { db, schema } from "./db.server";
 import { eq } from "drizzle-orm";
 import { createUserSession } from "./session.server";
-import crypto from "node:crypto";
 import { decodeJwt } from "jose";
 import {
   type OAuthProvider,
@@ -141,17 +140,18 @@ async function upsertUser(params: UpsertUserParams) {
   }
 
   // Créer un nouvel utilisateur
-  const userId = crypto.randomUUID();
-  await db.insert(schema.users).values({
-    id: userId,
-    oauthProvider: params.oauthProvider,
-    oauthSubject: params.oauthSubject,
-    email: params.email,
-    name: params.name,
-  });
+  const [newUser] = await db
+    .insert(schema.users)
+    .values({
+      oauthProvider: params.oauthProvider,
+      oauthSubject: params.oauthSubject,
+      email: params.email,
+      name: params.name,
+    })
+    .returning();
 
   return {
-    id: userId,
+    id: newUser.id,
     email: params.email,
     name: params.name, // Pour nouveau user, retourner le name du param (undefined si nouveau)
   };
@@ -188,13 +188,13 @@ export async function exchangeCodeForUser(
   return createUserSession(user.id, user.email, user.name, redirectTo);
 }
 
-export async function getUserById(userId: string) {
+export async function getUserById(userId: number) {
   return await db.query.users.findFirst({
     where: { id: userId },
   });
 }
 
-export async function updateUserName(userId: string, name: string) {
+export async function updateUserName(userId: number, name: string) {
   await db
     .update(schema.users)
     .set({

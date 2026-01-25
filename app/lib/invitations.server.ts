@@ -13,9 +13,9 @@ function generateInvitationCode(): string {
  * Crée une invitation pour rejoindre une organisation
  */
 export async function createInvitation(params: {
-  organizationId: string;
+  organizationId: number;
   invitedEmail: string;
-  invitedBy: string;
+  invitedBy: number;
 }) {
   // Supprimer toutes les invitations existantes pour cet email
   // (les anciennes invitations ne sont plus valides)
@@ -36,7 +36,6 @@ export async function createInvitation(params: {
   const [invitation] = await db
     .insert(schema.organizationInvitations)
     .values({
-      id: crypto.randomUUID(),
       organizationId: params.organizationId,
       invitedEmail: params.invitedEmail,
       invitedBy: params.invitedBy,
@@ -50,7 +49,7 @@ export async function createInvitation(params: {
 /**
  * Récupère toutes les invitations en attente pour une organisation
  */
-export async function getPendingInvitations(organizationId: string) {
+export async function getPendingInvitations(organizationId: number) {
   const invitations = await db
     .select()
     .from(schema.organizationInvitations)
@@ -120,7 +119,7 @@ export async function getInvitationByCode(invitationCode: string) {
 /**
  * Accepte une invitation et ajoute l'utilisateur à l'organisation
  */
-export async function acceptInvitation(invitationCode: string, userId: string) {
+export async function acceptInvitation(invitationCode: string, userId: number) {
   const invitation = await getInvitationByCode(invitationCode);
 
   if (!invitation) {
@@ -155,7 +154,6 @@ export async function acceptInvitation(invitationCode: string, userId: string) {
   await db.transaction(async (tx) => {
     // Ajouter l'utilisateur comme membre
     await tx.insert(schema.organizationMembers).values({
-      id: crypto.randomUUID(),
       organizationId: invitation.organizationId,
       userId,
     });
@@ -173,8 +171,8 @@ export async function acceptInvitation(invitationCode: string, userId: string) {
  * Annule une invitation (la supprime)
  */
 export async function cancelInvitation(
-  invitationId: string,
-  organizationId: string,
+  invitationId: number,
+  organizationId: number,
 ) {
   const invitation = await db
     .select()
@@ -198,8 +196,8 @@ export async function cancelInvitation(
  * Supprime un membre d'une organisation
  */
 export async function removeMemberFromOrganization(
-  membershipId: string,
-  organizationId: string,
+  membershipId: number,
+  organizationId: number,
 ) {
   const membership = await db
     .select()

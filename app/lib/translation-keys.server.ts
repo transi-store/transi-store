@@ -2,7 +2,7 @@ import { db, schema } from "./db.server";
 import { eq, and, inArray, like, or } from "drizzle-orm";
 
 export async function getTranslationKeys(
-  projectId: string,
+  projectId: number,
   options?: {
     search?: string;
     limit?: number;
@@ -48,14 +48,14 @@ export async function getTranslationKeys(
   }));
 }
 
-export async function getTranslationKeyById(keyId: string) {
+export async function getTranslationKeyById(keyId: number) {
   return await db.query.translationKeys.findFirst({
     where: { id: keyId },
   });
 }
 
 export async function getTranslationKeyByName(
-  projectId: string,
+  projectId: number,
   keyName: string,
 ) {
   return await db.query.translationKeys.findFirst({
@@ -64,26 +64,26 @@ export async function getTranslationKeyByName(
 }
 
 interface CreateTranslationKeyParams {
-  projectId: string;
+  projectId: number;
   keyName: string;
   description?: string;
 }
 
 export async function createTranslationKey(params: CreateTranslationKeyParams) {
-  const keyId = crypto.randomUUID();
+  const [key] = await db
+    .insert(schema.translationKeys)
+    .values({
+      projectId: params.projectId,
+      keyName: params.keyName,
+      description: params.description,
+    })
+    .returning();
 
-  await db.insert(schema.translationKeys).values({
-    id: keyId,
-    projectId: params.projectId,
-    keyName: params.keyName,
-    description: params.description,
-  });
-
-  return keyId;
+  return key.id;
 }
 
 interface UpdateTranslationKeyParams {
-  keyId: string;
+  keyId: number;
   keyName?: string;
   description?: string;
 }
@@ -107,7 +107,7 @@ export async function updateTranslationKey(params: UpdateTranslationKeyParams) {
   }
 }
 
-export async function deleteTranslationKey(keyId: string) {
+export async function deleteTranslationKey(keyId: number) {
   await db
     .delete(schema.translationKeys)
     .where(eq(schema.translationKeys.id, keyId));
@@ -115,14 +115,14 @@ export async function deleteTranslationKey(keyId: string) {
 
 // Translation values management
 
-export async function getTranslationsForKey(keyId: string) {
+export async function getTranslationsForKey(keyId: number) {
   return await db.query.translations.findMany({
     where: { keyId },
   });
 }
 
 interface UpsertTranslationParams {
-  keyId: string;
+  keyId: number;
   locale: string;
   value: string;
 }
@@ -143,20 +143,20 @@ export async function upsertTranslation(params: UpsertTranslationParams) {
     return existing.id;
   } else {
     // Create new
-    const translationId = crypto.randomUUID();
+    const [translation] = await db
+      .insert(schema.translations)
+      .values({
+        keyId: params.keyId,
+        locale: params.locale,
+        value: params.value,
+      })
+      .returning();
 
-    await db.insert(schema.translations).values({
-      id: translationId,
-      keyId: params.keyId,
-      locale: params.locale,
-      value: params.value,
-    });
-
-    return translationId;
+    return translation.id;
   }
 }
 
-export async function deleteTranslation(keyId: string, locale: string) {
+export async function deleteTranslation(keyId: number, locale: string) {
   await db
     .delete(schema.translations)
     .where(
@@ -168,7 +168,7 @@ export async function deleteTranslation(keyId: string, locale: string) {
 }
 
 // Get all translations for a project grouped by key
-export async function getProjectTranslations(projectId: string) {
+export async function getProjectTranslations(projectId: number) {
   // Get all keys for this project, sorted alphabetically by keyName
   const keys = await db.query.translationKeys.findMany({
     where: { projectId },
