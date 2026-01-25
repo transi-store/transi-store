@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { eq, and, like, or, inArray } from "drizzle-orm";
+import { eq, and, or, inArray, sql, desc } from "drizzle-orm";
 
 export interface SearchResult {
   keyId: string;
@@ -14,6 +14,7 @@ export interface SearchResult {
   translationLocale?: string;
   translationValue?: string;
   matchType: "key" | "translation";
+  similarity?: number; // Score de similarité (0-1)
 }
 
 export async function globalSearch(
@@ -24,14 +25,15 @@ export async function globalSearch(
     projectId?: string;
     locale?: string;
     limit?: number;
-  }
+  },
 ): Promise<SearchResult[]> {
   if (!query || query.trim().length < 2) {
     return [];
   }
 
-  const searchPattern = `%${query}%`;
+  const searchQuery = query.trim();
   const limit = options?.limit || 100;
+  const similarityThreshold = 0.1; // Seuil de similarité minimum (0-1)
 
   // Get user's organization IDs
   const memberships = await db
@@ -46,10 +48,14 @@ export async function globalSearch(
   const userOrgIds = memberships.map((m) => m.organizationId);
 
   // Build conditions for projects
-  const projectConditions = [inArray(schema.projects.organizationId, userOrgIds)];
+  const projectConditions = [
+    inArray(schema.projects.organizationId, userOrgIds),
+  ];
 
   if (options?.organizationId) {
-    projectConditions.push(eq(schema.projects.organizationId, options.organizationId));
+    projectConditions.push(
+      eq(schema.projects.organizationId, options.organizationId),
+    );
   }
 
   if (options?.projectId) {
@@ -68,52 +74,85 @@ export async function globalSearch(
 
   const projectIds = projects.map((p) => p.id);
 
-  // Build conditions for translation keys
-  const keyConditions = [
-    inArray(schema.translationKeys.projectId, projectIds),
-    or(
-      like(schema.translationKeys.keyName, searchPattern),
-      like(schema.translationKeys.description, searchPattern)
-    )!,
-  ];
+  // Fonction de calcul de similarité maximale
+  const maxSimilarity = (field: any, query: string) =>
+    sql<number>`GREATEST(
+      similarity(${field}, ${query}),
+      word_similarity(${query}, ${field})
+    )`;
 
-  // Search in translation keys
-  const keys = await db
-    .select()
+  // Search in translation keys avec score de similarité
+  const keysWithSimilarity = await db
+    .select({
+      key: schema.translationKeys,
+      similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as(
+        "similarity",
+      ),
+    })
     .from(schema.translationKeys)
-    .where(and(...keyConditions))
+    .where(
+      and(
+        inArray(schema.translationKeys.projectId, projectIds),
+        or(
+          sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${similarityThreshold}`,
+          sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${similarityThreshold}`,
+        )!,
+      ),
+    )
+    .orderBy(desc(sql`similarity`))
     .limit(limit);
 
-  // Search in translations
+  const keys = keysWithSimilarity.map((row) => row.key);
+  const keysSimilarityMap = new Map(
+    keysWithSimilarity.map((row) => [row.key.id, row.similarity]),
+  );
+
+  // Search in translations avec score de similarité
   const translationConditions = [
-    inArray(schema.translations.keyId,
+    inArray(
+      schema.translations.keyId,
       await db
         .select({ id: schema.translationKeys.id })
         .from(schema.translationKeys)
         .where(inArray(schema.translationKeys.projectId, projectIds))
-        .then(rows => rows.map(r => r.id))
+        .then((rows) => rows.map((r) => r.id)),
     ),
-    like(schema.translations.value, searchPattern),
+    sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${similarityThreshold}`,
   ];
 
   if (options?.locale) {
     translationConditions.push(eq(schema.translations.locale, options.locale));
   }
 
-  const translations = await db
-    .select()
+  const translationsWithSimilarity = await db
+    .select({
+      translation: schema.translations,
+      similarity: maxSimilarity(schema.translations.value, searchQuery).as(
+        "similarity",
+      ),
+    })
     .from(schema.translations)
     .where(and(...translationConditions))
+    .orderBy(desc(sql`similarity`))
     .limit(limit);
+
+  const translations = translationsWithSimilarity.map((row) => row.translation);
+  const translationsSimilarityMap = new Map(
+    translationsWithSimilarity.map((row) => [
+      row.translation.id,
+      row.similarity,
+    ]),
+  );
 
   // Get translation keys for the translations found
   const translationKeyIds = [...new Set(translations.map((t) => t.keyId))];
-  const translationKeys = translationKeyIds.length > 0
-    ? await db
-        .select()
-        .from(schema.translationKeys)
-        .where(inArray(schema.translationKeys.id, translationKeyIds))
-    : [];
+  const translationKeys =
+    translationKeyIds.length > 0
+      ? await db
+          .select()
+          .from(schema.translationKeys)
+          .where(inArray(schema.translationKeys.id, translationKeyIds))
+      : [];
 
   // Get organizations
   const organizations = await db
@@ -142,6 +181,7 @@ export async function globalSearch(
       organizationName: org.name,
       organizationSlug: org.slug,
       matchType: "key" as const,
+      similarity: keysSimilarityMap.get(key.id),
     };
   });
 
@@ -164,6 +204,7 @@ export async function globalSearch(
       translationLocale: translation.locale,
       translationValue: translation.value,
       matchType: "translation" as const,
+      similarity: translationsSimilarityMap.get(translation.id),
     };
   });
 
@@ -174,11 +215,21 @@ export async function globalSearch(
   for (const result of allResults) {
     const existing = uniqueResults.get(result.keyId);
 
-    // If key match exists, keep it. Otherwise, add translation match
-    if (!existing || result.matchType === "key") {
+    // Prioriser les matches sur les clés, ou prendre le meilleur score
+    if (!existing) {
+      uniqueResults.set(result.keyId, result);
+    } else if (result.matchType === "key") {
+      uniqueResults.set(result.keyId, result);
+    } else if (
+      existing.matchType !== "key" &&
+      (result.similarity || 0) > (existing.similarity || 0)
+    ) {
       uniqueResults.set(result.keyId, result);
     }
   }
 
-  return Array.from(uniqueResults.values()).slice(0, limit);
+  // Trier par score de similarité décroissant
+  return Array.from(uniqueResults.values())
+    .sort((a, b) => (b.similarity || 0) - (a.similarity || 0))
+    .slice(0, limit);
 }

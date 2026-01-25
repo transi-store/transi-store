@@ -77,7 +77,13 @@ docker compose up -d
 yarn db:push
 ```
 
-7. Demarrer le serveur de developpement :
+7. Activer la recherche floue (une seule fois) :
+
+```bash
+yarn db:setup-search
+```
+
+8. Demarrer le serveur de developpement :
 
 ```bash
 yarn dev
@@ -87,15 +93,16 @@ L'application sera disponible sur http://localhost:5173
 
 ## Scripts disponibles
 
-| Script             | Description                             |
-| ------------------ | --------------------------------------- |
-| `yarn dev`         | Demarre le serveur de developpement     |
-| `yarn build`       | Build l'application pour la production  |
-| `yarn start`       | Demarre l'application en production     |
-| `yarn typecheck`   | Verifie les types TypeScript            |
-| `yarn db:generate` | Genere les migrations Drizzle           |
-| `yarn db:push`     | Applique le schema a la base de donnees |
-| `yarn db:studio`   | Ouvre Drizzle Studio                    |
+| Script                 | Description                                |
+| ---------------------- | ------------------------------------------ |
+| `yarn dev`             | Demarre le serveur de developpement        |
+| `yarn build`           | Build l'application pour la production     |
+| `yarn start`           | Demarre l'application en production        |
+| `yarn typecheck`       | Verifie les types TypeScript               |
+| `yarn db:generate`     | Genere les migrations Drizzle              |
+| `yarn db:push`         | Applique le schema a la base de donnees    |
+| `yarn db:studio`       | Ouvre Drizzle Studio                       |
+| `yarn db:setup-search` | Active la recherche floue (une seule fois) |
 
 ## Structure du projet
 

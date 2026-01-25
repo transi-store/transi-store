@@ -125,6 +125,7 @@ export const translationKeys = pgTable(
   (table) => [
     uniqueIndex("unique_project_key").on(table.projectId, table.keyName),
     index("idx_keys_name").on(table.keyName),
+    // Index GIN pour la recherche floue seront créés via SQL (voir scripts/enable-fuzzy-search.sh)
   ],
 );
 
@@ -141,7 +142,10 @@ export const translations = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => [uniqueIndex("unique_key_locale").on(table.keyId, table.locale)],
+  (table) => [
+    uniqueIndex("unique_key_locale").on(table.keyId, table.locale),
+    // Index GIN pour la recherche floue sera créé via SQL (voir scripts/enable-fuzzy-search.sh)
+  ],
 );
 
 // Types inferes pour TypeScript

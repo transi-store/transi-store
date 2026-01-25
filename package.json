@@ -11,7 +11,8 @@
     "typecheck": "react-router typegen && tsc",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:setup-search": "./scripts/enable-fuzzy-search.sh"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.3.1",
