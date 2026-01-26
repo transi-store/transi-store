@@ -41,27 +41,14 @@ export default function ProjectLayout() {
   ];
 
   return (
-    <Container maxW="container.xl" py={10}>
-      <VStack gap={8} align="stretch">
-        {/* Header */}
-        <Box>
-          <HStack justify="space-between" mb={2}>
-            <Heading as="h1" size="2xl">
-              {project.name}
-            </Heading>
-            <Button asChild variant="outline" size="sm">
-              <Link to={`/orgs/${organization.slug}`}>Retour</Link>
-            </Button>
-          </HStack>
-          {project.description && (
-            <Text color="gray.600" mb={4}>
-              {project.description}
-            </Text>
-          )}
-        </Box>
-
+    <Container maxW="container.xl" py={5}>
+      <VStack gap={4} align="stretch">
         {/* Navigation */}
         <HStack gap={2} borderBottomWidth={1} pb={2}>
+          <Heading as="h1" size="2xl" mr={8}>
+            {project.name}
+          </Heading>
+
           {navItems.map((item) => {
             const fullPath = `/orgs/${organization.slug}/projects/${project.slug}/${item.path}`;
             const isActive = location.pathname === fullPath;
@@ -79,6 +66,12 @@ export default function ProjectLayout() {
             );
           })}
         </HStack>
+
+        {project.description && (
+          <Box>
+            <Text color="gray.600">{project.description}</Text>
+          </Box>
+        )}
 
         {/* Child route content */}
         <Outlet context={{ organization, project, languages }} />

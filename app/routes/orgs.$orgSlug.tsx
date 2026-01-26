@@ -82,7 +82,6 @@ export default function OrganizationLayout() {
               <Link to="/orgs">Retour aux organisations</Link>
             </Button>
           </HStack>
-          <Text color="gray.600">/{organization.slug}</Text>
         </Box>
 
         {/* Statistiques */}
