@@ -113,6 +113,48 @@ export async function deleteTranslationKey(keyId: number) {
     .where(eq(schema.translationKeys.id, keyId));
 }
 
+export async function duplicateTranslationKey(keyId: number) {
+  // Get the original key
+  const originalKey = await getTranslationKeyById(keyId);
+  
+  if (!originalKey) {
+    throw new Error("Translation key not found");
+  }
+  
+  // Get the original translations
+  const originalTranslations = await getTranslationsForKey(keyId);
+  
+  // Find a unique name for the duplicated key
+  let newKeyName = `${originalKey.keyName} (copy)`;
+  let counter = 2;
+  
+  // Check if the key name already exists and increment counter if needed
+  while (await getTranslationKeyByName(originalKey.projectId, newKeyName)) {
+    newKeyName = `${originalKey.keyName} (copy ${counter})`;
+    counter++;
+  }
+  
+  // Create the new key with the unique name
+  const newKeyId = await createTranslationKey({
+    projectId: originalKey.projectId,
+    keyName: newKeyName,
+    description: originalKey.description || undefined,
+  });
+  
+  // Copy all translations to the new key in parallel
+  await Promise.all(
+    originalTranslations.map((translation) =>
+      upsertTranslation({
+        keyId: newKeyId,
+        locale: translation.locale,
+        value: translation.value,
+      }),
+    ),
+  );
+  
+  return newKeyId;
+}
+
 // Translation values management
 
 export async function getTranslationsForKey(keyId: number) {
