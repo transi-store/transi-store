@@ -2,16 +2,26 @@ import {
   Heading,
   VStack,
   Button,
+  IconButton,
   Input,
   Box,
+  ButtonGroup,
+  Center,
   Table,
   Text,
   HStack,
   Badge,
   Progress,
+  Pagination,
 } from "@chakra-ui/react";
 import { Link, Form, useOutletContext, redirect } from "react-router";
-import { LuPlus, LuPencil, LuCopy } from "react-icons/lu";
+import {
+  LuChevronLeft,
+  LuChevronRight,
+  LuPlus,
+  LuPencil,
+  LuCopy,
+} from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.translations";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -20,6 +30,8 @@ import {
   getTranslationKeys,
   duplicateTranslationKey,
 } from "~/lib/translation-keys.server";
+
+const LIMIT = 50;
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -43,12 +55,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const search = url.searchParams.get("search") || undefined;
   const page = parseInt(url.searchParams.get("page") || "1", 10);
-  const limit = 50;
-  const offset = (page - 1) * limit;
+  const offset = (page - 1) * LIMIT;
 
   const keys = await getTranslationKeys(project.id, {
     search,
-    limit,
+    limit: LIMIT,
     offset,
   });
 
@@ -97,7 +108,11 @@ export async function action({ request, params }: Route.ActionArgs) {
 export default function ProjectTranslations({
   loaderData,
 }: Route.ComponentProps) {
-  const { keys, search, page } = loaderData;
+  const {
+    keys: { data, count },
+    search,
+    page,
+  } = loaderData;
   const { organization, project, languages } = useOutletContext<ContextType>();
 
   const totalLanguages = languages.length;
@@ -113,7 +128,7 @@ export default function ProjectTranslations({
             Clés de traduction
           </Heading>
           <Text color="gray.600" mt={2}>
-            {keys.length} clé{keys.length > 1 ? "s" : ""}
+            {count} clé{count > 1 ? "s" : ""}
           </Text>
         </Box>
         {languages.length > 0 && (
@@ -163,7 +178,7 @@ export default function ProjectTranslations({
             </Link>
           </Button>
         </Box>
-      ) : keys.length === 0 ? (
+      ) : data.length === 0 ? (
         <Box p={8} textAlign="center" bg="gray.50" borderRadius="md">
           <Text color="gray.600">
             {search
@@ -182,7 +197,7 @@ export default function ProjectTranslations({
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {keys.map((key) => {
+              {data.map((key) => {
                 const translatedCount = key.translatedLocales.length;
                 const progressPercent =
                   totalLanguages > 0
@@ -269,37 +284,60 @@ export default function ProjectTranslations({
             </Table.Body>
           </Table.Root>
 
-          {keys.length === 50 && (
-            <HStack justify="center">
-              {page > 1 && (
-                <Button asChild>
-                  <Link
-                    to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
-                      {
-                        ...(search && { search }),
-                        page: String(page - 1),
-                      },
-                    )}`}
-                  >
-                    Page précédente
-                  </Link>
-                </Button>
-              )}
-              <Text>Page {page}</Text>
-              <Button asChild>
-                <Link
-                  to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
-                    {
-                      ...(search && { search }),
-                      page: String(page + 1),
-                    },
-                  )}`}
-                >
-                  Page suivante
-                </Link>
-              </Button>
-            </HStack>
-          )}
+          <Center>
+            <Pagination.Root count={count} pageSize={LIMIT} defaultPage={1}>
+              <ButtonGroup variant="outline">
+                <Pagination.PrevTrigger asChild>
+                  <IconButton asChild>
+                    <Link
+                      to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
+                        {
+                          ...(search && { search }),
+                          page: String(page - 1),
+                        },
+                      )}`}
+                    >
+                      <LuChevronLeft />
+                    </Link>
+                  </IconButton>
+                </Pagination.PrevTrigger>
+
+                <Pagination.Items
+                  render={(page) => (
+                    <IconButton
+                      asChild
+                      variant={{ base: "ghost", _selected: "outline" }}
+                    >
+                      <Link
+                        to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
+                          {
+                            ...(search && { search }),
+                            page: String(page.value),
+                          },
+                        )}`}
+                      >
+                        {page.value}
+                      </Link>
+                    </IconButton>
+                  )}
+                />
+                <Pagination.NextTrigger asChild>
+                  <IconButton asChild>
+                    <Link
+                      to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
+                        {
+                          ...(search && { search }),
+                          page: String(page + 1),
+                        },
+                      )}`}
+                    >
+                      <LuChevronRight />
+                    </Link>
+                  </IconButton>
+                </Pagination.NextTrigger>
+              </ButtonGroup>
+            </Pagination.Root>
+          </Center>
         </>
       )}
     </VStack>

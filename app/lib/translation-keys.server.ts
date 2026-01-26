@@ -1,6 +1,13 @@
 import { db, schema } from "./db.server";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
+
+type TranslationKeysReturnType = {
+  count: number;
+  data: Array<
+    typeof schema.translationKeys.$inferSelect & { translatedLocales: string[] }
+  >;
+};
 
 export async function getTranslationKeys(
   projectId: number,
@@ -9,10 +16,9 @@ export async function getTranslationKeys(
     limit?: number;
     offset?: number;
   },
-) {
-  const conditions = [eq(schema.translationKeys.projectId, projectId)];
-
-  let keys;
+): Promise<TranslationKeysReturnType> {
+  let keys: Array<typeof schema.translationKeys.$inferSelect> = [];
+  let count = 0;
 
   if (options?.search) {
     const searchQuery = options.search.trim();
@@ -28,19 +34,25 @@ export async function getTranslationKeys(
     );
 
     keys = keysWithSimilarity.map((row) => row.key);
+    count = keysWithSimilarity.length;
   } else {
     // No search query - use regular query ordered by keyName
     keys = await db
       .select()
       .from(schema.translationKeys)
-      .where(and(...conditions))
+      .where(eq(schema.translationKeys.projectId, projectId))
       .limit(options?.limit || 50)
       .offset(options?.offset || 0)
       .orderBy(schema.translationKeys.keyName);
+
+    count = await db.$count(
+      schema.translationKeys,
+      eq(schema.translationKeys.projectId, projectId),
+    );
   }
 
   if (keys.length === 0) {
-    return [];
+    return { data: [], count };
   }
 
   // Get translations for these keys
@@ -51,12 +63,15 @@ export async function getTranslationKeys(
     .where(inArray(schema.translations.keyId, keyIds));
 
   // Combine keys with their translated locales
-  return keys.map((key) => ({
-    ...key,
-    translatedLocales: translations
-      .filter((t) => t.keyId === key.id)
-      .map((t) => t.locale),
-  }));
+  return {
+    count,
+    data: keys.map((key) => ({
+      ...key,
+      translatedLocales: translations
+        .filter((t) => t.keyId === key.id)
+        .map((t) => t.locale),
+    })),
+  };
 }
 
 export async function getTranslationKeyById(keyId: number) {
@@ -127,31 +142,31 @@ export async function deleteTranslationKey(keyId: number) {
 export async function duplicateTranslationKey(keyId: number) {
   // Get the original key
   const originalKey = await getTranslationKeyById(keyId);
-  
+
   if (!originalKey) {
     throw new Error("Translation key not found");
   }
-  
+
   // Get the original translations
   const originalTranslations = await getTranslationsForKey(keyId);
-  
+
   // Find a unique name for the duplicated key
   let newKeyName = `${originalKey.keyName} (copy)`;
   let counter = 2;
-  
+
   // Check if the key name already exists and increment counter if needed
   while (await getTranslationKeyByName(originalKey.projectId, newKeyName)) {
     newKeyName = `${originalKey.keyName} (copy ${counter})`;
     counter++;
   }
-  
+
   // Create the new key with the unique name
   const newKeyId = await createTranslationKey({
     projectId: originalKey.projectId,
     keyName: newKeyName,
     description: originalKey.description || undefined,
   });
-  
+
   // Copy all translations to the new key in parallel
   await Promise.all(
     originalTranslations.map((translation) =>
@@ -162,7 +177,7 @@ export async function duplicateTranslationKey(keyId: number) {
       }),
     ),
   );
-  
+
   return newKeyId;
 }
 
