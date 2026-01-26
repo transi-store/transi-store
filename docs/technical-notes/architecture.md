@@ -119,7 +119,7 @@ Form Submit → React Router → Route Action → Server logic → Database
 
 ### Base de données
 
-- **PostgreSQL 17** : Base de données relationnelle
+- **PostgreSQL 18** : Base de données relationnelle
 - **pg_trgm** : Extension pour recherche floue
 - **GIN indexes** : Index pour optimiser la recherche
 

@@ -1,11 +1,13 @@
 # Base configuration (shared between dev and prod)
 services:
   postgres:
-    image: postgres:16
+    image: postgres:18
+    # container_name: postgres
     environment:
       POSTGRES_DB: ${DB_DATABASE:-transistore}
       POSTGRES_USER: ${DB_USER:-transistore}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-transistore}
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:

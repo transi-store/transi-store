@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-transi-store utilise **PostgreSQL 17** avec **Drizzle ORM v1.0.0-beta**.
+transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
 
 **Source de vérité** : Le schéma est défini dans `drizzle/schema.ts`
 

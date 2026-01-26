@@ -50,7 +50,7 @@ docker compose up -d         # Start PostgreSQL
 ### Tech Stack
 - **Framework**: React Router v7 (SSR framework mode)
 - **UI**: Chakra UI v3 + React 19
-- **Database**: PostgreSQL 17 + Drizzle ORM v1.0.0-beta
+- **Database**: PostgreSQL 18 + Drizzle ORM v1.0.0-beta
 - **Auth**: OAuth2/OIDC via Arctic (Google + Mapado providers)
 - **Package Manager**: Yarn Berry v4
 

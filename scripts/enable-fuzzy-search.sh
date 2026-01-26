@@ -41,7 +41,7 @@ if [ -n "$DATABASE_URL" ]; then
   # Utiliser DATABASE_URL si défini (connexion distante via Docker)
   echo "📡 Connexion à la base de données distante via DATABASE_URL..."
   
-  echo "$SQL_COMMANDS" | docker run --rm -i postgres:17 psql "$FINAL_URL"
+  echo "$SQL_COMMANDS" | docker run --rm -i postgres:18 psql "$FINAL_URL"
   EXIT_CODE=$?
 else
   # Utiliser Docker Compose (défaut)
