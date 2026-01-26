@@ -1,6 +1,6 @@
 import { db, schema } from "./db.server";
-import { eq, and, inArray, or, sql, desc } from "drizzle-orm";
-import { maxSimilarity, SIMILARITY_THRESHOLD } from "./search-utils.server";
+import { eq, and, inArray } from "drizzle-orm";
+import { searchTranslationKeys } from "./search-utils.server";
 
 export async function getTranslationKeys(
   projectId: number,
@@ -18,27 +18,14 @@ export async function getTranslationKeys(
     const searchQuery = options.search.trim();
 
     // Use fuzzy search with similarity scoring
-    const keysWithSimilarity = await db
-      .select({
-        key: schema.translationKeys,
-        similarity: maxSimilarity(
-          schema.translationKeys.keyName,
-          searchQuery,
-        ).as("similarity"),
-      })
-      .from(schema.translationKeys)
-      .where(
-        and(
-          eq(schema.translationKeys.projectId, projectId),
-          or(
-            sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
-            sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
-          )!,
-        ),
-      )
-      .orderBy(desc(sql`similarity`))
-      .limit(options?.limit || 50)
-      .offset(options?.offset || 0);
+    const keysWithSimilarity = await searchTranslationKeys(
+      searchQuery,
+      projectId,
+      {
+        limit: options?.limit || 50,
+        offset: options?.offset || 0,
+      },
+    );
 
     keys = keysWithSimilarity.map((row) => row.key);
   } else {
