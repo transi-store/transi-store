@@ -64,6 +64,10 @@ export function IcuEditor({
 }: IcuEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
+  const onBlurRef = useRef(onBlur);
+  // Update ref during render (valid React pattern for callbacks)
+  onBlurRef.current = onBlur;
+
   const [internalValue, setInternalValue] = useState(value);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -126,8 +130,8 @@ export function IcuEditor({
       // Blur handler
       EditorView.domEventHandlers({
         blur: () => {
-          if (onBlur) {
-            onBlur();
+          if (onBlurRef.current) {
+            onBlurRef.current();
           }
         },
       }),
@@ -165,7 +169,7 @@ export function IcuEditor({
       view.destroy();
       editorRef.current = null;
     };
-  }, [placeholder, disabled, minHeight, onBlur]);
+  }, [placeholder, disabled, minHeight]);
 
   const isValid = errors.length === 0;
 

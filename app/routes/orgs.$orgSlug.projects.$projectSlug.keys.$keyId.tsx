@@ -53,6 +53,7 @@ import {
   getRedirectUrlFromRequest,
   getRedirectUrlFromFormData,
 } from "~/lib/routes-helpers";
+import { toaster } from "~/components/ui/toaster";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -252,6 +253,25 @@ export default function EditTranslationKey({
           method: "POST",
         },
       );
+
+      // Show toast immediately after submitting
+      toaster.success({
+        title: "Sauvegarde en cours...",
+        // description: `Clé: ${key.keyName} • Locale: ${locale} • Valeur: ${value || "(vide)"}`,
+        description: (
+          <VStack align="start" gap={1}>
+            <Text>
+              <strong>Clé:</strong> {key.keyName}
+            </Text>
+            <Text>
+              <strong>Locale:</strong> {locale}
+            </Text>
+            <Text>
+              <strong>Valeur:</strong> {value || "(vide)"}
+            </Text>
+          </VStack>
+        ),
+      });
     }
   };
 
@@ -264,8 +284,8 @@ export default function EditTranslationKey({
         const locale = formData.get("locale");
         const value = formData.get("value");
         if (locale && typeof locale === "string") {
-          originalValuesRef.current[locale] =
-            typeof value === "string" ? value : "";
+          const savedValue = typeof value === "string" ? value : "";
+          originalValuesRef.current[locale] = savedValue;
         }
       }
     }
