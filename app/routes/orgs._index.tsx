@@ -31,8 +31,10 @@ export default function OrganizationsIndex() {
           <Heading as="h1" size="2xl">
             Mes organisations
           </Heading>
-          <Button as={Link} to="/orgs/new" colorPalette="brand">
-            <LuPlus /> Nouvelle organisation
+          <Button asChild colorPalette="brand">
+            <Link to="/orgs/new">
+              <LuPlus /> Nouvelle organisation
+            </Link>
           </Button>
         </Box>
 
@@ -41,8 +43,10 @@ export default function OrganizationsIndex() {
             <Text fontSize="lg" color="gray.600" mb={4}>
               Vous n'etes membre d'aucune organisation
             </Text>
-            <Button as={Link} to="/orgs/new" colorPalette="brand">
-              <LuPlus /> Creer ma premiere organisation
+            <Button asChild colorPalette="brand">
+              <Link to="/orgs/new">
+                <LuPlus /> Creer ma premiere organisation
+              </Link>
             </Button>
           </Box>
         ) : (

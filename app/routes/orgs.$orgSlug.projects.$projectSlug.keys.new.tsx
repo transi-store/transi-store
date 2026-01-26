@@ -8,7 +8,13 @@ import {
   Box,
   Textarea,
 } from "@chakra-ui/react";
-import { Form, useActionData, useNavigation, redirect } from "react-router";
+import {
+  Form,
+  Link,
+  useActionData,
+  useNavigation,
+  redirect,
+} from "react-router";
 import { IcuEditorClient } from "~/components/icu-editor";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.new";
 import { requireUser } from "~/lib/session.server";
@@ -140,13 +146,10 @@ export default function NewTranslationKey({
               >
                 Créer la clé
               </Button>
-              <Button
-                as="a"
-                href={getTranslationsUrl(organization.slug, project.slug)}
-                variant="outline"
-                disabled={isSubmitting}
-              >
-                Annuler
+              <Button asChild variant="outline" disabled={isSubmitting}>
+                <Link to={getTranslationsUrl(organization.slug, project.slug)}>
+                  Annuler
+                </Link>
               </Button>
             </Box>
           </VStack>

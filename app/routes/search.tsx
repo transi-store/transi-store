@@ -120,8 +120,8 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                   : "Aucun résultat"}
               </Text>
               {query && (
-                <Button as={Link} to="/search" variant="outline" size="sm">
-                  Effacer la recherche
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/search">Effacer la recherche</Link>
                 </Button>
               )}
             </HStack>
@@ -190,13 +190,12 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                             </HStack>
                           </Box>
 
-                          <Button
-                            as={Link}
-                            to={`/orgs/${result.organizationSlug}/projects/${result.projectSlug}/keys/${result.keyId}`}
-                            colorPalette="brand"
-                            size="sm"
-                          >
-                            Éditer
+                          <Button asChild colorPalette="brand" size="sm">
+                            <Link
+                              to={`/orgs/${result.organizationSlug}/projects/${result.projectSlug}/keys/${result.keyId}`}
+                            >
+                              Éditer
+                            </Link>
                           </Button>
                         </HStack>
                       </VStack>

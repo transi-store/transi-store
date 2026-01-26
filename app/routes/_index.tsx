@@ -7,7 +7,7 @@ import {
   Button,
   HStack,
 } from "@chakra-ui/react";
-import { Form, useLoaderData, Link, redirect } from "react-router";
+import { Form, useLoaderData, redirect } from "react-router";
 import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";

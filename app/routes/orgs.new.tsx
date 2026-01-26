@@ -8,7 +8,13 @@ import {
   Box,
   Text,
 } from "@chakra-ui/react";
-import { Form, useActionData, useNavigation, redirect } from "react-router";
+import {
+  Form,
+  Link,
+  useActionData,
+  useNavigation,
+  redirect,
+} from "react-router";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.new";
 import { requireUser } from "~/lib/session.server";
@@ -108,13 +114,8 @@ export default function NewOrganization() {
               >
                 <LuPlus /> Creer l'organisation
               </Button>
-              <Button
-                as="a"
-                href="/orgs"
-                variant="outline"
-                disabled={isSubmitting}
-              >
-                Annuler
+              <Button asChild variant="outline" disabled={isSubmitting}>
+                <Link to="/orgs">Annuler</Link>
               </Button>
             </Box>
           </VStack>

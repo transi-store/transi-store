@@ -73,12 +73,12 @@ export default function ProjectTranslations({
           </Text>
         </Box>
         {languages.length > 0 && (
-          <Button
-            as={Link}
-            to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
-            colorPalette="brand"
-          >
-            <LuPlus /> Nouvelle clé
+          <Button asChild colorPalette="brand">
+            <Link
+              to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
+            >
+              <LuPlus /> Nouvelle clé
+            </Link>
           </Button>
         )}
       </HStack>
@@ -94,12 +94,12 @@ export default function ProjectTranslations({
             Rechercher
           </Button>
           {search && (
-            <Button
-              as={Link}
-              to={`/orgs/${organization.slug}/projects/${project.slug}/translations`}
-              variant="outline"
-            >
-              Effacer
+            <Button asChild variant="outline">
+              <Link
+                to={`/orgs/${organization.slug}/projects/${project.slug}/translations`}
+              >
+                Effacer
+              </Link>
             </Button>
           )}
         </HStack>
@@ -111,12 +111,12 @@ export default function ProjectTranslations({
             Ajoutez au moins une langue dans les paramètres pour commencer à
             traduire
           </Text>
-          <Button
-            as={Link}
-            to={`/orgs/${organization.slug}/projects/${project.slug}/settings`}
-            colorPalette="brand"
-          >
-            Gérer les langues
+          <Button asChild colorPalette="brand">
+            <Link
+              to={`/orgs/${organization.slug}/projects/${project.slug}/settings`}
+            >
+              Gérer les langues
+            </Link>
           </Button>
         </Box>
       ) : keys.length === 0 ? (
@@ -198,13 +198,12 @@ export default function ProjectTranslations({
                       </VStack>
                     </Table.Cell>
                     <Table.Cell>
-                      <Button
-                        as={Link}
-                        to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}`}
-                        size="sm"
-                        colorPalette="brand"
-                      >
-                        <LuPencil /> Éditer
+                      <Button asChild size="sm" colorPalette="brand">
+                        <Link
+                          to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}`}
+                        >
+                          <LuPencil /> Éditer
+                        </Link>
                       </Button>
                     </Table.Cell>
                   </Table.Row>
@@ -216,29 +215,31 @@ export default function ProjectTranslations({
           {keys.length === 50 && (
             <HStack justify="center">
               {page > 1 && (
-                <Button
-                  as={Link}
-                  to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
-                    {
-                      ...(search && { search }),
-                      page: String(page - 1),
-                    },
-                  )}`}
-                >
-                  Page précédente
+                <Button asChild>
+                  <Link
+                    to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
+                      {
+                        ...(search && { search }),
+                        page: String(page - 1),
+                      },
+                    )}`}
+                  >
+                    Page précédente
+                  </Link>
                 </Button>
               )}
               <Text>Page {page}</Text>
-              <Button
-                as={Link}
-                to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
-                  {
-                    ...(search && { search }),
-                    page: String(page + 1),
-                  },
-                )}`}
-              >
-                Page suivante
+              <Button asChild>
+                <Link
+                  to={`/orgs/${organization.slug}/projects/${project.slug}/translations?${new URLSearchParams(
+                    {
+                      ...(search && { search }),
+                      page: String(page + 1),
+                    },
+                  )}`}
+                >
+                  Page suivante
+                </Link>
               </Button>
             </HStack>
           )}

@@ -21,35 +21,34 @@ export function Header({ user }: HeaderProps) {
         <HStack justify="space-between">
           <HStack gap={6}>
             <Text
-              as={Link}
-              to={user ? "/orgs" : "/"}
+              asChild
               fontSize="xl"
               fontWeight="bold"
               color="brand.700"
               _hover={{ color: "brand.600" }}
             >
-              transi-store
+              <Link to={user ? "/orgs" : "/"}>transi-store</Link>
             </Text>
 
             {user && (
               <HStack gap={4} fontSize="sm">
                 {user.lastOrganizationSlug && (
                   <Text
-                    as={Link}
-                    to={`/orgs/${user.lastOrganizationSlug}`}
+                    asChild
                     color="brand.600"
                     _hover={{ textDecoration: "underline", color: "brand.700" }}
                   >
-                    Projets
+                    <Link to={`/orgs/${user.lastOrganizationSlug}`}>
+                      Projets
+                    </Link>
                   </Text>
                 )}
                 <Text
-                  as={Link}
-                  to="/search"
+                  asChild
                   color="brand.600"
                   _hover={{ textDecoration: "underline", color: "brand.700" }}
                 >
-                  Recherche
+                  <Link to="/search">Recherche</Link>
                 </Text>
               </HStack>
             )}
@@ -87,8 +86,8 @@ export function Header({ user }: HeaderProps) {
                 </Portal>
               </Menu.Root>
             ) : (
-              <Button as={Link} to="/auth/login" size="sm" colorPalette="brand">
-                Connexion
+              <Button asChild size="sm" colorPalette="brand">
+                <Link to="/auth/login">Connexion</Link>
               </Button>
             )}
           </HStack>
