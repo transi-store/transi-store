@@ -86,32 +86,6 @@ export async function getOrganizationAiProviders(
 }
 
 /**
- * Récupère la clé API déchiffrée pour un provider donné.
- * À utiliser uniquement côté serveur pour les appels API.
- */
-export async function getDecryptedApiKey(
-  organizationId: number,
-  provider: AiProvider,
-): Promise<string | null> {
-  const [result] = await db
-    .select({ encryptedApiKey: schema.organizationAiProviders.encryptedApiKey })
-    .from(schema.organizationAiProviders)
-    .where(
-      and(
-        eq(schema.organizationAiProviders.organizationId, organizationId),
-        eq(schema.organizationAiProviders.provider, provider),
-      ),
-    )
-    .limit(1);
-
-  if (!result) {
-    return null;
-  }
-
-  return decrypt(result.encryptedApiKey);
-}
-
-/**
  * Récupère le provider actif pour une organisation.
  */
 export async function getActiveAiProvider(

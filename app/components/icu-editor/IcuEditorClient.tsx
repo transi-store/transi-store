@@ -87,5 +87,3 @@ export function IcuEditorClient(props: IcuEditorClientProps) {
     </Suspense>
   );
 }
-
-export default IcuEditorClient;

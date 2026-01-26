@@ -156,17 +156,6 @@ export async function upsertTranslation(params: UpsertTranslationParams) {
   }
 }
 
-export async function deleteTranslation(keyId: number, locale: string) {
-  await db
-    .delete(schema.translations)
-    .where(
-      and(
-        eq(schema.translations.keyId, keyId),
-        eq(schema.translations.locale, locale),
-      ),
-    );
-}
-
 // Get all translations for a project grouped by key
 export async function getProjectTranslations(projectId: number) {
   // Get all keys for this project, sorted alphabetically by keyName

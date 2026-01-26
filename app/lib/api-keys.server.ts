@@ -7,7 +7,7 @@ import type { ApiKey } from "../../drizzle/schema";
  * Génère une clé d'API aléatoire de 32 caractères alphanumériques
  * 24 bytes = 192 bits d'entropie, encodé en base64url = ~32 caractères
  */
-export function generateApiKey(): string {
+function generateApiKey(): string {
   return randomBytes(24).toString("base64url");
 }
 
@@ -111,15 +111,4 @@ export async function updateApiKeyLastUsed(keyValue: string): Promise<void> {
     .update(schema.apiKeys)
     .set({ lastUsedAt: new Date() })
     .where(eq(schema.apiKeys.keyValue, keyValue));
-}
-
-/**
- * Vérifie si une clé d'API est valide et appartient à l'organisation spécifiée
- */
-export async function validateApiKey(
-  keyValue: string,
-  organizationSlug: string,
-): Promise<boolean> {
-  const org = await getOrganizationByApiKey(keyValue);
-  return org !== null && org.slug === organizationSlug;
 }

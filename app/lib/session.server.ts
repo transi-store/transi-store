@@ -46,7 +46,7 @@ export async function createUserSession(
   });
 }
 
-export async function getUserSession(request: Request) {
+async function getUserSession(request: Request) {
   const cookie = request.headers.get("Cookie");
   return sessionStorage.getSession(cookie);
 }

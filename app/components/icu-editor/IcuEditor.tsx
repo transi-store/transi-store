@@ -204,7 +204,6 @@ export function IcuEditor({
         <Box borderWidth={1} borderRadius="md" overflow="hidden">
           <Box
             as="button"
-            type="button"
             w="100%"
             p={2}
             bg="gray.50"
@@ -233,5 +232,3 @@ export function IcuEditor({
     </VStack>
   );
 }
-
-export default IcuEditor;
