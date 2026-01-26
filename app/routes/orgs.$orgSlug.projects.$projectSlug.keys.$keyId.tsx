@@ -13,6 +13,7 @@ import {
   GridItem,
   Spinner,
   Textarea,
+  Input,
   DialogRoot,
   DialogContent,
   DialogHeader,
@@ -32,8 +33,8 @@ import {
   Link,
   useFetcher,
 } from "react-router";
-import { useState } from "react";
-import { LuPencil, LuPlus, LuSave, LuTrash2, LuSparkles } from "react-icons/lu";
+import { useState, useEffect } from "react";
+import { LuPencil, LuSave, LuTrash2, LuSparkles } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -130,6 +131,22 @@ export async function action({ request, params }: Route.ActionArgs) {
     return redirect(redirectUrl);
   }
 
+  if (action === "editKey") {
+    const keyName = formData.get("keyName");
+    const description = formData.get("description");
+
+    await updateTranslationKey({
+      keyId: key.id,
+      keyName: keyName && typeof keyName === "string" ? keyName : undefined,
+      description:
+        description && typeof description === "string"
+          ? description
+          : undefined,
+    });
+
+    return { success: true };
+  }
+
   if (action === "update") {
     const description = formData.get("description");
 
@@ -183,7 +200,14 @@ export default function EditTranslationKey({
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [isEditKeyModalOpen, setIsEditKeyModalOpen] = useState(false);
+
+  // Close modal after successful edit
+  useEffect(() => {
+    if (actionData?.success && navigation.state === "idle") {
+      setIsEditKeyModalOpen(false);
+    }
+  }, [actionData, navigation.state]);
 
   // État pour la modale de traduction IA
   const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);
@@ -237,36 +261,26 @@ export default function EditTranslationKey({
       <VStack gap={6} align="stretch">
         <HStack justify="space-between" align="start">
           <Box flex={1}>
-            <Heading as="h1" size="2xl" fontFamily="mono">
-              {key.keyName}
-            </Heading>
+            <HStack gap={2} align="center">
+              <Heading as="h1" size="2xl" fontFamily="mono">
+                {key.keyName}
+              </Heading>
+              <IconButton
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditKeyModalOpen(true)}
+                aria-label="Éditer la clé"
+              >
+                <LuPencil />
+              </IconButton>
+            </HStack>
             <Text color="gray.600" mt={2}>
               Projet : {project.name}
             </Text>
-            {key.description && !isEditingDescription && (
-              <HStack mt={2} align="start" gap={1}>
-                <Text fontSize="sm" color="gray.500" flex={1}>
-                  {key.description}
-                </Text>
-                <IconButton
-                  size="xs"
-                  variant="ghost"
-                  onClick={() => setIsEditingDescription(true)}
-                  aria-label="Éditer la description"
-                >
-                  <LuPencil />
-                </IconButton>
-              </HStack>
-            )}
-            {!key.description && !isEditingDescription && (
-              <Button
-                size="xs"
-                variant="ghost"
-                onClick={() => setIsEditingDescription(true)}
-                mt={2}
-              >
-                <LuPlus /> Ajouter une description
-              </Button>
+            {key.description && (
+              <Text fontSize="sm" color="gray.500" mt={2}>
+                {key.description}
+              </Text>
             )}
           </Box>
           <Form method="post">
@@ -312,36 +326,8 @@ export default function EditTranslationKey({
           <Form method="post">
             <input type="hidden" name="_action" value="update" />
             <input type="hidden" name="redirectUrl" value={redirectUrl} />
-            {!isEditingDescription && (
-              <input
-                type="hidden"
-                name="description"
-                value={key.description || ""}
-              />
-            )}
 
             <VStack gap={4} align="stretch">
-              {isEditingDescription && (
-                <Field.Root>
-                  <Field.Label>Description</Field.Label>
-                  <Textarea
-                    name="description"
-                    placeholder="Description de cette clé..."
-                    defaultValue={key.description || ""}
-                    disabled={isSubmitting}
-                    rows={2}
-                  />
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    onClick={() => setIsEditingDescription(false)}
-                    mt={1}
-                  >
-                    Annuler
-                  </Button>
-                </Field.Root>
-              )}
-
               <Box>
                 <Heading as="h2" size="lg" mb={4}>
                   Traductions
@@ -439,6 +425,61 @@ export default function EditTranslationKey({
             </VStack>
           </Form>
         )}
+
+        {/* Modale d'édition de la clé */}
+        <DialogRoot
+          open={isEditKeyModalOpen}
+          onOpenChange={(e) => setIsEditKeyModalOpen(e.open)}
+        >
+          <Portal>
+            <DialogBackdrop />
+            <DialogPositioner>
+              <DialogContent>
+                <Form method="post">
+                  <input type="hidden" name="_action" value="editKey" />
+                  <DialogHeader>
+                    <DialogTitle>Modifier la clé de traduction</DialogTitle>
+                  </DialogHeader>
+                  <DialogCloseTrigger />
+                  <DialogBody pb={6}>
+                    <VStack gap={4} align="stretch">
+                      <Field.Root>
+                        <Field.Label>Clé de traduction</Field.Label>
+                        <Input
+                          name="keyName"
+                          defaultValue={key.keyName}
+                          required
+                          fontFamily="monospace"
+                        />
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>Description</Field.Label>
+                        <Textarea
+                          name="description"
+                          placeholder="Description de cette clé..."
+                          defaultValue={key.description || ""}
+                          rows={3}
+                        />
+                      </Field.Root>
+                    </VStack>
+                  </DialogBody>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsEditKeyModalOpen(false)}
+                    >
+                      Annuler
+                    </Button>
+                    <Button type="submit" colorPalette="brand">
+                      Enregistrer
+                    </Button>
+                  </DialogFooter>
+                </Form>
+              </DialogContent>
+            </DialogPositioner>
+          </Portal>
+        </DialogRoot>
 
         {/* Modale de suggestions IA */}
         <DialogRoot
