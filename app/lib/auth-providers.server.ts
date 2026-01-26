@@ -2,12 +2,11 @@ import { Google, OAuth2Client } from "arctic";
 import crypto from "node:crypto";
 
 // Configuration OAuth2 générique (existant)
-const OAUTH_AUTHORIZATION_URL = process.env.OAUTH_AUTHORIZATION_URL;
-const OAUTH_TOKEN_URL = process.env.OAUTH_TOKEN_URL;
-const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
-const OAUTH_REDIRECT_URI = process.env.OAUTH_REDIRECT_URI;
-const OAUTH_SCOPES = process.env.OAUTH_SCOPES || "";
+const MAPADO_AUTHORIZATION_URL = process.env.MAPADO_AUTHORIZATION_URL;
+const MAPADO_TOKEN_URL = process.env.MAPADO_TOKEN_URL;
+const MAPADO_CLIENT_ID = process.env.MAPADO_CLIENT_ID;
+const MAPADO_CLIENT_SECRET = process.env.MAPADO_CLIENT_SECRET;
+const MAPADO_REDIRECT_URI = process.env.MAPADO_REDIRECT_URI;
 
 // Configuration Google OAuth
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -27,11 +26,11 @@ export const AVAILABLE_PROVIDERS: ProviderConfig[] = [
     type: "mapado",
     name: "Mapado",
     enabled: !!(
-      OAUTH_AUTHORIZATION_URL &&
-      OAUTH_TOKEN_URL &&
-      OAUTH_CLIENT_ID &&
-      OAUTH_CLIENT_SECRET &&
-      OAUTH_REDIRECT_URI
+      MAPADO_AUTHORIZATION_URL &&
+      MAPADO_TOKEN_URL &&
+      MAPADO_CLIENT_ID &&
+      MAPADO_CLIENT_SECRET &&
+      MAPADO_REDIRECT_URI
     ),
   },
   {
@@ -69,16 +68,16 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_REDIRECT_URI) {
 // Mapado OAuth (via OAuth2Client générique d'Arctic)
 let mapadoClient: OAuth2Client | null = null;
 if (
-  OAUTH_AUTHORIZATION_URL &&
-  OAUTH_TOKEN_URL &&
-  OAUTH_CLIENT_ID &&
-  OAUTH_CLIENT_SECRET &&
-  OAUTH_REDIRECT_URI
+  MAPADO_AUTHORIZATION_URL &&
+  MAPADO_TOKEN_URL &&
+  MAPADO_CLIENT_ID &&
+  MAPADO_CLIENT_SECRET &&
+  MAPADO_REDIRECT_URI
 ) {
   mapadoClient = new OAuth2Client(
-    OAUTH_CLIENT_ID,
-    OAUTH_CLIENT_SECRET,
-    OAUTH_REDIRECT_URI,
+    MAPADO_CLIENT_ID,
+    MAPADO_CLIENT_SECRET,
+    MAPADO_REDIRECT_URI,
   );
 }
 
@@ -166,9 +165,9 @@ export async function getGoogleUserInfo(
 
 // Mapado OAuth (OAuth2 avec JWT)
 export async function generateMapadoAuthorizationUrl(): Promise<AuthorizationUrlResult> {
-  if (!mapadoClient || !OAUTH_AUTHORIZATION_URL) {
+  if (!mapadoClient || !MAPADO_AUTHORIZATION_URL) {
     throw new Error(
-      "Mapado OAuth is not configured. Missing environment variables: OAUTH_AUTHORIZATION_URL, OAUTH_TOKEN_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REDIRECT_URI",
+      "Mapado OAuth is not configured. Missing environment variables: MAPADO_AUTHORIZATION_URL, MAPADO_AUTHORIZATION_URL, MAPADO_CLIENT_ID, MAPADO_CLIENT_SECRET, MAPADO_REDIRECT_URI",
     );
   }
 
@@ -176,13 +175,12 @@ export async function generateMapadoAuthorizationUrl(): Promise<AuthorizationUrl
   const codeVerifier = generateRandomString();
 
   // Créer l'URL d'autorisation avec PKCE
-  const scopes = OAUTH_SCOPES ? OAUTH_SCOPES.split(" ") : [];
   const url = mapadoClient.createAuthorizationURLWithPKCE(
-    OAUTH_AUTHORIZATION_URL,
+    MAPADO_AUTHORIZATION_URL,
     state,
     0, // CodeChallengeMethod.S256
     codeVerifier,
-    scopes,
+    [],
   );
 
   return { url: url.toString(), codeVerifier, state };
@@ -192,12 +190,12 @@ export async function exchangeMapadoCode(
   code: string,
   codeVerifier: string,
 ): Promise<string> {
-  if (!mapadoClient || !OAUTH_TOKEN_URL) {
+  if (!mapadoClient || !MAPADO_TOKEN_URL) {
     throw new Error("Mapado OAuth is not configured");
   }
 
   const tokens = await mapadoClient.validateAuthorizationCode(
-    OAUTH_TOKEN_URL,
+    MAPADO_TOKEN_URL,
     code,
     codeVerifier,
   );
