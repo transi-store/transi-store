@@ -43,8 +43,9 @@ transi-store est une application web permettant de gerer les traductions de chai
 
 ### Prerequis
 
-- Docker & Docker Compose (ou Docker Desktop)
-- Make (généralement préinstallé sur Linux/macOS)
+- Node.js 20+
+- Yarn Berry
+- Docker et Docker Compose
 
 ### Installation
 
@@ -55,60 +56,64 @@ git clone <repo-url>
 cd transi-store
 ```
 
-2. Copier le fichier d'environnement :
+2. Installer les dependances :
+
+```bash
+yarn install
+```
+
+3. Copier le fichier d'environnement :
 
 ```bash
 cp .env.example .env
 ```
 
-3. Configurer les variables d'environnement dans `.env` :
+4. Configurer les variables d'environnement dans `.env` :
 
-- `DATABASE_URL` : URL de connexion a la base de données (par défaut : `postgresql://transi-store:transi-store@postgres:5432/transi-store`)
-- `SESSION_SECRET` : Secret pour les sessions (générer une chaîne aléatoire)
-- `MAPADO_*` ou `GOOGLE_*` : Configuration OAuth (optionnel selon le provider)
+- `DATABASE_URL` : URL de connexion a la base de données
+- `OIDC_ISSUER` : URL de l'issuer OIDC
+- `OIDC_CLIENT_ID` : Client ID OAuth
+- `OIDC_CLIENT_SECRET` : Client Secret OAuth
+- `SESSION_SECRET` : Secret pour les sessions
 
-4. Demarrer l'application :
+5. Demarrer PostgreSQL :
 
 ```bash
-make dev
+docker compose up -d
 ```
 
-L'application build automatiquement les images Docker et démarre tous les services.
-
-5. Dans un autre terminal, appliquer le schema de base de donnees :
+6. Appliquer le schema de base de donnees :
 
 ```bash
-make db-push
+yarn db:push
 ```
 
-6. Optionnel : activer la recherche floue (une seule fois) :
+7. Activer la recherche floue (une seule fois) :
 
 ```bash
-make db-setup
+yarn db:setup-search
+```
+
+8. Demarrer le serveur de developpement :
+
+```bash
+yarn dev
 ```
 
 L'application sera disponible sur http://localhost:5173
 
-**Note** : Toutes les commandes `yarn` sont remplacées par des commandes `make`. Voir la section "Scripts disponibles" ci-dessous.
-
 ## Scripts disponibles
 
-| Commande          | Description                                          |
-| ----------------- | ---------------------------------------------------- |
-| `make dev`        | Demarre le serveur de developpement (port 5173)     |
-| `make build`      | Build l'application pour la production               |
-| `make start`      | Demarre l'application en production (port 3000)      |
-| `make install`    | Installe/met a jour les dependances                  |
-| `make typecheck`  | Verifie les types TypeScript                         |
-| `make db-push`    | Applique le schema a la base de donnees              |
-| `make db-studio`  | Ouvre Drizzle Studio                                 |
-| `make db-setup`   | Active la recherche floue (une seule fois)           |
-| `make logs`       | Affiche les logs de l'application                    |
-| `make shell`      | Ouvre un shell dans le container de l'application    |
-| `make down`       | Arrete tous les services                             |
-| `make clean`      | Arrete et supprime les volumes (⚠️ supprime les donnees) |
-
-Utilisez `make help` pour voir toutes les commandes disponibles.
+| Script                 | Description                                |
+| ---------------------- | ------------------------------------------ |
+| `yarn dev`             | Demarre le serveur de developpement        |
+| `yarn build`           | Build l'application pour la production     |
+| `yarn start`           | Demarre l'application en production        |
+| `yarn typecheck`       | Verifie les types TypeScript               |
+| `yarn db:generate`     | Genere les migrations Drizzle              |
+| `yarn db:push`         | Applique le schema a la base de donnees    |
+| `yarn db:studio`       | Ouvre Drizzle Studio                       |
+| `yarn db:setup-search` | Active la recherche floue (une seule fois) |
 
 ## Structure du projet
 

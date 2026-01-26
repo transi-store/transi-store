@@ -4,7 +4,6 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [reactRouter()],
-  server: { allowedHosts: true },
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "./app"),

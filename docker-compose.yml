@@ -1,8 +1,8 @@
-# Base configuration (shared between dev and prod)
 services:
   postgres:
     image: postgres:18
-    # container_name: postgres
+    container_name: transi-store-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_DATABASE:-transistore}
       POSTGRES_USER: ${DB_USER:-transistore}
@@ -17,33 +17,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - transi-store-network
-
-  app:
-    build:
-      context: .
-    environment:
-      # Override DATABASE_URL to use 'postgres' as host (Docker service name)
-      - DATABASE_URL=postgresql://${DB_USER:-transistore}:${DB_PASSWORD:-transistore}@postgres:5432/${DB_DATABASE:-transistore}
-      - SESSION_SECRET=${SESSION_SECRET}
-      - MAPADO_AUTHORIZATION_URL=${MAPADO_AUTHORIZATION_URL}
-      - MAPADO_TOKEN_URL=${MAPADO_TOKEN_URL}
-      - MAPADO_CLIENT_ID=${MAPADO_CLIENT_ID}
-      - MAPADO_CLIENT_SECRET=${MAPADO_CLIENT_SECRET}
-      - MAPADO_REDIRECT_URI=${MAPADO_REDIRECT_URI}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - transi-store-network
-
-networks:
-  transi-store-network:
-    driver: bridge
 
 volumes:
   postgres_data:
