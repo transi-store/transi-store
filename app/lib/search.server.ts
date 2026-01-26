@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { eq, and, or, inArray, sql, desc } from "drizzle-orm";
+import { eq, and, inArray, sql, desc } from "drizzle-orm";
 import {
   maxSimilarity,
   SIMILARITY_THRESHOLD,
@@ -79,9 +79,13 @@ export async function globalSearch(
   const projectIds = projects.map((p) => p.id);
 
   // Search in translation keys avec score de similarité
-  const keysWithSimilarity = await searchTranslationKeys(searchQuery, projectIds, {
-    limit,
-  });
+  const keysWithSimilarity = await searchTranslationKeys(
+    searchQuery,
+    projectIds,
+    {
+      limit,
+    },
+  );
 
   const keys = keysWithSimilarity.map((row) => row.key);
   const keysSimilarityMap = new Map(

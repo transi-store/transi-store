@@ -1,4 +1,4 @@
-import { sql, and, or, inArray, eq, desc } from "drizzle-orm";
+import { sql, and, or, inArray, desc } from "drizzle-orm";
 import { db, schema } from "./db.server";
 
 /**
@@ -47,10 +47,9 @@ export async function searchTranslationKeys(
   return await db
     .select({
       key: schema.translationKeys,
-      similarity: maxSimilarity(
-        schema.translationKeys.keyName,
-        searchQuery,
-      ).as("similarity"),
+      similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as(
+        "similarity",
+      ),
     })
     .from(schema.translationKeys)
     .where(

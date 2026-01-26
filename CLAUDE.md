@@ -31,7 +31,8 @@ This project maintains detailed technical documentation in the `docs/` folder:
 ```bash
 # Development
 yarn dev                     # Start dev server (http://localhost:5173)
-yarn lint:types               # Type check with TypeScript
+yarn lint:types              # Type check with TypeScript
+yarn knip                    # Find unused code and dependencies
 yarn build                   # Build for production
 
 # Database
@@ -92,7 +93,7 @@ SESSION_SECRET="..."
 2. **Follow existing patterns** documented in code-patterns.md
 3. **Check ADRs** for context on past decisions
 4. **Verify route configuration** in `app/routes.ts` when adding routes
-5. **Run `yarn lint:types`** before committing
+5. **Run `yarn lint:types` and `yarn knip`** before committing
 
 ---
 
