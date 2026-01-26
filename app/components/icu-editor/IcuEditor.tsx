@@ -35,6 +35,8 @@ interface IcuEditorProps {
   value: string;
   /** Callback when value changes */
   onChange: (value: string) => void;
+  /** Callback when editor loses focus */
+  onBlur?: () => void;
   /** Placeholder text */
   placeholder?: string;
   /** Whether the editor is disabled */
@@ -52,6 +54,7 @@ interface IcuEditorProps {
 export function IcuEditor({
   value,
   onChange,
+  onBlur,
   placeholder = "Entrez votre traduction ICU...",
   disabled = false,
   locale = "fr",
@@ -61,6 +64,10 @@ export function IcuEditor({
 }: IcuEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
+  const onBlurRef = useRef(onBlur);
+  // Update ref during render (valid React pattern for callbacks)
+  onBlurRef.current = onBlur;
+
   const [internalValue, setInternalValue] = useState(value);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -118,6 +125,15 @@ export function IcuEditor({
         if (update.docChanged) {
           handleChange(update.state.doc.toString());
         }
+      }),
+
+      // Blur handler
+      EditorView.domEventHandlers({
+        blur: () => {
+          if (onBlurRef.current) {
+            onBlurRef.current();
+          }
+        },
       }),
 
       // Editable state

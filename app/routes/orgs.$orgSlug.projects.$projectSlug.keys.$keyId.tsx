@@ -33,8 +33,8 @@ import {
   Link,
   useFetcher,
 } from "react-router";
-import { useState, useEffect } from "react";
-import { LuPencil, LuSave, LuTrash2, LuSparkles } from "react-icons/lu";
+import { useState, useEffect, useRef } from "react";
+import { LuPencil, LuTrash2, LuSparkles } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -49,10 +49,10 @@ import {
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { IcuEditorClient } from "~/components/icu-editor";
 import {
-  getTranslationsUrl,
   getRedirectUrlFromRequest,
   getRedirectUrlFromFormData,
 } from "~/lib/routes-helpers";
+import { toaster } from "~/components/ui/toaster";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -147,39 +147,25 @@ export async function action({ request, params }: Route.ActionArgs) {
     return { success: true };
   }
 
-  if (action === "update") {
-    const description = formData.get("description");
+  if (action === "saveTranslation") {
+    const locale = formData.get("locale");
+    const value = formData.get("value");
 
-    await updateTranslationKey({
-      keyId: key.id,
-      description:
-        description && typeof description === "string"
-          ? description
-          : undefined,
-    });
-
-    // Update translations
-    const languages = await getProjectLanguages(project.id);
-
-    for (const lang of languages) {
-      const value = formData.get(`translation_${lang.locale}`);
-
+    if (locale && typeof locale === "string") {
       if (value && typeof value === "string" && value.trim()) {
+        // Save the translation
         await upsertTranslation({
           keyId: key.id,
-          locale: lang.locale,
+          locale: locale,
           value: value.trim(),
         });
+      } else {
+        // Delete the translation if the value is empty
+        await deleteTranslationKey(key.id);
       }
     }
 
-    const redirectUrl = getRedirectUrlFromFormData(
-      formData,
-      params.orgSlug,
-      params.projectSlug,
-    );
-
-    return redirect(redirectUrl);
+    return { success: true };
   }
 
   return { error: "Action inconnue" };
@@ -201,6 +187,12 @@ export default function EditTranslationKey({
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const [isEditKeyModalOpen, setIsEditKeyModalOpen] = useState(false);
+
+  // Fetcher for auto-saving translations
+  const saveFetcher = useFetcher();
+
+  // Track original values to detect changes
+  const originalValuesRef = useRef<Record<string, string>>({});
 
   // Close modal after successful edit
   useEffect(() => {
@@ -231,8 +223,59 @@ export default function EditTranslationKey({
     return initial;
   });
 
+  // Initialize original values ref
+  useEffect(() => {
+    const initial: Record<string, string> = {};
+    for (const lang of languages) {
+      initial[lang.locale] = translationMap.get(lang.locale) || "";
+    }
+    originalValuesRef.current = initial;
+  }, [languages, translationMap]);
+
   const handleTranslationChange = (locale: string, value: string) => {
     setTranslationValues((prev) => ({ ...prev, [locale]: value }));
+  };
+
+  const handleTranslationBlur = (locale: string) => {
+    const value = translationValues[locale];
+    const originalValue = originalValuesRef.current[locale];
+
+    // Only save if the value has changed
+    if (value !== originalValue) {
+      // Update the reference immediately after submitting
+      // This way, we avoid duplicate saves if the user blurs multiple times
+      originalValuesRef.current[locale] = value;
+
+      saveFetcher.submit(
+        {
+          _action: "saveTranslation",
+          locale,
+          value: value || "",
+        },
+        {
+          method: "POST",
+        },
+      );
+
+      // Show toast immediately after submitting
+      toaster.success({
+        title: "Sauvegarde en cours...",
+        // description: `Clé: ${key.keyName} • Locale: ${locale} • Valeur: ${value || "(vide)"}`,
+        description: (
+          <VStack align="start" gap={1}>
+            <Text>
+              <strong>Clé:</strong> {key.keyName}
+            </Text>
+            <Text>
+              <strong>Locale:</strong> {locale}
+            </Text>
+            <Text>
+              <strong>Valeur:</strong> {value || "(vide)"}
+            </Text>
+          </VStack>
+        ),
+      });
+    }
   };
 
   const handleRequestAiTranslation = (locale: string) => {
@@ -253,6 +296,7 @@ export default function EditTranslationKey({
     if (aiDialogLocale) {
       handleTranslationChange(aiDialogLocale, text);
       setAiDialogLocale(null);
+      // The value will be saved on blur when the user leaves the field
     }
   };
 
@@ -320,106 +364,91 @@ export default function EditTranslationKey({
             </Button>
           </Box>
         ) : (
-          <Form method="post">
-            <input type="hidden" name="_action" value="update" />
-            <input type="hidden" name="redirectUrl" value={redirectUrl} />
+          <VStack gap={4} align="stretch">
+            <Box>
+              <Heading as="h2" size="lg" mb={4}>
+                Traductions
+              </Heading>
 
-            <VStack gap={4} align="stretch">
-              <Box>
-                <Heading as="h2" size="lg" mb={4}>
-                  Traductions
-                </Heading>
+              <SimpleGrid columns={2} gap={6}>
+                {/* Langue par défaut en premier */}
+                {languages
+                  .filter((lang) => lang.isDefault)
+                  .map((lang) => (
+                    <GridItem key={lang.id}>
+                      <Field.Root>
+                        <Field.Label>
+                          <HStack>
+                            <Text>{lang.locale.toUpperCase()}</Text>
+                            <Badge colorPalette="brand" size="sm">
+                              Par défaut
+                            </Badge>
+                          </HStack>
+                        </Field.Label>
+                        <IcuEditorClient
+                          name={`translation_${lang.locale}`}
+                          value={translationValues[lang.locale] || ""}
+                          onChange={(value) =>
+                            handleTranslationChange(lang.locale, value)
+                          }
+                          onBlur={() => handleTranslationBlur(lang.locale)}
+                          placeholder={`Traduction en ${lang.locale}...`}
+                          disabled={isSubmitting}
+                          locale={lang.locale}
+                          showPreview={true}
+                        />
+                      </Field.Root>
+                    </GridItem>
+                  ))}
 
-                <SimpleGrid columns={2} gap={6}>
-                  {/* Langue par défaut en premier */}
-                  {languages
-                    .filter((lang) => lang.isDefault)
-                    .map((lang) => (
-                      <GridItem key={lang.id}>
-                        <Field.Root>
-                          <Field.Label>
-                            <HStack>
-                              <Text>{lang.locale.toUpperCase()}</Text>
-                              <Badge colorPalette="brand" size="sm">
-                                Par défaut
-                              </Badge>
-                            </HStack>
-                          </Field.Label>
-                          <IcuEditorClient
-                            name={`translation_${lang.locale}`}
-                            value={translationValues[lang.locale] || ""}
-                            onChange={(value) =>
-                              handleTranslationChange(lang.locale, value)
-                            }
-                            placeholder={`Traduction en ${lang.locale}...`}
-                            disabled={isSubmitting}
-                            locale={lang.locale}
-                            showPreview={true}
-                          />
-                        </Field.Root>
-                      </GridItem>
-                    ))}
+                {/* Autres langues */}
+                {languages
+                  .filter((lang) => !lang.isDefault)
+                  .map((lang) => (
+                    <GridItem key={lang.id}>
+                      <Field.Root>
+                        <Field.Label>
+                          <HStack justify="space-between" w="100%">
+                            <Text>{lang.locale.toUpperCase()}</Text>
+                            {hasAiProvider && (
+                              <Button
+                                size="xs"
+                                variant="ghost"
+                                colorPalette="purple"
+                                onClick={() =>
+                                  handleRequestAiTranslation(lang.locale)
+                                }
+                                disabled={isSubmitting}
+                              >
+                                <LuSparkles /> Traduire avec IA
+                              </Button>
+                            )}
+                          </HStack>
+                        </Field.Label>
+                        <IcuEditorClient
+                          name={`translation_${lang.locale}`}
+                          value={translationValues[lang.locale] || ""}
+                          onChange={(value) =>
+                            handleTranslationChange(lang.locale, value)
+                          }
+                          onBlur={() => handleTranslationBlur(lang.locale)}
+                          placeholder={`Traduction en ${lang.locale}...`}
+                          disabled={isSubmitting}
+                          locale={lang.locale}
+                          showPreview={true}
+                        />
+                      </Field.Root>
+                    </GridItem>
+                  ))}
+              </SimpleGrid>
+            </Box>
 
-                  {/* Autres langues */}
-                  {languages
-                    .filter((lang) => !lang.isDefault)
-                    .map((lang) => (
-                      <GridItem key={lang.id}>
-                        <Field.Root>
-                          <Field.Label>
-                            <HStack justify="space-between" w="100%">
-                              <Text>{lang.locale.toUpperCase()}</Text>
-                              {hasAiProvider && (
-                                <Button
-                                  size="xs"
-                                  variant="ghost"
-                                  colorPalette="purple"
-                                  onClick={() =>
-                                    handleRequestAiTranslation(lang.locale)
-                                  }
-                                  disabled={isSubmitting}
-                                >
-                                  <LuSparkles /> Traduire avec IA
-                                </Button>
-                              )}
-                            </HStack>
-                          </Field.Label>
-                          <IcuEditorClient
-                            name={`translation_${lang.locale}`}
-                            value={translationValues[lang.locale] || ""}
-                            onChange={(value) =>
-                              handleTranslationChange(lang.locale, value)
-                            }
-                            placeholder={`Traduction en ${lang.locale}...`}
-                            disabled={isSubmitting}
-                            locale={lang.locale}
-                            showPreview={true}
-                          />
-                        </Field.Root>
-                      </GridItem>
-                    ))}
-                </SimpleGrid>
-              </Box>
-
-              <Box display="flex" gap={3} mt={6}>
-                <Button
-                  type="submit"
-                  colorPalette="brand"
-                  loading={isSubmitting}
-                  flex={1}
-                >
-                  <LuSave /> Enregistrer
-                </Button>
-                <Button asChild variant="outline" disabled={isSubmitting}>
-                  <Link
-                    to={getTranslationsUrl(organization.slug, project.slug)}
-                  >
-                    Retour
-                  </Link>
-                </Button>
-              </Box>
-            </VStack>
-          </Form>
+            <Box display="flex" gap={3} mt={6}>
+              <Button asChild variant="outline" disabled={isSubmitting}>
+                <Link to={redirectUrl}>Retour</Link>
+              </Button>
+            </Box>
+          </VStack>
         )}
 
         {/* Modale d'édition de la clé */}

@@ -16,6 +16,8 @@ interface IcuEditorClientProps {
   value: string;
   /** Callback when value changes */
   onChange: (value: string) => void;
+  /** Callback when editor loses focus */
+  onBlur?: () => void;
   /** Placeholder text */
   placeholder?: string;
   /** Whether the editor is disabled */

@@ -79,7 +79,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
 
     const parsedKeyId = parseInt(keyId, 10);
-    
+
     if (isNaN(parsedKeyId)) {
       throw new Response("Invalid Key ID", { status: 400 });
     }
@@ -101,6 +101,9 @@ export default function ProjectTranslations({
   const { organization, project, languages } = useOutletContext<ContextType>();
 
   const totalLanguages = languages.length;
+
+  // Build redirect URL with current search params
+  const currentUrl = `/orgs/${organization.slug}/projects/${project.slug}/translations${search ? `?search=${encodeURIComponent(search)}` : ""}`;
 
   return (
     <VStack gap={6} align="stretch">
@@ -242,7 +245,7 @@ export default function ProjectTranslations({
                       <HStack gap={2}>
                         <Button asChild size="sm" colorPalette="brand">
                           <Link
-                            to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}`}
+                            to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}?redirect=${encodeURIComponent(currentUrl)}`}
                           >
                             <LuPencil /> Éditer
                           </Link>
