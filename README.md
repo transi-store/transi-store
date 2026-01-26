@@ -8,12 +8,23 @@ transi-store est une application web permettant de gerer les traductions de chai
 
 ## Fonctionnalites
 
+### Gestion des traductions
 - **Multi-organisations** : Chaque utilisateur peut appartenir a plusieurs organisations
 - **Multi-projets** : Chaque organisation peut avoir plusieurs projets de traduction
-- **Multi-langues** : Chaque projet peut supporter plusieurs langues
-- **API d'export** : Telechargement des traductions en JSON et XLIFF
-- **Recherche globale** : Recherche sur les cles et les valeurs de traduction
-- **Authentification OAuth2/OIDC** : Connexion via un provider OIDC
+- **Multi-langues** : Support de plusieurs langues par projet avec langues par defaut
+- **Cles de traduction** : Gestion centralisee des cles avec descriptions pour les traducteurs
+- **Editeur ICU MessageFormat** : Syntaxe ICU pour pluralisation, genre, et variables avec validation en temps reel
+- **Recherche floue** : Recherche puissante sur les cles et valeurs avec PostgreSQL pg_trgm
+
+### Import/Export
+- **API d'export** : Telechargement des traductions en JSON (plat ou multi-langues) et XLIFF 2.0
+- **Cles d'API** : Authentification par Bearer token pour integration CI/CD
+- **Import JSON** : Import en masse de traductions avec strategies (overwrite/skip)
+
+### Collaboration
+- **Gestion d'equipe** : Invitation d'utilisateurs par email avec codes d'invitation
+- **Multi-utilisateurs** : Plusieurs membres par organisation avec acces partage aux projets
+- **Authentification OAuth2/OIDC** : Support multi-provider (Google, Mapado) avec PKCE
 
 ## Stack technique
 
@@ -118,15 +129,19 @@ transi-store/
 └── docker-compose.yml     # Configuration Docker
 ```
 
-## Decisions d'architecture
+## Documentation technique
 
-Les decisions d'architecture sont documentees dans le dossier [`docs/decisions/`](./docs/decisions/).
+### Architecture et implementation
+- **[Notes techniques](./docs/technical-notes/)** : Documentation detaillee de l'architecture, patterns, et systemes
+- **[Decisions d'architecture (ADR)](./docs/decisions/)** : Historique des decisions techniques importantes
 
-Consultez le [README des ADR](./docs/decisions/README.md) pour :
-
-- La liste complete des decisions architecturales
-- Le processus de creation d'un nouvel ADR
-- Le template a utiliser
+### Pour les developpeurs
+Consultez le dossier [`docs/technical-notes/`](./docs/technical-notes/) pour comprendre :
+- L'architecture generale du projet
+- Le systeme d'authentification OAuth2/OIDC
+- Le schema de base de donnees
+- L'API d'export et le systeme d'import
+- Les patterns de code utilises
 
 ## Licence
 

@@ -73,12 +73,11 @@ GOOGLE_CLIENT_SECRET=xxx
 GOOGLE_REDIRECT_URI=http://localhost:5173/auth/google/callback
 
 # Mapado OAuth (optionnel)
-OAUTH_AUTHORIZATION_URL=https://...
-OAUTH_TOKEN_URL=https://...
-OAUTH_CLIENT_ID=xxx
-OAUTH_CLIENT_SECRET=xxx
-OAUTH_REDIRECT_URI=http://localhost:5173/auth/mapado/callback
-OAUTH_SCOPES=
+MAPADO_AUTHORIZATION_URL=https://...
+MAPADO_TOKEN_URL=https://...
+MAPADO_CLIENT_ID=xxx
+MAPADO_CLIENT_SECRET=xxx
+MAPADO_REDIRECT_URI=http://localhost:5173/auth/mapado/callback
 ```
 
 Au moins un des deux providers doit être configuré pour que l'application fonctionne.
