@@ -9,7 +9,7 @@
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "lint:types": "react-router typegen && tsc",
-    "knip": "knip",
+    "knip": "react-router typegen && knip",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
