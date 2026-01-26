@@ -35,6 +35,8 @@ interface IcuEditorProps {
   value: string;
   /** Callback when value changes */
   onChange: (value: string) => void;
+  /** Callback when editor loses focus */
+  onBlur?: () => void;
   /** Placeholder text */
   placeholder?: string;
   /** Whether the editor is disabled */
@@ -52,6 +54,7 @@ interface IcuEditorProps {
 export function IcuEditor({
   value,
   onChange,
+  onBlur,
   placeholder = "Entrez votre traduction ICU...",
   disabled = false,
   locale = "fr",
@@ -120,6 +123,16 @@ export function IcuEditor({
         }
       }),
 
+      // Blur handler
+      EditorView.domEventHandlers({
+        blur: () => {
+          if (onBlur) {
+            onBlur();
+          }
+          return false;
+        },
+      }),
+
       // Editable state
       EditorView.editable.of(!disabled),
 
@@ -153,7 +166,7 @@ export function IcuEditor({
       view.destroy();
       editorRef.current = null;
     };
-  }, [placeholder, disabled, minHeight]);
+  }, [placeholder, disabled, minHeight, onBlur]);
 
   const isValid = errors.length === 0;
 
