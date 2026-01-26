@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { eq, and, inArray, like, or } from "drizzle-orm";
+import { eq, and, inArray, or, sql, desc } from "drizzle-orm";
 
 export async function getTranslationKeys(
   projectId: number,
@@ -11,22 +11,53 @@ export async function getTranslationKeys(
 ) {
   const conditions = [eq(schema.translationKeys.projectId, projectId)];
 
-  if (options?.search) {
-    conditions.push(
-      or(
-        like(schema.translationKeys.keyName, `%${options.search}%`),
-        like(schema.translationKeys.description, `%${options.search}%`),
-      )!,
-    );
-  }
+  // Helper function to calculate max similarity (same as globalSearch)
+  const maxSimilarity = (field: any, query: string) =>
+    sql<number>`GREATEST(
+      similarity(${field}, ${query}),
+      word_similarity(${query}, ${field})
+    )`;
 
-  const keys = await db
-    .select()
-    .from(schema.translationKeys)
-    .where(and(...conditions))
-    .limit(options?.limit || 50)
-    .offset(options?.offset || 0)
-    .orderBy(schema.translationKeys.keyName);
+  let keys;
+
+  if (options?.search) {
+    const searchQuery = options.search.trim();
+    const similarityThreshold = 0.1; // Same threshold as globalSearch
+
+    // Use fuzzy search with similarity scoring
+    const keysWithSimilarity = await db
+      .select({
+        key: schema.translationKeys,
+        similarity: maxSimilarity(
+          schema.translationKeys.keyName,
+          searchQuery,
+        ).as("similarity"),
+      })
+      .from(schema.translationKeys)
+      .where(
+        and(
+          eq(schema.translationKeys.projectId, projectId),
+          or(
+            sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${similarityThreshold}`,
+            sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${similarityThreshold}`,
+          )!,
+        ),
+      )
+      .orderBy(desc(sql`similarity`))
+      .limit(options?.limit || 50)
+      .offset(options?.offset || 0);
+
+    keys = keysWithSimilarity.map((row) => row.key);
+  } else {
+    // No search query - use regular query ordered by keyName
+    keys = await db
+      .select()
+      .from(schema.translationKeys)
+      .where(and(...conditions))
+      .limit(options?.limit || 50)
+      .offset(options?.offset || 0)
+      .orderBy(schema.translationKeys.keyName);
+  }
 
   if (keys.length === 0) {
     return [];
