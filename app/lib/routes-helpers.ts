@@ -18,11 +18,8 @@ export function getRedirectUrlFromRequest(
 ): string {
   const url = new URL(request.url);
   const redirectParam = url.searchParams.get("redirect");
-  const referer = request.headers.get("referer");
   return (
-    redirectParam ||
-    referer ||
-    getTranslationsUrl(defaultOrgSlug, defaultProjectSlug)
+    redirectParam || getTranslationsUrl(defaultOrgSlug, defaultProjectSlug)
   );
 }
 
