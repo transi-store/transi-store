@@ -33,7 +33,7 @@ import {
   Link,
   useFetcher,
 } from "react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LuPencil, LuTrash2, LuSparkles } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
 import { requireUser } from "~/lib/session.server";
@@ -45,6 +45,7 @@ import {
   upsertTranslation,
   deleteTranslationKey,
   updateTranslationKey,
+  deleteTranslation,
 } from "~/lib/translation-keys.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -152,11 +153,15 @@ export async function action({ request, params }: Route.ActionArgs) {
 
     if (locale && typeof locale === "string") {
       if (value && typeof value === "string" && value.trim()) {
+        // Save the translation
         await upsertTranslation({
           keyId: key.id,
           locale: locale,
           value: value.trim(),
         });
+      } else {
+        // Delete the translation if the value is empty
+        await deleteTranslation(key.id, locale);
       }
     }
 
@@ -185,6 +190,9 @@ export default function EditTranslationKey({
 
   // Fetcher for auto-saving translations
   const saveFetcher = useFetcher();
+
+  // Track original values to detect changes
+  const originalValuesRef = useRef<Record<string, string>>({});
 
   // Close modal after successful edit
   useEffect(() => {
@@ -215,22 +223,39 @@ export default function EditTranslationKey({
     return initial;
   });
 
+  // Initialize original values ref
+  useEffect(() => {
+    const initial: Record<string, string> = {};
+    for (const lang of languages) {
+      initial[lang.locale] = translationMap.get(lang.locale) || "";
+    }
+    originalValuesRef.current = initial;
+  }, [languages, translationMap]);
+
   const handleTranslationChange = (locale: string, value: string) => {
     setTranslationValues((prev) => ({ ...prev, [locale]: value }));
   };
 
   const handleTranslationBlur = (locale: string) => {
     const value = translationValues[locale];
-    saveFetcher.submit(
-      {
-        _action: "saveTranslation",
-        locale,
-        value: value || "",
-      },
-      {
-        method: "POST",
-      },
-    );
+    const originalValue = originalValuesRef.current[locale];
+
+    // Only save if the value has changed
+    if (value !== originalValue) {
+      saveFetcher.submit(
+        {
+          _action: "saveTranslation",
+          locale,
+          value: value || "",
+        },
+        {
+          method: "POST",
+        },
+      );
+
+      // Update the original value after saving
+      originalValuesRef.current[locale] = value;
+    }
   };
 
   const handleRequestAiTranslation = (locale: string) => {
@@ -250,6 +275,8 @@ export default function EditTranslationKey({
   const handleSelectSuggestion = (text: string) => {
     if (aiDialogLocale) {
       handleTranslationChange(aiDialogLocale, text);
+      // Mark as changed so it will be saved on blur
+      originalValuesRef.current[aiDialogLocale] = "";
       setAiDialogLocale(null);
     }
   };
