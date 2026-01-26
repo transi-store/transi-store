@@ -78,7 +78,13 @@ export async function action({ request, params }: Route.ActionArgs) {
       throw new Response("Key ID is required", { status: 400 });
     }
 
-    const newKeyId = await duplicateTranslationKey(parseInt(keyId, 10));
+    const parsedKeyId = parseInt(keyId, 10);
+    
+    if (isNaN(parsedKeyId)) {
+      throw new Response("Invalid Key ID", { status: 400 });
+    }
+
+    const newKeyId = await duplicateTranslationKey(parsedKeyId);
 
     return redirect(
       `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys/${newKeyId}`,
