@@ -10,13 +10,16 @@ import {
   Badge,
   Progress,
 } from "@chakra-ui/react";
-import { Link, Form, useOutletContext } from "react-router";
-import { LuPlus, LuPencil } from "react-icons/lu";
+import { Link, Form, useOutletContext, redirect } from "react-router";
+import { LuPlus, LuPencil, LuCopy } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.translations";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
-import { getTranslationKeys } from "~/lib/translation-keys.server";
+import {
+  getTranslationKeys,
+  duplicateTranslationKey,
+} from "~/lib/translation-keys.server";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -50,6 +53,39 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   });
 
   return { keys, search, page };
+}
+
+export async function action({ request, params }: Route.ActionArgs) {
+  const user = await requireUser(request);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
+
+  const project = await getProjectBySlug(organization.id, params.projectSlug);
+
+  if (!project) {
+    throw new Response("Project not found", { status: 404 });
+  }
+
+  const formData = await request.formData();
+  const action = formData.get("_action");
+
+  if (action === "duplicate") {
+    const keyId = formData.get("keyId");
+
+    if (!keyId || typeof keyId !== "string") {
+      throw new Response("Key ID is required", { status: 400 });
+    }
+
+    const newKeyId = await duplicateTranslationKey(parseInt(keyId, 10));
+
+    return redirect(
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys/${newKeyId}`,
+    );
+  }
+
+  return { error: "Action inconnue" };
 }
 
 export default function ProjectTranslations({
@@ -133,7 +169,7 @@ export default function ProjectTranslations({
               <Table.Row>
                 <Table.ColumnHeader>Nom de la clé</Table.ColumnHeader>
                 <Table.ColumnHeader w="300px">Traductions</Table.ColumnHeader>
-                <Table.ColumnHeader w="150px">Actions</Table.ColumnHeader>
+                <Table.ColumnHeader w="280px">Actions</Table.ColumnHeader>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -197,13 +233,26 @@ export default function ProjectTranslations({
                       </VStack>
                     </Table.Cell>
                     <Table.Cell>
-                      <Button asChild size="sm" colorPalette="brand">
-                        <Link
-                          to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}`}
-                        >
-                          <LuPencil /> Éditer
-                        </Link>
-                      </Button>
+                      <HStack gap={2}>
+                        <Button asChild size="sm" colorPalette="brand">
+                          <Link
+                            to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}`}
+                          >
+                            <LuPencil /> Éditer
+                          </Link>
+                        </Button>
+                        <Form method="post">
+                          <input
+                            type="hidden"
+                            name="_action"
+                            value="duplicate"
+                          />
+                          <input type="hidden" name="keyId" value={key.id} />
+                          <Button type="submit" size="sm" variant="outline">
+                            <LuCopy /> Dupliquer
+                          </Button>
+                        </Form>
+                      </HStack>
                     </Table.Cell>
                   </Table.Row>
                 );
