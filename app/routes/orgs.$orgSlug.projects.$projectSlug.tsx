@@ -58,9 +58,6 @@ export default function ProjectLayout() {
               {project.description}
             </Text>
           )}
-          <Text fontSize="sm" color="gray.600">
-            /{organization.slug}/{project.slug}
-          </Text>
         </Box>
 
         {/* Navigation */}

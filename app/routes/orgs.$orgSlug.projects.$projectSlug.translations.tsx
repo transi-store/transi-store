@@ -11,6 +11,8 @@ import {
   Text,
   HStack,
   Badge,
+  LinkBox,
+  LinkOverlay,
   Progress,
   Pagination,
 } from "@chakra-ui/react";
@@ -207,23 +209,31 @@ export default function ProjectTranslations({
                 return (
                   <Table.Row key={key.id}>
                     <Table.Cell>
-                      <VStack align="stretch" gap={1}>
-                        <Text
-                          fontFamily="mono"
-                          fontSize="sm"
-                          fontWeight="medium"
-                        >
-                          {key.keyName}
-                        </Text>
-                        {key.description && (
-                          <Text fontSize="xs" color="gray.400">
-                            {key.description}
+                      <LinkBox>
+                        <VStack align="stretch" gap={1}>
+                          <LinkOverlay asChild>
+                            <Link
+                              to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}?redirect=${encodeURIComponent(currentUrl)}`}
+                            >
+                              <Text
+                                fontFamily="mono"
+                                fontSize="sm"
+                                fontWeight="medium"
+                              >
+                                {key.keyName}
+                              </Text>
+                            </Link>
+                          </LinkOverlay>
+                          {key.description && (
+                            <Text fontSize="xs" color="gray.400">
+                              {key.description}
+                            </Text>
+                          )}
+                          <Text fontSize="s" color="gray.600">
+                            {key.defaultTranslation}
                           </Text>
-                        )}
-                        <Text fontSize="s" color="gray.600">
-                          {key.defaultTranslation}
-                        </Text>
-                      </VStack>
+                        </VStack>
+                      </LinkBox>
                     </Table.Cell>
                     <Table.Cell>
                       <VStack align="stretch" gap={2}>
