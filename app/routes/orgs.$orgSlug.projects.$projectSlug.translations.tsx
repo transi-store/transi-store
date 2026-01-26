@@ -10,7 +10,7 @@ import {
   Badge,
   Progress,
 } from "@chakra-ui/react";
-import { Link, Form, useSearchParams, useOutletContext } from "react-router";
+import { Link, Form, useOutletContext } from "react-router";
 import { LuPlus, LuPencil } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.translations";
 import { requireUser } from "~/lib/session.server";
@@ -57,7 +57,6 @@ export default function ProjectTranslations({
 }: Route.ComponentProps) {
   const { keys, search, page } = loaderData;
   const { organization, project, languages } = useOutletContext<ContextType>();
-  const [searchParams] = useSearchParams();
 
   const totalLanguages = languages.length;
 

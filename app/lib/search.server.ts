@@ -210,7 +210,7 @@ export async function globalSearch(
 
   // Combine and deduplicate by keyId (prioritize key matches)
   const allResults = [...keyResults, ...translationResults];
-  const uniqueResults = new Map<string, SearchResult>();
+  const uniqueResults = new Map<number, SearchResult>();
 
   for (const result of allResults) {
     const existing = uniqueResults.get(result.keyId);

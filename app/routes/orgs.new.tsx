@@ -6,7 +6,6 @@ import {
   Input,
   Field,
   Box,
-  Text,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -48,7 +47,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   // Créer l'organisation
-  const organizationId = await createOrganization({
+  await createOrganization({
     name,
     slug,
     createdBy: user.userId,

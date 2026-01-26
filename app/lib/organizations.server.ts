@@ -26,7 +26,7 @@ export async function getUserOrganizations(userId: number) {
   return organizations;
 }
 
-export async function getOrganizationBySlug(slug: string) {
+async function getOrganizationBySlug(slug: string) {
   return await db.query.organizations.findFirst({
     where: { slug },
   });
@@ -71,7 +71,9 @@ interface CreateOrganizationParams {
   createdBy: number;
 }
 
-export async function createOrganization(params: CreateOrganizationParams) {
+export async function createOrganization(
+  params: CreateOrganizationParams,
+): Promise<number> {
   let organizationId: number;
 
   await db.transaction(async (tx) => {

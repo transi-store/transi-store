@@ -7,7 +7,7 @@ export function getTranslationsUrl(
   return search ? `${baseUrl}?search=${encodeURIComponent(search)}` : baseUrl;
 }
 
-export function getKeyUrl(orgSlug: string, projectSlug: string, keyId: string) {
+export function getKeyUrl(orgSlug: string, projectSlug: string, keyId: number) {
   return `/orgs/${orgSlug}/projects/${projectSlug}/keys/${keyId}`;
 }
 

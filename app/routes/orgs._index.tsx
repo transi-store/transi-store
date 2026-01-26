@@ -8,7 +8,7 @@ import {
   SimpleGrid,
   Card,
 } from "@chakra-ui/react";
-import { Link, useLoaderData, redirect } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs._index";
 import { requireUser } from "~/lib/session.server";

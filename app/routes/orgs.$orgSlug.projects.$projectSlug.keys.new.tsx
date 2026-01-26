@@ -15,7 +15,6 @@ import {
   useNavigation,
   redirect,
 } from "react-router";
-import { IcuEditorClient } from "~/components/icu-editor";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.new";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
