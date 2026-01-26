@@ -178,6 +178,25 @@ export const translations = pgTable(
   ],
 );
 
+// Providers IA pour la traduction automatique (par organisation)
+export const organizationAiProviders = pgTable(
+  "organization_ai_providers",
+  {
+    id: serial("id").primaryKey(),
+    organizationId: integer("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    provider: varchar("provider", { length: 50 }).notNull(), // 'openai' | 'gemini'
+    encryptedApiKey: text("encrypted_api_key").notNull(), // Chiffré AES-256-GCM
+    isActive: boolean("is_active").default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("unique_org_provider").on(table.organizationId, table.provider),
+  ],
+);
+
 // Types inferes pour TypeScript
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -207,3 +226,8 @@ export type NewTranslationKey = typeof translationKeys.$inferInsert;
 
 export type Translation = typeof translations.$inferSelect;
 export type NewTranslation = typeof translations.$inferInsert;
+
+export type OrganizationAiProvider =
+  typeof organizationAiProviders.$inferSelect;
+export type NewOrganizationAiProvider =
+  typeof organizationAiProviders.$inferInsert;

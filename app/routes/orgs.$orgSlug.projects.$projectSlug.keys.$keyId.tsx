@@ -11,6 +11,18 @@ import {
   IconButton,
   SimpleGrid,
   GridItem,
+  Spinner,
+  Textarea,
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogCloseTrigger,
+  DialogBackdrop,
+  DialogPositioner,
+  Portal,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -18,9 +30,10 @@ import {
   useNavigation,
   redirect,
   Link,
+  useFetcher,
 } from "react-router";
 import { useState } from "react";
-import { LuPencil, LuPlus, LuSave, LuTrash2 } from "react-icons/lu";
+import { LuPencil, LuPlus, LuSave, LuTrash2, LuSparkles } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -32,6 +45,7 @@ import {
   deleteTranslationKey,
   updateTranslationKey,
 } from "~/lib/translation-keys.server";
+import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { IcuEditorClient } from "~/components/icu-editor";
 import {
   getTranslationsUrl,
@@ -61,13 +75,25 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const languages = await getProjectLanguages(project.id);
   const translations = await getTranslationsForKey(key.id);
 
+  // Vérifier si un provider IA est configuré
+  const activeAiProvider = await getActiveAiProvider(organization.id);
+  const hasAiProvider = activeAiProvider !== null;
+
   const redirectUrl = getRedirectUrlFromRequest(
     request,
     params.orgSlug,
     params.projectSlug,
   );
 
-  return { organization, project, key, languages, translations, redirectUrl };
+  return {
+    organization,
+    project,
+    key,
+    languages,
+    translations,
+    redirectUrl,
+    hasAiProvider,
+  };
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -145,12 +171,27 @@ export async function action({ request, params }: Route.ActionArgs) {
 export default function EditTranslationKey({
   loaderData,
 }: Route.ComponentProps) {
-  const { organization, project, key, languages, translations, redirectUrl } =
-    loaderData;
+  const {
+    organization,
+    project,
+    key,
+    languages,
+    translations,
+    redirectUrl,
+    hasAiProvider,
+  } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+
+  // État pour la modale de traduction IA
+  const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);
+  const aiFetcher = useFetcher<{
+    suggestions?: { text: string; confidence?: number }[];
+    provider?: string;
+    error?: string;
+  }>();
 
   // Create a map of translations by locale for easier lookup
   const translationMap = new Map(translations.map((t) => [t.locale, t.value]));
@@ -168,6 +209,27 @@ export default function EditTranslationKey({
 
   const handleTranslationChange = (locale: string, value: string) => {
     setTranslationValues((prev) => ({ ...prev, [locale]: value }));
+  };
+
+  const handleRequestAiTranslation = (locale: string) => {
+    setAiDialogLocale(locale);
+    aiFetcher.submit(
+      {
+        keyId: String(key.id),
+        targetLocale: locale,
+      },
+      {
+        method: "POST",
+        action: `/api/orgs/${organization.slug}/projects/${project.slug}/translate`,
+      },
+    );
+  };
+
+  const handleSelectSuggestion = (text: string) => {
+    if (aiDialogLocale) {
+      handleTranslationChange(aiDialogLocale, text);
+      setAiDialogLocale(null);
+    }
   };
 
   return (
@@ -322,8 +384,21 @@ export default function EditTranslationKey({
                       <GridItem key={lang.id}>
                         <Field.Root>
                           <Field.Label>
-                            <HStack>
+                            <HStack justify="space-between" w="100%">
                               <Text>{lang.locale.toUpperCase()}</Text>
+                              {hasAiProvider && (
+                                <Button
+                                  size="xs"
+                                  variant="ghost"
+                                  colorPalette="purple"
+                                  onClick={() =>
+                                    handleRequestAiTranslation(lang.locale)
+                                  }
+                                  disabled={isSubmitting}
+                                >
+                                  <LuSparkles /> Traduire avec IA
+                                </Button>
+                              )}
                             </HStack>
                           </Field.Label>
                           <IcuEditorClient
@@ -364,6 +439,95 @@ export default function EditTranslationKey({
             </VStack>
           </Form>
         )}
+
+        {/* Modale de suggestions IA */}
+        <DialogRoot
+          open={aiDialogLocale !== null}
+          onOpenChange={(e) => {
+            if (!e.open) setAiDialogLocale(null);
+          }}
+        >
+          <Portal>
+            <DialogBackdrop />
+            <DialogPositioner>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    <HStack>
+                      <LuSparkles />
+                      <Text>Suggestions de traduction</Text>
+                      {aiDialogLocale && (
+                        <Badge colorPalette="purple">
+                          {aiDialogLocale.toUpperCase()}
+                        </Badge>
+                      )}
+                    </HStack>
+                  </DialogTitle>
+                </DialogHeader>
+                <DialogCloseTrigger />
+                <DialogBody pb={6}>
+                  {aiFetcher.state === "submitting" ||
+                  aiFetcher.state === "loading" ? (
+                    <VStack py={8}>
+                      <Spinner size="lg" />
+                      <Text color="gray.600">
+                        Génération des traductions en cours...
+                      </Text>
+                    </VStack>
+                  ) : aiFetcher.data?.error ? (
+                    <Box p={4} bg="red.50" borderRadius="md">
+                      <Text color="red.700">{aiFetcher.data.error}</Text>
+                    </Box>
+                  ) : aiFetcher.data?.suggestions ? (
+                    <VStack align="stretch" gap={3}>
+                      {aiFetcher.data.provider && (
+                        <Text fontSize="xs" color="gray.500">
+                          Généré par{" "}
+                          {aiFetcher.data.provider === "openai"
+                            ? "OpenAI"
+                            : "Google Gemini"}
+                        </Text>
+                      )}
+                      {aiFetcher.data.suggestions.map((suggestion, index) => (
+                        <Box
+                          key={index}
+                          p={4}
+                          borderWidth={1}
+                          borderRadius="md"
+                          _hover={{ bg: "gray.50", cursor: "pointer" }}
+                          onClick={() =>
+                            handleSelectSuggestion(suggestion.text)
+                          }
+                        >
+                          <Text fontFamily="mono" fontSize="sm">
+                            {suggestion.text}
+                          </Text>
+                          {suggestion.confidence && (
+                            <Text fontSize="xs" color="gray.500" mt={1}>
+                              Confiance:{" "}
+                              {Math.round(suggestion.confidence * 100)}%
+                            </Text>
+                          )}
+                        </Box>
+                      ))}
+                      <Text fontSize="xs" color="gray.500" mt={2}>
+                        Cliquez sur une suggestion pour l'utiliser
+                      </Text>
+                    </VStack>
+                  ) : null}
+                </DialogBody>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setAiDialogLocale(null)}
+                  >
+                    Fermer
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </DialogPositioner>
+          </Portal>
+        </DialogRoot>
       </VStack>
     </Container>
   );

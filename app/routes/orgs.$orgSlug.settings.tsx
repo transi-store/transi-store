@@ -9,6 +9,7 @@ import {
   Alert,
   Code,
   HStack,
+  Badge,
 } from "@chakra-ui/react";
 import {
   DialogRoot,
@@ -24,7 +25,14 @@ import {
 } from "@chakra-ui/react";
 import { useLoaderData, Form, useActionData } from "react-router";
 import React from "react";
-import { LuPlus, LuTrash2, LuCopy, LuTriangleAlert } from "react-icons/lu";
+import {
+  LuPlus,
+  LuTrash2,
+  LuCopy,
+  LuTriangleAlert,
+  LuSparkles,
+  LuCheck,
+} from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.settings";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -33,6 +41,13 @@ import {
   createApiKey,
   deleteApiKey,
 } from "~/lib/api-keys.server";
+import {
+  getOrganizationAiProviders,
+  saveAiProvider,
+  setActiveAiProvider,
+  deleteAiProvider,
+} from "~/lib/ai-providers.server";
+import { AI_PROVIDERS, type AiProvider } from "~/lib/ai-providers";
 import { redirect } from "react-router";
 import { toaster } from "~/components/ui/toaster";
 
@@ -60,9 +75,42 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   if (intent === "delete-api-key") {
-    const keyId = formData.get("keyId") as string;
+    const keyId = parseInt(formData.get("keyId") as string, 10);
 
     await deleteApiKey(keyId, organization.id);
+
+    return redirect(`/orgs/${params.orgSlug}/settings`);
+  }
+
+  if (intent === "save-ai-provider") {
+    const provider = formData.get("provider") as AiProvider;
+    const apiKey = formData.get("apiKey") as string;
+
+    if (!provider || !apiKey) {
+      return { success: false, error: "Provider et clé API requis" };
+    }
+
+    await saveAiProvider({
+      organizationId: organization.id,
+      provider,
+      apiKey,
+    });
+
+    return { success: true, action: "save-ai-provider", provider };
+  }
+
+  if (intent === "activate-ai-provider") {
+    const provider = formData.get("provider") as AiProvider;
+
+    await setActiveAiProvider(organization.id, provider);
+
+    return redirect(`/orgs/${params.orgSlug}/settings`);
+  }
+
+  if (intent === "delete-ai-provider") {
+    const provider = formData.get("provider") as AiProvider;
+
+    await deleteAiProvider(organization.id, provider);
 
     return redirect(`/orgs/${params.orgSlug}/settings`);
   }
@@ -80,13 +128,19 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   // Récupérer les clés d'API de l'organisation
   const apiKeys = await getOrganizationApiKeys(organization.id);
 
-  return { organization, apiKeys };
+  // Récupérer les providers IA configurés
+  const aiProviders = await getOrganizationAiProviders(organization.id);
+
+  return { organization, apiKeys, aiProviders };
 }
 
 export default function OrganizationSettings() {
-  const { organization, apiKeys } = useLoaderData<typeof loader>();
+  const { organization, apiKeys, aiProviders } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isAiDialogOpen, setIsAiDialogOpen] = React.useState(false);
+  const [selectedAiProvider, setSelectedAiProvider] =
+    React.useState<AiProvider | null>(null);
 
   const handleCopyKey = async (key: string) => {
     try {
@@ -109,6 +163,10 @@ export default function OrganizationSettings() {
   React.useEffect(() => {
     if (actionData?.action === "create" && actionData.success) {
       setIsDialogOpen(false);
+    }
+    if (actionData?.action === "save-ai-provider" && actionData.success) {
+      setIsAiDialogOpen(false);
+      setSelectedAiProvider(null);
     }
   }, [actionData]);
 
@@ -304,6 +362,222 @@ export default function OrganizationSettings() {
   "https://your-domain.com/api/orgs/${organization.slug}/projects/PROJECT_SLUG/export?format=json&locale=fr"`}
             </Code>
           </Box>
+        </Box>
+
+        {/* Section Configuration IA */}
+        <Box>
+          <HStack mb={4}>
+            <LuSparkles />
+            <Heading as="h3" size="md">
+              Traduction automatique (IA)
+            </Heading>
+          </HStack>
+          <Text color="gray.600" mb={4}>
+            Configurez un service d'IA pour proposer des traductions
+            automatiques. Vous devez fournir votre propre clé API.
+          </Text>
+
+          {/* Liste des providers configurés */}
+          <VStack align="stretch" gap={2} mb={4}>
+            {AI_PROVIDERS.map((providerInfo) => {
+              const configured = aiProviders.find(
+                (p) => p.provider === providerInfo.value,
+              );
+
+              return (
+                <Box
+                  key={providerInfo.value}
+                  p={4}
+                  borderWidth={1}
+                  borderRadius="md"
+                  bg={configured?.isActive ? "green.50" : undefined}
+                >
+                  <HStack justify="space-between">
+                    <HStack flex={1}>
+                      <Text fontWeight="medium">{providerInfo.label}</Text>
+                      {configured ? (
+                        <>
+                          <Badge colorPalette="green">Configuré</Badge>
+                          {configured.isActive && (
+                            <Badge colorPalette="blue">Actif</Badge>
+                          )}
+                        </>
+                      ) : (
+                        <Badge colorPalette="gray">Non configuré</Badge>
+                      )}
+                    </HStack>
+                    <HStack gap={2}>
+                      {configured && !configured.isActive && (
+                        <Form method="post">
+                          <input
+                            type="hidden"
+                            name="intent"
+                            value="activate-ai-provider"
+                          />
+                          <input
+                            type="hidden"
+                            name="provider"
+                            value={providerInfo.value}
+                          />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            variant="outline"
+                            colorPalette="green"
+                          >
+                            <LuCheck /> Activer
+                          </Button>
+                        </Form>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedAiProvider(providerInfo.value);
+                          setIsAiDialogOpen(true);
+                        }}
+                      >
+                        {configured ? "Modifier" : "Configurer"}
+                      </Button>
+                      {configured && (
+                        <Form method="post">
+                          <input
+                            type="hidden"
+                            name="intent"
+                            value="delete-ai-provider"
+                          />
+                          <input
+                            type="hidden"
+                            name="provider"
+                            value={providerInfo.value}
+                          />
+                          <IconButton
+                            type="submit"
+                            variant="ghost"
+                            colorPalette="red"
+                            size="sm"
+                            aria-label="Supprimer"
+                            title="Supprimer cette configuration"
+                          >
+                            <LuTrash2 />
+                          </IconButton>
+                        </Form>
+                      )}
+                    </HStack>
+                  </HStack>
+                </Box>
+              );
+            })}
+          </VStack>
+
+          {/* Modale de configuration d'un provider IA */}
+          <DialogRoot
+            lazyMount
+            open={isAiDialogOpen}
+            onOpenChange={(e) => {
+              setIsAiDialogOpen(e.open);
+              if (!e.open) setSelectedAiProvider(null);
+            }}
+          >
+            <Portal>
+              <DialogBackdrop />
+              <DialogPositioner>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      Configurer{" "}
+                      {AI_PROVIDERS.find((p) => p.value === selectedAiProvider)
+                        ?.label || "IA"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <DialogCloseTrigger />
+                  <Form method="post">
+                    <input
+                      type="hidden"
+                      name="intent"
+                      value="save-ai-provider"
+                    />
+                    <input
+                      type="hidden"
+                      name="provider"
+                      value={selectedAiProvider || ""}
+                    />
+                    <DialogBody pb={6}>
+                      <VStack align="stretch" gap={4}>
+                        <Box>
+                          <Text fontSize="sm" fontWeight="medium" mb={2}>
+                            Clé API
+                          </Text>
+                          <Input
+                            name="apiKey"
+                            type="password"
+                            placeholder="sk-..."
+                            required
+                          />
+                          <Text fontSize="xs" color="gray.600" mt={1}>
+                            {selectedAiProvider === "openai" && (
+                              <>
+                                Obtenez votre clé sur{" "}
+                                <a
+                                  href="https://platform.openai.com/api-keys"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ textDecoration: "underline" }}
+                                >
+                                  platform.openai.com
+                                </a>
+                              </>
+                            )}
+                            {selectedAiProvider === "gemini" && (
+                              <>
+                                Obtenez votre clé sur{" "}
+                                <a
+                                  href="https://aistudio.google.com/apikey"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ textDecoration: "underline" }}
+                                >
+                                  aistudio.google.com
+                                </a>
+                              </>
+                            )}
+                          </Text>
+                        </Box>
+                        <Alert.Root status="warning">
+                          <Alert.Indicator>
+                            <LuTriangleAlert />
+                          </Alert.Indicator>
+                          <Alert.Content>
+                            <Alert.Description>
+                              <Text fontSize="sm">
+                                La clé sera chiffrée et stockée de manière
+                                sécurisée. Les appels API seront facturés sur
+                                votre compte.
+                              </Text>
+                            </Alert.Description>
+                          </Alert.Content>
+                        </Alert.Root>
+                      </VStack>
+                    </DialogBody>
+                    <DialogFooter gap={3}>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsAiDialogOpen(false);
+                          setSelectedAiProvider(null);
+                        }}
+                      >
+                        Annuler
+                      </Button>
+                      <Button type="submit" colorPalette="brand">
+                        Enregistrer
+                      </Button>
+                    </DialogFooter>
+                  </Form>
+                </DialogContent>
+              </DialogPositioner>
+            </Portal>
+          </DialogRoot>
         </Box>
       </VStack>
     </Box>
