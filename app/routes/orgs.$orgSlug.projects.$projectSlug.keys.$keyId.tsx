@@ -313,13 +313,10 @@ export default function EditTranslationKey({
               Ajoutez des langues dans les paramètres du projet avant de créer
               des traductions.
             </Text>
-            <Button
-              as={Link}
-              to={`/orgs/${organization.slug}/projects/${project.slug}`}
-              colorPalette="yellow"
-              mt={4}
-            >
-              Gérer les langues
+            <Button asChild colorPalette="yellow" mt={4}>
+              <Link to={`/orgs/${organization.slug}/projects/${project.slug}`}>
+                Gérer les langues
+              </Link>
             </Button>
           </Box>
         ) : (
@@ -413,13 +410,12 @@ export default function EditTranslationKey({
                 >
                   <LuSave /> Enregistrer
                 </Button>
-                <Button
-                  as={Link}
-                  to={getTranslationsUrl(organization.slug, project.slug)}
-                  variant="outline"
-                  disabled={isSubmitting}
-                >
-                  Retour
+                <Button asChild variant="outline" disabled={isSubmitting}>
+                  <Link
+                    to={getTranslationsUrl(organization.slug, project.slug)}
+                  >
+                    Retour
+                  </Link>
                 </Button>
               </Box>
             </VStack>

@@ -49,13 +49,8 @@ export default function ProjectLayout() {
             <Heading as="h1" size="2xl">
               {project.name}
             </Heading>
-            <Button
-              as={Link}
-              to={`/orgs/${organization.slug}`}
-              variant="outline"
-              size="sm"
-            >
-              Retour
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/orgs/${organization.slug}`}>Retour</Link>
             </Button>
           </HStack>
           {project.description && (
@@ -77,13 +72,12 @@ export default function ProjectLayout() {
             return (
               <Button
                 key={item.path}
-                as={Link}
-                to={fullPath}
+                asChild
                 variant={isActive ? "solid" : "ghost"}
                 colorPalette={isActive ? "brand" : "gray"}
                 size="sm"
               >
-                {item.label}
+                <Link to={fullPath}>{item.label}</Link>
               </Button>
             );
           })}

@@ -8,7 +8,13 @@ import {
   Box,
   Textarea,
 } from "@chakra-ui/react";
-import { Form, useActionData, useNavigation, redirect } from "react-router";
+import {
+  Form,
+  Link,
+  useActionData,
+  useNavigation,
+  redirect,
+} from "react-router";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.new";
 import { requireUser } from "~/lib/session.server";
@@ -134,13 +140,8 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
               >
                 <LuPlus /> Creer le projet
               </Button>
-              <Button
-                as="a"
-                href={`/orgs/${organization.slug}`}
-                variant="outline"
-                disabled={isSubmitting}
-              >
-                Annuler
+              <Button asChild variant="outline" disabled={isSubmitting}>
+                <Link to={`/orgs/${organization.slug}`}>Annuler</Link>
               </Button>
             </Box>
           </VStack>

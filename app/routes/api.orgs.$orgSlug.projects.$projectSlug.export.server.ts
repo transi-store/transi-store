@@ -1,8 +1,5 @@
 import { requireUser } from "~/lib/session.server";
-import {
-  requireOrganizationMembership,
-  getOrganizationBySlug,
-} from "~/lib/organizations.server";
+import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import {

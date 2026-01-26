@@ -113,6 +113,18 @@ Ce projet utilise le mode manuel, probablement pour:
 - [ ] Vérifier que les types TypeScript sont générés dans `.react-router/types/`
 - [ ] Tester l'accès à la route dans le navigateur
 
+## Rendu avec chakra-ui
+
+Lors de la création de liens de navigation, utiliser le composant `Button` avec la prop `asChild` pour envelopper le composant `Link` de React Router. Cela permet de conserver le style du bouton tout en utilisant la navigation de React Router.
+
+Exemple:
+
+```tsx
+<Button asChild variant="outline" size="sm">
+  <Link to={`/orgs/${organization.slug}`}>Retour</Link>
+</Button>
+```
+
 ## Références
 
 - [React Router 7 - Route Configuration](https://reactrouter.com/start/framework/routing)

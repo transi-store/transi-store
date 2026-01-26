@@ -7,7 +7,6 @@ import {
   SimpleGrid,
   Card,
   HStack,
-  Input,
   Field,
   Separator,
 } from "@chakra-ui/react";
@@ -16,11 +15,12 @@ import { FileUpload } from "@chakra-ui/react/file-upload";
 import { Switch } from "@chakra-ui/react/switch";
 import {
   Form,
+  Link,
   useActionData,
   useNavigation,
   useOutletContext,
 } from "react-router";
-import { LuUpload } from "react-icons/lu";
+import { LuDownload, LuUpload } from "react-icons/lu";
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.import-export";
 import { requireUser } from "~/lib/session.server";
@@ -330,25 +330,22 @@ export default function ProjectImportExport() {
                   </Text>
                   <SimpleGrid columns={{ base: 2, md: 4 }} gap={2}>
                     {languages.map((lang) => (
-                      <Button
-                        key={lang.id}
-                        as="a"
-                        href={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&locale=${lang.locale}`}
-                        size="sm"
-                        variant="outline"
-                        download
-                      >
-                        {lang.locale.toUpperCase()}
+                      <Button key={lang.id} asChild size="sm" variant="outline">
+                        <Link
+                          to={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&locale=${lang.locale}`}
+                        >
+                          <LuDownload />
+                          {lang.locale.toUpperCase()}
+                        </Link>
                       </Button>
                     ))}
-                    <Button
-                      as="a"
-                      href={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&all`}
-                      size="sm"
-                      colorPalette="brand"
-                      download
-                    >
-                      Toutes les langues
+                    <Button asChild size="sm" colorPalette="brand">
+                      <Link
+                        to={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&all`}
+                      >
+                        <LuDownload />
+                        Toutes les langues
+                      </Link>
                     </Button>
                   </SimpleGrid>
                 </Card.Body>
@@ -370,15 +367,14 @@ export default function ProjectImportExport() {
                       /export?format=xliff&source=en&target=fr
                     </Text>
                     <HStack>
-                      <Button
-                        as="a"
-                        href={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=xliff&source=${languages[0].locale}&target=${languages[1].locale}`}
-                        size="sm"
-                        variant="outline"
-                        download
-                      >
-                        {languages[0].locale.toUpperCase()} →{" "}
-                        {languages[1].locale.toUpperCase()}
+                      <Button asChild size="sm" variant="outline">
+                        <Link
+                          to={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=xliff&source=${languages[0].locale}&target=${languages[1].locale}`}
+                        >
+                          <LuDownload />
+                          {languages[0].locale.toUpperCase()} →{" "}
+                          {languages[1].locale.toUpperCase()}
+                        </Link>
                       </Button>
                     </HStack>
                   </Card.Body>

@@ -78,8 +78,8 @@ export default function OrganizationLayout() {
             <Heading as="h1" size="2xl">
               {organization.name}
             </Heading>
-            <Button as={Link} to="/orgs" variant="outline" size="sm">
-              Retour aux organisations
+            <Button asChild variant="outline" size="sm">
+              <Link to="/orgs">Retour aux organisations</Link>
             </Button>
           </HStack>
           <Text color="gray.600">/{organization.slug}</Text>

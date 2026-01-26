@@ -1,6 +1,5 @@
 import {
   Heading,
-  VStack,
   Button,
   Box,
   Text,
@@ -39,13 +38,10 @@ export default function OrganizationProjects() {
         <Heading as="h2" size="lg">
           Projets
         </Heading>
-        <Button
-          as={Link}
-          to={`/orgs/${organization.slug}/projects/new`}
-          colorPalette="brand"
-          size="sm"
-        >
-          <LuPlus /> Nouveau projet
+        <Button asChild colorPalette="brand" size="sm">
+          <Link to={`/orgs/${organization.slug}/projects/new`}>
+            <LuPlus /> Nouveau projet
+          </Link>
         </Button>
       </HStack>
 
@@ -54,12 +50,10 @@ export default function OrganizationProjects() {
           <Text color="gray.600" mb={4}>
             Aucun projet dans cette organisation
           </Text>
-          <Button
-            as={Link}
-            to={`/orgs/${organization.slug}/projects/new`}
-            colorPalette="brand"
-          >
-            <LuPlus /> Créer le premier projet
+          <Button asChild colorPalette="brand">
+            <Link to={`/orgs/${organization.slug}/projects/new`}>
+              <LuPlus /> Créer le premier projet
+            </Link>
           </Button>
         </Box>
       ) : (
@@ -72,7 +66,7 @@ export default function OrganizationProjects() {
                     {project.name}
                   </Heading>
                   {project.description && (
-                    <Text fontSize="sm" color="gray.600" noOfLines={2}>
+                    <Text fontSize="sm" color="gray.600">
                       {project.description}
                     </Text>
                   )}

@@ -9,6 +9,7 @@ transi-store est une application web permettant de gerer les traductions de chai
 ## Fonctionnalites
 
 ### Gestion des traductions
+
 - **Multi-organisations** : Chaque utilisateur peut appartenir a plusieurs organisations
 - **Multi-projets** : Chaque organisation peut avoir plusieurs projets de traduction
 - **Multi-langues** : Support de plusieurs langues par projet avec langues par defaut
@@ -17,11 +18,13 @@ transi-store est une application web permettant de gerer les traductions de chai
 - **Recherche floue** : Recherche puissante sur les cles et valeurs avec PostgreSQL pg_trgm
 
 ### Import/Export
+
 - **API d'export** : Telechargement des traductions en JSON (plat ou multi-langues) et XLIFF 2.0
 - **Cles d'API** : Authentification par Bearer token pour integration CI/CD
 - **Import JSON** : Import en masse de traductions avec strategies (overwrite/skip)
 
 ### Collaboration
+
 - **Gestion d'equipe** : Invitation d'utilisateurs par email avec codes d'invitation
 - **Multi-utilisateurs** : Plusieurs membres par organisation avec acces partage aux projets
 - **Authentification OAuth2/OIDC** : Support multi-provider (Google, Mapado) avec PKCE
@@ -109,7 +112,7 @@ L'application sera disponible sur http://localhost:5173
 | `yarn dev`             | Demarre le serveur de developpement        |
 | `yarn build`           | Build l'application pour la production     |
 | `yarn start`           | Demarre l'application en production        |
-| `yarn typecheck`       | Verifie les types TypeScript               |
+| `yarn lint:types`      | Verifie les types TypeScript               |
 | `yarn db:generate`     | Genere les migrations Drizzle              |
 | `yarn db:push`         | Applique le schema a la base de donnees    |
 | `yarn db:studio`       | Ouvre Drizzle Studio                       |
@@ -132,11 +135,14 @@ transi-store/
 ## Documentation technique
 
 ### Architecture et implementation
+
 - **[Notes techniques](./docs/technical-notes/)** : Documentation detaillee de l'architecture, patterns, et systemes
 - **[Decisions d'architecture (ADR)](./docs/decisions/)** : Historique des decisions techniques importantes
 
 ### Pour les developpeurs
+
 Consultez le dossier [`docs/technical-notes/`](./docs/technical-notes/) pour comprendre :
+
 - L'architecture generale du projet
 - Le systeme d'authentification OAuth2/OIDC
 - Le schema de base de donnees

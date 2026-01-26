@@ -4,10 +4,9 @@ import {
   Text,
   Container,
   VStack,
-  Button,
   HStack,
 } from "@chakra-ui/react";
-import { Form, useLoaderData, Link, redirect } from "react-router";
+import { redirect } from "react-router";
 import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
@@ -38,12 +37,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     throw redirect("/orgs");
   }
 
-  return { user };
+  return null;
 }
 
 export default function Index() {
-  const { user } = useLoaderData<typeof loader>();
-
   return (
     <Container maxW="container.lg" py={10}>
       <VStack gap={6} align="stretch">
@@ -56,32 +53,12 @@ export default function Index() {
               Outil de gestion de traductions multi-projets
             </Text>
           </Box>
-          <Box>
-            {user && (
-              <VStack align="end" gap={2}>
-                <Text fontSize="sm" color="gray.600">
-                  Connecte en tant que {user.name || user.email}
-                </Text>
-                <Form action="/auth/logout" method="post">
-                  <Button type="submit" size="sm" variant="outline">
-                    Deconnexion
-                  </Button>
-                </Form>
-              </VStack>
-            )}
-          </Box>
         </HStack>
         <Box p={6} borderWidth={1} borderRadius="lg">
           <Text>
             Bienvenue ! Ce projet permet de gerer les traductions de vos
             applications.
           </Text>
-          {user && (
-            <Text mt={4}>
-              Vous etes maintenant connecte et pouvez commencer a gerer vos
-              traductions.
-            </Text>
-          )}
         </Box>
       </VStack>
     </Container>

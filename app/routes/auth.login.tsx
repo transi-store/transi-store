@@ -58,27 +58,32 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                   return (
                     <Button
                       key={provider.type}
-                      as={Link}
-                      to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                      asChild
                       width="full"
                       colorPalette="blue"
                       size="lg"
-                      leftIcon={<FaGoogle />}
                     >
-                      Se connecter avec Google
+                      <Link
+                        to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                      >
+                        <FaGoogle /> Se connecter avec Google
+                      </Link>
                     </Button>
                   );
                 case "mapado":
                   return (
                     <Button
                       key={provider.type}
-                      as={Link}
-                      to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                      asChild
                       width="full"
                       colorPalette="brand"
                       size="lg"
                     >
-                      Se connecter avec {provider.name}
+                      <Link
+                        to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                      >
+                        Se connecter avec {provider.name}
+                      </Link>
                     </Button>
                   );
                 default:

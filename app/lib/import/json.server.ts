@@ -6,7 +6,7 @@ import {
 } from "~/lib/translation-keys.server";
 
 interface ImportParams {
-  projectId: string;
+  projectId: number;
   locale: string;
   data: Record<string, string>;
   strategy: "overwrite" | "skip";
@@ -133,19 +133,19 @@ export async function importTranslations(
     stats.total = entries.length;
 
     // Process all imports in a transaction
-    await db.transaction(async (tx) => {
+    await db.transaction(async () => {
       for (const [keyName, value] of entries) {
         try {
           // 1. Check if translation key exists
           let translationKey = await getTranslationKeyByName(
-            projectId,
+            Number(projectId),
             keyName,
           );
 
           // 2. Create key if it doesn't exist
           if (!translationKey) {
             const keyId = await createTranslationKey({
-              projectId,
+              projectId: Number(projectId),
               keyName,
               description: undefined,
             });

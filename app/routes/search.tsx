@@ -15,20 +15,26 @@ import { Link, Form, useSearchParams } from "react-router";
 import type { Route } from "./+types/search";
 import { requireUser } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
-import { globalSearch } from "~/lib/search.server";
+import { globalSearch, type SearchResult } from "~/lib/search.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
   const url = new URL(request.url);
 
-  const query = url.searchParams.get("q") || "";
-  const organizationId = url.searchParams.get("org") || undefined;
-  const projectId = url.searchParams.get("project") || undefined;
-  const locale = url.searchParams.get("locale") || undefined;
+  const searchParams = url.searchParams;
+
+  const query = searchParams.get("q") ?? "";
+  const organizationId = searchParams.get("org")
+    ? Number(searchParams.get("org"))
+    : undefined;
+  const projectId = searchParams.get("project")
+    ? Number(searchParams.get("project"))
+    : undefined;
+  const locale = searchParams.get("locale") ?? undefined;
 
   const organizations = await getUserOrganizations(user.userId);
 
-  let results = [];
+  let results: Array<SearchResult> = [];
 
   if (query && query.trim().length >= 2) {
     results = await globalSearch(user.userId, query, {
@@ -120,8 +126,8 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                   : "Aucun résultat"}
               </Text>
               {query && (
-                <Button as={Link} to="/search" variant="outline" size="sm">
-                  Effacer la recherche
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/search">Effacer la recherche</Link>
                 </Button>
               )}
             </HStack>
@@ -190,13 +196,12 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                             </HStack>
                           </Box>
 
-                          <Button
-                            as={Link}
-                            to={`/orgs/${result.organizationSlug}/projects/${result.projectSlug}/keys/${result.keyId}`}
-                            colorPalette="brand"
-                            size="sm"
-                          >
-                            Éditer
+                          <Button asChild colorPalette="brand" size="sm">
+                            <Link
+                              to={`/orgs/${result.organizationSlug}/projects/${result.projectSlug}/keys/${result.keyId}`}
+                            >
+                              Éditer
+                            </Link>
                           </Button>
                         </HStack>
                       </VStack>
