@@ -216,10 +216,13 @@ export default function ProjectTranslations({
                           {key.keyName}
                         </Text>
                         {key.description && (
-                          <Text fontSize="xs" color="gray.500">
+                          <Text fontSize="xs" color="gray.400">
                             {key.description}
                           </Text>
                         )}
+                        <Text fontSize="s" color="gray.600">
+                          {key.defaultTranslation}
+                        </Text>
                       </VStack>
                     </Table.Cell>
                     <Table.Cell>

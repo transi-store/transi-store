@@ -5,7 +5,10 @@ import { searchTranslationKeys } from "./search-utils.server";
 type TranslationKeysReturnType = {
   count: number;
   data: Array<
-    typeof schema.translationKeys.$inferSelect & { translatedLocales: string[] }
+    typeof schema.translationKeys.$inferSelect & {
+      translatedLocales: Array<string>;
+      defaultTranslation: string | null;
+    }
   >;
 };
 
@@ -19,6 +22,13 @@ export async function getTranslationKeys(
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<typeof schema.translationKeys.$inferSelect> = [];
   let count = 0;
+
+  const defaultLocale = await db.query.projectLanguages.findFirst({
+    where: {
+      projectId,
+      isDefault: true,
+    },
+  });
 
   if (options?.search) {
     const searchQuery = options.search.trim();
@@ -62,14 +72,32 @@ export async function getTranslationKeys(
     .from(schema.translations)
     .where(inArray(schema.translations.keyId, keyIds));
 
+  const translationsByKey: Record<
+    number,
+    Array<typeof schema.translations.$inferSelect>
+  > = translations.reduce(
+    (acc, translation) => {
+      if (!acc[translation.keyId]) {
+        acc[translation.keyId] = [];
+      }
+      acc[translation.keyId].push(translation);
+      return acc;
+    },
+    {} as Record<number, Array<typeof schema.translations.$inferSelect>>,
+  );
+
   // Combine keys with their translated locales
   return {
     count,
     data: keys.map((key) => ({
       ...key,
-      translatedLocales: translations
-        .filter((t) => t.keyId === key.id)
-        .map((t) => t.locale),
+      translatedLocales: translationsByKey[key.id]
+        ? translationsByKey[key.id].map((t) => t.locale)
+        : [],
+      defaultTranslation:
+        translationsByKey[key.id]?.find(
+          (t) => t.keyId === key.id && t.locale === defaultLocale?.locale,
+        )?.value || null,
     })),
   };
 }
