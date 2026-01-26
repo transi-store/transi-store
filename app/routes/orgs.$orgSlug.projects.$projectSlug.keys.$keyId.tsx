@@ -252,11 +252,24 @@ export default function EditTranslationKey({
           method: "POST",
         },
       );
-
-      // Update the original value after saving
-      originalValuesRef.current[locale] = value;
     }
   };
+
+  // Update original values after successful save
+  useEffect(() => {
+    if (saveFetcher.state === "idle" && saveFetcher.data?.success) {
+      // Get the locale and value from the last submission
+      const formData = saveFetcher.formData;
+      if (formData) {
+        const locale = formData.get("locale");
+        const value = formData.get("value");
+        if (locale && typeof locale === "string") {
+          originalValuesRef.current[locale] =
+            typeof value === "string" ? value : "";
+        }
+      }
+    }
+  }, [saveFetcher.state, saveFetcher.data, saveFetcher.formData]);
 
   const handleRequestAiTranslation = (locale: string) => {
     setAiDialogLocale(locale);
@@ -275,9 +288,8 @@ export default function EditTranslationKey({
   const handleSelectSuggestion = (text: string) => {
     if (aiDialogLocale) {
       handleTranslationChange(aiDialogLocale, text);
-      // Mark as changed so it will be saved on blur
-      originalValuesRef.current[aiDialogLocale] = "";
       setAiDialogLocale(null);
+      // The value will be saved on blur when the user leaves the field
     }
   };
 

@@ -129,7 +129,6 @@ export function IcuEditor({
           if (onBlur) {
             onBlur();
           }
-          return false;
         },
       }),
 
