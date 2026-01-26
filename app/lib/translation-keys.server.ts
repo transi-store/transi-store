@@ -1,5 +1,6 @@
 import { db, schema } from "./db.server";
 import { eq, and, inArray, or, sql, desc } from "drizzle-orm";
+import { maxSimilarity, SIMILARITY_THRESHOLD } from "./search-utils.server";
 
 export async function getTranslationKeys(
   projectId: number,
@@ -11,18 +12,10 @@ export async function getTranslationKeys(
 ) {
   const conditions = [eq(schema.translationKeys.projectId, projectId)];
 
-  // Helper function to calculate max similarity (same as globalSearch)
-  const maxSimilarity = (field: any, query: string) =>
-    sql<number>`GREATEST(
-      similarity(${field}, ${query}),
-      word_similarity(${query}, ${field})
-    )`;
-
   let keys;
 
   if (options?.search) {
     const searchQuery = options.search.trim();
-    const similarityThreshold = 0.1; // Same threshold as globalSearch
 
     // Use fuzzy search with similarity scoring
     const keysWithSimilarity = await db
@@ -38,8 +31,8 @@ export async function getTranslationKeys(
         and(
           eq(schema.translationKeys.projectId, projectId),
           or(
-            sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${similarityThreshold}`,
-            sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${similarityThreshold}`,
+            sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
+            sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
           )!,
         ),
       )
