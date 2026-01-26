@@ -1,0 +1,20 @@
+# Development overrides (applied automatically by docker compose)
+services:
+  postgres:
+    container_name: transi-store-db
+    restart: unless-stopped
+
+  app:
+    build:
+      target: development
+    container_name: transi-store-app
+    restart: unless-stopped
+    ports:
+      - "5176:5176"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Use anonymous volume for node_modules to avoid conflicts
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
