@@ -31,7 +31,7 @@ This project maintains detailed technical documentation in the `docs/` folder:
 ```bash
 # Development
 yarn dev                     # Start dev server (http://localhost:5173)
-yarn typecheck               # Type check with TypeScript
+yarn lint:types               # Type check with TypeScript
 yarn build                   # Build for production
 
 # Database
@@ -48,6 +48,7 @@ docker compose up -d         # Start PostgreSQL
 ## Key Architecture Points
 
 ### Tech Stack
+
 - **Framework**: React Router v7 (SSR framework mode)
 - **UI**: Chakra UI v3 + React 19
 - **Database**: PostgreSQL 18 + Drizzle ORM v1.0.0-beta
@@ -63,9 +64,10 @@ docker compose up -d         # Start PostgreSQL
    - Database queries, auth logic, secrets
 
 3. **Authentication flow**:
+
    ```typescript
-   const user = await requireUser(request)
-   const org = await requireOrganizationMembership(user, params.orgSlug)
+   const user = await requireUser(request);
+   const org = await requireOrganizationMembership(user, params.orgSlug);
    ```
 
 4. **Database schema changes**: Use `yarn db:push` (no migrations for now)
@@ -75,6 +77,7 @@ docker compose up -d         # Start PostgreSQL
 ## Environment Variables
 
 Required in `.env`:
+
 ```bash
 DATABASE_URL="postgresql://..."
 OIDC_ISSUER="https://..."
@@ -89,7 +92,7 @@ SESSION_SECRET="..."
 2. **Follow existing patterns** documented in code-patterns.md
 3. **Check ADRs** for context on past decisions
 4. **Verify route configuration** in `app/routes.ts` when adding routes
-5. **Run `yarn typecheck`** before committing
+5. **Run `yarn lint:types`** before committing
 
 ---
 

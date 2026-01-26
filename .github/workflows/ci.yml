@@ -28,8 +28,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Run typecheck
-        run: yarn typecheck
+      - name: Run lint:types
+        run: yarn lint:types
 
   knip:
     name: Knip Validation
