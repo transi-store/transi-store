@@ -10,7 +10,6 @@ export default [
   route("auth/mapado/login", "routes/auth.mapado.login.tsx"),
   route("auth/mapado/callback", "routes/auth.mapado.callback.tsx"),
   route("auth/logout", "routes/auth.logout.tsx"),
-  route("auth/debug", "routes/auth.debug.tsx"),
   route("auth/complete-profile", "routes/auth.complete-profile.tsx"),
 
   // Organizations routes
