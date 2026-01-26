@@ -4,21 +4,12 @@ import { createUserSession } from "./session.server";
 import { decodeJwt } from "jose";
 import {
   type OAuthProvider,
-  generateMapadoAuthorizationUrl,
   exchangeMapadoCode,
   exchangeGoogleCode,
   getGoogleUserInfo,
-  type AuthorizationUrlResult,
 } from "./auth-providers.server";
 
-export type { OAuthProvider, AuthorizationUrlResult };
-
-// Pour compatibilité avec le code existant - Mapado OAuth
-export async function generateAuthorizationUrl(): Promise<AuthorizationUrlResult> {
-  return generateMapadoAuthorizationUrl();
-}
-
-export interface CallbackParams {
+interface CallbackParams {
   code: string;
   state: string;
   codeVerifier?: string;
@@ -31,7 +22,7 @@ interface OAuth2JWTPayload {
   email?: string; // Email (optionnel dans JWT)
 }
 
-export async function handleCallback(params: CallbackParams) {
+async function handleCallback(params: CallbackParams) {
   // Vérifier que le state correspond
   if (params.state !== params.expectedState) {
     throw new Error("State mismatch");

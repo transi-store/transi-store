@@ -32,7 +32,7 @@ export async function getOrganizationBySlug(slug: string) {
   });
 }
 
-export async function isUserMemberOfOrganization(
+async function isUserMemberOfOrganization(
   userId: number,
   organizationId: number,
 ): Promise<boolean> {
@@ -115,10 +115,4 @@ export async function updateUserLastOrganization(
       updatedAt: new Date(),
     })
     .where(eq(schema.users.id, userId));
-}
-
-export async function getOrganizationById(organizationId: number) {
-  return await db.query.organizations.findFirst({
-    where: { id: organizationId },
-  });
 }

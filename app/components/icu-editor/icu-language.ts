@@ -32,7 +32,7 @@ interface Token {
  * Simple tokenizer for ICU messages
  * Identifies variables, keywords, and arguments
  */
-export function tokenizeIcu(text: string): Token[] {
+function tokenizeIcu(text: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
   let depth = 0;
@@ -203,7 +203,7 @@ function createIcuDecorator() {
 }
 
 // Theme for the ICU editor
-export const icuEditorTheme = EditorView.theme({
+const icuEditorTheme = EditorView.theme({
   "&": {
     fontSize: "14px",
     border: "1px solid #d0d7de",

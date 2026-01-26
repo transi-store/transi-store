@@ -102,13 +102,6 @@ export function icuLinter(): Extension {
 }
 
 /**
- * Check if an ICU message is valid
- */
-export function isValidIcuMessage(text: string): boolean {
-  return validateIcuMessage(text).length === 0;
-}
-
-/**
  * Extract variable names from an ICU message
  */
 export function extractVariables(text: string): string[] {

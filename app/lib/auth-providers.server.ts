@@ -15,7 +15,7 @@ const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
 export type OAuthProvider = "mapado" | "google";
 
-export interface ProviderConfig {
+interface ProviderConfig {
   type: OAuthProvider;
   name: string;
   enabled: boolean;
