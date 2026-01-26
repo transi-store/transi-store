@@ -45,7 +45,6 @@ import {
   upsertTranslation,
   deleteTranslationKey,
   updateTranslationKey,
-  deleteTranslation,
 } from "~/lib/translation-keys.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -162,7 +161,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         });
       } else {
         // Delete the translation if the value is empty
-        await deleteTranslation(key.id, locale);
+        await deleteTranslationKey(key.id);
       }
     }
 
@@ -243,6 +242,10 @@ export default function EditTranslationKey({
 
     // Only save if the value has changed
     if (value !== originalValue) {
+      // Update the reference immediately after submitting
+      // This way, we avoid duplicate saves if the user blurs multiple times
+      originalValuesRef.current[locale] = value;
+
       saveFetcher.submit(
         {
           _action: "saveTranslation",
@@ -274,22 +277,6 @@ export default function EditTranslationKey({
       });
     }
   };
-
-  // Update original values after successful save
-  useEffect(() => {
-    if (saveFetcher.state === "idle" && saveFetcher.data?.success) {
-      // Get the locale and value from the last submission
-      const formData = saveFetcher.formData;
-      if (formData) {
-        const locale = formData.get("locale");
-        const value = formData.get("value");
-        if (locale && typeof locale === "string") {
-          const savedValue = typeof value === "string" ? value : "";
-          originalValuesRef.current[locale] = savedValue;
-        }
-      }
-    }
-  }, [saveFetcher.state, saveFetcher.data, saveFetcher.formData]);
 
   const handleRequestAiTranslation = (locale: string) => {
     setAiDialogLocale(locale);
