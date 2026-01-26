@@ -1,5 +1,10 @@
 import { db, schema } from "./db.server";
-import { eq, and, or, inArray, sql, desc } from "drizzle-orm";
+import { eq, and, inArray, sql, desc } from "drizzle-orm";
+import {
+  maxSimilarity,
+  SIMILARITY_THRESHOLD,
+  searchTranslationKeys,
+} from "./search-utils.server";
 
 export interface SearchResult {
   keyId: number;
@@ -33,7 +38,6 @@ export async function globalSearch(
 
   const searchQuery = query.trim();
   const limit = options?.limit || 100;
-  const similarityThreshold = 0.1; // Seuil de similarité minimum (0-1)
 
   // Get user's organization IDs
   const memberships = await db
@@ -74,33 +78,14 @@ export async function globalSearch(
 
   const projectIds = projects.map((p) => p.id);
 
-  // Fonction de calcul de similarité maximale
-  const maxSimilarity = (field: any, query: string) =>
-    sql<number>`GREATEST(
-      similarity(${field}, ${query}),
-      word_similarity(${query}, ${field})
-    )`;
-
   // Search in translation keys avec score de similarité
-  const keysWithSimilarity = await db
-    .select({
-      key: schema.translationKeys,
-      similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as(
-        "similarity",
-      ),
-    })
-    .from(schema.translationKeys)
-    .where(
-      and(
-        inArray(schema.translationKeys.projectId, projectIds),
-        or(
-          sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${similarityThreshold}`,
-          sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${similarityThreshold}`,
-        )!,
-      ),
-    )
-    .orderBy(desc(sql`similarity`))
-    .limit(limit);
+  const keysWithSimilarity = await searchTranslationKeys(
+    searchQuery,
+    projectIds,
+    {
+      limit,
+    },
+  );
 
   const keys = keysWithSimilarity.map((row) => row.key);
   const keysSimilarityMap = new Map(
@@ -117,7 +102,7 @@ export async function globalSearch(
         .where(inArray(schema.translationKeys.projectId, projectIds))
         .then((rows) => rows.map((r) => r.id)),
     ),
-    sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${similarityThreshold}`,
+    sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
   ];
 
   if (options?.locale) {

@@ -1,5 +1,6 @@
 import { db, schema } from "./db.server";
-import { eq, and, inArray, like, or } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
+import { searchTranslationKeys } from "./search-utils.server";
 
 export async function getTranslationKeys(
   projectId: number,
@@ -11,22 +12,32 @@ export async function getTranslationKeys(
 ) {
   const conditions = [eq(schema.translationKeys.projectId, projectId)];
 
-  if (options?.search) {
-    conditions.push(
-      or(
-        like(schema.translationKeys.keyName, `%${options.search}%`),
-        like(schema.translationKeys.description, `%${options.search}%`),
-      )!,
-    );
-  }
+  let keys;
 
-  const keys = await db
-    .select()
-    .from(schema.translationKeys)
-    .where(and(...conditions))
-    .limit(options?.limit || 50)
-    .offset(options?.offset || 0)
-    .orderBy(schema.translationKeys.keyName);
+  if (options?.search) {
+    const searchQuery = options.search.trim();
+
+    // Use fuzzy search with similarity scoring
+    const keysWithSimilarity = await searchTranslationKeys(
+      searchQuery,
+      projectId,
+      {
+        limit: options?.limit || 50,
+        offset: options?.offset || 0,
+      },
+    );
+
+    keys = keysWithSimilarity.map((row) => row.key);
+  } else {
+    // No search query - use regular query ordered by keyName
+    keys = await db
+      .select()
+      .from(schema.translationKeys)
+      .where(and(...conditions))
+      .limit(options?.limit || 50)
+      .offset(options?.offset || 0)
+      .orderBy(schema.translationKeys.keyName);
+  }
 
   if (keys.length === 0) {
     return [];
