@@ -23,6 +23,7 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { icuLanguage } from "./icu-language";
 import { icuLinter, validateIcuMessage, extractVariables } from "./icu-linter";
 import { IcuPreview } from "./IcuPreview";
+import { IcuTemplateButtons } from "./IcuTemplateButtons";
 import {
   LuChevronDown,
   LuChevronRight,
@@ -104,6 +105,24 @@ export function IcuEditor({
     [onChange],
   );
 
+  // Insert template at cursor position
+  const handleInsertTemplate = useCallback((template: string) => {
+    if (!editorRef.current) return;
+
+    const view = editorRef.current;
+    const { state } = view;
+    const { from, to } = state.selection.main;
+
+    // Insert the template at cursor position
+    view.dispatch({
+      changes: { from, to, insert: template },
+      selection: { anchor: from + template.length },
+    });
+
+    // Focus the editor after insertion
+    view.focus();
+  }, []);
+
   // Initialize CodeMirror
   useEffect(() => {
     if (!containerRef.current) return;
@@ -177,6 +196,12 @@ export function IcuEditor({
     <VStack align="stretch" gap={2} w="full">
       {/* Hidden input for form submission */}
       {name && <input type="hidden" name={name} value={internalValue} />}
+
+      {/* Template buttons */}
+      <IcuTemplateButtons
+        onInsertTemplate={handleInsertTemplate}
+        disabled={disabled}
+      />
 
       {/* Editor container */}
       <Box
