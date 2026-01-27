@@ -63,7 +63,7 @@ db-studio: ## Ouvre Drizzle Studio
 	docker compose exec app yarn db:studio
 
 db-setup-search: ## Configure la recherche fuzzy dans PostgreSQL
-	docker compose exec app yarn db:setup-search
+	sh scripts/enable-fuzzy-search.sh
 
 db-reset: ## Recrée la base de données (ATTENTION: supprime toutes les données!)
 	docker compose down -v

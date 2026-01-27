@@ -37,20 +37,14 @@ EOF
 )
 
 # Déterminer comment se connecter à la base de données
-if [ -n "$DATABASE_URL" ]; then
-  # Utiliser DATABASE_URL si défini (connexion distante via Docker)
-  echo "📡 Connexion à la base de données distante via DATABASE_URL..."
-  
-  echo "$SQL_COMMANDS" | docker run --rm -i postgres:18 psql "$FINAL_URL"
-  EXIT_CODE=$?
-else
+
   # Utiliser Docker Compose (défaut)
-  echo "🐳 Connexion à la base de données via Docker Compose..."
-  DB_USER=${DB_USER:-transi-store}
-  DB_NAME=${DB_DATABASE:-transi-store}
-  echo "$SQL_COMMANDS" | docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME"
-  EXIT_CODE=$?
-fi
+echo "🐳 Connexion à la base de données via Docker Compose..."
+DB_USER=${DB_USER:-transi-store}
+DB_NAME=${DB_DATABASE:-transi-store}
+echo "$SQL_COMMANDS" | docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME"
+EXIT_CODE=$?
+
 
 if [ $EXIT_CODE -eq 0 ]; then
   echo "✅ Extension pg_trgm et index GIN créés avec succès!"
