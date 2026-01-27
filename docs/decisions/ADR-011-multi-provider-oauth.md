@@ -67,17 +67,15 @@ Nous avons refactorisé le système d'authentification pour supporter plusieurs 
 ### Variables d'environnement
 
 ```bash
+DOMAIN_ROOT=http://localhost:5173
+
 # Google OAuth (optionnel)
 GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=xxx
-GOOGLE_REDIRECT_URI=http://localhost:5173/auth/google/callback
 
 # Mapado OAuth (optionnel)
-MAPADO_AUTHORIZATION_URL=https://...
-MAPADO_TOKEN_URL=https://...
 MAPADO_CLIENT_ID=xxx
 MAPADO_CLIENT_SECRET=xxx
-MAPADO_REDIRECT_URI=http://localhost:5173/auth/mapado/callback
 ```
 
 Au moins un des deux providers doit être configuré pour que l'application fonctionne.
