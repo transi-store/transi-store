@@ -25,7 +25,10 @@ services:
   app:
     container_name: transi-store-app
     build:
+      context: .
       dockerfile: ./Dockerfile
+      network: host
+
     restart: unless-stopped
     ports:
       - "${APP_PORT:-5173}:5173"
