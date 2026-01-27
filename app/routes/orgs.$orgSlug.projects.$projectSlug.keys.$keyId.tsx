@@ -45,6 +45,7 @@ import {
   upsertTranslation,
   deleteTranslationKey,
   updateTranslationKey,
+  deleteTranslation,
 } from "~/lib/translation-keys.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -161,7 +162,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         });
       } else {
         // Delete the translation if the value is empty
-        await deleteTranslationKey(key.id);
+        await deleteTranslation(key.id, locale);
       }
     }
 

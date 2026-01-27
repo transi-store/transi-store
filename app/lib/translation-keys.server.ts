@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 
 type TranslationKeysReturnType = {
@@ -159,6 +159,20 @@ export async function updateTranslationKey(params: UpdateTranslationKeyParams) {
       .set(updates)
       .where(eq(schema.translationKeys.id, params.keyId));
   }
+}
+
+export async function deleteTranslation(
+  keyId: number,
+  locale: string,
+): Promise<void> {
+  await db
+    .delete(schema.translations)
+    .where(
+      and(
+        eq(schema.translations.keyId, keyId),
+        eq(schema.translations.locale, locale),
+      ),
+    );
 }
 
 export async function deleteTranslationKey(keyId: number) {
