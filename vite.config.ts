@@ -2,6 +2,10 @@ import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import path from "node:path";
 
+const allowedHosts =
+  process.env.DOMAIN_ROOT &&
+  new URL(process.env.DOMAIN_ROOT ?? "localhost").hostname;
+
 export default defineConfig({
   plugins: [reactRouter()],
   resolve: {
@@ -11,7 +15,7 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0", // Écoute sur toutes les interfaces pour permettre l'accès depuis l'hôte
-    allowedHosts: ["jdeniau.dev.mapado.com"], // Autorise les requêtes provenant de ce domaine
+    allowedHosts: allowedHosts ? [allowedHosts] : undefined, // Autorise les requêtes provenant de ce domaine
     port: 5173,
     strictPort: true,
     watch: {
