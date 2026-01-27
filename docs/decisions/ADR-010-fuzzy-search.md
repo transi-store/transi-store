@@ -33,7 +33,7 @@ Utilisation de l'extension PostgreSQL **pg_trgm** (trigram) pour implémenter un
 
    **Note** : Les index GIN ne sont pas gérés par Drizzle ORM directement (limitation de l'outil).
    Un script `scripts/enable-fuzzy-search.sh` permet de créer l'extension et les index.
-   Commande : `yarn db:setup-search`
+   Commande : `make db-setup-search` ou `docker compose exec app yarn db:setup-search`
 
 3. **Algorithme de recherche** :
    - Calcul du score de similarité pour chaque résultat

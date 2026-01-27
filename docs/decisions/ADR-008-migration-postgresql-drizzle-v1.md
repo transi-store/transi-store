@@ -200,7 +200,7 @@ Suppression de `mysql2` qui n'est plus nécessaire.
 Pour les environnements existants :
 
 1. **Backup** : Exporter les données de MariaDB
-2. **Schema** : Lancer `yarn db:push` pour créer les tables PostgreSQL
+2. **Schema** : Lancer `make db-push` ou `docker compose exec app yarn db:push` pour créer les tables PostgreSQL
 3. **Import** : Importer les données dans PostgreSQL
 4. **Validation** : Vérifier l'intégrité des données
 

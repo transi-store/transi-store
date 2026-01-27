@@ -46,9 +46,16 @@ transi-store est une application web permettant de gerer les traductions de chai
 
 ### Prerequis
 
-- Node.js 20+
-- Yarn Berry
 - Docker et Docker Compose
+- **Make (fortement recommandé)**
+  - **Linux/Mac** : généralement pré-installé
+  - **Windows** : installer via Chocolatey `choco install make`
+    ```powershell
+    # Dans PowerShell en administrateur
+    choco install make
+    ```
+
+> **Note** : L'application s'exécute entièrement dans Docker. Node.js et Yarn ne sont pas nécessaires sur votre machine hôte.
 
 ### Installation
 
@@ -59,64 +66,86 @@ git clone <repo-url>
 cd transi-store
 ```
 
-2. Installer les dependances :
-
-```bash
-yarn install
-```
-
-3. Copier le fichier d'environnement :
+2. Copier le fichier d'environnement :
 
 ```bash
 cp .env.example .env
 ```
 
-4. Configurer les variables d'environnement dans `.env` :
+3. Configurer les variables d'environnement dans `.env` :
 
-- `DATABASE_URL` : URL de connexion a la base de données
-- `OIDC_ISSUER` : URL de l'issuer OIDC
-- `OIDC_CLIENT_ID` : Client ID OAuth
-- `OIDC_CLIENT_SECRET` : Client Secret OAuth
+- `DATABASE_URL` : Utiliser `postgres` comme host (ex: `postgresql://transi-store:transi-store@postgres:5432/transi-store`)
+- `MAPADO_CLIENT_ID` / `MAPADO_CLIENT_SECRET` : Identifiants OAuth Mapado
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` : Identifiants OAuth Google (optionnel)
 - `SESSION_SECRET` : Secret pour les sessions
+- `ENCRYPTION_KEY` : Clé de chiffrement
 
-5. Demarrer PostgreSQL :
+4. Setup complet en une commande :
 
 ```bash
-docker compose up -d
+make setup
 ```
 
-6. Appliquer le schema de base de donnees :
+Cette commande va :
+
+- Démarrer les conteneurs Docker (app + PostgreSQL)
+- Installer les dépendances
+- Créer le schéma de base de données
+
+5. Demarrer le serveur de developpement :
 
 ```bash
-yarn db:push
-```
-
-7. Activer la recherche floue (une seule fois) :
-
-```bash
-yarn db:setup-search
-```
-
-8. Demarrer le serveur de developpement :
-
-```bash
-yarn dev
+make dev
 ```
 
 L'application sera disponible sur http://localhost:5173
 
-## Scripts disponibles
+<details>
+<summary><strong>⚠️ Utilisation sans Make (non recommandé)</strong></summary>
 
-| Script                 | Description                                |
-| ---------------------- | ------------------------------------------ |
-| `yarn dev`             | Demarre le serveur de developpement        |
-| `yarn build`           | Build l'application pour la production     |
-| `yarn start`           | Demarre l'application en production        |
-| `yarn lint:types`      | Verifie les types TypeScript               |
-| `yarn db:generate`     | Genere les migrations Drizzle              |
-| `yarn db:push`         | Applique le schema a la base de donnees    |
-| `yarn db:studio`       | Ouvre Drizzle Studio                       |
-| `yarn db:setup-search` | Active la recherche floue (une seule fois) |
+Si vous ne pouvez vraiment pas installer Make, vous pouvez utiliser directement les commandes Docker Compose :
+
+```bash
+# Setup initial
+docker compose up -d
+docker compose exec app yarn install
+docker compose exec app yarn db:push
+
+# Développement
+docker compose exec app yarn dev
+docker compose exec app yarn build
+docker compose exec app yarn lint:types
+
+# Base de données
+docker compose exec app yarn db:push
+docker compose exec app yarn db:studio
+docker compose exec app yarn db:setup-search
+```
+
+**Important** : Cette approche n'est pas recommandée et rend les commandes plus longues et difficiles à retenir. Installez Make pour une meilleure expérience.
+
+</details>
+
+## Commandes disponibles
+
+Tapez `make help` pour voir toutes les commandes disponibles. Principales commandes :
+
+| Commande          | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| `make help`       | Affiche toutes les commandes disponibles            |
+| `make setup`      | Setup initial complet (première utilisation)        |
+| `make dev`        | Démarre le serveur de développement                 |
+| `make build`      | Build l'application pour la production              |
+| `make up`         | Démarre les conteneurs Docker                       |
+| `make down`       | Arrête les conteneurs Docker                        |
+| `make logs`       | Affiche les logs en temps réel                      |
+| `make shell`      | Ouvre un shell dans le conteneur app                |
+| `make install`    | Installe/met à jour les dépendances                 |
+| `make db-push`    | Applique le schéma à la base de données             |
+| `make db-studio`  | Ouvre Drizzle Studio                                |
+| `make db-reset`   | Recrée la base de données (⚠️ supprime les données) |
+| `make lint-types` | Vérifie les types TypeScript                        |
+| `make knip`       | Analyse les imports/exports non utilisés            |
 
 ## Structure du projet
 
