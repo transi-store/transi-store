@@ -9,4 +9,12 @@ export default defineConfig({
       "~": path.resolve(__dirname, "./app"),
     },
   },
+  server: {
+    host: "0.0.0.0", // Écoute sur toutes les interfaces pour permettre l'accès depuis l'hôte
+    port: 5173,
+    strictPort: true,
+    watch: {
+      usePolling: true, // Nécessaire pour que le hot reload fonctionne avec Docker sur Windows
+    },
+  },
 });

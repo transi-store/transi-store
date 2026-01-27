@@ -13,10 +13,28 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-transistore} -d ${DB_DATABASE:-transistore}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-transistore} -d ${DB_DATABASE:-transistore}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  app:
+    container_name: transi-store-app
+    build:
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-5173}:5173"
+    volumes:
+      - .:/app
+      # Volume anonyme pour node_modules : empêche l'écrasement par le bind mount Windows
+      - /app/node_modules
+      # Volume anonyme pour .yarn/cache pour éviter les problèmes de permissions
+      - /app/.yarn/cache
 
 volumes:
   postgres_data:
