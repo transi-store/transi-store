@@ -26,21 +26,33 @@ export const ICU_TEMPLATES: IcuTemplate[] = [
     id: "plural",
     label: "Plural",
     icon: <LuHash />,
-    template: "{count, plural, one {# item} other {# items}}",
+    template: `{count, plural,
+  one {# item}
+  other {# items}
+}`,
     description: "Pluralisation avec nombre",
   },
   {
     id: "select",
     label: "Select",
     icon: <LuGitBranch />,
-    template: "{gender, select, male {he} female {she} other {they}}",
+    template: `{gender, select,
+  male {he}
+  female {she}
+  other {they}
+}`,
     description: "Sélection conditionnelle",
   },
   {
     id: "selectordinal",
     label: "Ordinal",
     icon: <LuListTree />,
-    template: "{position, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}",
+    template: `{position, selectordinal,
+  one {#st}
+  two {#nd}
+  few {#rd}
+  other {#th}
+}`,
     description: "Nombres ordinaux (1er, 2ème...)",
   },
 ];
