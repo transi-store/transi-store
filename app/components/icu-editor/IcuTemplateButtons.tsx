@@ -6,7 +6,7 @@
 import { Button, HStack, Text } from "@chakra-ui/react";
 import { LuHash, LuListTree, LuGitBranch, LuBraces } from "react-icons/lu";
 
-export interface IcuTemplate {
+interface IcuTemplate {
   id: string;
   label: string;
   icon: React.ReactNode;
@@ -14,7 +14,7 @@ export interface IcuTemplate {
   description: string;
 }
 
-export const ICU_TEMPLATES: IcuTemplate[] = [
+const ICU_TEMPLATES: IcuTemplate[] = [
   {
     id: "variable",
     label: "Variable",
