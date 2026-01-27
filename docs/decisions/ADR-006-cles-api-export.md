@@ -398,8 +398,12 @@ await db.insert(auditLogs).values({
 
 ```bash
 # Après modification du schéma
-yarn db:generate  # Génère la migration
-yarn db:push      # Applique la migration
+make db-generate  # Génère la migration
+make db-push      # Applique la migration
+
+# Ou sans Make:
+docker compose exec app yarn db:generate
+docker compose exec app yarn db:push
 ```
 
 ## Métriques et monitoring

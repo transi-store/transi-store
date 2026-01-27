@@ -37,7 +37,9 @@ Error: No route matches URL "/auth/complete-profile"
 Après avoir ajouté la route dans `app/routes.ts`, redémarrer le serveur de développement:
 
 ```bash
-yarn dev
+make dev
+# ou sans Make:
+docker compose exec app yarn dev
 ```
 
 React Router générera alors automatiquement les types TypeScript dans `.react-router/types/app/routes/+types/`.

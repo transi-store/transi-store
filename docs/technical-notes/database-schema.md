@@ -6,7 +6,7 @@ transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
 
 **Source de vérité** : Le schéma est défini dans `drizzle/schema.ts`
 
-**Application** : Via `yarn db:push` (pas de migrations pour l'instant, adapté au développement early-stage)
+**Application** : Via `make db-push` ou `docker compose exec app yarn db:push` (pas de migrations pour l'instant, adapté au développement early-stage)
 
 ## Hiérarchie des entités
 
@@ -88,7 +88,7 @@ Workflow :
 
 ## Recherche floue (pg_trgm)
 
-**Setup** : `yarn db:setup-search` (à exécuter une seule fois)
+**Setup** : `make db-setup-search` ou `docker compose exec app yarn db:setup-search` (à exécuter une seule fois)
 
 Ce script :
 
@@ -134,12 +134,12 @@ const org = await db.query.organizations.findFirst({
 
 ## Gestion du schéma
 
-**Appliquer les changements** : `yarn db:push`
+**Appliquer les changements** : `make db-push` ou `docker compose exec app yarn db:push`
 
 - Applique `drizzle/schema.ts` directement à la base de données
 - Pas de fichiers de migration (adapté pour développement early-stage)
 
-**Visualiser** : `yarn db:studio`
+**Visualiser** : `make db-studio` ou `docker compose exec app yarn db:studio`
 
 - Interface web Drizzle Studio pour explorer tables et données
 
