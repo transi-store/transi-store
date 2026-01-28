@@ -28,10 +28,12 @@ services:
       context: .
       dockerfile: ./Dockerfile
       network: host
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped
+    restart: no # unless-stopped mais bug et restart en boucle
     ports:
       - "${APP_PORT:-5173}:5173"
     volumes:
