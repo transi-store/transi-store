@@ -35,7 +35,8 @@ services:
         condition: service_healthy
     restart: no # unless-stopped mais bug et restart en boucle
     ports:
-      - "${APP_PORT:-5173}:${APP_PORT:-5173}"
+      - "${APP_PORT:-5173}:5173"
+      - "${APP_PORT_PROD:-3000}:3000" # Pour le start en prod
     volumes:
       - .:/app
       # Volume anonyme pour node_modules : empêche l'écrasement par le bind mount Windows
