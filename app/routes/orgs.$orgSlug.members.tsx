@@ -388,6 +388,21 @@ export default function OrganizationMembers() {
                     >
                       <LuCopy /> Copier
                     </Button>
+                    <Form method="post">
+                      <input
+                        type="hidden"
+                        name="intent"
+                        value="cancel-invitation"
+                      />
+                      <input
+                        type="hidden"
+                        name="invitationId"
+                        value={organizationInvitation.id}
+                      />
+                      <Button type="submit" size="sm" colorPalette="red">
+                        <LuTrash2 /> Supprimer
+                      </Button>
+                    </Form>
                   </HStack>
                 </VStack>
               </Alert.Description>
