@@ -40,6 +40,7 @@ export async function createInvitation(params: {
       invitedEmail: params.invitedEmail,
       invitedBy: params.invitedBy,
       invitationCode,
+      isUnlimited: false,
     })
     .returning();
 
@@ -47,13 +48,76 @@ export async function createInvitation(params: {
 }
 
 /**
+ * Crée un lien d'invitation illimité pour une organisation
+ */
+export async function createOrganizationInvitation(params: {
+  organizationId: number;
+  invitedBy: number;
+}) {
+  // Vérifier s'il existe déjà un lien d'invitation illimité pour cette organisation
+  const existing = await db
+    .select()
+    .from(schema.organizationInvitations)
+    .where(
+      and(
+        eq(schema.organizationInvitations.organizationId, params.organizationId),
+        eq(schema.organizationInvitations.isUnlimited, true),
+      ),
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    return existing[0];
+  }
+
+  const invitationCode = generateInvitationCode();
+
+  const [invitation] = await db
+    .insert(schema.organizationInvitations)
+    .values({
+      organizationId: params.organizationId,
+      invitedEmail: null,
+      invitedBy: params.invitedBy,
+      invitationCode,
+      isUnlimited: true,
+    })
+    .returning();
+
+  return invitation;
+}
+
+/**
+ * Récupère le lien d'invitation illimité pour une organisation s'il existe
+ */
+export async function getOrganizationInvitation(organizationId: number) {
+  const invitations = await db
+    .select()
+    .from(schema.organizationInvitations)
+    .where(
+      and(
+        eq(schema.organizationInvitations.organizationId, organizationId),
+        eq(schema.organizationInvitations.isUnlimited, true),
+      ),
+    )
+    .limit(1);
+
+  return invitations.length > 0 ? invitations[0] : null;
+}
+
+/**
  * Récupère toutes les invitations en attente pour une organisation
+ * (seulement les invitations par email, pas les liens illimités)
  */
 export async function getPendingInvitations(organizationId: number) {
   const invitations = await db
     .select()
     .from(schema.organizationInvitations)
-    .where(eq(schema.organizationInvitations.organizationId, organizationId));
+    .where(
+      and(
+        eq(schema.organizationInvitations.organizationId, organizationId),
+        eq(schema.organizationInvitations.isUnlimited, false),
+      ),
+    );
 
   // Récupérer les utilisateurs qui ont invité
   const inviterIds = invitations.map((i) => i.invitedBy);
@@ -142,15 +206,17 @@ export async function acceptInvitation(invitationCode: string, userId: number) {
     .limit(1);
 
   if (existingMembership.length > 0) {
-    // Déjà membre, on supprime l'invitation et on retourne
-    await db
-      .delete(schema.organizationInvitations)
-      .where(eq(schema.organizationInvitations.id, invitation.id));
+    // Déjà membre, on supprime l'invitation seulement si elle n'est pas illimitée
+    if (!invitation.isUnlimited) {
+      await db
+        .delete(schema.organizationInvitations)
+        .where(eq(schema.organizationInvitations.id, invitation.id));
+    }
 
     return invitation.organization!;
   }
 
-  // Transaction : ajouter le membre et supprimer l'invitation
+  // Transaction : ajouter le membre et supprimer l'invitation si elle n'est pas illimitée
   await db.transaction(async (tx) => {
     // Ajouter l'utilisateur comme membre
     await tx.insert(schema.organizationMembers).values({
@@ -158,10 +224,12 @@ export async function acceptInvitation(invitationCode: string, userId: number) {
       userId,
     });
 
-    // Supprimer l'invitation (elle a été utilisée)
-    await tx
-      .delete(schema.organizationInvitations)
-      .where(eq(schema.organizationInvitations.id, invitation.id));
+    // Supprimer l'invitation seulement si elle n'est pas illimitée
+    if (!invitation.isUnlimited) {
+      await tx
+        .delete(schema.organizationInvitations)
+        .where(eq(schema.organizationInvitations.id, invitation.id));
+    }
   });
 
   return invitation.organization!;

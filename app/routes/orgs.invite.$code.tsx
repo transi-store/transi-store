@@ -101,9 +101,15 @@ export default function AcceptInvitation() {
           <Text color="gray.600" mb={6}>
             /{invitation.organization!.slug}
           </Text>
-          <Text fontSize="sm" color="gray.600">
-            Invité par {invitation.inviter!.name || invitation.inviter!.email}
-          </Text>
+          {invitation.isUnlimited ? (
+            <Text fontSize="sm" color="gray.600">
+              Lien d'invitation pour l'organisation
+            </Text>
+          ) : (
+            <Text fontSize="sm" color="gray.600">
+              Invité par {invitation.inviter!.name || invitation.inviter!.email}
+            </Text>
+          )}
         </Box>
 
         {sessionUser ? (

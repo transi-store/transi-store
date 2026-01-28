@@ -68,13 +68,15 @@ export const organizationInvitations = pgTable(
     invitationCode: varchar("invitation_code", { length: 32 })
       .notNull()
       .unique(),
-    invitedEmail: varchar("invited_email", { length: 255 }).notNull(),
+    invitedEmail: varchar("invited_email", { length: 255 }), // Nullable for organization-wide invitations
+    isUnlimited: boolean("is_unlimited").default(false).notNull(), // True for organization-wide invitations
     invitedBy: integer("invited_by")
       .notNull()
       .references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
+    // Conditional unique constraint: only for email-based invitations (when invitedEmail is not null)
     uniqueIndex("unique_org_email").on(
       table.organizationId,
       table.invitedEmail,
