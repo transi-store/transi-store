@@ -29,7 +29,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-      network: host
+      # network: host
     networks:
       - transi-store-network
     env_file:
@@ -54,3 +54,9 @@ volumes:
 networks:
   transi-store-network:
     driver: bridge
+    name: transi-store-network
+    driver_opts:
+      com.docker.network.bridge.name: transi-store-network
+      com.docker.network.bridge.host_binding_ipv4: 0.0.0.0
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.driver.mtu: 1500
