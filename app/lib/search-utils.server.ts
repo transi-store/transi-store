@@ -5,7 +5,7 @@ import { db, schema } from "./db.server";
  * Seuil de similarité minimum pour la recherche floue (0-1)
  * Utilisé pour filtrer les résultats de recherche basés sur le score de similarité
  */
-export const SIMILARITY_THRESHOLD = 0.1;
+export const SIMILARITY_THRESHOLD = 0.7;
 
 /**
  * Fonction de calcul de similarité maximale pour la recherche floue
