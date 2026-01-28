@@ -12,7 +12,8 @@ const sessionStorage = createCookieSessionStorage({
     path: "/",
     sameSite: "lax",
     secrets: [SESSION_SECRET],
-    secure: process.env.NODE_ENV === "production",
+    // TODO activate secure cookie once on HTTPS
+    secure: false, // process.env.NODE_ENV === "production",
   },
 });
 
