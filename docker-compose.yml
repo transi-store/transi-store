@@ -28,7 +28,9 @@ services:
       context: .
       dockerfile: ./Dockerfile
       network: host
-
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     ports:
       - "${APP_PORT:-5173}:5173"
