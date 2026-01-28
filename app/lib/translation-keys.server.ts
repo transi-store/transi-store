@@ -32,8 +32,6 @@ export async function getTranslationKeys(
 
   if (options?.search) {
     const searchQuery = options.search.trim();
-
-    // Use fuzzy search with similarity scoring
     const keysWithSimilarity = await searchTranslationKeys(
       searchQuery,
       projectId,
@@ -42,8 +40,13 @@ export async function getTranslationKeys(
         offset: options?.offset || 0,
       },
     );
-
-    keys = keysWithSimilarity.map((row) => row.key);
+    // On expose tous les champs utiles pour le highlight et le matchType
+    keys = keysWithSimilarity.map((row) => ({
+      ...row.key,
+      matchType: row.matchType,
+      translationLocale: row.translationLocale,
+      translationValue: row.translationValue,
+    }));
     count = keysWithSimilarity.length;
   } else {
     // No search query - use regular query ordered by keyName

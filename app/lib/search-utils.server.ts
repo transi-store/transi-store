@@ -1,4 +1,77 @@
-import { sql, and, or, inArray, desc } from "drizzle-orm";
+// Recherche universelle sur les clés et traductions, filtrable par projectIds
+export async function searchTranslationKeysUniversal(
+  searchQuery: string,
+  projectIds: number[],
+  options?: {
+    limit?: number;
+    offset?: number;
+    locale?: string;
+  },
+) {
+  const limit = options?.limit || 50;
+  const offset = options?.offset || 0;
+
+  // Matches sur keyName et description
+  const keyResults = await db
+    .select({
+      key: schema.translationKeys,
+      similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as("similarity"),
+      matchType: sql`'key'`.as('matchType'),
+    })
+    .from(schema.translationKeys)
+    .where(
+      and(
+        inArray(schema.translationKeys.projectId, projectIds),
+        or(
+          sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
+          sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
+        )!,
+      ),
+    )
+    .orderBy(desc(sql`similarity`))
+    .limit(limit)
+    .offset(offset);
+
+  // Matches sur les traductions
+  const translationWhere = [
+    inArray(schema.translationKeys.projectId, projectIds),
+    sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
+  ];
+  if (options?.locale) {
+    translationWhere.push(eq(schema.translations.locale, options.locale));
+  }
+  const translationResults = await db
+    .select({
+      key: schema.translationKeys,
+      similarity: maxSimilarity(schema.translations.value, searchQuery).as("similarity"),
+      matchType: sql`'translation'`.as('matchType'),
+      translationLocale: schema.translations.locale,
+      translationValue: schema.translations.value,
+    })
+    .from(schema.translationKeys)
+    .innerJoin(
+      schema.translations,
+      eq(schema.translationKeys.id, schema.translations.keyId)
+    )
+    .where(and(...translationWhere))
+    .orderBy(desc(sql`similarity`))
+    .limit(limit)
+    .offset(offset);
+
+  // Fusionne et déduplique (priorité clé)
+  const all = [...keyResults, ...translationResults];
+  const seen = new Map();
+  const deduped = [];
+  for (const row of all) {
+    const id = row.key.id;
+    if (!seen.has(id) || row.matchType === 'key') {
+      seen.set(id, true);
+      deduped.push(row);
+    }
+  }
+  return deduped;
+}
+import { eq, sql, and, or, inArray, desc } from "drizzle-orm";
 import { db, schema } from "./db.server";
 
 /**
@@ -44,12 +117,14 @@ export async function searchTranslationKeys(
   const limit = options?.limit || 50;
   const offset = options?.offset || 0;
 
-  return await db
+  // Matches sur keyName et description
+  const keyResults = await db
     .select({
       key: schema.translationKeys,
       similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as(
         "similarity",
       ),
+      matchType: sql`'key'`.as("matchType"),
     })
     .from(schema.translationKeys)
     .where(
@@ -64,4 +139,43 @@ export async function searchTranslationKeys(
     .orderBy(desc(sql`similarity`))
     .limit(limit)
     .offset(offset);
+
+  // Matches sur les traductions
+  const translationResults = await db
+    .select({
+      key: schema.translationKeys,
+      similarity: maxSimilarity(schema.translations.value, searchQuery).as(
+        "similarity",
+      ),
+      matchType: sql`'translation'`.as("matchType"),
+      translationLocale: schema.translations.locale,
+      translationValue: schema.translations.value,
+    })
+    .from(schema.translationKeys)
+    .innerJoin(
+      schema.translations,
+      eq(schema.translationKeys.id, schema.translations.keyId),
+    )
+    .where(
+      and(
+        inArray(schema.translationKeys.projectId, projectIdArray),
+        sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
+      ),
+    )
+    .orderBy(desc(sql`similarity`))
+    .limit(limit)
+    .offset(offset);
+
+  // Fusionne et déduplique (priorité clé)
+  const all = [...keyResults, ...translationResults];
+  const seen = new Map();
+  const deduped = [];
+  for (const row of all) {
+    const id = row.key.id;
+    if (!seen.has(id) || row.matchType === "key") {
+      seen.set(id, true);
+      deduped.push(row);
+    }
+  }
+  return deduped;
 }

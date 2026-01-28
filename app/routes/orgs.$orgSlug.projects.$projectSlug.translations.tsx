@@ -32,6 +32,7 @@ import {
   getTranslationKeys,
   duplicateTranslationKey,
 } from "~/lib/translation-keys.server";
+import { highlightText } from "../lib/highlight";
 
 const LIMIT = 50;
 
@@ -220,18 +221,34 @@ export default function ProjectTranslations({
                                 fontSize="sm"
                                 fontWeight="medium"
                               >
-                                {key.keyName}
+                                {highlightText(key.keyName, search)}
                               </Text>
                             </Link>
                           </LinkOverlay>
                           {key.description && (
                             <Text fontSize="xs" color="gray.400">
-                              {key.description}
+                              {highlightText(key.description, search)}
                             </Text>
                           )}
-                          <Text fontSize="s" color="gray.600">
-                            {key.defaultTranslation}
-                          </Text>
+                          {key.matchType === 'translation' && key.translationLocale && (
+                            <HStack gap={2} mt={1}>
+                              <Badge colorScheme="purple" size="sm">Traduction</Badge>
+                              <Badge colorPalette="brand" size="sm">{key.translationLocale.toUpperCase()}</Badge>
+                            </HStack>
+                          )}
+                          {key.matchType === 'key' && (
+                            <Badge colorScheme="purple" size="sm" mt={1}>Clé</Badge>
+                          )}
+                          {key.matchType === 'translation' && key.translationValue && (
+                            <Text fontSize="xs" color="gray.600" mt={1}>
+                              {highlightText(key.translationValue, search)}
+                            </Text>
+                          )}
+                          {key.matchType !== 'translation' && key.defaultTranslation && (
+                            <Text fontSize="s" color="gray.600">
+                              {key.defaultTranslation}
+                            </Text>
+                          )}
                         </VStack>
                       </LinkBox>
                     </Table.Cell>
