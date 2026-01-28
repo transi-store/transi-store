@@ -41,6 +41,8 @@ import {
   getPendingInvitations,
   cancelInvitation,
   removeMemberFromOrganization,
+  createOrganizationInvitation,
+  getOrganizationInvitation,
 } from "~/lib/invitations.server";
 import { db, schema } from "~/lib/db.server";
 import { eq, inArray } from "drizzle-orm";
@@ -83,6 +85,29 @@ export async function action({ request, params }: Route.ActionArgs) {
           error instanceof Error
             ? error.message
             : "Erreur lors de la création de l'invitation",
+      };
+    }
+  }
+
+  if (intent === "create-org-invitation") {
+    try {
+      const invitation = await createOrganizationInvitation({
+        organizationId: organization.id,
+        invitedBy: user.userId,
+      });
+
+      return {
+        success: true,
+        invitationCode: invitation.invitationCode,
+        action: "create-org-invitation",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erreur lors de la création du lien d'invitation",
       };
     }
   }
@@ -157,11 +182,27 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   // Récupérer les invitations en attente
   const pendingInvitations = await getPendingInvitations(organization.id);
 
-  return { members, pendingInvitations, organization };
+  // Récupérer le lien d'invitation illimité s'il existe
+  const organizationInvitation = await getOrganizationInvitation(
+    organization.id,
+  );
+
+  // Déterminer l'origine à partir de la requête pour le rendu côté serveur
+  const url = new URL(request.url);
+  const origin = url.origin;
+
+  return {
+    members,
+    pendingInvitations,
+    organizationInvitation,
+    organization,
+    origin,
+  };
 }
 
 export default function OrganizationMembers() {
-  const { members, pendingInvitations } = useLoaderData<typeof loader>();
+  const { members, pendingInvitations, organizationInvitation, origin } =
+    useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = React.useState(false);
   const [showLinkModal, setShowLinkModal] = React.useState(false);
@@ -175,7 +216,7 @@ export default function OrganizationMembers() {
   }, [actionData]);
 
   const handleCopyInvitationLink = async (code: string) => {
-    const link = `${window.location.origin}/orgs/invite/${code}`;
+    const link = `${origin}/orgs/invite/${code}`;
     try {
       await navigator.clipboard.writeText(link);
       toaster.success({
@@ -227,7 +268,7 @@ export default function OrganizationMembers() {
                     flex={1}
                     wordBreak="break-all"
                   >
-                    {window.location.origin}/orgs/invite/
+                    {origin}/orgs/invite/
                     {actionData.invitationCode}
                   </Code>
                   <Button
@@ -303,6 +344,105 @@ export default function OrganizationMembers() {
             </Card.Body>
           </Card.Root>
         ))}
+      </VStack>
+
+      {/* Lien d'invitation pour l'organisation */}
+      <VStack align="stretch" gap={4} mb={8}>
+        <Heading as="h3" size="md">
+          Lien d'invitation pour l'organisation
+        </Heading>
+
+        {organizationInvitation ? (
+          <Alert.Root status="info">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>
+                Lien d'invitation permanent pour l'organisation
+              </Alert.Title>
+              <Alert.Description>
+                <VStack align="stretch" gap={2} mt={2}>
+                  <Text fontSize="sm">
+                    Ce lien peut être utilisé plusieurs fois par différentes
+                    personnes pour rejoindre l'organisation. Il ne périme pas
+                    après utilisation.
+                  </Text>
+                  <HStack>
+                    <Code
+                      p={2}
+                      borderRadius="md"
+                      fontSize="sm"
+                      flex={1}
+                      wordBreak="break-all"
+                    >
+                      {origin}/orgs/invite/
+                      {organizationInvitation.invitationCode}
+                    </Code>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        handleCopyInvitationLink(
+                          organizationInvitation.invitationCode,
+                        )
+                      }
+                      colorPalette="gray"
+                    >
+                      <LuCopy /> Copier
+                    </Button>
+                    <Form method="post">
+                      <input
+                        type="hidden"
+                        name="intent"
+                        value="cancel-invitation"
+                      />
+                      <input
+                        type="hidden"
+                        name="invitationId"
+                        value={organizationInvitation.id}
+                      />
+                      <Button type="submit" size="sm" colorPalette="red">
+                        <LuTrash2 /> Supprimer
+                      </Button>
+                    </Form>
+                  </HStack>
+                </VStack>
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        ) : (
+          <Card.Root>
+            <Card.Body>
+              <VStack align="stretch" gap={3}>
+                <Text fontSize="sm" color="gray.600">
+                  Créez un lien d'invitation permanent qui peut être utilisé par
+                  plusieurs personnes pour rejoindre l'organisation.
+                </Text>
+                <Text fontSize="sm" fontWeight="medium">
+                  Différences avec l'invitation par email :
+                </Text>
+                <VStack align="stretch" gap={1} pl={4}>
+                  <Text fontSize="sm" color="gray.600">
+                    • <strong>Lien d'organisation :</strong> Peut être utilisé
+                    indéfiniment, pas lié à un email spécifique
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    • <strong>Invitation par email :</strong> Usage unique, liée
+                    à un email précis
+                  </Text>
+                </VStack>
+                <Form method="post">
+                  <input
+                    type="hidden"
+                    name="intent"
+                    value="create-org-invitation"
+                  />
+                  <Button type="submit" colorScheme="brand" mt={2}>
+                    <LuPlus /> Créer un lien d'invitation pour l'organisation
+                  </Button>
+                </Form>
+              </VStack>
+            </Card.Body>
+          </Card.Root>
+        )}
       </VStack>
 
       {/* Invitations en attente */}
