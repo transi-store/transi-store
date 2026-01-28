@@ -34,13 +34,12 @@ export async function getTranslationKeys(
     const searchQuery = options.search.trim();
     const keysWithSimilarity = await searchTranslationKeys(
       searchQuery,
-      projectId,
+      [projectId],
       {
         limit: options?.limit || 50,
         offset: options?.offset || 0,
       },
     );
-    // On expose tous les champs utiles pour le highlight et le matchType
     keys = keysWithSimilarity.map((row) => ({
       ...row.key,
       matchType: row.matchType,

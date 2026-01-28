@@ -1,5 +1,12 @@
+type SearchTranslationKeyResult = {
+  key: typeof schema.translationKeys.$inferSelect;
+  translationLocale?: string;
+  translationValue?: string;
+  matchType: "key" | "translation";
+};
+
 // Recherche universelle sur les clés et traductions, filtrable par projectIds
-export async function searchTranslationKeysUniversal(
+export async function searchTranslationKeys(
   searchQuery: string,
   projectIds: number[],
   options?: {
@@ -7,7 +14,7 @@ export async function searchTranslationKeysUniversal(
     offset?: number;
     locale?: string;
   },
-) {
+): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit || 50;
   const offset = options?.offset || 0;
 
@@ -15,8 +22,10 @@ export async function searchTranslationKeysUniversal(
   const keyResults = await db
     .select({
       key: schema.translationKeys,
-      similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as("similarity"),
-      matchType: sql`'key'`.as('matchType'),
+      similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as(
+        "similarity",
+      ),
+      matchType: sql`'key'`.as("matchType"),
     })
     .from(schema.translationKeys)
     .where(
@@ -43,15 +52,17 @@ export async function searchTranslationKeysUniversal(
   const translationResults = await db
     .select({
       key: schema.translationKeys,
-      similarity: maxSimilarity(schema.translations.value, searchQuery).as("similarity"),
-      matchType: sql`'translation'`.as('matchType'),
+      similarity: maxSimilarity(schema.translations.value, searchQuery).as(
+        "similarity",
+      ),
+      matchType: sql`'translation'`.as("matchType"),
       translationLocale: schema.translations.locale,
       translationValue: schema.translations.value,
     })
     .from(schema.translationKeys)
     .innerJoin(
       schema.translations,
-      eq(schema.translationKeys.id, schema.translations.keyId)
+      eq(schema.translationKeys.id, schema.translations.keyId),
     )
     .where(and(...translationWhere))
     .orderBy(desc(sql`similarity`))
@@ -64,11 +75,12 @@ export async function searchTranslationKeysUniversal(
   const deduped = [];
   for (const row of all) {
     const id = row.key.id;
-    if (!seen.has(id) || row.matchType === 'key') {
+    if (!seen.has(id) || row.matchType === "key") {
       seen.set(id, true);
       deduped.push(row);
     }
   }
+
   return deduped;
 }
 import { eq, sql, and, or, inArray, desc } from "drizzle-orm";
@@ -105,77 +117,3 @@ export function maxSimilarity(field: any, query: string) {
  * @param options - Options de recherche (limit, offset)
  * @returns Tableau de clés avec leur score de similarité
  */
-export async function searchTranslationKeys(
-  searchQuery: string,
-  projectIds: number | number[],
-  options?: {
-    limit?: number;
-    offset?: number;
-  },
-) {
-  const projectIdArray = Array.isArray(projectIds) ? projectIds : [projectIds];
-  const limit = options?.limit || 50;
-  const offset = options?.offset || 0;
-
-  // Matches sur keyName et description
-  const keyResults = await db
-    .select({
-      key: schema.translationKeys,
-      similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as(
-        "similarity",
-      ),
-      matchType: sql`'key'`.as("matchType"),
-    })
-    .from(schema.translationKeys)
-    .where(
-      and(
-        inArray(schema.translationKeys.projectId, projectIdArray),
-        or(
-          sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
-          sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
-        )!,
-      ),
-    )
-    .orderBy(desc(sql`similarity`))
-    .limit(limit)
-    .offset(offset);
-
-  // Matches sur les traductions
-  const translationResults = await db
-    .select({
-      key: schema.translationKeys,
-      similarity: maxSimilarity(schema.translations.value, searchQuery).as(
-        "similarity",
-      ),
-      matchType: sql`'translation'`.as("matchType"),
-      translationLocale: schema.translations.locale,
-      translationValue: schema.translations.value,
-    })
-    .from(schema.translationKeys)
-    .innerJoin(
-      schema.translations,
-      eq(schema.translationKeys.id, schema.translations.keyId),
-    )
-    .where(
-      and(
-        inArray(schema.translationKeys.projectId, projectIdArray),
-        sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
-      ),
-    )
-    .orderBy(desc(sql`similarity`))
-    .limit(limit)
-    .offset(offset);
-
-  // Fusionne et déduplique (priorité clé)
-  const all = [...keyResults, ...translationResults];
-  const seen = new Map();
-  const deduped = [];
-  for (const row of all) {
-    const id = row.key.id;
-    if (!seen.has(id) || row.matchType === "key") {
-      seen.set(id, true);
-      deduped.push(row);
-    }
-  }
-  return deduped;
-}

@@ -2,7 +2,7 @@ import { db, schema } from "./db.server";
 import { eq, and, inArray, sql, desc } from "drizzle-orm";
 import {
   maxSimilarity,
-  searchTranslationKeysUniversal,
+  searchTranslationKeys,
   SIMILARITY_THRESHOLD,
   searchTranslationKeys,
 } from "./search-utils.server";
@@ -80,11 +80,10 @@ export async function globalSearch(
   const projectIds = projects.map((p) => p.id);
 
   // Utilise la logique mutualisée
-  const results = await searchTranslationKeysUniversal(
-    searchQuery,
-    projectIds,
-    { limit, locale: options?.locale },
-  );
+  const results = await searchTranslationKeys(searchQuery, projectIds, {
+    limit,
+    locale: options?.locale,
+  });
 
   // Get organizations et projets pour enrichir les résultats
   const organizations = await db
