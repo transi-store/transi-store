@@ -183,14 +183,25 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const pendingInvitations = await getPendingInvitations(organization.id);
 
   // Récupérer le lien d'invitation illimité s'il existe
-  const organizationInvitation =
-    await getOrganizationInvitation(organization.id);
+  const organizationInvitation = await getOrganizationInvitation(
+    organization.id,
+  );
 
-  return { members, pendingInvitations, organizationInvitation, organization };
+  // Déterminer l'origine à partir de la requête pour le rendu côté serveur
+  const url = new URL(request.url);
+  const origin = url.origin;
+
+  return {
+    members,
+    pendingInvitations,
+    organizationInvitation,
+    organization,
+    origin,
+  };
 }
 
 export default function OrganizationMembers() {
-  const { members, pendingInvitations, organizationInvitation } =
+  const { members, pendingInvitations, organizationInvitation, origin } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = React.useState(false);
@@ -205,7 +216,7 @@ export default function OrganizationMembers() {
   }, [actionData]);
 
   const handleCopyInvitationLink = async (code: string) => {
-    const link = `${window.location.origin}/orgs/invite/${code}`;
+    const link = `${origin}/orgs/invite/${code}`;
     try {
       await navigator.clipboard.writeText(link);
       toaster.success({
@@ -257,7 +268,7 @@ export default function OrganizationMembers() {
                     flex={1}
                     wordBreak="break-all"
                   >
-                    {window.location.origin}/orgs/invite/
+                    {origin}/orgs/invite/
                     {actionData.invitationCode}
                   </Code>
                   <Button
@@ -363,7 +374,7 @@ export default function OrganizationMembers() {
                       flex={1}
                       wordBreak="break-all"
                     >
-                      {window.location.origin}/orgs/invite/
+                      {origin}/orgs/invite/
                       {organizationInvitation.invitationCode}
                     </Code>
                     <Button
