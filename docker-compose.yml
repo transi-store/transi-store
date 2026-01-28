@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - transi-store-network
+      - trst-network
     healthcheck:
       test:
         [
@@ -31,7 +31,7 @@ services:
       dockerfile: ./Dockerfile
       # network: host
     networks:
-      - transi-store-network
+      - trst-network
     env_file:
       - .env
     depends_on:
@@ -52,11 +52,11 @@ volumes:
   postgres_data:
 
 networks:
-  transi-store-network:
+  trst-network:
     driver: bridge
-    name: transi-store-network
+    name: trst-network
     driver_opts:
-      com.docker.network.bridge.name: transi-store-network
+      com.docker.network.bridge.name: trst-network
       com.docker.network.bridge.host_binding_ipv4: 0.0.0.0
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.driver.mtu: 1500
