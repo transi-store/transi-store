@@ -135,8 +135,6 @@ ${buildUserPrompt(context)}`,
     suggestions: TranslationSuggestion[];
   };
 
-  console.log(content);
-
   return parsed.suggestions;
 }
 
