@@ -16,3 +16,7 @@ RUN yarn install --immutable
 # Copier le reste du code (seulement en production)
 # En dev, le code est monté via volume
 COPY . .
+
+RUN yarn build
+
+CMD ["yarn", "start"]
