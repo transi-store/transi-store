@@ -85,14 +85,39 @@ async function translateWithOpenAI(
 ): Promise<TranslationSuggestion[]> {
   const openai = new OpenAI({ apiKey });
 
+  const available = await openai.models.list();
+  console.log(available.data.map((m) => m.id));
+
   const response = await openai.chat.completions.create({
-    model: "gpt-5-mini",
+    model: "gpt-4.1",
     messages: [
       { role: "system", content: buildSystemPrompt() },
       { role: "user", content: buildUserPrompt(context) },
     ],
     temperature: 0.7,
-    response_format: { type: "json_object" },
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "translation",
+        schema: {
+          type: "object",
+          properties: {
+            suggestions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  text: { type: "string" },
+                  confidence: { type: "number" },
+                },
+                required: ["text"],
+              },
+            },
+          },
+          required: ["suggestions"],
+        },
+      },
+    },
   });
 
   const content = response.choices[0]?.message?.content;
