@@ -12,6 +12,8 @@ services:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - transi-store-network
     healthcheck:
       test:
         [
@@ -28,6 +30,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
       network: host
+    networks:
+      - transi-store-network
     env_file:
       - .env
     depends_on:
@@ -46,3 +50,7 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  transi-store-network:
+    driver: bridge
