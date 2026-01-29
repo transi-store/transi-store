@@ -50,6 +50,7 @@ import {
 import { AI_PROVIDERS, type AiProvider } from "~/lib/ai-providers";
 import { redirect } from "react-router";
 import { toaster } from "~/components/ui/toaster";
+import { getOrigin } from "~/lib/origin.server";
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
@@ -131,11 +132,12 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   // Récupérer les providers IA configurés
   const aiProviders = await getOrganizationAiProviders(organization.id);
 
-  return { organization, apiKeys, aiProviders };
+  return { organization, apiKeys, aiProviders, origin: getOrigin(request) };
 }
 
 export default function OrganizationSettings() {
-  const { organization, apiKeys, aiProviders } = useLoaderData<typeof loader>();
+  const { organization, apiKeys, aiProviders, origin } =
+    useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
@@ -359,7 +361,7 @@ export default function OrganizationSettings() {
               wordBreak="break-all"
             >
               {`curl -H "Authorization: Bearer YOUR_API_KEY" \\
-  "https://your-domain.com/api/orgs/${organization.slug}/projects/PROJECT_SLUG/export?format=json&locale=fr"`}
+  "${origin}/api/orgs/${organization.slug}/projects/PROJECT_SLUG/export?format=json&locale=fr"`}
             </Code>
           </Box>
         </Box>

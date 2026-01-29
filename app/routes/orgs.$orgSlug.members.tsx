@@ -48,6 +48,7 @@ import { db, schema } from "~/lib/db.server";
 import { eq, inArray } from "drizzle-orm";
 import { redirect } from "react-router";
 import { toaster } from "~/components/ui/toaster";
+import { getOrigin } from "~/lib/origin.server";
 
 export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request);
@@ -187,16 +188,12 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     organization.id,
   );
 
-  // Déterminer l'origine à partir de la requête pour le rendu côté serveur
-  const url = new URL(request.url);
-  const origin = url.origin;
-
   return {
     members,
     pendingInvitations,
     organizationInvitation,
     organization,
-    origin,
+    origin: getOrigin(request),
   };
 }
 
