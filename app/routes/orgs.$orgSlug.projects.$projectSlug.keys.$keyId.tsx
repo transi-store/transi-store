@@ -54,6 +54,7 @@ import {
   getRedirectUrlFromFormData,
 } from "~/lib/routes-helpers";
 import { toaster } from "~/components/ui/toaster";
+import type { TranslationSuggestion } from "~/lib/ai-translation.server";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -205,7 +206,7 @@ export default function EditTranslationKey({
   // État pour la modale de traduction IA
   const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);
   const aiFetcher = useFetcher<{
-    suggestions?: { text: string; confidence?: number }[];
+    suggestions?: Array<TranslationSuggestion>;
     provider?: string;
     error?: string;
   }>();
@@ -297,7 +298,18 @@ export default function EditTranslationKey({
     if (aiDialogLocale) {
       handleTranslationChange(aiDialogLocale, text);
       setAiDialogLocale(null);
-      // The value will be saved on blur when the user leaves the field
+
+      // save the value
+      saveFetcher.submit(
+        {
+          _action: "saveTranslation",
+          locale: aiDialogLocale,
+          value: text,
+        },
+        {
+          method: "POST",
+        },
+      );
     }
   };
 
@@ -574,6 +586,13 @@ export default function EditTranslationKey({
                               Confiance:{" "}
                               {Math.round(suggestion.confidence * 100)}%
                             </Text>
+                          )}
+                          {suggestion.notes && (
+                            <Box mt={2} p={2} bg="gray.100" borderRadius="sm">
+                              <Text fontSize="xs" color="gray.600">
+                                {suggestion.notes}
+                              </Text>
+                            </Box>
                           )}
                         </Box>
                       ))}
