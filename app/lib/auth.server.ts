@@ -85,11 +85,18 @@ async function handleMapadoCallback(params: CallbackParams) {
     throw new Error("Failed to decode JWT token");
   }
 
+  // Mapado email is in the sub, but prefixed with "something_"
+
+  const email = decodedToken.email
+    ? decodedToken.email
+    : (decodedToken.sub.replace(/^.*?_/, "") ??
+      `user-${decodedToken.sub}@unknown.local`);
+
   // Créer ou mettre à jour l'utilisateur (sans name)
   const user = await upsertUser({
     oauthProvider: "mapado",
     oauthSubject: decodedToken.sub,
-    email: decodedToken.email || `user-${decodedToken.sub}@unknown.local`,
+    email,
     name: undefined,
   });
 
