@@ -287,65 +287,6 @@ export default function OrganizationMembers() {
         </Alert.Root>
       )}
 
-      {/* Membres actuels */}
-      <VStack align="stretch" gap={4} mb={8}>
-        <Heading as="h3" size="md">
-          Membres ({members.length})
-        </Heading>
-        {members.map((member) => (
-          <Card.Root key={member.id}>
-            <Card.Body>
-              <HStack justify="space-between">
-                <Box flex="1">
-                  <HStack>
-                    <Text fontWeight="medium">
-                      {member.user.name || member.user.email}
-                    </Text>
-                    {member.isCurrentUser && (
-                      <Badge colorScheme="blue">Vous</Badge>
-                    )}
-                  </HStack>
-                  <Text fontSize="sm" color="gray.600">
-                    {member.user.email}
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">
-                    Membre depuis le{" "}
-                    {new Date(member.createdAt).toLocaleDateString("fr-FR")}
-                  </Text>
-                </Box>
-                {!member.isCurrentUser && (
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="remove-member" />
-                    <input
-                      type="hidden"
-                      name="membershipId"
-                      value={member.id}
-                    />
-                    <IconButton
-                      type="submit"
-                      aria-label="Retirer le membre"
-                      variant="ghost"
-                      colorScheme="red"
-                      onClick={(e) => {
-                        if (
-                          !confirm(
-                            "Êtes-vous sûr de vouloir retirer ce membre ?",
-                          )
-                        ) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                      <LuTrash2 />
-                    </IconButton>
-                  </Form>
-                )}
-              </HStack>
-            </Card.Body>
-          </Card.Root>
-        ))}
-      </VStack>
-
       {/* Lien d'invitation pour l'organisation */}
       <VStack align="stretch" gap={4} mb={8}>
         <Heading as="h3" size="md">
@@ -443,6 +384,65 @@ export default function OrganizationMembers() {
             </Card.Body>
           </Card.Root>
         )}
+      </VStack>
+
+      {/* Membres actuels */}
+      <VStack align="stretch" gap={4} mb={8}>
+        <Heading as="h3" size="md">
+          Membres ({members.length})
+        </Heading>
+        {members.map((member) => (
+          <Card.Root key={member.id}>
+            <Card.Body>
+              <HStack justify="space-between">
+                <Box flex="1">
+                  <HStack>
+                    <Text fontWeight="medium">
+                      {member.user.name || member.user.email}
+                    </Text>
+                    {member.isCurrentUser && (
+                      <Badge colorScheme="blue">Vous</Badge>
+                    )}
+                  </HStack>
+                  <Text fontSize="sm" color="gray.600">
+                    {member.user.email}
+                  </Text>
+                  <Text fontSize="xs" color="gray.500">
+                    Membre depuis le{" "}
+                    {new Date(member.createdAt).toLocaleDateString("fr-FR")}
+                  </Text>
+                </Box>
+                {!member.isCurrentUser && (
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="remove-member" />
+                    <input
+                      type="hidden"
+                      name="membershipId"
+                      value={member.id}
+                    />
+                    <IconButton
+                      type="submit"
+                      aria-label="Retirer le membre"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={(e) => {
+                        if (
+                          !confirm(
+                            "Êtes-vous sûr de vouloir retirer ce membre ?",
+                          )
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
+                      <LuTrash2 />
+                    </IconButton>
+                  </Form>
+                )}
+              </HStack>
+            </Card.Body>
+          </Card.Root>
+        ))}
       </VStack>
 
       {/* Invitations en attente */}
