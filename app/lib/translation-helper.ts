@@ -1,4 +1,4 @@
-import { type schema } from "./db.server";
+import type { schema } from "./db.server";
 
 export type RegularDataRow = typeof schema.translationKeys.$inferSelect & {
   translatedLocales: Array<string>;
