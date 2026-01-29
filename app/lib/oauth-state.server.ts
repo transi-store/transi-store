@@ -10,8 +10,7 @@ const oauthStateCookie = createCookie("oauth_state", {
   path: "/",
   sameSite: "lax",
   secrets: [SESSION_SECRET],
-  // TODO activate secure cookie once on HTTPS
-  secure: false, // process.env.NODE_ENV === "production",
+  secure: process.env.NODE_ENV === "production",
   maxAge: 600, // 10 minutes
 });
 

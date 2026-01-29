@@ -66,4 +66,5 @@ export default [
     "api/orgs/:orgSlug/projects/:projectSlug/translate",
     "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
   ),
+  route("api/locales/:lng/:ns", "routes/api.locales.$lng.$ns.ts"),
 ] satisfies RouteConfig;

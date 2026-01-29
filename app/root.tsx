@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
+  data,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -10,19 +11,34 @@ import {
 } from "react-router";
 import type { Route } from "./+types/root";
 import { ChakraProvider, Box } from "@chakra-ui/react";
+import {
+  getLocale,
+  i18nextMiddleware,
+  localeCookie,
+} from "~/middleware/i18next";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
 import { Toaster } from "~/components/ui/toaster";
+import { useTranslation } from "react-i18next";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export const middleware = [i18nextMiddleware];
+
+export async function loader({ request, context }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
-  return { user };
+  const locale = getLocale(context);
+
+  return data(
+    { user, locale }, // Return the locale to the UI
+    { headers: { "Set-Cookie": await localeCookie.serialize(locale) } },
+  );
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  const { i18n } = useTranslation();
+
   return (
-    <html lang="fr">
+    <html lang={i18n.language} dir={i18n.dir(i18n.language)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -39,7 +55,14 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-  const { user } = useLoaderData<typeof loader>();
+  const { user, locale } = useLoaderData<typeof loader>();
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    if (i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale, i18n]);
 
   return (
     <>
