@@ -1,11 +1,6 @@
 import { db, schema } from "./db.server";
-import { eq, and, inArray, sql, desc } from "drizzle-orm";
-import {
-  maxSimilarity,
-  searchTranslationKeys,
-  SIMILARITY_THRESHOLD,
-  searchTranslationKeys,
-} from "./search-utils.server";
+import { eq, and, inArray } from "drizzle-orm";
+import { searchTranslationKeys } from "./search-utils.server";
 
 export interface SearchResult {
   keyId: number;

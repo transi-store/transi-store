@@ -1,15 +1,11 @@
 import { db, schema } from "./db.server";
 import { and, eq, inArray } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
+import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
 
 type TranslationKeysReturnType = {
   count: number;
-  data: Array<
-    typeof schema.translationKeys.$inferSelect & {
-      translatedLocales: Array<string>;
-      defaultTranslation: string | null;
-    }
-  >;
+  data: Array<RegularDataRow | SearchDataRow>;
 };
 
 export async function getTranslationKeys(
@@ -20,7 +16,12 @@ export async function getTranslationKeys(
     offset?: number;
   },
 ): Promise<TranslationKeysReturnType> {
-  let keys: Array<typeof schema.translationKeys.$inferSelect> = [];
+  let keys: Array<
+    Omit<
+      RegularDataRow | SearchDataRow,
+      "translatedLocales" | "defaultTranslation"
+    >
+  > = [];
   let count = 0;
 
   const defaultLocale = await db.query.projectLanguages.findFirst({
@@ -40,12 +41,16 @@ export async function getTranslationKeys(
         offset: options?.offset || 0,
       },
     );
-    keys = keysWithSimilarity.map((row) => ({
-      ...row.key,
-      matchType: row.matchType,
-      translationLocale: row.translationLocale,
-      translationValue: row.translationValue,
-    }));
+    keys = keysWithSimilarity.map(
+      (
+        row,
+      ): Omit<SearchDataRow, "translatedLocales" | "defaultTranslation"> => ({
+        ...row.key,
+        matchType: row.matchType,
+        translationLocale: row.translationLocale,
+        translationValue: row.translationValue,
+      }),
+    );
     count = keysWithSimilarity.length;
   } else {
     // No search query - use regular query ordered by keyName

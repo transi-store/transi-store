@@ -15,8 +15,8 @@ import { Link, Form, useSearchParams } from "react-router";
 import type { Route } from "./+types/search";
 import { requireUser } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
-import { highlightText } from "../lib/highlight";
-import { globalSearch } from "~/lib/search.server";
+import { TextHighlight } from "../lib/highlight";
+import { globalSearch, type SearchResult } from "~/lib/search.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -167,12 +167,18 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                               fontWeight="medium"
                               mb={1}
                             >
-                              {highlightText(result.keyName, query)}
+                              <TextHighlight
+                                text={result.keyName}
+                                query={query}
+                              />
                             </Text>
 
                             {result.keyDescription && (
                               <Text color="gray.600" fontSize="sm" mb={2}>
-                                {highlightText(result.keyDescription, query)}
+                                <TextHighlight
+                                  text={result.keyDescription}
+                                  query={query}
+                                />
                               </Text>
                             )}
 
@@ -185,10 +191,10 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                                 borderLeftColor="blue.500"
                               >
                                 <Text fontSize="sm">
-                                  {highlightText(
-                                    result.translationValue,
-                                    query,
-                                  )}
+                                  <TextHighlight
+                                    text={result.translationValue}
+                                    query={query}
+                                  />
                                 </Text>
                               </Box>
                             )}
