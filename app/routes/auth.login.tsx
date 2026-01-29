@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { Link, useSearchParams } from "react-router";
 import { FaGoogle } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 export async function loader() {
   return { providers: AVAILABLE_PROVIDERS };
@@ -17,6 +18,7 @@ export async function loader() {
 
 export default function Login({ loaderData }: Route.ComponentProps) {
   const { providers } = loaderData;
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const redirectTo =
     searchParams.get("redirect") || searchParams.get("redirectTo") || "/orgs";
@@ -27,11 +29,10 @@ export default function Login({ loaderData }: Route.ComponentProps) {
       <Container maxW="md" py={10}>
         <Box p={8} borderWidth={1} borderRadius="lg" bg="white">
           <Heading size="lg" mb={4}>
-            Connexion
+            {t("auth.login.title")}
           </Heading>
           <Text color="red.500">
-            Aucun provider OAuth n'est configuré. Veuillez configurer les
-            variables d'environnement.
+            {t("auth.login.noProvider")}
           </Text>
         </Box>
       </Container>
@@ -45,10 +46,10 @@ export default function Login({ loaderData }: Route.ComponentProps) {
     <Container maxW="md" py={10}>
       <Box p={8} borderWidth={1} borderRadius="lg" bg="white">
         <Heading size="lg" mb={2}>
-          Connexion
+          {t("auth.login.title")}
         </Heading>
         <Text color="gray.600" mb={6}>
-          Choisissez votre méthode de connexion
+          {t("auth.login.chooseMethod")}
         </Text>
         <VStack gap={3}>
           {enabledProviders.map((provider) => {
@@ -63,10 +64,10 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                       colorPalette="blue"
                       size="lg"
                     >
-                      <Link
+                        <Link
                         to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
                       >
-                        <FaGoogle /> Se connecter avec Google
+                        <FaGoogle /> {t("auth.login.signInWith", { provider: "Google" })}
                       </Link>
                     </Button>
                   );
@@ -79,10 +80,10 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                       colorPalette="brand"
                       size="lg"
                     >
-                      <Link
+                        <Link
                         to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
                       >
-                        Se connecter avec {provider.name}
+                        {t("auth.login.signInWith", { provider: provider.name })}
                       </Link>
                     </Button>
                   );

@@ -40,24 +40,27 @@ export async function loader({ request }: Route.LoaderArgs) {
   return null;
 }
 
+import { useTranslation } from "react-i18next";
+
 export default function Index() {
+  const { t } = useTranslation();
+
   return (
     <Container maxW="container.lg" py={10}>
       <VStack gap={6} align="stretch">
         <HStack justify="space-between" align="start">
           <Box>
             <Heading as="h1" size="2xl">
-              transi-store
+              {t("index.siteName")}
             </Heading>
             <Text fontSize="xl" color="gray.600">
-              Outil de gestion de traductions multi-projets
+              {t("index.description")}
             </Text>
           </Box>
         </HStack>
         <Box p={6} borderWidth={1} borderRadius="lg">
           <Text>
-            Bienvenue ! Ce projet permet de gerer les traductions de vos
-            applications.
+            {t("index.welcome")}
           </Text>
         </Box>
       </VStack>

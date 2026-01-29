@@ -1,1 +1,39 @@
-{}
+{
+  "header.siteName": "transi-store",
+  "header.projects": "Projets",
+  "header.search": "Recherche",
+  "header.myOrganizations": "Mes organisations",
+  "header.logout": "Déconnexion",
+  "header.login": "Connexion",
+
+  "search.title": "Recherche",
+  "search.placeholder": "Rechercher dans les clés et traductions...",
+  "search.organization": "Organisation",
+  "search.all": "Toutes",
+  "search.language": "Langue",
+  "search.localePlaceholder": "fr, en, de...",
+  "search.search": "Rechercher",
+  "search.resultLabel": "{count, plural, one {résultat trouvé} other {résultats trouvés}}",
+  "search.noResults": "Aucun résultat",
+  "search.clearSearch": "Effacer la recherche",
+  "search.noResultsFor": "Aucun résultat pour \"{{query}}\"",
+  "search.tryOtherKeywords": "Essayez avec d'autres mots-clés ou modifiez les filtres",
+  "search.badgeKey": "Clé",
+  "search.badgeTranslation": "Traduction",
+  "search.edit": "Éditer"
+  ,
+  "orgs.returnToOrganizations": "Retour aux organisations",
+  "orgs.projects": "Projets",
+  "orgs.members": "Membres",
+  "orgs.settings": "Paramètres",
+  "orgs.apiKeys": "Clés d'API",
+
+  "auth.login.title": "Connexion",
+  "auth.login.noProvider": "Aucun provider OAuth n'est configuré. Veuillez configurer les variables d'environnement.",
+  "auth.login.chooseMethod": "Choisissez votre méthode de connexion",
+  "auth.login.signInWith": "Se connecter avec {{provider}}",
+
+  "index.siteName": "transi-store",
+  "index.description": "Outil de gestion de traductions multi-projets",
+  "index.welcome": "Bienvenue ! Ce projet permet de gerer les traductions de vos applications."
+}

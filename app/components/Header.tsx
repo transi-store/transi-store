@@ -3,12 +3,14 @@ import { Menu, Portal } from "@chakra-ui/react";
 import { Link, Form } from "react-router";
 import { LuChevronDown, LuBuilding2, LuLogOut } from "react-icons/lu";
 import type { SessionData } from "~/lib/session.server";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   user: SessionData | null;
 }
 
 export function Header({ user }: HeaderProps) {
+  const { t } = useTranslation();
   return (
     <Box
       as="header"
@@ -27,7 +29,7 @@ export function Header({ user }: HeaderProps) {
               color="brand.700"
               _hover={{ color: "brand.600" }}
             >
-              <Link to={user ? "/orgs" : "/"}>transi-store</Link>
+              <Link to={user ? "/orgs" : "/"}>{t("header.siteName")}</Link>
             </Text>
 
             {user && (
@@ -39,7 +41,7 @@ export function Header({ user }: HeaderProps) {
                     _hover={{ textDecoration: "underline", color: "brand.700" }}
                   >
                     <Link to={`/orgs/${user.lastOrganizationSlug}`}>
-                      Projets
+                      {t("header.projects")}
                     </Link>
                   </Text>
                 )}
@@ -48,7 +50,7 @@ export function Header({ user }: HeaderProps) {
                   color="brand.600"
                   _hover={{ textDecoration: "underline", color: "brand.700" }}
                 >
-                  <Link to="/search">Recherche</Link>
+                  <Link to="/search">{t("header.search")}</Link>
                 </Text>
               </HStack>
             )}
@@ -69,7 +71,7 @@ export function Header({ user }: HeaderProps) {
                       <Menu.Item value="organizations" asChild>
                         <Link to="/orgs">
                           <LuBuilding2 />
-                          Mes organisations
+                          {t("header.myOrganizations")}
                         </Link>
                       </Menu.Item>
                       <Menu.Separator />
@@ -77,7 +79,7 @@ export function Header({ user }: HeaderProps) {
                         <Menu.Item value="logout" asChild>
                           <button type="submit" style={{ width: "100%" }}>
                             <LuLogOut />
-                            Déconnexion
+                            {t("header.logout")}
                           </button>
                         </Menu.Item>
                       </Form>
@@ -87,7 +89,7 @@ export function Header({ user }: HeaderProps) {
               </Menu.Root>
             ) : (
               <Button asChild size="sm" colorPalette="brand">
-                <Link to="/auth/login">Connexion</Link>
+                <Link to="/auth/login">{t("header.login")}</Link>
               </Button>
             )}
           </HStack>

@@ -12,6 +12,7 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 import { Link, Form, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/search";
 import { requireUser } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
@@ -50,6 +51,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Search({ loaderData }: Route.ComponentProps) {
+  const { t } = useTranslation();
   const { query, results, organizations } = loaderData;
   const [searchParams] = useSearchParams();
 
@@ -59,14 +61,14 @@ export default function Search({ loaderData }: Route.ComponentProps) {
     <Container maxW="container.xl" py={10}>
       <VStack gap={6} align="stretch">
         <Heading as="h1" size="2xl">
-          Recherche
+          {t("search.title")}
         </Heading>
 
         <Form method="get">
           <VStack gap={4} align="stretch">
             <Input
               name="q"
-              placeholder="Rechercher dans les clés et traductions..."
+              placeholder={t("search.placeholder")}
               defaultValue={query}
               size="lg"
               autoFocus
@@ -76,7 +78,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
             <SimpleGrid columns={{ base: 1, md: 3 }} gap={3}>
               <Box>
                 <Text fontSize="sm" fontWeight="medium" mb={1}>
-                  Organisation
+                  {t("search.organization")}
                 </Text>
                 <select
                   name="org"
@@ -88,7 +90,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                     border: "1px solid #e2e8f0",
                   }}
                 >
-                  <option value="">Toutes</option>
+                  <option value="">{t("search.all")}</option>
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
                       {org.name}
@@ -99,18 +101,18 @@ export default function Search({ loaderData }: Route.ComponentProps) {
 
               <Box>
                 <Text fontSize="sm" fontWeight="medium" mb={1}>
-                  Langue
+                  {t("search.language")}
                 </Text>
                 <Input
                   name="locale"
-                  placeholder="fr, en, de..."
+                  placeholder={t("search.localePlaceholder")}
                   defaultValue={searchParams.get("locale") || ""}
                 />
               </Box>
 
               <Box display="flex" alignItems="flex-end">
                 <Button type="submit" colorPalette="brand" w="full">
-                  Rechercher
+                  {t("search.search")}
                 </Button>
               </Box>
             </SimpleGrid>
@@ -123,21 +125,23 @@ export default function Search({ loaderData }: Route.ComponentProps) {
             <HStack justify="space-between" align="center">
               <Text fontSize="lg" fontWeight="medium">
                 {results.length > 0
-                  ? `${results.length} résultat${results.length > 1 ? "s" : ""} trouvé${results.length > 1 ? "s" : ""}`
-                  : "Aucun résultat"}
+                  ? `${results.length} ${t("search.resultLabel", { count: results.length })}`
+                  : t("search.noResults")}
               </Text>
               {query && (
                 <Button asChild variant="outline" size="sm">
-                  <Link to="/search">Effacer la recherche</Link>
+                  <Link to="/search">{t("search.clearSearch")}</Link>
                 </Button>
               )}
             </HStack>
 
             {results.length === 0 ? (
               <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-                <Text color="gray.600">Aucun résultat pour "{query}"</Text>
+                <Text color="gray.600">
+                  {t("search.noResultsFor", { query })}
+                </Text>
                 <Text color="gray.500" fontSize="sm" mt={2}>
-                  Essayez avec d'autres mots-clés ou modifiez les filtres
+                  {t("search.tryOtherKeywords")}
                 </Text>
               </Box>
             ) : (
@@ -151,8 +155,8 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                             <HStack mb={2}>
                               <Badge colorScheme="purple" size="sm">
                                 {result.matchType === "key"
-                                  ? "Clé"
-                                  : "Traduction"}
+                                  ? t("search.badgeKey")
+                                  : t("search.badgeTranslation")}
                               </Badge>
                               {result.translationLocale && (
                                 <Badge colorPalette="brand" size="sm">
@@ -210,7 +214,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                             <Link
                               to={`/orgs/${result.organizationSlug}/projects/${result.projectSlug}/keys/${result.keyId}`}
                             >
-                              Éditer
+                              {t("search.edit")}
                             </Link>
                           </Button>
                         </HStack>

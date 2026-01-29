@@ -10,6 +10,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { Link, NavLink, Outlet, useLoaderData, data } from "react-router";
+import { useTranslation } from "react-i18next";
 import { LuFolderOpen, LuUsers, LuSettings } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug";
 import {
@@ -67,6 +68,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function OrganizationLayout() {
+  const { t } = useTranslation();
   const { organization, stats } = useLoaderData<typeof loader>();
 
   return (
@@ -79,7 +81,7 @@ export default function OrganizationLayout() {
               {organization.name}
             </Heading>
             <Button asChild variant="outline" size="sm">
-              <Link to="/orgs">Retour aux organisations</Link>
+              <Link to="/orgs">{t("orgs.returnToOrganizations")}</Link>
             </Button>
           </HStack>
         </Box>
@@ -89,7 +91,7 @@ export default function OrganizationLayout() {
           <Card.Root>
             <Card.Body>
               <Text fontSize="sm" color="gray.600" mb={1}>
-                Projets
+                {t("orgs.projects")}
               </Text>
               <Heading as="h3" size="xl">
                 {stats.projectsCount}
@@ -100,7 +102,7 @@ export default function OrganizationLayout() {
           <Card.Root>
             <Card.Body>
               <Text fontSize="sm" color="gray.600" mb={1}>
-                Membres
+                {t("orgs.members")}
               </Text>
               <Heading as="h3" size="xl">
                 {stats.membersCount}
@@ -111,7 +113,7 @@ export default function OrganizationLayout() {
           <Card.Root>
             <Card.Body>
               <Text fontSize="sm" color="gray.600" mb={1}>
-                Clés d'API
+                {t("orgs.apiKeys")}
               </Text>
               <Heading as="h3" size="xl">
                 {stats.apiKeysCount}
@@ -143,7 +145,7 @@ export default function OrganizationLayout() {
                 transition: "all 0.2s",
               })}
             >
-              <LuFolderOpen /> Projets
+              <LuFolderOpen /> {t("orgs.projects")}
             </NavLink>
             <NavLink
               to={`/orgs/${organization.slug}/members`}
@@ -164,7 +166,7 @@ export default function OrganizationLayout() {
                 transition: "all 0.2s",
               })}
             >
-              <LuUsers /> Membres
+              <LuUsers /> {t("orgs.members")}
             </NavLink>
             <NavLink
               to={`/orgs/${organization.slug}/settings`}
@@ -185,7 +187,7 @@ export default function OrganizationLayout() {
                 transition: "all 0.2s",
               })}
             >
-              <LuSettings /> Paramètres
+              <LuSettings /> {t("orgs.settings")}
             </NavLink>
           </HStack>
         </Box>
