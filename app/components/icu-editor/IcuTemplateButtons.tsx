@@ -1,15 +1,15 @@
+import type { ReactNode } from "react";
+import { Button, HStack, Text } from "@chakra-ui/react";
+import { LuHash, LuListTree, LuGitBranch, LuBraces } from "react-icons/lu";
+
 /**
  * ICU Template Buttons Component
  * Provides quick-insert buttons for common ICU message format templates
  */
-
-import { Button, HStack, Text } from "@chakra-ui/react";
-import { LuHash, LuListTree, LuGitBranch, LuBraces } from "react-icons/lu";
-
 interface IcuTemplate {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   template: string;
   description: string;
 }

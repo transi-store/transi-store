@@ -25,7 +25,7 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { useLoaderData, Form, useActionData } from "react-router";
-import React from "react";
+import { useEffect, useState } from "react";
 import {
   LuPlus,
   LuTrash2,
@@ -204,12 +204,12 @@ export default function OrganizationMembers() {
   const { members, pendingInvitations, organizationInvitation, origin } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = React.useState(false);
-  const [showLinkModal, setShowLinkModal] = React.useState(false);
-  const [currentLink, setCurrentLink] = React.useState<string>("");
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [currentLink, setCurrentLink] = useState<string>("");
 
   // Fermer la modale après création réussie
-  React.useEffect(() => {
+  useEffect(() => {
     if (actionData?.action === "invite" && actionData.success) {
       setIsInviteDialogOpen(false);
     }

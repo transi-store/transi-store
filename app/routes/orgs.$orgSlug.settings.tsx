@@ -24,7 +24,7 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { useLoaderData, Form, useActionData } from "react-router";
-import React from "react";
+import { useEffect, useState } from "react";
 import {
   LuPlus,
   LuTrash2,
@@ -137,10 +137,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export default function OrganizationSettings() {
   const { organization, apiKeys, aiProviders } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [isAiDialogOpen, setIsAiDialogOpen] = React.useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [selectedAiProvider, setSelectedAiProvider] =
-    React.useState<AiProvider | null>(null);
+    useState<AiProvider | null>(null);
 
   const handleCopyKey = async (key: string) => {
     try {
@@ -160,7 +160,7 @@ export default function OrganizationSettings() {
   };
 
   // Fermer la modale après création réussie
-  React.useEffect(() => {
+  useEffect(() => {
     if (actionData?.action === "create" && actionData.success) {
       setIsDialogOpen(false);
     }
