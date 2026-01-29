@@ -1,6 +1,19 @@
-import OpenAI from "openai";
-import { GoogleGenAI } from "@google/genai";
+import { generateText, Output } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import type { AiProvider } from "./ai-providers";
+import { z } from "zod";
+
+// 1. Définition du schéma Zod
+const SuggestionSchema = z.object({
+  suggestions: z.array(
+    z.object({
+      text: z.string(),
+      confidence: z.number(),
+      notes: z.string().nullable(),
+    }),
+  ),
+});
 
 export interface TranslationContext {
   sourceText: string;
@@ -10,10 +23,9 @@ export interface TranslationContext {
   keyDescription?: string;
 }
 
-export interface TranslationSuggestion {
-  text: string;
-  confidence?: number;
-}
+export type TranslationSuggestion = z.infer<
+  typeof SuggestionSchema
+>["suggestions"][number];
 
 /**
  * Construit le prompt système pour la traduction ICU
@@ -37,10 +49,14 @@ IMPORTANT :
 Réponds UNIQUEMENT au format JSON suivant :
 {
   "suggestions": [
-    { "text": "traduction 1", "confidence": 0.95 },
-    { "text": "traduction alternative", "confidence": 0.85 }
+    { "text": "traduction 1", "confidence": 0.95, notes: "pourquoi cette traduction en particulier ?" },
+    { "text": "traduction alternative", "confidence": 0.85, notes: "cette traduction peut être meilleure dans tel contexte." }
   ]
-}`;
+}
+
+Les clés "notes" DOIVENT être dans la langue du texte source.
+  
+`;
 }
 
 /**
@@ -76,6 +92,27 @@ Traductions existantes (pour le contexte) :`;
   return prompt;
 }
 
+async function callGenerateText({
+  context,
+  model,
+  extraParameters,
+}: {
+  context: TranslationContext;
+  model: any;
+  extraParameters?: Record<string, any>;
+}): Promise<TranslationSuggestion[]> {
+  const { output } = await generateText({
+    ...extraParameters,
+    model,
+    prompt: `${buildSystemPrompt()} \n\n ${buildUserPrompt(context)}`,
+    output: Output.object({
+      schema: SuggestionSchema,
+    }),
+  });
+
+  return output.suggestions;
+}
+
 /**
  * Traduit avec OpenAI GPT
  */
@@ -83,26 +120,9 @@ async function translateWithOpenAI(
   context: TranslationContext,
   apiKey: string,
 ): Promise<TranslationSuggestion[]> {
-  const openai = new OpenAI({ apiKey });
+  const openai = createOpenAI({ apiKey });
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-5-mini",
-    messages: [
-      { role: "system", content: buildSystemPrompt() },
-      { role: "user", content: buildUserPrompt(context) },
-    ],
-    response_format: { type: "json_object" },
-  });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("Réponse vide d'OpenAI");
-  }
-
-  const parsed = JSON.parse(content) as {
-    suggestions: TranslationSuggestion[];
-  };
-  return parsed.suggestions;
+  return callGenerateText({ context, model: openai("gpt-5-mini") });
 }
 
 /**
@@ -112,29 +132,13 @@ async function translateWithGemini(
   context: TranslationContext,
   apiKey: string,
 ): Promise<TranslationSuggestion[]> {
-  const genai = new GoogleGenAI({ apiKey });
+  const google = createGoogleGenerativeAI({ apiKey });
 
-  const response = await genai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `${buildSystemPrompt()}
-
-${buildUserPrompt(context)}`,
-    config: {
-      temperature: 0.7,
-      responseMimeType: "application/json",
-    },
+  return callGenerateText({
+    context,
+    model: google("gemini-3-flash-preview"),
+    extraParameters: { temperature: 0.7 },
   });
-
-  const content = response.text;
-  if (!content) {
-    throw new Error("Réponse vide de Gemini");
-  }
-
-  const parsed = JSON.parse(content) as {
-    suggestions: TranslationSuggestion[];
-  };
-
-  return parsed.suggestions;
 }
 
 /**
