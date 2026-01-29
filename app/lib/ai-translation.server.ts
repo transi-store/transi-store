@@ -91,7 +91,6 @@ async function translateWithOpenAI(
       { role: "system", content: buildSystemPrompt() },
       { role: "user", content: buildUserPrompt(context) },
     ],
-    temperature: 0.7,
     response_format: { type: "json_object" },
   });
 
