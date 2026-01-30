@@ -5,14 +5,17 @@ import { hydrateRoot } from "react-dom/client";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import { HydratedRouter } from "react-router/dom";
 import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
+import ICU from "i18next-icu";
+import { DEFAULT_LANGUAGE_CODE } from "./lib/i18n";
 
 async function main() {
   await i18next
     .use(initReactI18next)
+    .use(ICU)
     .use(Fetch)
     .use(I18nextBrowserLanguageDetector)
     .init({
-      fallbackLng: "en", // Change this to your default language
+      fallbackLng: DEFAULT_LANGUAGE_CODE, // Change this to your default language
       // Here we only want to detect the language from the html tag
       // since the middleware already detected the language server-side
       detection: { order: ["htmlTag"], caches: [] },

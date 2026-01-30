@@ -32,6 +32,7 @@
     "i18next": "^25.8.0",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-fetch-backend": "^7.0.0",
+    "i18next-icu": "^2.4.2",
     "intl-messageformat": "^11.1.1",
     "isbot": "^5.1.17",
     "jose": "^6.1.3",

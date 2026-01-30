@@ -3,6 +3,8 @@ import { createCookie } from "react-router";
 import { createI18nextMiddleware } from "remix-i18next/middleware";
 import resources from "~/locales"; // Import your locales
 import "i18next";
+import ICU from "i18next-icu";
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "~/lib/i18n";
 
 // This cookie will be used to store the user locale preference
 export const localeCookie = createCookie("lng", {
@@ -15,12 +17,12 @@ export const localeCookie = createCookie("lng", {
 export const [i18nextMiddleware, getLocale, getInstance] =
   createI18nextMiddleware({
     detection: {
-      supportedLanguages: ["fr", "en"], // Your supported languages, the fallback should be last
-      fallbackLanguage: "en", // Your fallback language
+      supportedLanguages: AVAILABLE_LANGUAGES.map((lang) => lang.code), // Your supported languages, the fallback should be last
+      fallbackLanguage: DEFAULT_LANGUAGE_CODE, // Your fallback language
       cookie: localeCookie, // The cookie to store the user preference
     },
     i18next: { resources }, // Your locales
-    plugins: [initReactI18next], // Plugins you may need, like react-i18next
+    plugins: [initReactI18next, ICU], // Plugins you may need, like react-i18next
   });
 
 // This adds type-safety to the `t` function

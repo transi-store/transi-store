@@ -4161,6 +4161,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"i18next-icu@npm:^2.4.2":
+  version: 2.4.2
+  resolution: "i18next-icu@npm:2.4.2"
+  peerDependencies:
+    intl-messageformat: ">=10.3.3 <12.0.0"
+  checksum: 10c0/d7f9fa2e846eafdc550c42e63d0de250d3d8996532d7c5b1f454bc33d493c1329352634ba3e2b9813d24a4e540c30ce3a8e7bd53631275c3c55da8f3b5ee2cf9
+  languageName: node
+  linkType: hard
+
 "i18next@npm:^25.8.0":
   version: 25.8.0
   resolution: "i18next@npm:25.8.0"
@@ -5902,6 +5911,7 @@ __metadata:
     i18next: "npm:^25.8.0"
     i18next-browser-languagedetector: "npm:^8.2.0"
     i18next-fetch-backend: "npm:^7.0.0"
+    i18next-icu: "npm:^2.4.2"
     intl-messageformat: "npm:^11.1.1"
     isbot: "npm:^5.1.17"
     jose: "npm:^6.1.3"

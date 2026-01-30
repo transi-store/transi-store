@@ -134,7 +134,7 @@ export default function ProjectTranslations({
             {t("translations.title")}
           </Heading>
           <Text color="gray.600" mt={2}>
-            {count} {t("translations.count", { count })}
+            {t("translations.count", { count })}
           </Text>
         </Box>
         {languages.length > 0 && (

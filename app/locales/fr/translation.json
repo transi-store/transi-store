@@ -234,7 +234,7 @@
   "translations.badgeKey": "Clé",
   "translations.badgeTranslation": "Traduction",
   "translations.clear": "Effacer",
-  "translations.count": "{count, plural, one {clé} other {clés}}",
+  "translations.count": "{count, plural, one {# clé} other {# clés}}",
   "translations.duplicate": "Dupliquer",
   "translations.edit": "Éditer",
   "translations.manageLanguages": "Gérer les langues",
