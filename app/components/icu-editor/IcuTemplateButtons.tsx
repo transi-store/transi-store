@@ -73,7 +73,7 @@ export function IcuTemplateButtons({
   return (
     <HStack gap={2} flexWrap="wrap">
       <Text fontSize="xs" color="gray.600" fontWeight="medium">
-        Templates ICU :
+        {t("icu.templateButtons.label")}
       </Text>
       {ICU_TEMPLATES.map((template) => (
         <Button
