@@ -393,6 +393,20 @@ export default function EditTranslationKey({
                         <Field.Label>
                           <HStack>
                             <Text>{lang.locale.toUpperCase()}</Text>
+                            {hasAiProvider && (
+                              <Button
+                                size="xs"
+                                variant="ghost"
+                                colorPalette="purple"
+                                onClick={() =>
+                                  handleRequestAiTranslation(lang.locale)
+                                }
+                                disabled={isSubmitting}
+                              >
+                                <LuSparkles /> Traduire avec IA
+                              </Button>
+                            )}
+
                             <Badge colorPalette="brand" size="sm">
                               Par défaut
                             </Badge>
