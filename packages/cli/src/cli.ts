@@ -40,6 +40,12 @@ async function fetchTranslations({
 
     const data = await content.text();
 
+    // create directory if not exists
+    const dir = output.substring(0, output.lastIndexOf("/"));
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
     fs.writeFileSync(output, data);
 
     console.log(`Translations exported to ${output}`);
