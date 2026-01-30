@@ -15,6 +15,7 @@ import { FileUpload } from "@chakra-ui/react/file-upload";
 import { Switch } from "@chakra-ui/react/switch";
 import {
   Form,
+  Link,
   useActionData,
   useNavigation,
   useOutletContext,
@@ -31,7 +32,6 @@ import {
   validateImportData,
   importTranslations,
 } from "~/lib/import/json.server";
-import { downloadResponse } from "~/lib/download";
 import { getInstance } from "~/middleware/i18next";
 
 type ContextType = {
@@ -365,37 +365,24 @@ export default function ProjectImportExport() {
                   </Text>
                   <SimpleGrid columns={{ base: 2, md: 4 }} gap={2}>
                     {languages.map((lang) => (
-                      <Button
-                        key={lang.id}
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          downloadResponse(
-                            await fetch(
-                              `/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&locale=${lang.locale}`,
-                            ),
-                            `${project.slug}-${lang.locale}.json`,
-                          );
-                        }}
-                      >
-                        <LuDownload />
-                        {lang.locale.toUpperCase()}
+                      <Button key={lang.id} asChild size="sm" variant="outline">
+                        <Link
+                          reloadDocument
+                          to={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&locale=${lang.locale}`}
+                        >
+                          <LuDownload />
+                          {lang.locale.toUpperCase()}
+                        </Link>
                       </Button>
                     ))}
-                    <Button
-                      size="sm"
-                      colorPalette="brand"
-                      onClick={async () => {
-                        downloadResponse(
-                          await fetch(
-                            `/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&all`,
-                          ),
-                          `${project.slug}-all.json`,
-                        );
-                      }}
-                    >
-                      <LuDownload />
-                      {t("export.allLanguages")}
+                    <Button asChild size="sm" colorPalette="brand">
+                      <Link
+                        reloadDocument
+                        to={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=json&all`}
+                      >
+                        <LuDownload />
+                        {t("export.allLanguages")}
+                      </Link>
                     </Button>
                   </SimpleGrid>
                 </Card.Body>
@@ -418,21 +405,15 @@ export default function ProjectImportExport() {
                       })}
                     </Text>
                     <HStack>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          downloadResponse(
-                            await fetch(
-                              `/api/orgs/${organization.slug}/projects/${project.slug}/export?format=xliff&source=${languages[0].locale}&target=${languages[1].locale}`,
-                            ),
-                            `${project.slug}-${languages[0].locale}-to-${languages[1].locale}.xliff`,
-                          );
-                        }}
-                      >
-                        <LuDownload />
-                        {languages[0].locale.toUpperCase()} →{" "}
-                        {languages[1].locale.toUpperCase()}
+                      <Button asChild size="sm" variant="outline">
+                        <Link
+                          reloadDocument
+                          to={`/api/orgs/${organization.slug}/projects/${project.slug}/export?format=xliff&source=${languages[0].locale}&target=${languages[1].locale}`}
+                        >
+                          <LuDownload />
+                          {languages[0].locale.toUpperCase()} →{" "}
+                          {languages[1].locale.toUpperCase()}
+                        </Link>
                       </Button>
                     </HStack>
                   </Card.Body>
