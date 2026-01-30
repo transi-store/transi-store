@@ -227,12 +227,9 @@ export default function Search({ loaderData }: Route.ComponentProps) {
           </>
         ) : (
           <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-            <Text color="gray.600">
-              Saisissez au moins 2 caractères pour lancer une recherche
-            </Text>
+            <Text color="gray.600">{t("search.enterQuery")}</Text>
             <Text color="gray.500" fontSize="sm" mt={2}>
-              La recherche s'effectue dans les noms de clés, descriptions et
-              valeurs de traduction
+              {t("search.searchInstructions")}
             </Text>
           </Box>
         )}

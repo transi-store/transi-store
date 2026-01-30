@@ -32,7 +32,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
             {t("auth.login.title")}
           </Heading>
           <Text color="red.500">
-            {t("auth.login.noProvider")}
+            {t("auth.login.noProvidersDescription")}
           </Text>
         </Box>
       </Container>
@@ -57,36 +57,36 @@ export default function Login({ loaderData }: Route.ComponentProps) {
               switch (provider.type) {
                 case "google":
                   return (
-                    <Button
-                      key={provider.type}
-                      asChild
-                      width="full"
-                      colorPalette="blue"
-                      size="lg"
+                  <Button
+                    key={provider.type}
+                    asChild
+                    width="full"
+                    colorPalette="blue"
+                    size="lg"
+                  >
+                    <Link
+                      to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
                     >
-                        <Link
-                        to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
-                      >
-                        <FaGoogle /> {t("auth.login.signInWith", { provider: "Google" })}
-                      </Link>
-                    </Button>
-                  );
+                      <FaGoogle /> {t("auth.login.signInWith", { provider: provider.name })}
+                    </Link>
+                  </Button>
+                );
                 case "mapado":
-                  return (
-                    <Button
-                      key={provider.type}
-                      asChild
-                      width="full"
-                      colorPalette="brand"
-                      size="lg"
+                return (
+                  <Button
+                    key={provider.type}
+                    asChild
+                    width="full"
+                    colorPalette="brand"
+                    size="lg"
+                  >
+                    <Link
+                      to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
                     >
-                        <Link
-                        to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
-                      >
-                        {t("auth.login.signInWith", { provider: provider.name })}
-                      </Link>
-                    </Button>
-                  );
+                      {t("auth.login.signInWith", { provider: provider.name })}
+                    </Link>
+                  </Button>
+                );
                 default:
                   return null;
               }

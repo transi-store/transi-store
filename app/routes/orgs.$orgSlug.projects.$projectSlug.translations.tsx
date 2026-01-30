@@ -16,6 +16,7 @@ import {
   Progress,
   Pagination,
 } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 import { Link, Form, useOutletContext, redirect } from "react-router";
 import {
   LuChevronLeft,
@@ -112,6 +113,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 export default function ProjectTranslations({
   loaderData,
 }: Route.ComponentProps) {
+  const { t } = useTranslation();
   const {
     keys: { data, count },
     search,
@@ -129,10 +131,10 @@ export default function ProjectTranslations({
       <HStack justify="space-between">
         <Box>
           <Heading as="h2" size="lg">
-            Clés de traduction
+            {t("translations.title")}
           </Heading>
           <Text color="gray.600" mt={2}>
-            {count} clé{count > 1 ? "s" : ""}
+            {count} {t("translations.count", { count })}
           </Text>
         </Box>
         {languages.length > 0 && (
@@ -140,7 +142,7 @@ export default function ProjectTranslations({
             <Link
               to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
             >
-              <LuPlus /> Nouvelle clé
+              <LuPlus /> Nouvelle clé {t("translations.newKey")}
             </Link>
           </Button>
         )}
@@ -150,18 +152,18 @@ export default function ProjectTranslations({
         <HStack>
           <Input
             name="search"
-            placeholder="Rechercher une clé..."
+            placeholder={t("translations.searchPlaceholder")}
             defaultValue={search}
           />
           <Button type="submit" colorPalette="brand">
-            Rechercher
+            {t("translations.search")}
           </Button>
           {search && (
             <Button asChild variant="outline">
               <Link
                 to={`/orgs/${organization.slug}/projects/${project.slug}/translations`}
               >
-                Effacer
+                {t("translations.clear")}
               </Link>
             </Button>
           )}
@@ -171,14 +173,13 @@ export default function ProjectTranslations({
       {languages.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
           <Text color="gray.600" mb={4}>
-            Ajoutez au moins une langue dans les paramètres pour commencer à
-            traduire
+            {t("translations.noLanguages")}
           </Text>
           <Button asChild colorPalette="brand">
             <Link
               to={`/orgs/${organization.slug}/projects/${project.slug}/settings`}
             >
-              Gérer les langues
+              {t("translations.manageLanguages")}
             </Link>
           </Button>
         </Box>
@@ -186,8 +187,8 @@ export default function ProjectTranslations({
         <Box p={8} textAlign="center" bg="gray.50" borderRadius="md">
           <Text color="gray.600">
             {search
-              ? "Aucune clé trouvée pour cette recherche"
-              : "Aucune clé de traduction. Créez-en une pour commencer !"}
+              ? t("translations.noResultsForSearch")
+              : t("translations.noKeysEmpty")}
           </Text>
         </Box>
       ) : (
@@ -195,9 +196,15 @@ export default function ProjectTranslations({
           <Table.Root variant="outline">
             <Table.Header>
               <Table.Row>
-                <Table.ColumnHeader>Nom de la clé</Table.ColumnHeader>
-                <Table.ColumnHeader w="300px">Traductions</Table.ColumnHeader>
-                <Table.ColumnHeader w="280px">Actions</Table.ColumnHeader>
+                <Table.ColumnHeader>
+                  {t("translations.table.keyName")}
+                </Table.ColumnHeader>
+                <Table.ColumnHeader w="300px">
+                  {t("translations.table.translations")}
+                </Table.ColumnHeader>
+                <Table.ColumnHeader w="280px">
+                  {t("translations.table.actions")}
+                </Table.ColumnHeader>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -243,7 +250,7 @@ export default function ProjectTranslations({
                                 key.translationLocale && (
                                   <HStack gap={2} mt={1}>
                                     <Badge colorScheme="purple" size="sm">
-                                      Traduction
+                                      {t("translations.badgeTranslation")}
                                     </Badge>
                                     <Badge colorPalette="brand" size="sm">
                                       {key.translationLocale.toUpperCase()}
@@ -252,7 +259,7 @@ export default function ProjectTranslations({
                                 )}
                               {key.matchType === "key" && (
                                 <Badge colorScheme="purple" size="sm" mt={1}>
-                                  Clé
+                                  {t("translations.badgeKey")}
                                 </Badge>
                               )}
                               {key.matchType === "translation" &&
@@ -315,7 +322,7 @@ export default function ProjectTranslations({
                           <Link
                             to={`/orgs/${organization.slug}/projects/${project.slug}/keys/${key.id}?redirect=${encodeURIComponent(currentUrl)}`}
                           >
-                            <LuPencil /> Éditer
+                            <LuPencil /> {t("translations.edit")}
                           </Link>
                         </Button>
                         <Form method="post">
@@ -326,7 +333,7 @@ export default function ProjectTranslations({
                           />
                           <input type="hidden" name="keyId" value={key.id} />
                           <Button type="submit" size="sm" variant="outline">
-                            <LuCopy /> Dupliquer
+                            <LuCopy /> {t("translations.duplicate")}
                           </Button>
                         </Form>
                       </HStack>

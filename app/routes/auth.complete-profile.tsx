@@ -16,10 +16,12 @@ import {
   useSearchParams,
   useLoaderData,
 } from "react-router";
+import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/auth.complete-profile";
 import { requireUser } from "~/lib/session.server";
 import { updateUserName, getUserById } from "~/lib/auth.server";
 import { createUserSession } from "~/lib/session.server";
+import { getInstance } from "~/middleware/i18next";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const sessionUser = await requireUser(request);
@@ -39,7 +41,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { email: dbUser.email };
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
+
   const sessionUser = await requireUser(request);
   const formData = await request.formData();
 
@@ -48,11 +52,11 @@ export async function action({ request }: Route.ActionArgs) {
 
   // Validation
   if (!name || typeof name !== "string" || name.trim().length === 0) {
-    return { error: "Le nom complet est requis" };
+    return { error: i18next.t("auth.completeProfile.errors.nameRequired") };
   }
 
   if (name.trim().length < 2) {
-    return { error: "Le nom doit contenir au moins 2 caractères" };
+    return { error: i18next.t("auth.completeProfile.errors.nameTooShort") };
   }
 
   // Update DB
@@ -68,6 +72,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function CompleteProfile() {
+  const { t } = useTranslation();
   const { email } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
@@ -80,16 +85,18 @@ export default function CompleteProfile() {
       <VStack gap={6} align="stretch">
         <Box>
           <Heading as="h1" size="2xl">
-            Complétez votre profil
+            {t("auth.completeProfile.title")}
           </Heading>
           <Text fontSize="md" color="gray.600" mt={2}>
-            Veuillez indiquer votre nom complet pour continuer
+            {t("auth.completeProfile.description")}
           </Text>
         </Box>
 
         {actionData?.error && (
           <Box p={4} bg="red.100" color="red.700" borderRadius="md">
-            {actionData.error}
+            {actionData.errorKey
+              ? t(actionData.errorKey, actionData.errorMeta || {})
+              : actionData.error}
           </Box>
         )}
 
@@ -103,16 +110,18 @@ export default function CompleteProfile() {
           <input type="hidden" name="redirectTo" value={redirectTo} />
           <VStack gap={4} align="stretch">
             <Field.Root required>
-              <Field.Label>Nom complet</Field.Label>
+              <Field.Label>
+                {t("auth.completeProfile.fullNameLabel")}
+              </Field.Label>
               <Input
                 name="name"
-                placeholder="Jean Dupont"
+                placeholder={t("auth.completeProfile.namePlaceholder")}
                 disabled={isSubmitting}
                 autoFocus
                 required
               />
               <Field.HelperText>
-                Ce nom sera affiché dans l'application
+                {t("auth.completeProfile.nameHelper")}
               </Field.HelperText>
             </Field.Root>
 
@@ -122,7 +131,7 @@ export default function CompleteProfile() {
               loading={isSubmitting}
               width="100%"
             >
-              Continuer
+              {t("auth.completeProfile.submit")}
             </Button>
           </VStack>
         </Form>

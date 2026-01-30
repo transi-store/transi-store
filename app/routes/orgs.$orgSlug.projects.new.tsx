@@ -15,6 +15,7 @@ import {
   useNavigation,
   redirect,
 } from "react-router";
+import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.new";
 import { requireUser } from "~/lib/session.server";
@@ -22,6 +23,7 @@ import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { createProject, isProjectSlugAvailable } from "~/lib/projects.server";
 import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
+import { getInstance } from "~/middleware/i18next";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -33,7 +35,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { organization };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
+
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
     user,
@@ -46,7 +50,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const description = formData.get("description");
 
   if (!name || typeof name !== "string") {
-    return { error: "Le nom est requis" };
+    return { error: i18next.t("projects.new.errors.nameRequired") };
   }
 
   const slug =
@@ -58,7 +62,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const available = await isProjectSlugAvailable(organization.id, slug);
   if (!available) {
     return {
-      error: `Le slug "${slug}" est deja utilise dans cette organisation`,
+      error: i18next.t("projects.new.errors.slugTaken", { slug }),
     };
   }
 
@@ -82,12 +86,13 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
   const isSubmitting = navigation.state === "submitting";
   const [name, setName] = useState("");
   const suggestedSlug = generateSlug(name);
+  const { t } = useTranslation();
 
   return (
     <Container maxW="container.md" py={10}>
       <VStack gap={6} align="stretch">
         <Heading as="h1" size="2xl">
-          Nouveau projet
+          {t("projects.new.title")}
         </Heading>
 
         {actionData?.error && (
@@ -99,10 +104,10 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
         <Form method="post">
           <VStack gap={4} align="stretch">
             <Field.Root required>
-              <Field.Label>Nom du projet</Field.Label>
+              <Field.Label>{t("projects.new.nameLabel")}</Field.Label>
               <Input
                 name="name"
-                placeholder="Mon application"
+                placeholder={t("projects.new.namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isSubmitting}
@@ -122,10 +127,10 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
             </Field.Root>
 
             <Field.Root>
-              <Field.Label>Description (optionnel)</Field.Label>
+              <Field.Label>{t("projects.new.descriptionLabel")}</Field.Label>
               <Textarea
                 name="description"
-                placeholder="Description du projet..."
+                placeholder={t("projects.new.descriptionPlaceholder")}
                 disabled={isSubmitting}
                 rows={3}
               />
@@ -138,10 +143,10 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
                 loading={isSubmitting}
                 flex={1}
               >
-                <LuPlus /> Creer le projet
+                <LuPlus /> {t("projects.new.create")}
               </Button>
               <Button asChild variant="outline" disabled={isSubmitting}>
-                <Link to={`/orgs/${organization.slug}`}>Annuler</Link>
+                <Link to={`/orgs/${organization.slug}`}>{t("cancel")}</Link>
               </Button>
             </Box>
           </VStack>

@@ -8,6 +8,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { Link, Outlet, useLoaderData, useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -33,11 +34,12 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export default function ProjectLayout() {
   const { organization, project, languages } = useLoaderData<typeof loader>();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const navItems = [
-    { path: "translations", label: "Traductions" },
-    { path: "settings", label: "Paramètres" },
-    { path: "import-export", label: "Import/Export" },
+    { path: "translations", label: t("translations.title") },
+    { path: "settings", label: t("orgs.tab.settings") },
+    { path: "import-export", label: t("import.title") },
   ];
 
   return (

@@ -7,20 +7,21 @@ import {
 } from "~/lib/translation-keys.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { translateWithAI } from "~/lib/ai-translation.server";
+import { getInstance } from "~/middleware/i18next";
+import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.translate";
 
-interface ActionArgs {
-  request: Request;
-  params: {
-    orgSlug: string;
-    projectSlug: string;
-  };
-}
-
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  // TODO ca plante ici
+  const i18next = getInstance(context);
   const { orgSlug, projectSlug } = params;
 
   if (!orgSlug || !projectSlug) {
-    return Response.json({ error: "Paramètres manquants" }, { status: 400 });
+    return Response.json(
+      {
+        error: i18next.t("api.translate.paramsMissing"),
+      },
+      { status: 400 },
+    );
   }
 
   const user = await requireUser(request);
@@ -29,7 +30,10 @@ export async function action({ request, params }: ActionArgs) {
   const project = await getProjectBySlug(organization.id, projectSlug);
 
   if (!project) {
-    return Response.json({ error: "Projet non trouvé" }, { status: 404 });
+    return Response.json(
+      { error: i18next.t("api.translate.projectNotFound") },
+      { status: 404 },
+    );
   }
 
   const formData = await request.formData();
@@ -38,7 +42,9 @@ export async function action({ request, params }: ActionArgs) {
 
   if (!keyId || !targetLocale) {
     return Response.json(
-      { error: "keyId et targetLocale requis" },
+      {
+        error: i18next.t("api.translate.missingParams"),
+      },
       { status: 400 },
     );
   }
@@ -46,7 +52,10 @@ export async function action({ request, params }: ActionArgs) {
   const key = await getTranslationKeyById(parseInt(keyId, 10));
 
   if (!key || key.projectId !== project.id) {
-    return Response.json({ error: "Clé non trouvée" }, { status: 404 });
+    return Response.json(
+      { error: i18next.t("api.translate.keyNotFound") },
+      { status: 404 },
+    );
   }
 
   // Récupérer le provider IA actif
@@ -55,8 +64,7 @@ export async function action({ request, params }: ActionArgs) {
   if (!activeProvider) {
     return Response.json(
       {
-        error:
-          "Aucun service IA configuré. Configurez-le dans les paramètres de l'organisation.",
+        error: i18next.t("api.translate.noAiProvider"),
       },
       { status: 400 },
     );
@@ -74,7 +82,9 @@ export async function action({ request, params }: ActionArgs) {
 
   if (!sourceTranslation) {
     return Response.json(
-      { error: "Aucune traduction source disponible" },
+      {
+        error: i18next.t("api.translate.noSourceTranslation"),
+      },
       { status: 400 },
     );
   }
@@ -99,10 +109,7 @@ export async function action({ request, params }: ActionArgs) {
     console.error("Erreur lors de la traduction IA:", error);
     return Response.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erreur lors de la traduction",
+        error: i18next.t("api.translate.translateError"),
       },
       { status: 500 },
     );

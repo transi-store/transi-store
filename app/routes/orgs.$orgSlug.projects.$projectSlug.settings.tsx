@@ -27,6 +27,7 @@ import {
   addLanguageToProject,
   removeLanguageFromProject,
 } from "~/lib/projects.server";
+import { useTranslation } from "react-i18next";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -112,31 +113,33 @@ export default function ProjectSettings() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
+  const { t } = useTranslation();
+
   return (
     <VStack gap={8} align="stretch">
       {/* Informations du projet */}
       <Box>
         <Heading as="h2" size="lg" mb={4}>
-          Informations du projet
+          {t("settings.projectInformation")}
         </Heading>
         <VStack gap={2} align="stretch">
           <Box>
             <Text fontSize="sm" color="gray.600" fontWeight="medium">
-              Nom
+              {t("settings.projectName")}
             </Text>
             <Text>{project.name}</Text>
           </Box>
           {project.description && (
             <Box>
               <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                Description
+                {t("settings.projectDescription")}
               </Text>
               <Text>{project.description}</Text>
             </Box>
           )}
           <Box>
             <Text fontSize="sm" color="gray.600" fontWeight="medium">
-              Slug
+              {t("settings.projectSlug")}
             </Text>
             <Text fontFamily="mono" fontSize="sm">
               /{organization.slug}/{project.slug}
@@ -148,7 +151,7 @@ export default function ProjectSettings() {
       {/* Langues */}
       <Box>
         <Heading as="h2" size="lg" mb={4}>
-          Langues ({languages.length})
+          {t("settings.languages", { count: languages.length })}
         </Heading>
 
         {actionData?.error && (
@@ -159,7 +162,7 @@ export default function ProjectSettings() {
 
         {actionData?.success && (
           <Box p={4} bg="green.50" color="green.700" borderRadius="md" mb={4}>
-            ✓ Langue mise à jour avec succès
+            {t("settings.languageActionSuccess")}
           </Box>
         )}
 
@@ -172,7 +175,7 @@ export default function ProjectSettings() {
             mb={4}
           >
             <Text color="gray.600" mb={4}>
-              Aucune langue configuree
+              {t("settings.noLanguages")}
             </Text>
           </Box>
         ) : (
@@ -185,7 +188,7 @@ export default function ProjectSettings() {
                       <Text fontWeight="medium">{lang.locale}</Text>
                       {lang.isDefault && (
                         <Badge colorPalette="brand" size="sm">
-                          Par defaut
+                          {t("settings.default")}
                         </Badge>
                       )}
                     </Box>
@@ -224,7 +227,7 @@ export default function ProjectSettings() {
               />
             </Field.Root>
             <Button type="submit" colorPalette="brand" loading={isSubmitting}>
-              <LuPlus /> Ajouter une langue
+              <LuPlus /> {t("settings.addLanguage")}
             </Button>
           </HStack>
         </Form>

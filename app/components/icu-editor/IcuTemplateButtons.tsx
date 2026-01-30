@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button, HStack, Text } from "@chakra-ui/react";
 import { LuHash, LuListTree, LuGitBranch, LuBraces } from "react-icons/lu";
+import { useTranslation } from "react-i18next";
 
 /**
  * ICU Template Buttons Component
@@ -14,48 +15,7 @@ interface IcuTemplate {
   description: string;
 }
 
-const ICU_TEMPLATES: IcuTemplate[] = [
-  {
-    id: "variable",
-    label: "Variable",
-    icon: <LuBraces />,
-    template: "{variable}",
-    description: "Variable simple",
-  },
-  {
-    id: "plural",
-    label: "Plural",
-    icon: <LuHash />,
-    template: `{count, plural,
-  one {# item}
-  other {# items}
-}`,
-    description: "Pluralisation avec nombre",
-  },
-  {
-    id: "select",
-    label: "Select",
-    icon: <LuGitBranch />,
-    template: `{gender, select,
-  male {he}
-  female {she}
-  other {they}
-}`,
-    description: "Sélection conditionnelle",
-  },
-  {
-    id: "selectordinal",
-    label: "Ordinal",
-    icon: <LuListTree />,
-    template: `{position, selectordinal,
-  one {#st}
-  two {#nd}
-  few {#rd}
-  other {#th}
-}`,
-    description: "Nombres ordinaux (1er, 2ème...)",
-  },
-];
+// ICU_TEMPLATES is built inside the component because translations are required
 
 interface IcuTemplateButtonsProps {
   onInsertTemplate: (template: string) => void;
@@ -66,6 +26,50 @@ export function IcuTemplateButtons({
   onInsertTemplate,
   disabled = false,
 }: IcuTemplateButtonsProps) {
+  const { t } = useTranslation();
+
+  const ICU_TEMPLATES: IcuTemplate[] = [
+    {
+      id: "variable",
+      label: t("icu.template.variable.label"),
+      icon: <LuBraces />,
+      template: "{variable}",
+      description: t("icu.template.variable.description"),
+    },
+    {
+      id: "plural",
+      label: t("icu.template.plural.label"),
+      icon: <LuHash />,
+      template: `{count, plural,
+  one {# item}
+  other {# items}
+}`,
+      description: t("icu.template.plural.description"),
+    },
+    {
+      id: "select",
+      label: t("icu.template.select.label"),
+      icon: <LuGitBranch />,
+      template: `{gender, select,
+  male {he}
+  female {she}
+  other {they}
+}`,
+      description: t("icu.template.select.description"),
+    },
+    {
+      id: "selectordinal",
+      label: t("icu.template.ordinal.label"),
+      icon: <LuListTree />,
+      template: `{position, selectordinal,
+  one {#st}
+  two {#nd}
+  few {#rd}
+  other {#th}
+}`,
+      description: t("icu.template.ordinal.description"),
+    },
+  ];
   return (
     <HStack gap={2} flexWrap="wrap">
       <Text fontSize="xs" color="gray.600" fontWeight="medium">

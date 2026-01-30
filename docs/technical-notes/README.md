@@ -14,6 +14,7 @@ Documentation technique détaillée de l'implémentation de transi-store.
 | [import-system.md](./import-system.md)     | Import JSON en masse, stratégies overwrite/skip, validation              |
 | [code-patterns.md](./code-patterns.md)     | Patterns courants (routes, queries Drizzle, formulaires, auth)           |
 | [code-formatting.md](./code-formatting.md) | Règles de formatage Prettier                                             |
+| [traductions.md](./traductions.md)         | Gestion des traductions du site (i18next, i18n)                          |
 
 ## Ordre de lecture recommandé
 
@@ -28,6 +29,7 @@ Documentation technique détaillée de l'implémentation de transi-store.
 1. **routing.md** - Comment ajouter une nouvelle route
 2. **code-patterns.md** - Patterns à suivre
 3. **database-schema.md** - Structures de données disponibles
+4. **traductions.md** - Gestion des traductions
 
 ### Pour intégrer avec l'API
 

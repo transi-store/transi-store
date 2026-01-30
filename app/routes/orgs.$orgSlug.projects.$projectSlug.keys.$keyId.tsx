@@ -33,6 +33,7 @@ import {
   Link,
   useFetcher,
 } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import { LuPencil, LuTrash2, LuSparkles } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
@@ -55,6 +56,7 @@ import {
 } from "~/lib/routes-helpers";
 import { toaster } from "~/components/ui/toaster";
 import type { TranslationSuggestion } from "~/lib/ai-translation.server";
+import { getInstance } from "~/middleware/i18next";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -99,7 +101,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
     user,
@@ -170,7 +173,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     return { success: true };
   }
 
-  return { error: "Action inconnue" };
+  return { error: i18next.t("keys.errors.unknownAction") };
 }
 
 export default function EditTranslationKey({
@@ -187,6 +190,7 @@ export default function EditTranslationKey({
   } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const isSubmitting = navigation.state === "submitting";
   const [isEditKeyModalOpen, setIsEditKeyModalOpen] = useState(false);
 
@@ -326,13 +330,13 @@ export default function EditTranslationKey({
                 size="sm"
                 variant="ghost"
                 onClick={() => setIsEditKeyModalOpen(true)}
-                aria-label="Éditer la clé"
+                aria-label={t("keys.edit.aria")}
               >
                 <LuPencil />
               </IconButton>
             </HStack>
             <Text color="gray.600" mt={2}>
-              Projet : {project.name}
+              {t("keys.projectLabel")}: {project.name}
             </Text>
             {key.description && (
               <Text fontSize="sm" color="gray.500" mt={2}>
@@ -350,7 +354,7 @@ export default function EditTranslationKey({
               size="sm"
               disabled={isSubmitting}
             >
-              <LuTrash2 /> Supprimer
+              <LuTrash2 /> {t("keys.delete")}
             </Button>
           </Form>
         </HStack>
@@ -380,7 +384,7 @@ export default function EditTranslationKey({
           <VStack gap={4} align="stretch">
             <Box>
               <Heading as="h2" size="lg" mb={4}>
-                Traductions
+                {t("translations.title")}
               </Heading>
 
               <SimpleGrid columns={2} gap={6}>
@@ -403,12 +407,12 @@ export default function EditTranslationKey({
                                 }
                                 disabled={isSubmitting}
                               >
-                                <LuSparkles /> Traduire avec IA
+                                <LuSparkles /> {t("keys.translateWithAI")}
                               </Button>
                             )}
 
                             <Badge colorPalette="brand" size="sm">
-                              Par défaut
+                              {t("translations.badgeDefault")}
                             </Badge>
                           </HStack>
                         </Field.Label>
@@ -419,7 +423,9 @@ export default function EditTranslationKey({
                             handleTranslationChange(lang.locale, value)
                           }
                           onBlur={() => handleTranslationBlur(lang.locale)}
-                          placeholder={`Traduction en ${lang.locale}...`}
+                          placeholder={t("keys.translation.placeholder", {
+                            locale: lang.locale,
+                          })}
                           disabled={isSubmitting}
                           locale={lang.locale}
                           showPreview={true}
@@ -447,7 +453,7 @@ export default function EditTranslationKey({
                                 }
                                 disabled={isSubmitting}
                               >
-                                <LuSparkles /> Traduire avec IA
+                                <LuSparkles /> {t("keys.translateWithAI")}
                               </Button>
                             )}
                           </HStack>
@@ -472,7 +478,7 @@ export default function EditTranslationKey({
 
             <Box display="flex" gap={3} mt={6}>
               <Button asChild variant="outline" disabled={isSubmitting}>
-                <Link to={redirectUrl}>Retour</Link>
+                <Link to={redirectUrl}>{t("project.back")}</Link>
               </Button>
             </Box>
           </VStack>
@@ -490,13 +496,13 @@ export default function EditTranslationKey({
                 <Form method="post">
                   <input type="hidden" name="_action" value="editKey" />
                   <DialogHeader>
-                    <DialogTitle>Modifier la clé de traduction</DialogTitle>
+                    <DialogTitle>{t("keys.edit.title")}</DialogTitle>
                   </DialogHeader>
                   <DialogCloseTrigger />
                   <DialogBody pb={6}>
                     <VStack gap={4} align="stretch">
                       <Field.Root>
-                        <Field.Label>Clé de traduction</Field.Label>
+                        <Field.Label>{t("keys.edit.keyLabel")}</Field.Label>
                         <Input
                           name="keyName"
                           defaultValue={key.keyName}
@@ -505,10 +511,12 @@ export default function EditTranslationKey({
                         />
                       </Field.Root>
                       <Field.Root>
-                        <Field.Label>Description</Field.Label>
+                        <Field.Label>
+                          {t("keys.edit.descriptionLabel")}
+                        </Field.Label>
                         <Textarea
                           name="description"
-                          placeholder="Description de cette clé..."
+                          placeholder={t("keys.edit.descriptionPlaceholder")}
                           defaultValue={key.description || ""}
                           rows={3}
                         />
@@ -521,10 +529,10 @@ export default function EditTranslationKey({
                       variant="outline"
                       onClick={() => setIsEditKeyModalOpen(false)}
                     >
-                      Annuler
+                      {t("settings.cancel")}
                     </Button>
                     <Button type="submit" colorPalette="brand">
-                      Enregistrer
+                      {t("keys.edit.save")}
                     </Button>
                   </DialogFooter>
                 </Form>

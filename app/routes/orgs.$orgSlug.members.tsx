@@ -25,6 +25,7 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { useLoaderData, Form, useActionData } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import {
   LuPlus,
@@ -49,8 +50,10 @@ import { eq, inArray } from "drizzle-orm";
 import { redirect } from "react-router";
 import { toaster } from "~/components/ui/toaster";
 import { getOrigin } from "~/lib/origin.server";
+import { getInstance } from "~/middleware/i18next";
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
     user,
@@ -64,7 +67,10 @@ export async function action({ request, params }: Route.ActionArgs) {
     const email = formData.get("email") as string;
 
     if (!email || !email.includes("@")) {
-      return { success: false, error: "Email invalide" };
+      return {
+        success: false,
+        error: i18next.t("members.errors.invalidEmail"),
+      };
     }
 
     try {
@@ -85,7 +91,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         error:
           error instanceof Error
             ? error.message
-            : "Erreur lors de la création de l'invitation",
+            : i18next.t("members.errors.createInvitation"),
       };
     }
   }
@@ -108,7 +114,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         error:
           error instanceof Error
             ? error.message
-            : "Erreur lors de la création du lien d'invitation",
+            : i18next.t("members.errors.createOrgInvitation"),
       };
     }
   }
@@ -125,7 +131,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         error:
           error instanceof Error
             ? error.message
-            : "Erreur lors de l'annulation de l'invitation",
+            : i18next.t("members.errors.cancelInvitation"),
       };
     }
   }
@@ -142,12 +148,12 @@ export async function action({ request, params }: Route.ActionArgs) {
         error:
           error instanceof Error
             ? error.message
-            : "Erreur lors de la suppression du membre",
+            : i18next.t("members.errors.removeMember"),
       };
     }
   }
 
-  return { success: false, error: "Action invalide" };
+  return { success: false, error: i18next.t("members.errors.invalidAction") };
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -198,6 +204,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function OrganizationMembers() {
+  const { t } = useTranslation();
   const { members, pendingInvitations, organizationInvitation, origin } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
@@ -217,8 +224,8 @@ export default function OrganizationMembers() {
     try {
       await navigator.clipboard.writeText(link);
       toaster.success({
-        title: "Lien copié",
-        description: "Le lien d'invitation a été copié dans le presse-papiers",
+        title: t("members.toasts.linkCopied.title"),
+        description: t("members.toasts.linkCopied.description"),
       });
     } catch (error) {
       // En cas d'erreur (HTTP, permissions, etc.), afficher une modale avec le lien
@@ -231,10 +238,10 @@ export default function OrganizationMembers() {
     <Box pt={6}>
       <HStack justify="space-between" mb={6}>
         <Heading as="h2" size="lg">
-          Membres de l'organisation
+          {t("members.title")}
         </Heading>
         <Button colorScheme="brand" onClick={() => setIsInviteDialogOpen(true)}>
-          <LuPlus /> Inviter un membre
+          <LuPlus /> {t("members.invite")}
         </Button>
       </HStack>
 
@@ -251,12 +258,10 @@ export default function OrganizationMembers() {
             <LuTriangleAlert />
           </Alert.Indicator>
           <Alert.Content>
-            <Alert.Title>Invitation créée avec succès</Alert.Title>
+            <Alert.Title>{t("members.invitation.createdTitle")}</Alert.Title>
             <Alert.Description>
               <VStack align="stretch" gap={2} mt={2}>
-                <Text fontSize="sm">
-                  Partagez ce lien avec la personne à inviter :
-                </Text>
+                <Text fontSize="sm">{t("members.invitation.share")}</Text>
                 <HStack>
                   <Code
                     p={2}
@@ -275,7 +280,7 @@ export default function OrganizationMembers() {
                     }
                     colorPalette="gray"
                   >
-                    <LuCopy /> Copier
+                    <LuCopy /> {t("members.copy")}
                   </Button>
                 </HStack>
               </VStack>
@@ -287,7 +292,7 @@ export default function OrganizationMembers() {
       {/* Lien d'invitation pour l'organisation */}
       <VStack align="stretch" gap={4} mb={8}>
         <Heading as="h3" size="md">
-          Lien d'invitation pour l'organisation
+          {t("members.inviteLink.title")}
         </Heading>
 
         {organizationInvitation ? (
@@ -295,14 +300,12 @@ export default function OrganizationMembers() {
             <Alert.Indicator />
             <Alert.Content>
               <Alert.Title>
-                Lien d'invitation permanent pour l'organisation
+                {t("members.inviteLink.permanentTitle")}
               </Alert.Title>
               <Alert.Description>
                 <VStack align="stretch" gap={2} mt={2}>
                   <Text fontSize="sm">
-                    Ce lien peut être utilisé plusieurs fois par différentes
-                    personnes pour rejoindre l'organisation. Il ne périme pas
-                    après utilisation.
+                    {t("members.inviteLink.permanentDescription")}
                   </Text>
                   <HStack>
                     <Code
@@ -324,7 +327,7 @@ export default function OrganizationMembers() {
                       }
                       colorPalette="gray"
                     >
-                      <LuCopy /> Copier
+                      <LuCopy /> {t("copy")}
                     </Button>
                     <Form method="post">
                       <input
@@ -338,7 +341,7 @@ export default function OrganizationMembers() {
                         value={organizationInvitation.id}
                       />
                       <Button type="submit" size="sm" colorPalette="red">
-                        <LuTrash2 /> Supprimer
+                        <LuTrash2 /> {t("members.inviteLink.delete")}
                       </Button>
                     </Form>
                   </HStack>
@@ -351,20 +354,20 @@ export default function OrganizationMembers() {
             <Card.Body>
               <VStack align="stretch" gap={3}>
                 <Text fontSize="sm" color="gray.600">
-                  Créez un lien d'invitation permanent qui peut être utilisé par
-                  plusieurs personnes pour rejoindre l'organisation.
+                  {t("members.inviteLink.createDescription")}
                 </Text>
                 <Text fontSize="sm" fontWeight="medium">
-                  Différences avec l'invitation par email :
+                  {t("members.inviteLink.differencesTitle")}
                 </Text>
                 <VStack align="stretch" gap={1} pl={4}>
                   <Text fontSize="sm" color="gray.600">
-                    • <strong>Lien d'organisation :</strong> Peut être utilisé
-                    indéfiniment, pas lié à un email spécifique
+                    • <strong>{t("members.inviteLink.orgLinkLabel")}</strong>{" "}
+                    {t("members.inviteLink.orgLinkDesc")}
                   </Text>
                   <Text fontSize="sm" color="gray.600">
-                    • <strong>Invitation par email :</strong> Usage unique, liée
-                    à un email précis
+                    •{" "}
+                    <strong>{t("members.inviteLink.emailInviteLabel")}</strong>{" "}
+                    {t("members.inviteLink.emailInviteDesc")}
                   </Text>
                 </VStack>
                 <Form method="post">
@@ -374,7 +377,7 @@ export default function OrganizationMembers() {
                     value="create-org-invitation"
                   />
                   <Button type="submit" colorScheme="brand" mt={2}>
-                    <LuPlus /> Créer un lien d'invitation pour l'organisation
+                    <LuPlus /> {t("members.createOrgInvitation")}
                   </Button>
                 </Form>
               </VStack>
@@ -386,7 +389,7 @@ export default function OrganizationMembers() {
       {/* Membres actuels */}
       <VStack align="stretch" gap={4} mb={8}>
         <Heading as="h3" size="md">
-          Membres ({members.length})
+          {t("members.listTitle", { count: members.length })}
         </Heading>
         {members.map((member) => (
           <Card.Root key={member.id}>
@@ -398,14 +401,14 @@ export default function OrganizationMembers() {
                       {member.user.name || member.user.email}
                     </Text>
                     {member.isCurrentUser && (
-                      <Badge colorScheme="blue">Vous</Badge>
+                      <Badge colorScheme="blue">{t("members.you")}</Badge>
                     )}
                   </HStack>
                   <Text fontSize="sm" color="gray.600">
                     {member.user.email}
                   </Text>
                   <Text fontSize="xs" color="gray.500">
-                    Membre depuis le{" "}
+                    {t("members.memberSince")}{" "}
                     {new Date(member.createdAt).toLocaleDateString("fr-FR")}
                   </Text>
                 </Box>
@@ -419,15 +422,11 @@ export default function OrganizationMembers() {
                     />
                     <IconButton
                       type="submit"
-                      aria-label="Retirer le membre"
+                      aria-label={t("members.removeMemberAria")}
                       variant="ghost"
                       colorScheme="red"
                       onClick={(e) => {
-                        if (
-                          !confirm(
-                            "Êtes-vous sûr de vouloir retirer ce membre ?",
-                          )
-                        ) {
+                        if (!confirm(t("members.removeMemberConfirm"))) {
                           e.preventDefault();
                         }
                       }}
@@ -446,7 +445,7 @@ export default function OrganizationMembers() {
       {pendingInvitations.length > 0 && (
         <VStack align="stretch" gap={4}>
           <Heading as="h3" size="md">
-            Invitations en attente ({pendingInvitations.length})
+            {t("members.pendingTitle", { count: pendingInvitations.length })}
           </Heading>
           {pendingInvitations.map((invitation) => (
             <Card.Root key={invitation.id}>
@@ -456,14 +455,14 @@ export default function OrganizationMembers() {
                     <HStack>
                       <LuMail />
                       <Text fontWeight="medium">{invitation.invitedEmail}</Text>
-                      <Badge colorScheme="yellow">En attente</Badge>
+                      <Badge colorScheme="yellow">{t("members.pending")}</Badge>
                     </HStack>
                     <Text fontSize="sm" color="gray.600">
-                      Invité par{" "}
+                      {t("members.invitedBy")}{" "}
                       {invitation.inviter?.name ||
                         invitation.inviter?.email ||
-                        "Inconnu"}{" "}
-                      le{" "}
+                        t("members.unknown")}{" "}
+                      {t("members.onDate")}{" "}
                       {new Date(invitation.createdAt).toLocaleDateString(
                         "fr-FR",
                       )}
@@ -471,7 +470,7 @@ export default function OrganizationMembers() {
                   </Box>
                   <HStack>
                     <IconButton
-                      aria-label="Copier le lien d'invitation"
+                      aria-label={t("members.copyInvitationAria")}
                       variant="ghost"
                       onClick={() =>
                         handleCopyInvitationLink(invitation.invitationCode)
@@ -492,7 +491,7 @@ export default function OrganizationMembers() {
                       />
                       <IconButton
                         type="submit"
-                        aria-label="Annuler l'invitation"
+                        aria-label={t("members.cancelInvitationAria")}
                         variant="ghost"
                         colorScheme="red"
                       >
@@ -517,7 +516,7 @@ export default function OrganizationMembers() {
           <DialogPositioner>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Inviter un membre</DialogTitle>
+                <DialogTitle>{t("members.invite")}</DialogTitle>
                 <DialogCloseTrigger />
               </DialogHeader>
               <DialogBody>
@@ -525,7 +524,7 @@ export default function OrganizationMembers() {
                   <input type="hidden" name="intent" value="invite-user" />
                   <VStack align="stretch" gap={4}>
                     <Box>
-                      <Text mb={2}>Email de la personne à inviter :</Text>
+                      <Text mb={2}>{t("members.invite.emailLabel")}</Text>
                       <Input
                         name="email"
                         type="email"
@@ -541,10 +540,10 @@ export default function OrganizationMembers() {
                   variant="outline"
                   onClick={() => setIsInviteDialogOpen(false)}
                 >
-                  Annuler
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" form="invite-form" colorScheme="brand">
-                  Créer l'invitation
+                  {t("members.createInvitation")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -568,8 +567,7 @@ export default function OrganizationMembers() {
               <DialogBody>
                 <VStack align="stretch" gap={4}>
                   <Text fontSize="sm" color="gray.600">
-                    Impossible de copier automatiquement. Veuillez copier ce
-                    lien manuellement :
+                    {t("members.inviteLink.copyError")}
                   </Text>
                   <Input
                     value={currentLink}

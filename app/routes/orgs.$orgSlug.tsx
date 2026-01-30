@@ -9,8 +9,8 @@ import {
   Card,
   HStack,
 } from "@chakra-ui/react";
-import { Link, NavLink, Outlet, useLoaderData, data } from "react-router";
 import { useTranslation } from "react-i18next";
+import { Link, NavLink, Outlet, useLoaderData, data } from "react-router";
 import { LuFolderOpen, LuUsers, LuSettings } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug";
 import {
@@ -81,7 +81,7 @@ export default function OrganizationLayout() {
               {organization.name}
             </Heading>
             <Button asChild variant="outline" size="sm">
-              <Link to="/orgs">{t("orgs.returnToOrganizations")}</Link>
+              <Link to="/orgs">{t("orgs.return")}</Link>
             </Button>
           </HStack>
         </Box>
@@ -145,7 +145,7 @@ export default function OrganizationLayout() {
                 transition: "all 0.2s",
               })}
             >
-              <LuFolderOpen /> {t("orgs.projects")}
+              <LuFolderOpen /> {t("orgs.tab.projects")}
             </NavLink>
             <NavLink
               to={`/orgs/${organization.slug}/members`}
@@ -166,7 +166,7 @@ export default function OrganizationLayout() {
                 transition: "all 0.2s",
               })}
             >
-              <LuUsers /> {t("orgs.members")}
+              <LuUsers /> {t("orgs.tab.members")}
             </NavLink>
             <NavLink
               to={`/orgs/${organization.slug}/settings`}
@@ -187,7 +187,7 @@ export default function OrganizationLayout() {
                 transition: "all 0.2s",
               })}
             >
-              <LuSettings /> {t("orgs.settings")}
+              <LuSettings /> {t("orgs.tab.settings")}
             </NavLink>
           </HStack>
         </Box>

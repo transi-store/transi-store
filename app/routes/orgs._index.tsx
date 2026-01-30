@@ -13,6 +13,7 @@ import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs._index";
 import { requireUser } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
+import { useTranslation } from "react-i18next";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -23,17 +24,18 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function OrganizationsIndex() {
   const { organizations } = useLoaderData<typeof loader>();
+  const { t } = useTranslation();
 
   return (
     <Container maxW="container.xl" py={10}>
       <VStack gap={6} align="stretch">
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Heading as="h1" size="2xl">
-            Mes organisations
+            {t("orgs.title")}
           </Heading>
           <Button asChild colorPalette="brand">
             <Link to="/orgs/new">
-              <LuPlus /> Nouvelle organisation
+              <LuPlus /> {t("orgs.new.title")}
             </Link>
           </Button>
         </Box>
@@ -41,11 +43,11 @@ export default function OrganizationsIndex() {
         {organizations.length === 0 ? (
           <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
             <Text fontSize="lg" color="gray.600" mb={4}>
-              Vous n'etes membre d'aucune organisation
+              {t("orgs.noOrganizations")}
             </Text>
             <Button asChild colorPalette="brand">
               <Link to="/orgs/new">
-                <LuPlus /> Creer ma premiere organisation
+                <LuPlus /> {t("orgs.new.first.title")}
               </Link>
             </Button>
           </Box>

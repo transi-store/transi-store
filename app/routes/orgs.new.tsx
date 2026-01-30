@@ -23,6 +23,7 @@ import {
 } from "~/lib/organizations.server";
 import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export async function action({ request }: Route.ActionArgs) {
   const user = await requireUser(request);
@@ -57,6 +58,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function NewOrganization() {
+  const { t } = useTranslation();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -67,7 +69,7 @@ export default function NewOrganization() {
     <Container maxW="container.md" py={10}>
       <VStack gap={6} align="stretch">
         <Heading as="h1" size="2xl">
-          Nouvelle organisation
+          {t("orgs.new.title")}
         </Heading>
 
         {actionData?.error && (
@@ -114,7 +116,7 @@ export default function NewOrganization() {
                 <LuPlus /> Creer l'organisation
               </Button>
               <Button asChild variant="outline" disabled={isSubmitting}>
-                <Link to="/orgs">Annuler</Link>
+                <Link to="/orgs">{t("cancel")}</Link>
               </Button>
             </Box>
           </VStack>

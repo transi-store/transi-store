@@ -19,6 +19,7 @@ import {
   useNavigation,
   useOutletContext,
 } from "react-router";
+import { useTranslation } from "react-i18next";
 import { LuDownload, LuUpload } from "react-icons/lu";
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.import-export";
@@ -31,6 +32,7 @@ import {
   importTranslations,
 } from "~/lib/import/json.server";
 import { downloadResponse } from "~/lib/download";
+import { getInstance } from "~/middleware/i18next";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -54,8 +56,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return {};
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   const user = await requireUser(request);
+  const i18next = getInstance(context);
+
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -74,30 +78,38 @@ export async function action({ request, params }: Route.ActionArgs) {
     // 1. Validate file input
     const file = formData.get("file");
     if (!file || !(file instanceof File)) {
-      return { error: "Fichier requis" };
+      return {
+        error: i18next.t("import.errors.fileRequired"),
+      };
     }
 
     if (file.type !== "application/json" && !file.name.endsWith(".json")) {
-      return { error: "Le fichier doit être au format JSON" };
+      return {
+        error: i18next.t("import.errors.invalidFormat"),
+      };
     }
 
     // 2. Validate locale input
     const locale = formData.get("locale");
     if (!locale || typeof locale !== "string") {
-      return { error: "Langue cible requise" };
+      return {
+        error: i18next.t("import.errors.localeRequired"),
+      };
     }
 
     // 3. Validate strategy input
     const strategy = formData.get("strategy");
     if (strategy !== "overwrite" && strategy !== "skip") {
-      return { error: "Stratégie invalide" };
+      return {
+        error: i18next.t("import.errors.invalidStrategy"),
+      };
     }
 
     // 4. Verify locale exists in project
     const languages = await getProjectLanguages(project.id);
     if (!languages.some((l) => l.locale === locale)) {
       return {
-        error: `La langue "${locale}" n'existe pas dans ce projet`,
+        error: i18next.t("import.errors.localeNotInProject", { locale }),
       };
     }
 
@@ -106,19 +118,27 @@ export async function action({ request, params }: Route.ActionArgs) {
     try {
       fileContent = await file.text();
     } catch (error) {
-      return { error: "Impossible de lire le fichier" };
+      return {
+        error: i18next.t("import.errors.unableToReadFile"),
+      };
     }
 
     // 6. Parse JSON
     const parseResult = parseImportJSON(fileContent);
     if (!parseResult.success) {
-      return { error: parseResult.error };
+      return {
+        error: i18next.t("import.errors.parseError"),
+        details: parseResult.error,
+      };
     }
 
     // 7. Validate data structure
     const validationErrors = validateImportData(parseResult.data!);
     if (validationErrors.length > 0) {
-      return { error: validationErrors.join(", ") };
+      return {
+        error: i18next.t("import.errors.invalidData"),
+        details: validationErrors.join(", "),
+      };
     }
 
     // 8. Import translations
@@ -130,7 +150,10 @@ export async function action({ request, params }: Route.ActionArgs) {
     });
 
     if (!result.success) {
-      return { error: result.errors.join(", ") };
+      return {
+        error: i18next.t("import.errors.importFailed"),
+        details: result.errors.join(", "),
+      };
     }
 
     // 9. Return success with stats
@@ -140,10 +163,11 @@ export async function action({ request, params }: Route.ActionArgs) {
     };
   }
 
-  return { error: "Action inconnue" };
+  return { error: i18next.t("import.errors.unknownAction") };
 }
 
 export default function ProjectImportExport() {
+  const { t } = useTranslation();
   const { organization, project, languages } = useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
@@ -164,14 +188,13 @@ export default function ProjectImportExport() {
       {/* Import Section */}
       <Box>
         <Heading as="h2" size="lg" mb={4}>
-          Importer des traductions
+          {t("import.title")}
         </Heading>
 
         {languages.length === 0 ? (
           <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
             <Text color="gray.600" mb={4}>
-              Ajoutez au moins une langue dans les paramètres pour importer des
-              traductions
+              {t("import.noLanguages")}
             </Text>
           </Box>
         ) : (
@@ -187,7 +210,7 @@ export default function ProjectImportExport() {
                 <VStack gap={4} align="stretch">
                   {/* File input */}
                   <Field.Root required>
-                    <Field.Label>Fichier JSON</Field.Label>
+                    <Field.Label>{t("import.fileLabel")}</Field.Label>
                     <FileUpload.Root
                       accept="application/json,.json"
                       required
@@ -198,28 +221,28 @@ export default function ProjectImportExport() {
                       <FileUpload.HiddenInput />
                       <FileUpload.Trigger asChild>
                         <Button variant="outline" size="sm">
-                          <LuUpload /> Upload file
+                          <LuUpload /> {t("import.upload")}
                         </Button>
                       </FileUpload.Trigger>
                       <FileUpload.List />
                     </FileUpload.Root>
                     <Field.HelperText>
-                      Format attendu : {"{"}"key.name": "traduction"{"}"}
+                      {t("import.formatExample")}
                     </Field.HelperText>
                   </Field.Root>
 
                   {/* Language select */}
                   <Field.Root required>
-                    <Field.Label>Langue cible</Field.Label>
+                    <Field.Label>{t("import.targetLang")}</Field.Label>
                     <NativeSelect.Root disabled={isSubmitting} maxW="300px">
                       <NativeSelect.Field
                         name="locale"
-                        placeholder="Choisir une langue"
+                        placeholder={t("import.chooseLanguage")}
                       >
                         {languages.map((lang) => (
                           <option key={lang.id} value={lang.locale}>
                             {lang.locale.toUpperCase()}
-                            {lang.isDefault ? " (défaut)" : ""}
+                            {lang.isDefault ? t("project.defaultSuffix") : ""}
                           </option>
                         ))}
                       </NativeSelect.Field>
@@ -240,15 +263,12 @@ export default function ProjectImportExport() {
                     >
                       <Switch.HiddenInput />
                       <Switch.Control />
-                      <Switch.Label>
-                        Écraser les traductions existantes
-                      </Switch.Label>
+                      <Switch.Label>{t("import.overwriteLabel")}</Switch.Label>
                     </Switch.Root>
 
                     <Box>
                       <Text fontSize="sm" color="gray.600">
-                        Si actif, les traductions existantes seront écrasées par
-                        les nouvelles valeurs du fichier importé.
+                        {t("import.overwriteHelp")}
                       </Text>
                     </Box>
                   </Field.Root>
@@ -258,7 +278,7 @@ export default function ProjectImportExport() {
                     colorPalette="brand"
                     loading={isSubmitting}
                   >
-                    <LuUpload /> Importer
+                    <LuUpload /> {t("import.submit")}
                   </Button>
                 </VStack>
               </Form>
@@ -277,21 +297,27 @@ export default function ProjectImportExport() {
             mt={4}
           >
             <Heading as="h4" size="sm" color="green.700" mb={2}>
-              ✓ Import réussi !
+              {t("import.success.title")}
             </Heading>
             <VStack gap={1} align="stretch" fontSize="sm" color="green.700">
-              <Text>• Total : {actionData.importStats.total} entrées</Text>
-              <Text>• Clés créées : {actionData.importStats.keysCreated}</Text>
               <Text>
-                • Traductions créées :{" "}
+                • {t("import.stats.total")}: {actionData.importStats.total}{" "}
+                {t("import.stats.entries")}
+              </Text>
+              <Text>
+                • {t("import.stats.keysCreated")}:{" "}
+                {actionData.importStats.keysCreated}
+              </Text>
+              <Text>
+                • {t("import.stats.translationsCreated")}:{" "}
                 {actionData.importStats.translationsCreated}
               </Text>
               <Text>
-                • Traductions mises à jour :{" "}
+                • {t("import.stats.translationsUpdated")}:{" "}
                 {actionData.importStats.translationsUpdated}
               </Text>
               <Text>
-                • Traductions ignorées :{" "}
+                • {t("import.stats.translationsSkipped")}:{" "}
                 {actionData.importStats.translationsSkipped}
               </Text>
             </VStack>
@@ -302,6 +328,15 @@ export default function ProjectImportExport() {
         {actionData?.error && (
           <Box p={4} bg="red.100" color="red.700" borderRadius="md" mt={4}>
             {actionData.error}
+
+            {actionData.details && (
+              <>
+                <br />
+                <Text fontSize="sm" color="red.700" whiteSpace="pre-wrap">
+                  {actionData.details}
+                </Text>
+              </>
+            )}
           </Box>
         )}
       </Box>
@@ -312,10 +347,10 @@ export default function ProjectImportExport() {
           <Separator />
           <Box>
             <Heading as="h2" size="lg" mb={4}>
-              Exporter des traductions
+              {t("export.title")}
             </Heading>
             <Text color="gray.600" mb={4}>
-              Exportez vos traductions en JSON ou XLIFF
+              {t("export.description")}
             </Text>
 
             <VStack gap={4} align="stretch">
@@ -323,10 +358,10 @@ export default function ProjectImportExport() {
               <Card.Root>
                 <Card.Body>
                   <Heading as="h3" size="md" mb={3}>
-                    Export JSON
+                    {t("export.json.title")}
                   </Heading>
                   <Text fontSize="sm" color="gray.600" mb={4}>
-                    Exportez une langue spécifique au format JSON
+                    {t("export.json.description")}
                   </Text>
                   <SimpleGrid columns={{ base: 2, md: 4 }} gap={2}>
                     {languages.map((lang) => (
@@ -360,7 +395,7 @@ export default function ProjectImportExport() {
                       }}
                     >
                       <LuDownload />
-                      Toutes les langues
+                      {t("export.allLanguages")}
                     </Button>
                   </SimpleGrid>
                 </Card.Body>
@@ -371,15 +406,16 @@ export default function ProjectImportExport() {
                 <Card.Root>
                   <Card.Body>
                     <Heading as="h3" size="md" mb={3}>
-                      Export XLIFF
+                      {t("export.xliff.title")}
                     </Heading>
                     <Text fontSize="sm" color="gray.600" mb={4}>
-                      Exportez au format XLIFF 2.0 avec langue source et cible
+                      {t("export.xliff.description")}
                     </Text>
                     <Text fontSize="xs" color="gray.500" mb={3}>
-                      Exemple : /api/orgs/{organization.slug}/projects/
-                      {project.slug}
-                      /export?format=xliff&source=en&target=fr
+                      {t("export.xliff.example", {
+                        org: organization.slug,
+                        project: project.slug,
+                      })}
                     </Text>
                     <HStack>
                       <Button

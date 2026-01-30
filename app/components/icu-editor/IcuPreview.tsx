@@ -13,6 +13,7 @@ import {
   Badge,
   Field,
 } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 import { IntlMessageFormat } from "intl-messageformat";
 import { extractVariables } from "./icu-linter";
 
@@ -22,6 +23,7 @@ interface IcuPreviewProps {
 }
 
 export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
+  const { t } = useTranslation();
   const variables = useMemo(() => extractVariables(message), [message]);
 
   // Default values for common variable types
@@ -98,9 +100,9 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
     return (
       <Box p={3} bg="gray.50" borderRadius="md" borderWidth={1}>
         <Text fontSize="sm" color="gray.600" mb={1}>
-          Aperçu :
+          {t("icu.previewLabel")}
         </Text>
-        <Text>{message || <em>Message vide</em>}</Text>
+        <Text>{message || <em>{t("icu.emptyMessage")}</em>}</Text>
       </Box>
     );
   }
@@ -117,7 +119,7 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
           borderColor="blue.200"
         >
           <Text fontSize="sm" fontWeight="medium" color="blue.700" mb={2}>
-            Variables détectées :
+            {t("icu.variablesDetected")}
           </Text>
           <HStack flexWrap="wrap" gap={3}>
             {variables.map((varName) => (
@@ -131,7 +133,7 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
                     width="120px"
                     value={String(values[varName] ?? "")}
                     onChange={(e) => handleValueChange(varName, e.target.value)}
-                    placeholder={`Valeur pour ${varName}`}
+                    placeholder={t("icu.valuePlaceholder", { varName })}
                   />
                 </HStack>
               </Field.Root>
@@ -154,14 +156,14 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
           color={error ? "red.700" : "green.700"}
           mb={1}
         >
-          {error ? "Erreur :" : "Aperçu :"}
+          {error ? t("icu.errorLabel") : t("icu.previewLabel")}
         </Text>
         {error ? (
           <Text color="red.600" fontSize="sm">
             {error}
           </Text>
         ) : (
-          <Text color="green.800">{formatted || <em>Message vide</em>}</Text>
+          <Text color="green.800">{formatted || <em>{t("icu.emptyMessage")}</em>}</Text>
         )}
       </Box>
     </VStack>

@@ -13,6 +13,7 @@ import type { Route } from "./+types/orgs.$orgSlug._index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { db } from "~/lib/db.server";
+import { useTranslation } from "react-i18next";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -30,17 +31,18 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function OrganizationProjects() {
+  const { t } = useTranslation();
   const { organization, projects } = useLoaderData<typeof loader>();
 
   return (
     <Box pt={6}>
       <HStack justify="space-between" mb={4}>
         <Heading as="h2" size="lg">
-          Projets
+          {t("orgs.projects")}
         </Heading>
         <Button asChild colorPalette="brand" size="sm">
           <Link to={`/orgs/${organization.slug}/projects/new`}>
-            <LuPlus /> Nouveau projet
+            <LuPlus /> {t("projects.new.title")}
           </Link>
         </Button>
       </HStack>
@@ -48,11 +50,11 @@ export default function OrganizationProjects() {
       {projects.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
           <Text color="gray.600" mb={4}>
-            Aucun projet dans cette organisation
+            {t("orgs.noProjects")}
           </Text>
           <Button asChild colorPalette="brand">
             <Link to={`/orgs/${organization.slug}/projects/new`}>
-              <LuPlus /> Créer le premier projet
+              <LuPlus /> {t("projects.new.firstProject")}
             </Link>
           </Button>
         </Box>

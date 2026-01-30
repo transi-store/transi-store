@@ -30,6 +30,7 @@ import {
   LuCircleAlert,
   LuCircleCheck,
 } from "react-icons/lu";
+import { useTranslation } from "react-i18next";
 
 interface IcuEditorProps {
   /** Initial value */
@@ -63,6 +64,7 @@ export function IcuEditor({
   minHeight = "80px",
   name,
 }: IcuEditorProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
   const onBlurRef = useRef(onBlur);
@@ -257,7 +259,7 @@ export function IcuEditor({
           >
             {isPreviewOpen ? <LuChevronDown /> : <LuChevronRight />}
             <Text fontSize="sm" fontWeight="medium">
-              Aperçu de la traduction
+              {t("icu.previewLabel")}
             </Text>
           </Box>
 

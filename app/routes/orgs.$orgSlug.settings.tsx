@@ -24,6 +24,7 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { useLoaderData, Form, useActionData } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import {
   LuPlus,
@@ -51,8 +52,10 @@ import { AI_PROVIDERS, type AiProvider } from "~/lib/ai-providers";
 import { redirect } from "react-router";
 import { toaster } from "~/components/ui/toaster";
 import { getOrigin } from "~/lib/origin.server";
+import { getInstance } from "~/middleware/i18next";
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
     user,
@@ -88,7 +91,10 @@ export async function action({ request, params }: Route.ActionArgs) {
     const apiKey = formData.get("apiKey") as string;
 
     if (!provider || !apiKey) {
-      return { success: false, error: "Provider et clé API requis" };
+      return {
+        success: false,
+        error: i18next.t("settings.errors.providerApiRequired"),
+      };
     }
 
     await saveAiProvider({
@@ -136,6 +142,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function OrganizationSettings() {
+  const { t } = useTranslation();
   const { organization, apiKeys, aiProviders, origin } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
@@ -148,14 +155,14 @@ export default function OrganizationSettings() {
     try {
       await navigator.clipboard.writeText(key);
       toaster.success({
-        title: "Clé copiée",
-        description: "La clé d'API a été copiée dans le presse-papiers",
+        title: t("settings.apiKeys.copied.title"),
+        description: t("settings.apiKeys.copied.description"),
         duration: 3000,
       });
     } catch (error) {
       toaster.error({
-        title: "Erreur",
-        description: "Impossible de copier la clé dans le presse-papiers",
+        title: t("settings.apiKeys.copyError.title"),
+        description: t("settings.apiKeys.copyError.description"),
         duration: 3000,
       });
     }
@@ -175,18 +182,17 @@ export default function OrganizationSettings() {
   return (
     <Box pt={6}>
       <Heading as="h2" size="lg" mb={4}>
-        Paramètres
+        {t("settings.title")}
       </Heading>
 
       <VStack align="stretch" gap={6}>
         {/* Section Clés d'API */}
         <Box>
           <Heading as="h3" size="md" mb={4}>
-            Clés d'API
+            {t("settings.apiKeys.title")}
           </Heading>
           <Text color="gray.600" mb={4}>
-            Les clés d'API permettent d'exporter les traductions de manière
-            automatisée (CI/CD, scripts).
+            {t("settings.apiKeys.description")}
           </Text>
 
           {/* Affichage de la clé nouvellement créée */}
@@ -196,12 +202,10 @@ export default function OrganizationSettings() {
                 <LuTriangleAlert />
               </Alert.Indicator>
               <Alert.Content>
-                <Alert.Title>Clé d'API créée avec succès</Alert.Title>
+                <Alert.Title>{t("settings.apiKeys.createdTitle")}</Alert.Title>
                 <Alert.Description>
                   <VStack align="stretch" gap={2} mt={2}>
-                    <Text fontSize="sm">
-                      Copiez cette clé maintenant, elle ne sera plus affichée.
-                    </Text>
+                    <Text fontSize="sm">{t("settings.apiKeys.copyNow")}</Text>
                     <HStack>
                       <Code
                         p={2}
@@ -217,7 +221,7 @@ export default function OrganizationSettings() {
                         onClick={() => handleCopyKey(actionData.keyValue!)}
                         colorPalette="gray"
                       >
-                        <LuCopy /> Copier
+                        <LuCopy /> {t("settings.copy")}
                       </Button>
                     </HStack>
                   </VStack>
@@ -236,7 +240,7 @@ export default function OrganizationSettings() {
               mb={4}
             >
               <Text color="gray.600" mb={3}>
-                Aucune clé d'API créée pour le moment
+                {t("settings.apiKeys.none")}
               </Text>
             </Box>
           ) : (
@@ -246,14 +250,15 @@ export default function OrganizationSettings() {
                   <HStack justify="space-between">
                     <Box flex={1}>
                       <Text fontWeight="medium">
-                        {key.name || "Clé sans nom"}
+                        {key.name || t("settings.apiKeys.unnamedKey")}
                       </Text>
                       <Text fontSize="sm" color="gray.600">
-                        Créée le {new Date(key.createdAt).toLocaleDateString()}
+                        {t("settings.apiKeys.createdOn")}{" "}
+                        {new Date(key.createdAt).toLocaleDateString()}
                         {key.lastUsedAt && (
                           <>
                             {" • "}
-                            Dernière utilisation:{" "}
+                            {t("settings.apiKeys.lastUsed")}{" "}
                             {new Date(key.lastUsedAt).toLocaleDateString()}
                           </>
                         )}
@@ -271,8 +276,8 @@ export default function OrganizationSettings() {
                         variant="ghost"
                         colorPalette="red"
                         size="sm"
-                        aria-label="Supprimer"
-                        title="Supprimer cette clé"
+                        aria-label={t("settings.apiKeys.deleteAria")}
+                        title={t("settings.apiKeys.deleteTitle")}
                       >
                         <LuTrash2 />
                       </IconButton>
@@ -291,7 +296,7 @@ export default function OrganizationSettings() {
             variant="outline"
             mb={6}
           >
-            <LuPlus /> Ajouter une clé d'API
+            <LuPlus /> {t("settings.apiKeys.addKey")}
           </Button>
 
           {/* Modale de création de clé d'API */}
@@ -304,7 +309,9 @@ export default function OrganizationSettings() {
               <DialogPositioner>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Créer une clé d'API</DialogTitle>
+                    <DialogTitle>
+                      {t("settings.apiKeys.createTitle")}
+                    </DialogTitle>
                   </DialogHeader>
                   <DialogCloseTrigger />
                   <Form method="post">
@@ -313,15 +320,15 @@ export default function OrganizationSettings() {
                       <VStack align="stretch" gap={4}>
                         <Box>
                           <Text fontSize="sm" fontWeight="medium" mb={2}>
-                            Nom de la clé (optionnel)
+                            {t("settings.apiKeys.nameLabel")}
                           </Text>
                           <Input
                             name="name"
-                            placeholder="Ex: CI/CD Production"
+                            placeholder={t("settings.apiKeys.namePlaceholder")}
                             maxLength={255}
                           />
                           <Text fontSize="xs" color="gray.600" mt={1}>
-                            Un nom pour identifier facilement cette clé
+                            {t("settings.apiKeys.nameHelp")}
                           </Text>
                         </Box>
                       </VStack>
@@ -331,10 +338,10 @@ export default function OrganizationSettings() {
                         variant="outline"
                         onClick={() => setIsDialogOpen(false)}
                       >
-                        Annuler
+                        {t("settings.cancel")}
                       </Button>
                       <Button type="submit" colorPalette="brand">
-                        <LuPlus /> Créer
+                        <LuPlus /> {t("settings.create")}
                       </Button>
                     </DialogFooter>
                   </Form>
@@ -346,11 +353,12 @@ export default function OrganizationSettings() {
           {/* Documentation d'utilisation */}
           <Box mt={6} p={4} borderWidth={1} borderRadius="lg" bg="gray.50">
             <Heading as="h4" size="sm" mb={2}>
-              Comment utiliser une clé d'API ?
+              {t("settings.apiKeys.howToUse")}
             </Heading>
             <Text fontSize="sm" color="gray.700" mb={2}>
-              Utilisez le header <Code>Authorization: Bearer YOUR_API_KEY</Code>{" "}
-              dans vos requêtes HTTP :
+              {t("settings.apiKeys.howToUseDescription")}
+              <Code>Authorization: Bearer YOUR_API_KEY</Code>{" "}
+              {t("settings.apiKeys.howToUseDescription2")}
             </Text>
             <Code
               display="block"
@@ -371,12 +379,11 @@ export default function OrganizationSettings() {
           <HStack mb={4}>
             <LuSparkles />
             <Heading as="h3" size="md">
-              Traduction automatique (IA)
+              {t("settings.ai.title")}
             </Heading>
           </HStack>
           <Text color="gray.600" mb={4}>
-            Configurez un service d'IA pour proposer des traductions
-            automatiques. Vous devez fournir votre propre clé API.
+            {t("settings.ai.description")}
           </Text>
 
           {/* Liste des providers configurés */}
@@ -399,13 +406,19 @@ export default function OrganizationSettings() {
                       <Text fontWeight="medium">{providerInfo.label}</Text>
                       {configured ? (
                         <>
-                          <Badge colorPalette="green">Configuré</Badge>
+                          <Badge colorPalette="green">
+                            {t("settings.ai.configured")}
+                          </Badge>
                           {configured.isActive && (
-                            <Badge colorPalette="blue">Actif</Badge>
+                            <Badge colorPalette="blue">
+                              {t("settings.ai.active")}
+                            </Badge>
                           )}
                         </>
                       ) : (
-                        <Badge colorPalette="gray">Non configuré</Badge>
+                        <Badge colorPalette="gray">
+                          {t("settings.ai.notConfigured")}
+                        </Badge>
                       )}
                     </HStack>
                     <HStack gap={2}>
@@ -427,7 +440,7 @@ export default function OrganizationSettings() {
                             variant="outline"
                             colorPalette="green"
                           >
-                            <LuCheck /> Activer
+                            <LuCheck /> {t("settings.ai.activate")}
                           </Button>
                         </Form>
                       )}
@@ -439,7 +452,9 @@ export default function OrganizationSettings() {
                           setIsAiDialogOpen(true);
                         }}
                       >
-                        {configured ? "Modifier" : "Configurer"}
+                        {configured
+                          ? t("settings.ai.edit")
+                          : t("settings.ai.configure")}
                       </Button>
                       {configured && (
                         <Form method="post">
@@ -458,8 +473,8 @@ export default function OrganizationSettings() {
                             variant="ghost"
                             colorPalette="red"
                             size="sm"
-                            aria-label="Supprimer"
-                            title="Supprimer cette configuration"
+                            aria-label={t("settings.ai.delete")}
+                            title={t("settings.ai.delete.title")}
                           >
                             <LuTrash2 />
                           </IconButton>
@@ -487,9 +502,12 @@ export default function OrganizationSettings() {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>
-                      Configurer{" "}
-                      {AI_PROVIDERS.find((p) => p.value === selectedAiProvider)
-                        ?.label || "IA"}
+                      {t("settings.ai.configureTitle", {
+                        provider:
+                          AI_PROVIDERS.find(
+                            (p) => p.value === selectedAiProvider,
+                          )?.label || "IA",
+                      })}
                     </DialogTitle>
                   </DialogHeader>
                   <DialogCloseTrigger />
@@ -508,18 +526,18 @@ export default function OrganizationSettings() {
                       <VStack align="stretch" gap={4}>
                         <Box>
                           <Text fontSize="sm" fontWeight="medium" mb={2}>
-                            Clé API
+                            {t("settings.ai.apiKeyLabel")}
                           </Text>
                           <Input
                             name="apiKey"
                             type="password"
-                            placeholder="sk-..."
+                            placeholder={t("settings.ai.apiKeyPlaceholder")}
                             required
                           />
                           <Text fontSize="xs" color="gray.600" mt={1}>
                             {selectedAiProvider === "openai" && (
                               <>
-                                Obtenez votre clé sur{" "}
+                                {t("settings.ai.getApiKeyOn")}{" "}
                                 <a
                                   href="https://platform.openai.com/api-keys"
                                   target="_blank"
@@ -532,7 +550,7 @@ export default function OrganizationSettings() {
                             )}
                             {selectedAiProvider === "gemini" && (
                               <>
-                                Obtenez votre clé sur{" "}
+                                {t("settings.ai.getApiKeyOn")}{" "}
                                 <a
                                   href="https://aistudio.google.com/apikey"
                                   target="_blank"
@@ -552,9 +570,7 @@ export default function OrganizationSettings() {
                           <Alert.Content>
                             <Alert.Description>
                               <Text fontSize="sm">
-                                La clé sera chiffrée et stockée de manière
-                                sécurisée. Les appels API seront facturés sur
-                                votre compte.
+                                {t("settings.ai.warning")}
                               </Text>
                             </Alert.Description>
                           </Alert.Content>
@@ -569,10 +585,10 @@ export default function OrganizationSettings() {
                           setSelectedAiProvider(null);
                         }}
                       >
-                        Annuler
+                        {t("settings.ai.cancel")}
                       </Button>
                       <Button type="submit" colorPalette="brand">
-                        Enregistrer
+                        {t("settings.ai.save")}
                       </Button>
                     </DialogFooter>
                   </Form>
