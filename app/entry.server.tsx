@@ -16,7 +16,7 @@ export default function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  entryContext: RouterContextProvider,
+  loadContext: RouterContextProvider,
 ) {
   // https://httpwg.org/specs/rfc9110.html#HEAD
   if (request.method.toUpperCase() === "HEAD") {
@@ -38,7 +38,7 @@ export default function handleRequest(
         : "onShellReady";
 
     const { pipe, abort } = renderToPipeableStream(
-      <I18nextProvider i18n={getInstance(entryContext)}>
+      <I18nextProvider i18n={getInstance(loadContext)}>
         <ServerRouter context={routerContext} url={request.url} />
       </I18nextProvider>,
       {

@@ -94,9 +94,7 @@ export default function CompleteProfile() {
 
         {actionData?.error && (
           <Box p={4} bg="red.100" color="red.700" borderRadius="md">
-            {actionData.errorKey
-              ? t(actionData.errorKey, actionData.errorMeta || {})
-              : actionData.error}
+            {actionData.error}
           </Box>
         )}
 
