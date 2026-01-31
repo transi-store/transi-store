@@ -1183,12 +1183,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jdeniau/i18next-icu@npm:^2.4.5":
-  version: 2.4.5
-  resolution: "@jdeniau/i18next-icu@npm:2.4.5"
+"@jdeniau/i18next-icu@npm:^2.4.6":
+  version: 2.4.6
+  resolution: "@jdeniau/i18next-icu@npm:2.4.6"
   peerDependencies:
     intl-messageformat: ">=10.3.3 <12.0.0"
-  checksum: 10c0/8db58de6185b0a88bfbc4592f6977838d98928b35d76d5603bbc2f503df3549ac55adfb3e1ac4e45851b7a40804083dcaab1dc958855d7b12ca484a6e580a2f7
+  checksum: 10c0/22c9bca91cd9cb7642202231b2be0b6c411a9c778de4091a844b83a4453320a99c32cb094b57349bd30b048b427d5faf713211bd1d82742cf3409f6935b7214f
   languageName: node
   linkType: hard
 
@@ -5895,7 +5895,7 @@ __metadata:
     "@codemirror/view": "npm:^6.39.11"
     "@emotion/react": "npm:^11.14.0"
     "@formatjs/icu-messageformat-parser": "npm:^3.5.0"
-    "@jdeniau/i18next-icu": "npm:^2.4.5"
+    "@jdeniau/i18next-icu": "npm:^2.4.6"
     "@react-router/dev": "npm:^7.12.0"
     "@react-router/node": "npm:^7.12.0"
     "@react-router/serve": "npm:^7.12.0"
