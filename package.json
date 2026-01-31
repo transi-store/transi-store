@@ -8,6 +8,7 @@
     "dev": "react-router dev",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
+    "cli": "ts-node ./packages/cli/src/cli.ts",
     "lint:types": "react-router typegen && tsc",
     "knip": "react-router typegen && knip",
     "db:generate": "drizzle-kit generate",
