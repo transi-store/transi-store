@@ -3,7 +3,7 @@ import { createCookie } from "react-router";
 import { createI18nextMiddleware } from "remix-i18next/middleware";
 import resources from "~/locales"; // Import your locales
 import "i18next";
-import ICU from "@jdeniau/i18next-icu";
+import ICU from "i18next-icu";
 import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "~/lib/i18n";
 
 // This cookie will be used to store the user locale preference
