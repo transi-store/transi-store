@@ -1,5 +1,5 @@
 import { PassThrough } from "node:stream";
-import type { EntryContext, RouterContextProvider } from "react-router";
+import { type EntryContext, RouterContextProvider } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
@@ -10,6 +10,15 @@ import { getInstance } from "./middleware/i18next";
 
 // Reject all pending promises from handler functions after 10 seconds
 export const streamTimeout = 5_000;
+
+// Try that due to https://community.vercel.com/t/react-router-v7-with-middleware-fails-on-vercel/25840
+export function getLoadContext(_request: Request): RouterContextProvider {
+  const loadContext = {};
+  let context = new RouterContextProvider();
+  Object.assign(context, loadContext);
+
+  return context;
+}
 
 export default function handleRequest(
   request: Request,
