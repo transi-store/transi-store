@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
-    "build:cli": "cd packages/cli && tsc",
+    "build:cli": "cd packages/cli && yarn build",
     "start": "react-router-serve ./build/server/index.js",
     "download-translations": "yarn build:cli && node ./packages/cli/dist/cli.js",
     "lint:types": "react-router typegen && tsc",
