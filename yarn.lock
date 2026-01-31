@@ -1183,6 +1183,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jdeniau/i18next-icu@npm:^2.4.3":
+  version: 2.4.3
+  resolution: "@jdeniau/i18next-icu@npm:2.4.3"
+  peerDependencies:
+    intl-messageformat: ">=10.3.3 <12.0.0"
+  checksum: 10c0/c65abcaf27c8c5576f38ab46b17cd3100c96ca6cef0e2fbcb762540a1de1361abb1f1b0bd6e3468078db42e37a923ed933baf226adb4a624928caeeee4ca461a
+  languageName: node
+  linkType: hard
+
 "@jridgewell/gen-mapping@npm:^0.3.12, @jridgewell/gen-mapping@npm:^0.3.5":
   version: 0.3.13
   resolution: "@jridgewell/gen-mapping@npm:0.3.13"
@@ -4161,15 +4170,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-icu@npm:^2.4.2":
-  version: 2.4.2
-  resolution: "i18next-icu@npm:2.4.2"
-  peerDependencies:
-    intl-messageformat: ">=10.3.3 <12.0.0"
-  checksum: 10c0/d7f9fa2e846eafdc550c42e63d0de250d3d8996532d7c5b1f454bc33d493c1329352634ba3e2b9813d24a4e540c30ce3a8e7bd53631275c3c55da8f3b5ee2cf9
-  languageName: node
-  linkType: hard
-
 "i18next@npm:^25.8.0":
   version: 25.8.0
   resolution: "i18next@npm:25.8.0"
@@ -5895,6 +5895,7 @@ __metadata:
     "@codemirror/view": "npm:^6.39.11"
     "@emotion/react": "npm:^11.14.0"
     "@formatjs/icu-messageformat-parser": "npm:^3.5.0"
+    "@jdeniau/i18next-icu": "npm:^2.4.3"
     "@react-router/dev": "npm:^7.12.0"
     "@react-router/node": "npm:^7.12.0"
     "@react-router/serve": "npm:^7.12.0"
@@ -5911,7 +5912,6 @@ __metadata:
     i18next: "npm:^25.8.0"
     i18next-browser-languagedetector: "npm:^8.2.0"
     i18next-fetch-backend: "npm:^7.0.0"
-    i18next-icu: "npm:^2.4.2"
     intl-messageformat: "npm:^11.1.1"
     isbot: "npm:^5.1.17"
     jose: "npm:^6.1.3"

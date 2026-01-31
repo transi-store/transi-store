@@ -5,7 +5,7 @@ import { hydrateRoot } from "react-dom/client";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import { HydratedRouter } from "react-router/dom";
 import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
-import ICU from "i18next-icu";
+import ICU from "@jdeniau/i18next-icu";
 import { DEFAULT_LANGUAGE_CODE } from "./lib/i18n";
 
 async function main() {
