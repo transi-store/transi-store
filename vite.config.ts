@@ -7,7 +7,7 @@ const allowedHosts =
   process.env.DOMAIN_ROOT &&
   new URL(process.env.DOMAIN_ROOT ?? "localhost").hostname;
 
-export default defineConfig({ isSsrBuild }) => ({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [reactRouter()],
   resolve: {
     alias: {
