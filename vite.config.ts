@@ -26,4 +26,4 @@ export default defineConfig(({ isSsrBuild }) => ({
       usePolling: true, // Nécessaire pour que le hot reload fonctionne avec Docker sur Windows
     },
   },
-});
+}));
