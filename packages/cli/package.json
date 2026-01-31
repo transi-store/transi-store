@@ -1,7 +1,7 @@
 {
   "name": "@transi-store/cli",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "exports": {
     ".": "./dist/cli.js"
