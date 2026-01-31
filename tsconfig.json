@@ -16,6 +16,8 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
     "rootDirs": [".", "./.react-router/types"],
     "outDir": "./build",
     "types": ["node", "vite/client"],
@@ -23,13 +25,6 @@
       "~/*": ["./app/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".react-router/types/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "build"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", ".react-router/types/**/*"],
+  "exclude": ["node_modules", "build"]
 }

@@ -7,8 +7,9 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
+    "build:cli": "cd packages/cli && tsc",
     "start": "react-router-serve ./build/server/index.js",
-    "cli": "ts-node ./packages/cli/src/cli.ts",
+    "download-translations": "yarn build:cli && node ./packages/cli/dist/cli.js",
     "lint:types": "react-router typegen && tsc",
     "knip": "react-router typegen && knip",
     "db:generate": "drizzle-kit generate",
@@ -48,7 +49,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@commander-js/extra-typings": "^14.0.0",
     "@react-router/dev": "^7.12.0",
     "@react-router/node": "^7.12.0",
     "@react-router/serve": "^7.12.0",
@@ -56,14 +56,12 @@
     "@types/pg": "^8.16.0",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
-    "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "drizzle-kit": "1.0.0-beta.12-a5629fb",
     "husky": "^9.1.7",
     "knip": "^5.82.1",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "vite": "^6.0.7"
   },
