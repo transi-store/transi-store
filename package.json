@@ -10,7 +10,7 @@
     "build:cli": "cd packages/cli && yarn build",
     "start": "react-router-serve ./build/server/index.js",
     "download-translations": "yarn build:cli && node ./packages/cli/dist/cli.js",
-    "lint:types": "react-router typegen && tsc",
+    "lint:types": "react-router typegen && tsc --noEmit && cd packages/cli && yarn lint:types",
     "knip": "react-router typegen && knip",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",

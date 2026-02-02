@@ -1,5 +1,5 @@
 import type { Route } from "./+types/auth.login";
-import { AVAILABLE_PROVIDERS } from "~/lib/auth-providers.server";
+import { AVAILABLE_PROVIDERS, type ProviderConfig } from "~/lib/auth-providers.server";
 import {
   Box,
   Button,
@@ -12,7 +12,7 @@ import { Link, useSearchParams } from "react-router";
 import { FaGoogle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
-export async function loader() {
+export async function loader(): Promise<{ providers: ProviderConfig[] }> {
   return { providers: AVAILABLE_PROVIDERS };
 }
 
