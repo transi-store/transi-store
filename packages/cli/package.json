@@ -1,9 +1,11 @@
 {
   "name": "@transi-store/cli",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "type": "module",
   "exports": {
-    ".": "./dist/cli.js"
+    ".": "./dist/cli.js",
+    "./schema": "./dist/schema.js",
+    "./schema.json": "./dist/schema.json"
   },
   "bin": {
     "transi-store": "./dist/cli.js"

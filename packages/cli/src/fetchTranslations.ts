@@ -70,7 +70,7 @@ export async function fetchForConfig(configPath: string) {
     process.exit(1);
   }
 
-  for (const configItem of result.data) {
+  for (const configItem of result.data.projects) {
     for (const locale of configItem.langs) {
       const options = {
         org: configItem.org,
