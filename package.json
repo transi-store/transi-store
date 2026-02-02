@@ -4,13 +4,16 @@
   "private": true,
   "type": "module",
   "packageManager": "yarn@4.12.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
-    "build:cli": "cd packages/cli && yarn build",
+    "build:cli": "yarn workspace @transi-store/cli build",
     "start": "react-router-serve ./build/server/index.js",
-    "download-translations": "yarn build:cli && node ./packages/cli/dist/cli.js",
-    "lint:types": "react-router typegen && tsc --noEmit && cd packages/cli && yarn lint:types",
+    "download-translations": "yarn build:cli && yarn transi-store",
+    "lint:types": "react-router typegen && tsc --noEmit && yarn workspace @transi-store/cli lint:types",
     "knip": "react-router typegen && knip",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
@@ -52,6 +55,7 @@
     "@react-router/dev": "^7.12.0",
     "@react-router/node": "^7.12.0",
     "@react-router/serve": "^7.12.0",
+    "@transi-store/cli": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/pg": "^8.16.0",
     "@types/react": "^19.0.7",
