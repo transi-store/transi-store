@@ -1,10 +1,13 @@
 {
   "name": "@transi-store/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
   "exports": {
     ".": "./dist/cli.js"
+  },
+  "bin": {
+    "transi-store": "./dist/cli.js"
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",

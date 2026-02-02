@@ -1,4 +1,4 @@
-// CLI command to export translations
+#!/usr/bin/env node
 import { Command } from "@commander-js/extra-typings";
 import {
   fetchForConfig,
