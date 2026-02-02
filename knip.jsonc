@@ -4,5 +4,8 @@
     ".": {
       "entry": ["server/app.ts"],
     },
+    "packages/cli": {
+      "entry": ["src/cli.ts"],
+    },
   },
 }
