@@ -20,6 +20,7 @@ const configItemSchema = z.object({
 });
 
 const schema = z.object({
+  $schema: z.url().optional(),
   projects: z.array(configItemSchema).min(1),
 });
 
