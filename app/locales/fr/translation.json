@@ -50,7 +50,7 @@
   "icu.variablesDetected": "Variables détectées :",
   "import.chooseLanguage": "Choisir une langue",
   "import.errors.fileRequired": "Fichier requis",
-  "import.errors.importFailed": "L'import a échoué : {{error}}",
+  "import.errors.importFailed": "L'import a échoué : {error}",
   "import.errors.invalidData": "Format de données invalide : {details}",
   "import.errors.invalidFormat": "Le fichier doit être au format JSON",
   "import.errors.invalidStrategy": "Stratégie invalide",

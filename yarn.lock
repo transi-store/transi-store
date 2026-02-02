@@ -537,6 +537,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@commander-js/extra-typings@npm:^14.0.0":
+  version: 14.0.0
+  resolution: "@commander-js/extra-typings@npm:14.0.0"
+  peerDependencies:
+    commander: ~14.0.0
+  checksum: 10c0/b064889e254e1c895886ec8148ac6e0d9bfa3c0336b9ee58124178308819dcf008f15e2a7abdc89b6c1ac3bdbd8003d8cfdaf363971d41dcce64b28c9714af12
+  languageName: node
+  linkType: hard
+
 "@drizzle-team/brocli@npm:^0.11.0":
   version: 0.11.0
   resolution: "@drizzle-team/brocli@npm:0.11.0"
@@ -1846,6 +1855,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@transi-store/cli@workspace:^, @transi-store/cli@workspace:packages/cli":
+  version: 0.0.0-use.local
+  resolution: "@transi-store/cli@workspace:packages/cli"
+  dependencies:
+    "@commander-js/extra-typings": "npm:^14.0.0"
+    commander: "npm:^14.0.3"
+    typescript: "npm:^5.7.3"
+    zod: "npm:^4.3.6"
+  bin:
+    transi-store: ./dist/cli.js
+  languageName: unknown
+  linkType: soft
+
 "@tybys/wasm-util@npm:^0.10.1":
   version: 0.10.1
   resolution: "@tybys/wasm-util@npm:0.10.1"
@@ -3142,6 +3164,13 @@ __metadata:
   version: 14.0.2
   resolution: "commander@npm:14.0.2"
   checksum: 10c0/245abd1349dbad5414cb6517b7b5c584895c02c4f7836ff5395f301192b8566f9796c82d7bd6c92d07eba8775fe4df86602fca5d86d8d10bcc2aded1e21c2aeb
+  languageName: node
+  linkType: hard
+
+"commander@npm:^14.0.3":
+  version: 14.0.3
+  resolution: "commander@npm:14.0.3"
+  checksum: 10c0/755652564bbf56ff2ff083313912b326450d3f8d8c85f4b71416539c9a05c3c67dbd206821ca72635bf6b160e2afdefcb458e86b317827d5cb333b69ce7f1a24
   languageName: node
   linkType: hard
 
@@ -5898,6 +5927,7 @@ __metadata:
     "@react-router/dev": "npm:^7.12.0"
     "@react-router/node": "npm:^7.12.0"
     "@react-router/serve": "npm:^7.12.0"
+    "@transi-store/cli": "workspace:^"
     "@types/node": "npm:^22.10.7"
     "@types/pg": "npm:^8.16.0"
     "@types/react": "npm:^19.0.7"

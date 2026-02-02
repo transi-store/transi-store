@@ -1,0 +1,28 @@
+{
+  "name": "@transi-store/cli",
+  "version": "1.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./dist/cli.js",
+    "./schema": "./dist/schema.js",
+    "./schema.json": "./dist/schema.json"
+  },
+  "bin": {
+    "transi-store": "./dist/cli.js"
+  },
+  "dependencies": {
+    "@commander-js/extra-typings": "^14.0.0",
+    "commander": "^14.0.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint:types": "tsc --noEmit"
+  },
+  "files": [
+    "dist"
+  ]
+}
