@@ -205,7 +205,6 @@ export default function OrganizationSettings() {
                 <Alert.Title>{t("settings.apiKeys.createdTitle")}</Alert.Title>
                 <Alert.Description>
                   <VStack align="stretch" gap={2} mt={2}>
-                    <Text fontSize="sm">{t("settings.apiKeys.copyNow")}</Text>
                     <HStack>
                       <Code
                         p={2}
@@ -245,46 +244,75 @@ export default function OrganizationSettings() {
             </Box>
           ) : (
             <VStack align="stretch" gap={2}>
-              {apiKeys.map((key) => (
-                <Box key={key.id} p={4} borderWidth={1} borderRadius="md">
-                  <HStack justify="space-between">
-                    <Box flex={1}>
-                      <Text fontWeight="medium">
-                        {key.name || t("settings.apiKeys.unnamedKey")}
-                      </Text>
-                      <Text fontSize="sm" color="gray.600">
-                        {t("settings.apiKeys.createdOn")}{" "}
-                        {new Date(key.createdAt).toLocaleDateString()}
-                        {key.lastUsedAt && (
-                          <>
-                            {" • "}
-                            {t("settings.apiKeys.lastUsed")}{" "}
-                            {new Date(key.lastUsedAt).toLocaleDateString()}
-                          </>
-                        )}
-                      </Text>
-                    </Box>
-                    <Form method="post">
-                      <input
-                        type="hidden"
-                        name="intent"
-                        value="delete-api-key"
-                      />
-                      <input type="hidden" name="keyId" value={key.id} />
-                      <IconButton
-                        type="submit"
-                        variant="ghost"
-                        colorPalette="red"
-                        size="sm"
-                        aria-label={t("settings.apiKeys.deleteAria")}
-                        title={t("settings.apiKeys.deleteTitle")}
-                      >
-                        <LuTrash2 />
-                      </IconButton>
-                    </Form>
-                  </HStack>
-                </Box>
-              ))}
+              {apiKeys
+                // remove just created key
+                .filter(
+                  (key) =>
+                    !(
+                      actionData?.action === "create" &&
+                      actionData?.keyValue === key.keyValue
+                    ),
+                )
+                .map((key) => (
+                  <Box key={key.id} p={4} borderWidth={1} borderRadius="md">
+                    <HStack justify="space-between">
+                      <Box flex={1}>
+                        <Text fontWeight="medium">
+                          {key.name || t("settings.apiKeys.unnamedKey")}
+                        </Text>
+
+                        <HStack>
+                          <Code
+                            p={2}
+                            borderRadius="md"
+                            fontSize="sm"
+                            flex={1}
+                            wordBreak="break-all"
+                          >
+                            {key.keyValue}
+                          </Code>
+                          <Button
+                            size="sm"
+                            onClick={() => handleCopyKey(key.keyValue)}
+                            colorPalette="gray"
+                          >
+                            <LuCopy /> {t("members.copy")}
+                          </Button>
+                        </HStack>
+
+                        <Text fontSize="sm" color="gray.600">
+                          {t("settings.apiKeys.createdOn")}{" "}
+                          {new Date(key.createdAt).toLocaleDateString()}
+                          {key.lastUsedAt && (
+                            <>
+                              {" • "}
+                              {t("settings.apiKeys.lastUsed")}{" "}
+                              {new Date(key.lastUsedAt).toLocaleDateString()}
+                            </>
+                          )}
+                        </Text>
+                      </Box>
+                      <Form method="post">
+                        <input
+                          type="hidden"
+                          name="intent"
+                          value="delete-api-key"
+                        />
+                        <input type="hidden" name="keyId" value={key.id} />
+                        <IconButton
+                          type="submit"
+                          variant="ghost"
+                          colorPalette="red"
+                          size="sm"
+                          aria-label={t("settings.apiKeys.deleteAria")}
+                          title={t("settings.apiKeys.deleteTitle")}
+                        >
+                          <LuTrash2 />
+                        </IconButton>
+                      </Form>
+                    </HStack>
+                  </Box>
+                ))}
             </VStack>
           )}
 

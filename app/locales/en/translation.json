@@ -200,7 +200,6 @@
   "settings.apiKeys.copied.title": "Key copied",
   "settings.apiKeys.copyError.description": "Unable to copy key to clipboard",
   "settings.apiKeys.copyError.title": "Error",
-  "settings.apiKeys.copyNow": "Copy this key now, it will not be displayed again.",
   "settings.apiKeys.createTitle": "Create an API key",
   "settings.apiKeys.createdOn": "Created on",
   "settings.apiKeys.createdTitle": "API key created successfully",

@@ -200,7 +200,6 @@
   "settings.apiKeys.copied.title": "Clé copiée",
   "settings.apiKeys.copyError.description": "Impossible de copier la clé dans le presse-papiers",
   "settings.apiKeys.copyError.title": "Erreur",
-  "settings.apiKeys.copyNow": "Copiez cette clé maintenant, elle ne sera plus affichée.",
   "settings.apiKeys.createTitle": "Créer une clé d'API",
   "settings.apiKeys.createdOn": "Créée le",
   "settings.apiKeys.createdTitle": "Clé d'API créée avec succès",

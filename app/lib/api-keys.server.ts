@@ -44,16 +44,9 @@ export async function createApiKey(
  */
 export async function getOrganizationApiKeys(
   organizationId: number,
-): Promise<Omit<ApiKey, "keyValue">[]> {
+): Promise<Array<ApiKey>> {
   const keys = await db
-    .select({
-      id: schema.apiKeys.id,
-      organizationId: schema.apiKeys.organizationId,
-      name: schema.apiKeys.name,
-      createdBy: schema.apiKeys.createdBy,
-      createdAt: schema.apiKeys.createdAt,
-      lastUsedAt: schema.apiKeys.lastUsedAt,
-    })
+    .select()
     .from(schema.apiKeys)
     .where(eq(schema.apiKeys.organizationId, organizationId))
     .orderBy(schema.apiKeys.createdAt);
