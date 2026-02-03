@@ -1,6 +1,7 @@
 import { db, schema } from "./db.server";
 import { eq, and, inArray } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import type { OrganizationInvitation, User } from "../../drizzle/schema";
 
 /**
  * Génère un code d'invitation unique
@@ -60,7 +61,10 @@ export async function createOrganizationInvitation(params: {
     .from(schema.organizationInvitations)
     .where(
       and(
-        eq(schema.organizationInvitations.organizationId, params.organizationId),
+        eq(
+          schema.organizationInvitations.organizationId,
+          params.organizationId,
+        ),
         eq(schema.organizationInvitations.isUnlimited, true),
       ),
     )
@@ -89,7 +93,9 @@ export async function createOrganizationInvitation(params: {
 /**
  * Récupère le lien d'invitation illimité pour une organisation s'il existe
  */
-export async function getOrganizationInvitation(organizationId: number) {
+export async function getOrganizationInvitation(
+  organizationId: number,
+): Promise<OrganizationInvitation | null> {
   const invitations = await db
     .select()
     .from(schema.organizationInvitations)
@@ -104,11 +110,17 @@ export async function getOrganizationInvitation(organizationId: number) {
   return invitations.length > 0 ? invitations[0] : null;
 }
 
+export type PendingInvitation = OrganizationInvitation & {
+  inviter: Pick<User, "id" | "name" | "email"> | null;
+};
+
 /**
  * Récupère toutes les invitations en attente pour une organisation
  * (seulement les invitations par email, pas les liens illimités)
  */
-export async function getPendingInvitations(organizationId: number) {
+export async function getPendingInvitations(
+  organizationId: number,
+): Promise<Array<PendingInvitation>> {
   const invitations = await db
     .select()
     .from(schema.organizationInvitations)

@@ -18,7 +18,7 @@ export default [
   route("orgs/invite/:code", "routes/orgs.invite.$code.tsx"),
   route("orgs/:orgSlug", "routes/orgs.$orgSlug.tsx", [
     index("routes/orgs.$orgSlug._index.tsx"),
-    route("members", "routes/orgs.$orgSlug.members.tsx"),
+    route("members", "routes/orgs.$orgSlug.members/index.tsx"),
     route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
   ]),
 

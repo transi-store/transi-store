@@ -94,9 +94,11 @@ app/routes/orgs.$orgSlug.settings/
 - `AiTranslationProviderItem` : Affichage d'un fournisseur avec badges et actions
 - `AiTranslationConfigDialog` : Modale de configuration d'un fournisseur
 
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
+
 ---
 
-#### 2. [app/routes/orgs.$orgSlug.members.tsx](../../app/routes/orgs.$orgSlug.members.tsx) (589 lignes)
+#### 2. ~~[app/routes/orgs.$orgSlug.members.tsx](../../app/routes/orgs.$orgSlug.members.tsx)~~ (589 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -107,34 +109,39 @@ app/routes/orgs.$orgSlug.settings/
 - Multiple modales avec logique complexe
 - Gestion de la copie de liens avec fallback
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/routes/orgs.$orgSlug.members/
 ├── index.tsx (loader, action, composant principal de la route)
 ├── Members/
-│   ├── index.tsx
-│   ├── MembersList.tsx
+│   ├── index.tsx (MembersList)
 │   └── MemberItem.tsx
-├── Invitations/
-│   ├── index.tsx
-│   ├── PendingInvitationsList.tsx
-│   ├── PendingInvitationItem.tsx
-│   ├── OrganizationInviteLink.tsx
-│   ├── InviteMemberDialog.tsx
-│   └── InviteLinkCopyDialog.tsx
+└── Invitations/
+    ├── index.tsx (composant principal avec états)
+    ├── useCopyInvitationLink.ts (hook pour copie clipboard)
+    ├── PendingInvitationsList.tsx
+    ├── PendingInvitationItem.tsx
+    ├── OrganizationInviteLink.tsx
+    ├── NewInvitationAlert.tsx
+    ├── InviteMemberDialog.tsx
+    └── CopyLinkFallbackDialog.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `MembersList` : Liste des membres avec titre
-- `MemberItem` : Carte d'un membre avec badge "vous" et bouton de suppression
-- `PendingInvitationsList` : Section des invitations en attente
-- `PendingInvitationItem` : Carte d'une invitation avec actions
-- `OrganizationInviteLink` : Section du lien permanent avec alerte info/création
-- `InviteMemberDialog` : Modale d'invitation par email
-- `InviteLinkCopyDialog` : Modale de fallback pour copier le lien
-- **Utilitaire** : `useCopyInvitationLink` (hook personnalisé pour la logique de copie)
+- `Members/index.tsx` : Liste des membres avec titre
+- `Members/MemberItem.tsx` : Carte d'un membre avec badge "vous" et bouton de suppression
+- `Invitations/index.tsx` : Composant principal gérant les états (dialog ouvert, fallback modal)
+- `Invitations/useCopyInvitationLink.ts` : Hook personnalisé pour la logique de copie avec fallback
+- `Invitations/PendingInvitationsList.tsx` : Section des invitations en attente
+- `Invitations/PendingInvitationItem.tsx` : Carte d'une invitation avec actions
+- `Invitations/OrganizationInviteLink.tsx` : Section du lien permanent avec alerte info/création
+- `Invitations/NewInvitationAlert.tsx` : Alerte affichée après création d'invitation
+- `Invitations/InviteMemberDialog.tsx` : Modale d'invitation par email
+- `Invitations/CopyLinkFallbackDialog.tsx` : Modale de fallback pour copier le lien
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 
