@@ -16,13 +16,13 @@ const sessionStorage = createCookieSessionStorage({
   },
 });
 
-export interface SessionData {
+export type SessionData = {
   userId: number;
   email: string;
   name?: string;
   lastOrganizationId?: number;
   lastOrganizationSlug?: string;
-}
+};
 
 export async function createUserSession(
   userId: number,

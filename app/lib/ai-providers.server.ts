@@ -4,12 +4,12 @@ import { encrypt, decrypt } from "./crypto.server";
 import type { OrganizationAiProvider } from "../../drizzle/schema";
 import type { AiProvider } from "./ai-providers";
 
-interface SaveAiProviderParams {
+type SaveAiProviderParams = {
   organizationId: number;
   provider: AiProvider;
   apiKey: string;
   isActive?: boolean;
-}
+};
 
 /**
  * Sauvegarde ou met à jour un provider IA pour une organisation.

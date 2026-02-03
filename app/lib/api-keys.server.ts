@@ -11,11 +11,11 @@ function generateApiKey(): string {
   return randomBytes(24).toString("base64url");
 }
 
-interface CreateApiKeyParams {
+type CreateApiKeyParams = {
   organizationId: number;
   name?: string;
   createdBy: number;
-}
+};
 
 /**
  * Crée une nouvelle clé d'API pour une organisation

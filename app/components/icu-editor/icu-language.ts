@@ -15,7 +15,7 @@ const pluralKeywordDecoration = Decoration.mark({
 const argumentDecoration = Decoration.mark({ class: "icu-argument" });
 const braceDecoration = Decoration.mark({ class: "icu-brace" });
 
-interface Token {
+type Token = {
   type:
     | "variable"
     | "pluralKeyword"

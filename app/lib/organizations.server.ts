@@ -65,11 +65,11 @@ export async function requireOrganizationMembership(
   return organization;
 }
 
-interface CreateOrganizationParams {
+type CreateOrganizationParams = {
   name: string;
   slug: string;
   createdBy: number;
-}
+};
 
 export async function createOrganization(
   params: CreateOrganizationParams,

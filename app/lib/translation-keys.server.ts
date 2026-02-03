@@ -124,11 +124,11 @@ export async function getTranslationKeyByName(
   });
 }
 
-interface CreateTranslationKeyParams {
+type CreateTranslationKeyParams = {
   projectId: number;
   keyName: string;
   description?: string;
-}
+};
 
 export async function createTranslationKey(params: CreateTranslationKeyParams) {
   const [key] = await db
@@ -143,11 +143,11 @@ export async function createTranslationKey(params: CreateTranslationKeyParams) {
   return key.id;
 }
 
-interface UpdateTranslationKeyParams {
+type UpdateTranslationKeyParams = {
   keyId: number;
   keyName?: string;
   description?: string;
-}
+};
 
 export async function updateTranslationKey(params: UpdateTranslationKeyParams) {
   const updates: Partial<typeof schema.translationKeys.$inferInsert> = {};
@@ -238,11 +238,11 @@ export async function getTranslationsForKey(keyId: number) {
   });
 }
 
-interface UpsertTranslationParams {
+type UpsertTranslationParams = {
   keyId: number;
   locale: string;
   value: string;
-}
+};
 
 export async function upsertTranslation(params: UpsertTranslationParams) {
   // Check if translation exists

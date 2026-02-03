@@ -2,7 +2,7 @@ import { db, schema } from "./db.server";
 import { eq, and, inArray } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 
-export interface SearchResult {
+export type SearchResult = {
   keyId: number;
   keyName: string;
   keyDescription: string | null;
@@ -16,7 +16,7 @@ export interface SearchResult {
   translationValue?: string;
   matchType: "key" | "translation";
   similarity?: number; // Score de similarité (0-1)
-}
+};
 
 export async function globalSearch(
   userId: number,

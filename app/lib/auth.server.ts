@@ -9,18 +9,18 @@ import {
   getGoogleUserInfo,
 } from "./auth-providers.server";
 
-interface CallbackParams {
+type CallbackParams = {
   code: string;
   state: string;
   codeVerifier?: string;
   expectedState: string;
   provider: OAuthProvider;
-}
+};
 
-interface OAuth2JWTPayload {
+type OAuth2JWTPayload = {
   sub: string; // User ID (requis)
   email?: string; // Email (optionnel dans JWT)
-}
+};
 
 async function handleCallback(params: CallbackParams) {
   // Vérifier que le state correspond
@@ -103,12 +103,12 @@ async function handleMapadoCallback(params: CallbackParams) {
   return user;
 }
 
-interface UpsertUserParams {
+type UpsertUserParams = {
   oauthProvider: string;
   oauthSubject: string;
   email: string;
   name?: string;
-}
+};
 
 async function upsertUser(params: UpsertUserParams) {
   // Chercher l'utilisateur existant

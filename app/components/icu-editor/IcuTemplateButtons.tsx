@@ -7,20 +7,20 @@ import { useTranslation } from "react-i18next";
  * ICU Template Buttons Component
  * Provides quick-insert buttons for common ICU message format templates
  */
-interface IcuTemplate {
+type IcuTemplate = {
   id: string;
   label: string;
   icon: ReactNode;
   template: string;
   description: string;
-}
+};
 
 // ICU_TEMPLATES is built inside the component because translations are required
 
-interface IcuTemplateButtonsProps {
+type IcuTemplateButtonsProps = {
   onInsertTemplate: (template: string) => void;
   disabled?: boolean;
-}
+};
 
 export function IcuTemplateButtons({
   onInsertTemplate,

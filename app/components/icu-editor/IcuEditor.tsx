@@ -32,7 +32,7 @@ import {
 } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 
-interface IcuEditorProps {
+type IcuEditorProps = {
   /** Initial value */
   value: string;
   /** Callback when value changes */
@@ -51,7 +51,7 @@ interface IcuEditorProps {
   minHeight?: string;
   /** Name attribute for form submission */
   name?: string;
-}
+};
 
 export function IcuEditor({
   value,
