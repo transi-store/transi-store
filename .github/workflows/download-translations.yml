@@ -31,6 +31,8 @@ jobs:
           node-version: '24'
           cache: 'yarn'
 
+      - run: yarn install
+
       # Runs a single command using the runners shell
       - name: Download translations
         run: yarn download-translations

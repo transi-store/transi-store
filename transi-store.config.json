@@ -1,10 +1,9 @@
 {
   "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+  "org": "transi-store",
   "projects": [
     {
-      "org": "transi-store",
       "project": "website",
-      "apiKey": "SAA1yRjGHnkm7F01IObGxsyoD16OnRaL",
       "langs": ["en", "fr"],
       "format": "json",
       "output": "app/locales/<lang>/translation.json"

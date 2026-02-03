@@ -30,14 +30,13 @@ transi-store --help
 // transi-store.config.json
 {
   "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+  "org": "my-org",
   "projects": [
     {
-      "org": "my-org",
       "project": "my-project",
       "langs": ["en", "fr", "de"],
-      "output": "./locales/<lang>/translations.json",
       "format": "json",
-      "apiKey": "your-api-key",
+      "output": "./locales/<lang>/translations.json",
     },
   ],
 }
@@ -49,6 +48,8 @@ The `"$schema"` field is optional but recommended for editor autocompletion and 
 
 The `output` must include the `<lang>` placeholder, which will be replaced by the actual locale code during the download process. It can also include other placeholders like `<format>` and `<project>`.
 
+You must also provide the `TRANSI_STORE_API_KEY` environment variable with your Transi-Store API key to authenticate the requests.
+
 ### With parameters
 
 If you don't want to use a configuration file, you can provide the necessary parameters directly in the command line:
@@ -58,8 +59,7 @@ transi-store download --org <orgSlug> \
   --project <projectSlug> \
   --locale <locale> \
   --output <outputPath> \
-  --format <format> \
-  --apiKey <apiKey>
+  --format <format>
 ```
 
 ## Contributing

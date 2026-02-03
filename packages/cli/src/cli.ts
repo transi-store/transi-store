@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from "@commander-js/extra-typings";
+import { Command, Option } from "@commander-js/extra-typings";
 import {
   fetchForConfig,
   fetchTranslations,
@@ -8,12 +8,19 @@ import {
 
 const program = new Command();
 
+const apiKeyOption = new Option(
+  "-k, --api-key <apiKey>",
+  "API key for authentication",
+)
+  .env("TRANSI_STORE_API_KEY")
+  .makeOptionMandatory();
+
 program
   .command("download")
   .description("Download translations for a project")
   .requiredOption("-o, --org <org>", "Organization slug")
   .requiredOption("-p, --project <project>", "Project slug")
-  .requiredOption("-k, --api-key <apiKey>", "API key for authentication")
+  .addOption(apiKeyOption)
   .requiredOption("-l, --locale <locale>", "Locale to export")
   .requiredOption("-O, --output <output>", "Output file path")
   .option("-f, --format <format>", "Export format (json, csv, etc.)", "json")
@@ -29,8 +36,9 @@ program
     "Path to config file",
     "transi-store.config.json",
   )
+  .addOption(apiKeyOption)
   .action((options) => {
-    fetchForConfig(options.config);
+    fetchForConfig(options.config, options.apiKey);
   });
 
 program.parse();

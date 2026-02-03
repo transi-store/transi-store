@@ -51,7 +51,7 @@ export async function fetchTranslations({
   }
 }
 
-export async function fetchForConfig(configPath: string) {
+export async function fetchForConfig(configPath: string, apiKey: string) {
   const cwd = process.cwd();
 
   const fullPath = `${cwd}/${configPath}`;
@@ -73,9 +73,9 @@ export async function fetchForConfig(configPath: string) {
   for (const configItem of result.data.projects) {
     for (const locale of configItem.langs) {
       const options = {
-        org: configItem.org,
+        org: result.data.org,
         project: configItem.project,
-        apiKey: configItem.apiKey,
+        apiKey,
         format: configItem.format,
         locale,
         output: configItem.output

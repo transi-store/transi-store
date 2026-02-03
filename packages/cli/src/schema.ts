@@ -1,9 +1,7 @@
 import z from "zod";
 
 const configItemSchema = z.object({
-  org: z.string().nonempty(),
   project: z.string().nonempty(),
-  apiKey: z.string().nonempty(),
   langs: z
     .array(z.string().regex(/^[a-z]{2}(?:-[A-Za-z]{2,})?$/))
     .min(1)
@@ -21,6 +19,7 @@ const configItemSchema = z.object({
 
 const schema = z.object({
   $schema: z.url().optional(),
+  org: z.string().nonempty(),
   projects: z.array(configItemSchema).min(1),
 });
 
