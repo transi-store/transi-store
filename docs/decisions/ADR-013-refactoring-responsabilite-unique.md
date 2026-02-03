@@ -183,7 +183,7 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/
 
 ---
 
-#### 4. [app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx) (405 lignes)
+#### 4. ~~[app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx)~~ (405 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -191,7 +191,7 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/
 - Logique de recherche et pagination
 - Mélange de logique d'affichage et de calcul de progression
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
@@ -203,13 +203,15 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
 └── TranslationsPagination.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `TranslationsSearchBar` : Barre de recherche avec boutons
-- `TranslationsTable` : Tableau avec en-têtes et corps
-- `TranslationKeyRow` : Ligne du tableau pour une clé de traduction
-- `TranslationProgress` : Barre de progression de traduction
-- `TranslationsPagination` : Composant de pagination réutilisable
+- `TranslationsSearchBar.tsx` : Barre de recherche avec boutons (40 lignes)
+- `TranslationsTable.tsx` : Tableau avec en-têtes et corps (60 lignes)
+- `TranslationKeyRow.tsx` : Ligne du tableau pour une clé de traduction (125 lignes)
+- `TranslationProgress.tsx` : Barre de progression de traduction (45 lignes)
+- `TranslationsPagination.tsx` : Composant de pagination réutilisable (55 lignes)
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 
