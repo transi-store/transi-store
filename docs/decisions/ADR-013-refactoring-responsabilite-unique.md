@@ -215,7 +215,7 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
 
 ### 🟡 Priorité moyenne
 
-#### 5. [app/components/Header.tsx](../../app/components/Header.tsx) (163 lignes)
+#### 5. ~~[app/components/Header.tsx](../../app/components/Header.tsx)~~ (163 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -223,21 +223,23 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
 - Logique de construction d'URL pour changement de langue
 - Pourrait être divisé pour meilleure réutilisabilité
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/components/Header/
 ├── index.tsx (composant principal)
 ├── Navigation.tsx
 ├── LanguageSelector.tsx
-├── UserMenu.tsx
+└── UserMenu.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `Navigation` : Liens de navigation (projets, recherche)
-- `LanguageSelector` : Menu déroulant de sélection de langue
-- `UserMenu` : Menu utilisateur avec dropdown organisations/logout
+- `Navigation.tsx` : Liens de navigation (projets, recherche)
+- `LanguageSelector.tsx` : Menu déroulant de sélection de langue avec logique URL
+- `UserMenu.tsx` : Menu utilisateur avec dropdown organisations/logout
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 
