@@ -21,7 +21,7 @@ export interface ProviderConfig {
   enabled: boolean;
 }
 
-export const AVAILABLE_PROVIDERS: ProviderConfig[] = [
+export const AVAILABLE_PROVIDERS: Array<ProviderConfig> = [
   {
     type: "mapado",
     name: "Mapado",

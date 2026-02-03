@@ -28,7 +28,7 @@ export function IcuTemplateButtons({
 }: IcuTemplateButtonsProps) {
   const { t } = useTranslation();
 
-  const ICU_TEMPLATES: IcuTemplate[] = [
+  const ICU_TEMPLATES: Array<IcuTemplate> = [
     {
       id: "variable",
       label: t("icu.template.variable.label"),

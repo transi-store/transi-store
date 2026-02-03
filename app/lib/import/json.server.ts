@@ -75,8 +75,8 @@ export function parseImportJSON(fileContent: string): ParseResult {
 /**
  * Validate import data structure
  */
-export function validateImportData(data: Record<string, string>): string[] {
-  const errors: string[] = [];
+export function validateImportData(data: Record<string, string>): Array<string> {
+  const errors: Array<string> = [];
 
   const entries = Object.entries(data);
 
@@ -126,7 +126,7 @@ export async function importTranslations(
     translationsSkipped: 0,
   };
 
-  const errors: string[] = [];
+  const errors: Array<string> = [];
 
   try {
     const entries = Object.entries(data);

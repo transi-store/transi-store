@@ -34,7 +34,7 @@ type SearchTranslationKeyResult = {
 // Recherche universelle sur les clés et traductions, filtrable par projectIds
 export async function searchTranslationKeys(
   searchQuery: string,
-  projectIds: number[],
+  projectIds: Array<number>,
   options?: {
     limit?: number;
     offset?: number;
