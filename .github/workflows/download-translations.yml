@@ -35,6 +35,8 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Download translations
+        env:
+          TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
         run: yarn download-translations
 
       - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
