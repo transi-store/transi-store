@@ -33,7 +33,7 @@ export async function globalSearch(
   }
 
   const searchQuery = query.trim();
-  const limit = options?.limit || 100;
+  const limit = options?.limit ?? 100;
 
   // Get user's organization IDs
   const memberships = await db

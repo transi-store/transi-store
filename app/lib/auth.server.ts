@@ -56,8 +56,8 @@ async function handleGoogleCallback(params: CallbackParams) {
   const user = await upsertUser({
     oauthProvider: "google",
     oauthSubject: userInfo.sub,
-    email: userInfo.email || `user-${userInfo.sub}@google.com`,
-    name: userInfo.name || userInfo.given_name,
+    email: userInfo.email ?? `user-${userInfo.sub}@google.com`,
+    name: userInfo.name ?? userInfo.given_name,
   });
 
   return user;

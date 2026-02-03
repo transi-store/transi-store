@@ -41,8 +41,8 @@ export async function searchTranslationKeys(
     locale?: string;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
-  const limit = options?.limit || 50;
-  const offset = options?.offset || 0;
+  const limit = options?.limit ?? 50;
+  const offset = options?.offset ?? 0;
 
   // Matches sur keyName et description
   const keyResults = await db

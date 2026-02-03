@@ -37,8 +37,8 @@ export async function getTranslationKeys(
       searchQuery,
       [projectId],
       {
-        limit: options?.limit || 50,
-        offset: options?.offset || 0,
+        limit: options?.limit ?? 50,
+        offset: options?.offset ?? 0,
       },
     );
     keys = keysWithSimilarity.map(
@@ -58,8 +58,8 @@ export async function getTranslationKeys(
       .select()
       .from(schema.translationKeys)
       .where(eq(schema.translationKeys.projectId, projectId))
-      .limit(options?.limit || 50)
-      .offset(options?.offset || 0)
+      .limit(options?.limit ?? 50)
+      .offset(options?.offset ?? 0)
       .orderBy(schema.translationKeys.keyName);
 
     count = await db.$count(
@@ -104,7 +104,7 @@ export async function getTranslationKeys(
       defaultTranslation:
         translationsByKey[key.id]?.find(
           (t) => t.keyId === key.id && t.locale === defaultLocale?.locale,
-        )?.value || null,
+        )?.value ?? null,
     })),
   };
 }
@@ -127,7 +127,7 @@ export async function getTranslationKeyByName(
 type CreateTranslationKeyParams = {
   projectId: number;
   keyName: string;
-  description?: string;
+  description?: string | null;
 };
 
 export async function createTranslationKey(params: CreateTranslationKeyParams) {
@@ -213,7 +213,7 @@ export async function duplicateTranslationKey(keyId: number) {
   const newKeyId = await createTranslationKey({
     projectId: originalKey.projectId,
     keyName: newKeyName,
-    description: originalKey.description || undefined,
+    description: originalKey.description,
   });
 
   // Copy all translations to the new key in parallel

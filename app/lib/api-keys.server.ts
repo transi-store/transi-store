@@ -30,7 +30,7 @@ export async function createApiKey(
     .values({
       organizationId: params.organizationId,
       keyValue,
-      name: params.name || null,
+      name: params.name ?? null,
       createdBy: params.createdBy,
     })
     .returning();
@@ -93,7 +93,7 @@ export async function getOrganizationByApiKey(
     .where(eq(schema.apiKeys.keyValue, keyValue))
     .limit(1);
 
-  return result[0] || null;
+  return result[0] ?? null;
 }
 
 /**

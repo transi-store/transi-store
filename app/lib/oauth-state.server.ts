@@ -29,7 +29,7 @@ export async function getOAuthState(
 ): Promise<OAuthState | null> {
   const cookie = request.headers.get("Cookie");
   const state = await oauthStateCookie.parse(cookie);
-  return state || null;
+  return state ?? null;
 }
 
 export async function clearOAuthState() {

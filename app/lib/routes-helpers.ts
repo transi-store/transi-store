@@ -19,7 +19,7 @@ export function getRedirectUrlFromRequest(
   const url = new URL(request.url);
   const redirectParam = url.searchParams.get("redirect");
   return (
-    redirectParam || getTranslationsUrl(defaultOrgSlug, defaultProjectSlug)
+    redirectParam ?? getTranslationsUrl(defaultOrgSlug, defaultProjectSlug)
   );
 }
 

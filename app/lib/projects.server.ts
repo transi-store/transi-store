@@ -59,7 +59,7 @@ export async function addLanguageToProject(params: AddLanguageParams) {
     .values({
       projectId: params.projectId,
       locale: params.locale,
-      isDefault: params.isDefault || false,
+      isDefault: params.isDefault ?? false,
     })
     .returning();
 
