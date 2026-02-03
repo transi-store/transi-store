@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
-import type { AiProvider } from "./ai-providers";
+import { AiProviderEnum } from "./ai-providers";
 import { z } from "zod";
 
 // 1. Définition du schéma Zod
@@ -146,13 +146,13 @@ async function translateWithGemini(
  */
 export async function translateWithAI(
   context: TranslationContext,
-  provider: AiProvider,
+  provider: AiProviderEnum,
   apiKey: string,
 ): Promise<TranslationSuggestion[]> {
   switch (provider) {
-    case "openai":
+    case AiProviderEnum.OPENAI:
       return translateWithOpenAI(context, apiKey);
-    case "gemini":
+    case AiProviderEnum.GEMINI:
       return translateWithGemini(context, apiKey);
     default:
       throw new Error(`Provider IA non supporté: ${provider}`);

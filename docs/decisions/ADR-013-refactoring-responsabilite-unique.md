@@ -9,6 +9,7 @@
 Plusieurs fichiers de routes et composants du projet sont devenus trop volumineux (400-600+ lignes), gérant plusieurs responsabilités distinctes dans un seul composant. Cela rend le code difficile à maintenir, tester et faire évoluer.
 
 Par exemple, la page de paramètres d'une organisation gère à la fois :
+
 - La liste des clés API
 - La configuration des fournisseurs d'IA de traduction
 
@@ -31,17 +32,16 @@ Pour une route avec plusieurs fonctionnalités :
 
 ```
 app/routes/orgs.$orgSlug.settings/
-├── route.tsx (loader, action, composant principal)
+├── index.tsx (loader, action, composant principal de la route)
 ├── ApiKeys/
-│   ├── index.ts
+│   ├── index.tsx (composant principal)
 │   ├── ApiKeysList.tsx
 │   ├── ApiKeyItem.tsx
 │   └── ...
-├── AiTranslation/
-│   ├── index.ts
-│   ├── AiTranslationSettings.tsx
-│   └── ...
-└── index.ts
+└── AiTranslation/
+    ├── index.tsx (composant principal)
+    ├── AiTranslationSettings.tsx
+    └── ...
 ```
 
 ## Raisons
@@ -70,20 +70,18 @@ app/routes/orgs.$orgSlug.settings/
 
 ```
 app/routes/orgs.$orgSlug.settings/
-├── route.tsx (loader, action, composant principal)
+├── index.tsx (loader, action, composant principal de la route)
 ├── ApiKeys/
-|   ├── index.ts
-|   ├── ApiKeysList.tsx
-|   ├── ApiKeyItem.tsx
-|   ├── ApiKeyCreationDialog.tsx
-|   ├── ApiKeyDocumentation.tsx
-├── AiTranslation/
-|   ├── index.ts
-|   ├── AiTranslation.tsx
-|   ├── AiTranslationSettings.tsx
-|   ├── AiTranslationProviderItem.tsx
-|   ├── AiTranslationConfigDialog.tsx
-└── index.ts
+│   ├── index.tsx (composant principal)
+│   ├── ApiKeysList.tsx
+│   ├── ApiKeyItem.tsx
+│   ├── ApiKeyCreationDialog.tsx
+│   └── ApiKeyDocumentation.tsx
+└── AiTranslation/
+    ├── index.tsx (composant principal)
+    ├── AiTranslationProvidersList.tsx
+    ├── AiTranslationProviderItem.tsx
+    └── AiTranslationConfigDialog.tsx
 ```
 
 **Composants à créer :**
@@ -113,19 +111,18 @@ app/routes/orgs.$orgSlug.settings/
 
 ```
 app/routes/orgs.$orgSlug.members/
-├── route.tsx (loader, action, composant principal)
+├── index.tsx (loader, action, composant principal de la route)
 ├── Members/
-|   ├── MembersList.tsx
-|   ├── MemberItem.tsx
-|   ├── index.ts
-├── Members/
-|   ├── PendingInvitationsList.tsx
-|   ├── PendingInvitationItem.tsx
-|   ├── OrganizationInviteLink.tsx
-|   ├── Invite/
-|   |   ├── InviteMemberDialog.tsx
-|   |   ├── InviteLinkCopyDialog.tsx
-|   |   ├── index.ts
+│   ├── index.tsx
+│   ├── MembersList.tsx
+│   └── MemberItem.tsx
+├── Invitations/
+│   ├── index.tsx
+│   ├── PendingInvitationsList.tsx
+│   ├── PendingInvitationItem.tsx
+│   ├── OrganizationInviteLink.tsx
+│   ├── InviteMemberDialog.tsx
+│   └── InviteLinkCopyDialog.tsx
 ```
 
 **Composants à créer :**
@@ -155,15 +152,15 @@ app/routes/orgs.$orgSlug.members/
 
 ```
 app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/
-├── route.tsx (loader, action, composant principal)
+├── index.tsx (loader, action, composant principal de la route)
 ├── Import/
-|   ├── ImportSection.tsx
-|   ├── ImportForm.tsx
-|   ├── ImportResults.tsx
-├── Export/
-|   ├── ExportSection.tsx
-|   ├── ExportLanguageCard.tsx
-|   ├── index.ts
+│   ├── index.tsx
+│   ├── ImportForm.tsx
+│   └── ImportResults.tsx
+└── Export/
+    ├── index.tsx
+    ├── ExportLanguageCard.tsx
+    └── ExportLanguageList.tsx
 ```
 
 **Composants à créer :**
@@ -188,12 +185,12 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/
 
 ```
 app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
-├── route.tsx (loader, action, composant principal)
+├── index.tsx (loader, action, composant principal de la route)
 ├── TranslationsSearchBar.tsx
 ├── TranslationsTable.tsx
 ├── TranslationKeyRow.tsx
 ├── TranslationProgress.tsx
-├── TranslationsPagination.tsx
+└── TranslationsPagination.tsx
 ```
 
 **Composants à créer :**

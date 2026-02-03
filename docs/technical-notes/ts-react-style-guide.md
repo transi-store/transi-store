@@ -25,7 +25,7 @@ De même, le composant `TranslationAiSettings` peut contenir un composant `Trans
 
 Chaque composant doit être placé dans un fichier séparé, avec un nom de fichier en PascalCase correspondant au nom du composant. Par exemple, le composant `ApiKeysList` doit être placé dans un fichier `ApiKeysList.tsx`.
 
-Plusieurs composants très liés peuvent être regroupés dans un même dossier, avec un fichier `index.ts` pour exporter les composants. 
+Plusieurs composants très liés peuvent être regroupés dans un même dossier, avec un fichier `index.ts` pour exporter les composants.
 
 ### Exemple simple : Composants apparentés dans un même dossier
 
@@ -49,34 +49,25 @@ Pour une page avec plusieurs fonctionnalités distinctes (ex: page de paramètre
 
 ```
 app/routes/orgs.$orgSlug.settings/
-├── route.tsx (loader, action, composant principal)
+├── index.tsx (loader, action, composant principal de la route)
 ├── ApiKeys/
-│   ├── index.ts
+│   ├── index.tsx (composant principal ApiKeys)
 │   ├── ApiKeysList.tsx
 │   ├── ApiKeyItem.tsx
 │   ├── ApiKeyCreationDialog.tsx
 │   └── ApiKeyDocumentation.tsx
-├── AiTranslation/
-│   ├── index.ts
-│   ├── AiTranslationSettings.tsx
-│   ├── AiTranslationProviderItem.tsx
-│   └── AiTranslationConfigDialog.tsx
-└── index.ts
+└── AiTranslation/
+    ├── index.tsx (composant principal AiTranslation)
+    ├── AiTranslationSettings.tsx
+    ├── AiTranslationProviderItem.tsx
+    └── AiTranslationConfigDialog.tsx
 ```
 
-Chaque sous-dossier exporte son composant principal via `index.ts` :
+Chaque sous-dossier exporte son composant principal via `index.tsx` comme composant par défaut.
 
-```typescript
-// ApiKeys/index.ts
-export { default } from "./ApiKeysList";
+Le fichier `index.tsx` de la route importe alors facilement ces composants :
 
-// AiTranslation/index.ts  
-export { default } from "./AiTranslationSettings";
 ```
-
-Le fichier `route.tsx` importe alors facilement ces composants :
-
-```typescript
 import ApiKeysList from "./ApiKeys";
 import AiTranslationSettings from "./AiTranslation";
 ```

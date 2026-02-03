@@ -2,11 +2,11 @@ import { db, schema } from "./db.server";
 import { eq, and } from "drizzle-orm";
 import { encrypt, decrypt } from "./crypto.server";
 import type { OrganizationAiProvider } from "../../drizzle/schema";
-import type { AiProvider } from "./ai-providers";
+import { AiProviderEnum } from "./ai-providers";
 
 type SaveAiProviderParams = {
   organizationId: number;
-  provider: AiProvider;
+  provider: AiProviderEnum;
   apiKey: string;
   isActive?: boolean;
 };
@@ -69,7 +69,7 @@ export async function saveAiProvider(
  */
 export async function getOrganizationAiProviders(
   organizationId: number,
-): Promise<{ provider: AiProvider; isActive: boolean; hasKey: boolean }[]> {
+): Promise<Array<Pick<OrganizationAiProvider, "provider" | "isActive">>> {
   const providers = await db
     .select({
       provider: schema.organizationAiProviders.provider,
@@ -78,11 +78,7 @@ export async function getOrganizationAiProviders(
     .from(schema.organizationAiProviders)
     .where(eq(schema.organizationAiProviders.organizationId, organizationId));
 
-  return providers.map((p) => ({
-    provider: p.provider as AiProvider,
-    isActive: p.isActive ?? false,
-    hasKey: true,
-  }));
+  return providers;
 }
 
 /**
@@ -90,7 +86,7 @@ export async function getOrganizationAiProviders(
  */
 export async function getActiveAiProvider(
   organizationId: number,
-): Promise<{ provider: AiProvider; apiKey: string } | null> {
+): Promise<{ provider: AiProviderEnum; apiKey: string } | null> {
   const [result] = await db
     .select({
       provider: schema.organizationAiProviders.provider,
@@ -110,7 +106,7 @@ export async function getActiveAiProvider(
   }
 
   return {
-    provider: result.provider as AiProvider,
+    provider: result.provider,
     apiKey: decrypt(result.encryptedApiKey),
   };
 }
@@ -120,7 +116,7 @@ export async function getActiveAiProvider(
  */
 export async function setActiveAiProvider(
   organizationId: number,
-  provider: AiProvider,
+  provider: AiProviderEnum,
 ): Promise<void> {
   // Désactiver tous les providers
   await db
@@ -145,7 +141,7 @@ export async function setActiveAiProvider(
  */
 export async function deleteAiProvider(
   organizationId: number,
-  provider: AiProvider,
+  provider: AiProviderEnum,
 ): Promise<void> {
   await db
     .delete(schema.organizationAiProviders)

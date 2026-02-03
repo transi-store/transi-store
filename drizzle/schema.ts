@@ -9,6 +9,7 @@ import {
   serial,
   integer,
 } from "drizzle-orm/pg-core";
+import { AiProviderEnum } from "~/lib/ai-providers";
 
 // Utilisateurs (lies a OAuth)
 export const users = pgTable(
@@ -188,9 +189,12 @@ export const organizationAiProviders = pgTable(
     organizationId: integer("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    provider: varchar("provider", { length: 50 }).notNull(), // 'openai' | 'gemini'
+    provider: varchar("provider", {
+      length: 50,
+      enum: [AiProviderEnum.OPENAI, AiProviderEnum.GEMINI],
+    }).notNull(), // 'openai' | 'gemini'
     encryptedApiKey: text("encrypted_api_key").notNull(), // Chiffré AES-256-GCM
-    isActive: boolean("is_active").default(false),
+    isActive: boolean("is_active").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

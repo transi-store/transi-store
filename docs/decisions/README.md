@@ -94,20 +94,20 @@ Utilisez le template suivant :
 
 ## Liste des ADR
 
-| Numéro                                                              | Titre                                                                | Date       | Statut     |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------- | ---------- |
-| [ADR-001](../../README.md#adr-001--stack-technique)                 | Stack technique                                                      | -          | Accepté ✅ |
-| [ADR-002](../../README.md#adr-002--multi-tenant-avec-organisations) | Multi-tenant avec organisations                                      | -          | Accepté ✅ |
-| [ADR-003](./ADR-003-icones-react-icons.md)                          | Ajout d'icônes avec react-icons                                      | 2026-01-23 | Accepté ✅ |
-| [ADR-004](./ADR-004-theme-couleurs-mapado.md)                       | Thème personnalisé avec les couleurs Mapado                          | 2026-01-23 | Accepté ✅ |
-| [ADR-005](./ADR-005-import-traductions-json.md)                     | Import de traductions depuis fichiers JSON                           | 2026-01-23 | Accepté ✅ |
-| [ADR-006](./ADR-006-cles-api-export.md)                             | Clés d'API pour l'export de données                                  | 2026-01-23 | Accepté ✅ |
-| [ADR-007](./ADR-007-redirection-organisation-unique.md)             | Redirection automatique vers organisation unique et menu utilisateur | 2026-01-24 | Accepté ✅ |
-| [ADR-008](./ADR-008-migration-postgresql-drizzle-v1.md)             | Migration vers PostgreSQL avec Drizzle ORM v1                        | 2026-01-24 | Accepté ✅ |
-| [ADR-009](./ADR-009-editeur-icu-codemirror.md)                      | Éditeur ICU avec CodeMirror                                          | 2026-01-25 | Accepté ✅ |
-| [ADR-010](./ADR-010-fuzzy-search.md)                                | Recherche floue avec PostgreSQL pg_trgm                              | 2026-01-25 | Accepté ✅ |
-| [ADR-011](./ADR-011-multi-provider-oauth.md)                        | Support multi-provider OAuth                                         | 2026-01-25 | Accepté ✅ |
-| [ADR-012](./ADR-012-gestion-multi-utilisateurs-organisations.md)    | Gestion multi-utilisateurs des organisations                         | 2026-01-25 | Accepté ✅ |
+| Numéro                                                              | Titre                                                                 | Date       | Statut     |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- | ---------- | ---------- |
+| [ADR-001](../../README.md#adr-001--stack-technique)                 | Stack technique                                                       | -          | Accepté ✅ |
+| [ADR-002](../../README.md#adr-002--multi-tenant-avec-organisations) | Multi-tenant avec organisations                                       | -          | Accepté ✅ |
+| [ADR-003](./ADR-003-icones-react-icons.md)                          | Ajout d'icônes avec react-icons                                       | 2026-01-23 | Accepté ✅ |
+| [ADR-004](./ADR-004-theme-couleurs-mapado.md)                       | Thème personnalisé avec les couleurs Mapado                           | 2026-01-23 | Accepté ✅ |
+| [ADR-005](./ADR-005-import-traductions-json.md)                     | Import de traductions depuis fichiers JSON                            | 2026-01-23 | Accepté ✅ |
+| [ADR-006](./ADR-006-cles-api-export.md)                             | Clés d'API pour l'export de données                                   | 2026-01-23 | Accepté ✅ |
+| [ADR-007](./ADR-007-redirection-organisation-unique.md)             | Redirection automatique vers organisation unique et menu utilisateur  | 2026-01-24 | Accepté ✅ |
+| [ADR-008](./ADR-008-migration-postgresql-drizzle-v1.md)             | Migration vers PostgreSQL avec Drizzle ORM v1                         | 2026-01-24 | Accepté ✅ |
+| [ADR-009](./ADR-009-editeur-icu-codemirror.md)                      | Éditeur ICU avec CodeMirror                                           | 2026-01-25 | Accepté ✅ |
+| [ADR-010](./ADR-010-fuzzy-search.md)                                | Recherche floue avec PostgreSQL pg_trgm                               | 2026-01-25 | Accepté ✅ |
+| [ADR-011](./ADR-011-multi-provider-oauth.md)                        | Support multi-provider OAuth                                          | 2026-01-25 | Accepté ✅ |
+| [ADR-012](./ADR-012-gestion-multi-utilisateurs-organisations.md)    | Gestion multi-utilisateurs des organisations                          | 2026-01-25 | Accepté ✅ |
 | [ADR-013](./ADR-013-refactoring-responsabilite-unique.md)           | Refactoring des composants selon le principe de responsabilité unique | 2026-02-03 | Accepté ✅ |
 
 ## Références
