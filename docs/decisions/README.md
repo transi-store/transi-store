@@ -108,6 +108,7 @@ Utilisez le template suivant :
 | [ADR-010](./ADR-010-fuzzy-search.md)                                | Recherche floue avec PostgreSQL pg_trgm                              | 2026-01-25 | Accepté ✅ |
 | [ADR-011](./ADR-011-multi-provider-oauth.md)                        | Support multi-provider OAuth                                         | 2026-01-25 | Accepté ✅ |
 | [ADR-012](./ADR-012-gestion-multi-utilisateurs-organisations.md)    | Gestion multi-utilisateurs des organisations                         | 2026-01-25 | Accepté ✅ |
+| [ADR-013](./ADR-013-refactoring-responsabilite-unique.md)           | Refactoring des composants selon le principe de responsabilité unique | 2026-02-03 | Accepté ✅ |
 
 ## Références
 
