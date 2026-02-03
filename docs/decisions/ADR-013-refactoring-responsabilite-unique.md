@@ -145,7 +145,7 @@ app/routes/orgs.$orgSlug.members/
 
 ---
 
-#### 3. [app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx) (428 lignes)
+#### 3. ~~[app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx)~~ (428 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -155,28 +155,31 @@ app/routes/orgs.$orgSlug.members/
 - Logique métier complexe dans l'action (validation multi-étapes)
 - Mélange de logique UI et logique de validation
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/
 ├── index.tsx (loader, action, composant principal de la route)
 ├── Import/
-│   ├── index.tsx
+│   ├── index.tsx (ImportSection avec états)
 │   ├── ImportForm.tsx
 │   └── ImportResults.tsx
 └── Export/
-    ├── index.tsx
-    ├── ExportLanguageCard.tsx
-    └── ExportLanguageList.tsx
+    ├── index.tsx (ExportSection)
+    ├── ExportJsonSection.tsx
+    └── ExportXliffSection.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `ImportSection` : Section d'import avec titre et gestion état
-- `ImportForm` : Formulaire d'import avec sélection fichier/locale/stratégie
-- `ImportResults` : Affichage des résultats d'import (succès/erreur/stats)
-- `ExportSection` : Section d'export avec grille de langues
-- `ExportLanguageCard` : Carte pour exporter une langue avec boutons JSON/CSV
+- `Import/index.tsx` : Section d'import avec états (shouldOverwrite, formRef)
+- `Import/ImportForm.tsx` : Formulaire d'import avec sélection fichier/locale/stratégie
+- `Import/ImportResults.tsx` : Affichage des résultats d'import (succès/erreur/stats)
+- `Export/index.tsx` : Section d'export principale
+- `Export/ExportJsonSection.tsx` : Grille de boutons d'export JSON par langue
+- `Export/ExportXliffSection.tsx` : Export XLIFF (source → target)
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 

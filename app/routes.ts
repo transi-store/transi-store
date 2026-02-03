@@ -39,7 +39,7 @@ export default [
       ),
       route(
         "import-export",
-        "routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx",
+        "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
       ),
     ],
   ),
