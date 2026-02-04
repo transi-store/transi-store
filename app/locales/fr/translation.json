@@ -98,6 +98,7 @@
   "keys.new.title": "Nouvelle clé de traduction",
   "keys.projectLabel": "Projet",
   "keys.translateWithAI": "Traduire avec IA",
+  "keys.translateWithAI.generatedBy": "Généré par {provider}",
   "keys.translation.placeholder": "Traduction en {locale}...",
   "members.cancelInvitationAria": "Annuler l'invitation",
   "members.copy": "Copier",

@@ -57,7 +57,7 @@ import {
 import { toaster } from "~/components/ui/toaster";
 import type { TranslationSuggestion } from "~/lib/ai-translation.server";
 import { getInstance } from "~/middleware/i18next";
-import { AiProviderEnum } from "~/lib/ai-providers";
+import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -212,7 +212,7 @@ export default function EditTranslationKey({
   const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);
   const aiFetcher = useFetcher<{
     suggestions?: Array<TranslationSuggestion>;
-    provider?: string;
+    provider?: AiProviderEnum;
     error?: string;
   }>();
 
@@ -584,11 +584,10 @@ export default function EditTranslationKey({
                     <VStack align="stretch" gap={3}>
                       {aiFetcher.data.provider && (
                         <Text fontSize="xs" color="gray.500">
-                          Généré par{" "}
-                          {aiFetcher.data.provider === AiProviderEnum.OPENAI
-                            ? // TODO use translation switch like in ~lib/ai-providers.ts
-                              "OpenAI"
-                            : "Google Gemini"}
+                          {t("keys.translateWithAI.generatedBy", {
+                            provider: getAiProvider(aiFetcher.data.provider)
+                              .name,
+                          })}
                         </Text>
                       )}
                       {aiFetcher.data.suggestions.map((suggestion, index) => (

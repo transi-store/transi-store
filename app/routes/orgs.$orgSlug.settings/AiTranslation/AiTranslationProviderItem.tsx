@@ -2,16 +2,11 @@ import { Box, Text, HStack, Badge, Button, IconButton } from "@chakra-ui/react";
 import { Form } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuCheck, LuTrash2 } from "react-icons/lu";
-import type { AiProviderEnum } from "~/lib/ai-providers";
+import type { AiProviderConfig, AiProviderEnum } from "~/lib/ai-providers";
 import type { OrganizationAiProvider } from "../../../../drizzle/schema";
 
-type ProviderInfo = {
-  label: string;
-  value: AiProviderEnum;
-};
-
 type AiTranslationProviderItemProps = {
-  providerInfo: ProviderInfo;
+  providerInfo: AiProviderConfig;
   configured?: Pick<OrganizationAiProvider, "provider" | "isActive">;
   onConfigure: (provider: AiProviderEnum) => void;
 };
@@ -32,7 +27,7 @@ export function AiTranslationProviderItem({
     >
       <HStack justify="space-between">
         <HStack flex={1}>
-          <Text fontWeight="medium">{providerInfo.label}</Text>
+          <Text fontWeight="medium">{providerInfo.name}</Text>
           {configured ? (
             <>
               <Badge colorPalette="green">{t("settings.ai.configured")}</Badge>
