@@ -22,7 +22,7 @@ export function exportToJSON(
 
 export function exportAllLanguagesToJSON(
   projectTranslations: ProjectTranslations,
-  locales: string[],
+  locales: Array<string>,
 ): string {
   const result: Record<string, Record<string, string>> = {};
 

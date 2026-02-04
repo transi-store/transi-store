@@ -5,14 +5,14 @@ import {
   upsertTranslation,
 } from "~/lib/translation-keys.server";
 
-interface ImportParams {
+type ImportParams = {
   projectId: number;
   locale: string;
   data: Record<string, string>;
   strategy: "overwrite" | "skip";
-}
+};
 
-interface ImportResult {
+type ImportResult = {
   success: boolean;
   stats: {
     total: number;
@@ -21,14 +21,14 @@ interface ImportResult {
     translationsUpdated: number;
     translationsSkipped: number;
   };
-  errors: string[];
-}
+  errors: Array<string>;
+};
 
-interface ParseResult {
+type ParseResult = {
   success: boolean;
   data?: Record<string, string>;
   error?: string;
-}
+};
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -75,8 +75,8 @@ export function parseImportJSON(fileContent: string): ParseResult {
 /**
  * Validate import data structure
  */
-export function validateImportData(data: Record<string, string>): string[] {
-  const errors: string[] = [];
+export function validateImportData(data: Record<string, string>): Array<string> {
+  const errors: Array<string> = [];
 
   const entries = Object.entries(data);
 
@@ -126,7 +126,7 @@ export async function importTranslations(
     translationsSkipped: 0,
   };
 
-  const errors: string[] = [];
+  const errors: Array<string> = [];
 
   try {
     const entries = Object.entries(data);

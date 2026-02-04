@@ -15,13 +15,13 @@ const SuggestionSchema = z.object({
   ),
 });
 
-export interface TranslationContext {
+export type TranslationContext = {
   sourceText: string;
   sourceLocale: string;
   targetLocale: string;
   existingTranslations: { locale: string; value: string }[];
   keyDescription?: string;
-}
+};
 
 export type TranslationSuggestion = z.infer<
   typeof SuggestionSchema

@@ -15,13 +15,13 @@ const GOOGLE_REDIRECT_URI = `${process.env.DOMAIN_ROOT}/auth/google/callback`;
 
 export type OAuthProvider = "mapado" | "google";
 
-export interface ProviderConfig {
+export type ProviderConfig = {
   type: OAuthProvider;
   name: string;
   enabled: boolean;
-}
+};
 
-export const AVAILABLE_PROVIDERS: ProviderConfig[] = [
+export const AVAILABLE_PROVIDERS: Array<ProviderConfig> = [
   {
     type: "mapado",
     name: "Mapado",
@@ -39,11 +39,11 @@ function generateRandomString(length: number = 43): string {
   return crypto.randomBytes(length).toString("base64url").slice(0, length);
 }
 
-export interface AuthorizationUrlResult {
+export type AuthorizationUrlResult = {
   url: string;
   codeVerifier?: string;
   state: string;
-}
+};
 
 // Google OAuth
 let googleClient: Google | null = null;
@@ -81,11 +81,11 @@ export async function generateGoogleAuthorizationUrl(): Promise<AuthorizationUrl
   return { url: url.toString(), state, codeVerifier };
 }
 
-export interface GoogleTokens {
+export type GoogleTokens = {
   accessToken: string;
   refreshToken?: string;
   expiresIn: number;
-}
+};
 
 export async function exchangeGoogleCode(
   code: string,
@@ -116,7 +116,7 @@ export async function exchangeGoogleCode(
   };
 }
 
-export interface GoogleUserInfo {
+export type GoogleUserInfo = {
   sub: string; // Google user ID
   email?: string;
   email_verified?: boolean;
@@ -124,7 +124,7 @@ export interface GoogleUserInfo {
   given_name?: string;
   family_name?: string;
   picture?: string;
-}
+};
 
 export async function getGoogleUserInfo(
   accessToken: string,

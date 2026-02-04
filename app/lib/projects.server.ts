@@ -7,13 +7,13 @@ export async function getProjectBySlug(organizationId: number, slug: string) {
   });
 }
 
-interface CreateProjectParams {
+type CreateProjectParams = {
   organizationId: number;
   name: string;
   slug: string;
   description?: string;
   createdBy: number;
-}
+};
 
 export async function createProject(params: CreateProjectParams) {
   const [project] = await db
@@ -47,11 +47,11 @@ export async function getProjectLanguages(projectId: number) {
   });
 }
 
-interface AddLanguageParams {
+type AddLanguageParams = {
   projectId: number;
   locale: string;
   isDefault?: boolean;
-}
+};
 
 export async function addLanguageToProject(params: AddLanguageParams) {
   const [language] = await db
@@ -59,7 +59,7 @@ export async function addLanguageToProject(params: AddLanguageParams) {
     .values({
       projectId: params.projectId,
       locale: params.locale,
-      isDefault: params.isDefault || false,
+      isDefault: params.isDefault ?? false,
     })
     .returning();
 

@@ -8,18 +8,18 @@ import type { Diagnostic } from "@codemirror/lint";
 import { parse } from "@formatjs/icu-messageformat-parser";
 import type { Extension } from "@codemirror/state";
 
-export interface IcuError {
+export type IcuError = {
   message: string;
   location?: {
     start: { offset: number; line: number; column: number };
     end: { offset: number; line: number; column: number };
   };
-}
+};
 
 /**
  * Validate an ICU message and return errors if any
  */
-export function validateIcuMessage(text: string): IcuError[] {
+export function validateIcuMessage(text: string): Array<IcuError> {
   if (!text.trim()) {
     return [];
   }
@@ -76,7 +76,7 @@ function cleanErrorMessage(message: string): string {
  */
 export function icuLinter(): Extension {
   return linter((view) => {
-    const diagnostics: Diagnostic[] = [];
+    const diagnostics: Array<Diagnostic> = [];
     const text = view.state.doc.toString();
 
     if (!text.trim()) {
@@ -104,7 +104,7 @@ export function icuLinter(): Extension {
 /**
  * Extract variable names from an ICU message
  */
-export function extractVariables(text: string): string[] {
+export function extractVariables(text: string): Array<string> {
   if (!text.trim()) {
     return [];
   }

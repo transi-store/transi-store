@@ -2,7 +2,7 @@ import { db, schema } from "./db.server";
 import { eq, and, inArray } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 
-export interface SearchResult {
+export type SearchResult = {
   keyId: number;
   keyName: string;
   keyDescription: string | null;
@@ -16,7 +16,7 @@ export interface SearchResult {
   translationValue?: string;
   matchType: "key" | "translation";
   similarity?: number; // Score de similarité (0-1)
-}
+};
 
 export async function globalSearch(
   userId: number,
@@ -33,7 +33,7 @@ export async function globalSearch(
   }
 
   const searchQuery = query.trim();
-  const limit = options?.limit || 100;
+  const limit = options?.limit ?? 100;
 
   // Get user's organization IDs
   const memberships = await db

@@ -14,11 +14,11 @@ const oauthStateCookie = createCookie("oauth_state", {
   maxAge: 600, // 10 minutes
 });
 
-export interface OAuthState {
+export type OAuthState = {
   state: string;
   codeVerifier: string;
   redirectTo?: string;
-}
+};
 
 export async function setOAuthState(state: OAuthState) {
   return await oauthStateCookie.serialize(state);
@@ -29,7 +29,7 @@ export async function getOAuthState(
 ): Promise<OAuthState | null> {
   const cookie = request.headers.get("Cookie");
   const state = await oauthStateCookie.parse(cookie);
-  return state || null;
+  return state ?? null;
 }
 
 export async function clearOAuthState() {

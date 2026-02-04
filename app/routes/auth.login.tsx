@@ -12,7 +12,7 @@ import { Link, useSearchParams } from "react-router";
 import { FaGoogle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
-export async function loader(): Promise<{ providers: ProviderConfig[] }> {
+export async function loader(): Promise<{ providers: Array<ProviderConfig> }> {
   return { providers: AVAILABLE_PROVIDERS };
 }
 

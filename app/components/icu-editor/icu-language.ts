@@ -15,7 +15,7 @@ const pluralKeywordDecoration = Decoration.mark({
 const argumentDecoration = Decoration.mark({ class: "icu-argument" });
 const braceDecoration = Decoration.mark({ class: "icu-brace" });
 
-interface Token {
+type Token = {
   type:
     | "variable"
     | "pluralKeyword"
@@ -26,14 +26,14 @@ interface Token {
   from: number;
   to: number;
   value: string;
-}
+};
 
 /**
  * Simple tokenizer for ICU messages
  * Identifies variables, keywords, and arguments
  */
-function tokenizeIcu(text: string): Token[] {
-  const tokens: Token[] = [];
+function tokenizeIcu(text: string): Array<Token> {
+  const tokens: Array<Token> = [];
   let i = 0;
   let depth = 0;
 

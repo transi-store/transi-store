@@ -17,10 +17,10 @@ import { useTranslation } from "react-i18next";
 import { IntlMessageFormat } from "intl-messageformat";
 import { extractVariables } from "./icu-linter";
 
-interface IcuPreviewProps {
+type IcuPreviewProps = {
   message: string;
   locale?: string;
-}
+};
 
 export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
   const { t } = useTranslation();

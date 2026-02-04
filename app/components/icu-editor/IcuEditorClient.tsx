@@ -11,7 +11,7 @@ const IcuEditorLazy = lazy(() =>
   import("./IcuEditor").then((mod) => ({ default: mod.IcuEditor })),
 );
 
-interface IcuEditorClientProps {
+type IcuEditorClientProps = {
   /** Initial value */
   value: string;
   /** Callback when value changes */
@@ -30,7 +30,7 @@ interface IcuEditorClientProps {
   minHeight?: string;
   /** Name attribute for form submission */
   name?: string;
-}
+};
 
 // Fallback during loading
 function EditorFallback({

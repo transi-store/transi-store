@@ -32,7 +32,7 @@ import {
 } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 
-interface IcuEditorProps {
+type IcuEditorProps = {
   /** Initial value */
   value: string;
   /** Callback when value changes */
@@ -51,7 +51,7 @@ interface IcuEditorProps {
   minHeight?: string;
   /** Name attribute for form submission */
   name?: string;
-}
+};
 
 export function IcuEditor({
   value,
@@ -73,8 +73,8 @@ export function IcuEditor({
 
   const [internalValue, setInternalValue] = useState(value);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [variables, setVariables] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Array<string>>([]);
+  const [variables, setVariables] = useState<Array<string>>([]);
 
   // Update internal value when prop changes
   useEffect(() => {
@@ -129,7 +129,7 @@ export function IcuEditor({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const extensions: Extension[] = [
+    const extensions: Array<Extension> = [
       // Basic setup
       history(),
       keymap.of([...defaultKeymap, ...historyKeymap]),

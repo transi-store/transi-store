@@ -135,7 +135,7 @@ export async function getPendingInvitations(organizationId: number) {
 
   return invitations.map((invitation) => ({
     ...invitation,
-    inviter: inviters.find((u) => u.id === invitation.invitedBy) || null,
+    inviter: inviters.find((u) => u.id === invitation.invitedBy) ?? null,
   }));
 }
 
@@ -175,8 +175,8 @@ export async function getInvitationByCode(invitationCode: string) {
 
   return {
     ...invitation,
-    organization: organizations[0] || null,
-    inviter: inviters[0] || null,
+    organization: organizations[0] ?? null,
+    inviter: inviters[0] ?? null,
   };
 }
 

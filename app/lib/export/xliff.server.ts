@@ -17,7 +17,7 @@ export function exportToXLIFF(
   targetLocale: string,
   projectName: string,
 ): string {
-  const xml: string[] = [];
+  const xml: Array<string> = [];
 
   xml.push('<?xml version="1.0" encoding="UTF-8"?>');
   xml.push(

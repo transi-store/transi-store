@@ -12,9 +12,9 @@ import type { SessionData } from "~/lib/session.server";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_LANGUAGE_CODE, AVAILABLE_LANGUAGES } from "~/lib/i18n";
 
-interface HeaderProps {
+type HeaderProps = {
   user: SessionData | null;
-}
+};
 
 export function Header({ user }: HeaderProps) {
   const { t, i18n } = useTranslation();
