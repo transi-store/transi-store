@@ -1,4 +1,5 @@
 import {
+  Breadcrumb,
   Container,
   Heading,
   VStack,
@@ -6,8 +7,15 @@ import {
   Box,
   HStack,
   Text,
+  Spacer,
 } from "@chakra-ui/react";
-import { Link, Outlet, useLoaderData, useLocation } from "react-router";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLoaderData,
+  useLocation,
+} from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
 import { requireUser } from "~/lib/session.server";
@@ -49,12 +57,38 @@ export default function ProjectLayout() {
 
   return (
     <Container maxW="container.xl" py={5}>
+      <Box></Box>
+
       <VStack gap={4} align="stretch">
         {/* Navigation */}
         <HStack gap={2} borderBottomWidth={1} pb={2}>
-          <Heading as="h1" size="2xl" mr={8}>
-            {project.name}
-          </Heading>
+          <Breadcrumb.Root>
+            <Breadcrumb.List>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link asChild>
+                  <NavLink to="/orgs">{t("header.myOrganizations")}</NavLink>
+                </Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Separator />
+              <Breadcrumb.Item>
+                <Breadcrumb.Link asChild>
+                  <NavLink to={`/orgs/${organization.slug}`}>
+                    {organization.name}
+                  </NavLink>
+                </Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Separator />
+              <Breadcrumb.Item>
+                <Breadcrumb.CurrentLink>
+                  <Heading as="span" size="sm">
+                    {project.name}
+                  </Heading>
+                </Breadcrumb.CurrentLink>
+              </Breadcrumb.Item>
+            </Breadcrumb.List>
+          </Breadcrumb.Root>
+
+          <Spacer />
 
           {navItems.map((item) => {
             const fullPath = `/orgs/${organization.slug}/projects/${project.slug}/${item.path}`;

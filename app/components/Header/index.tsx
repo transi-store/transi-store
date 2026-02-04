@@ -31,7 +31,7 @@ export function Header({ user }: HeaderProps) {
               color="brand.700"
               _hover={{ color: "brand.600" }}
             >
-              <Link to={user ? "/orgs" : "/"}>{t("header.siteName")}</Link>
+              <Link to="/">{t("header.siteName")}</Link>
             </Text>
 
             {user && (
