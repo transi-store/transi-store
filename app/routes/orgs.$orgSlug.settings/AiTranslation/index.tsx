@@ -2,7 +2,7 @@ import { Box, Heading, Text, HStack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { LuSparkles } from "react-icons/lu";
-import { AI_PROVIDERS, AiProviderEnum } from "~/lib/ai-providers";
+import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
 import { AiTranslationProvidersList } from "./AiTranslationProvidersList";
 import { AiTranslationConfigDialog } from "./AiTranslationConfigDialog";
 import type { OrganizationAiProvider } from "../../../../drizzle/schema";
@@ -34,8 +34,9 @@ export default function AiTranslation({
     }
   }, [actionSuccess]);
 
-  const providerLabel =
-    AI_PROVIDERS.find((p) => p.value === selectedProvider)?.label || "IA";
+  const providerLabel = selectedProvider
+    ? getAiProvider(selectedProvider).name
+    : "IA";
 
   return (
     <Box>

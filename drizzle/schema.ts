@@ -9,7 +9,7 @@ import {
   serial,
   integer,
 } from "drizzle-orm/pg-core";
-import { AiProviderEnum } from "~/lib/ai-providers";
+import { AllAiProviders } from "~/lib/ai-providers";
 
 // Utilisateurs (lies a OAuth)
 export const users = pgTable(
@@ -181,6 +181,14 @@ export const translations = pgTable(
   ],
 );
 
+function ensureOneItem<T>(arr: T[]): [T, ...T[]] {
+  if (arr.length === 0) {
+    throw new Error("Array must contain at least one item");
+  }
+
+  return arr as [T, ...T[]];
+}
+
 // Providers IA pour la traduction automatique (par organisation)
 export const organizationAiProviders = pgTable(
   "organization_ai_providers",
@@ -191,8 +199,8 @@ export const organizationAiProviders = pgTable(
       .references(() => organizations.id, { onDelete: "cascade" }),
     provider: varchar("provider", {
       length: 50,
-      enum: [AiProviderEnum.OPENAI, AiProviderEnum.GEMINI],
-    }).notNull(), // 'openai' | 'gemini'
+      enum: ensureOneItem(AllAiProviders),
+    }).notNull(),
     encryptedApiKey: text("encrypted_api_key").notNull(), // Chiffré AES-256-GCM
     isActive: boolean("is_active").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),

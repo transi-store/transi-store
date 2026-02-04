@@ -14,7 +14,7 @@ import { Box, Text, Input, Button, VStack, Alert } from "@chakra-ui/react";
 import { Form } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuTriangleAlert } from "react-icons/lu";
-import { AiProviderEnum } from "~/lib/ai-providers";
+import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
 
 type AiTranslationConfigDialogProps = {
   isOpen: boolean;
@@ -37,6 +37,10 @@ export function AiTranslationConfigDialog({
     onOpenChange(false);
     onProviderChange(null);
   };
+
+  const selectedProviderConfig = selectedProvider
+    ? getAiProvider(selectedProvider)
+    : null;
 
   return (
     <DialogRoot
@@ -75,34 +79,22 @@ export function AiTranslationConfigDialog({
                     <Input
                       name="apiKey"
                       type="password"
-                      placeholder={t("settings.ai.apiKeyPlaceholder")}
+                      placeholder={
+                        selectedProviderConfig?.apiKeyPlaceholder || ""
+                      }
                       required
                     />
                     <Text fontSize="xs" color="gray.600" mt={1}>
-                      {selectedProvider === AiProviderEnum.OPENAI && (
-                        // TODO use translation switch like in ~lib/ai-providers.ts
+                      {selectedProviderConfig && (
                         <>
                           {t("settings.ai.getApiKeyOn")}{" "}
                           <a
-                            href="https://platform.openai.com/api-keys"
+                            href={selectedProviderConfig.configureUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ textDecoration: "underline" }}
                           >
-                            platform.openai.com
-                          </a>
-                        </>
-                      )}
-                      {selectedProvider === AiProviderEnum.GEMINI && (
-                        <>
-                          {t("settings.ai.getApiKeyOn")}{" "}
-                          <a
-                            href="https://aistudio.google.com/apikey"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textDecoration: "underline" }}
-                          >
-                            aistudio.google.com
+                            {selectedProviderConfig.configureUrl}
                           </a>
                         </>
                       )}

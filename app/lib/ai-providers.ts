@@ -8,8 +8,36 @@ export enum AiProviderEnum {
   GEMINI = "gemini",
 }
 
-// TODO use a ICU translated value and use only the enum
-export const AI_PROVIDERS: Array<{ value: AiProviderEnum; label: string }> = [
-  { value: AiProviderEnum.OPENAI, label: "OpenAI (GPT)" },
-  { value: AiProviderEnum.GEMINI, label: "Google Gemini" },
+export const AllAiProviders = Object.values(AiProviderEnum);
+
+export type AiProviderConfig = {
+  value: AiProviderEnum;
+  name: string;
+  configureUrl: string;
+  apiKeyPlaceholder: string;
+};
+
+export const AI_PROVIDERS: Array<AiProviderConfig> = [
+  {
+    value: AiProviderEnum.OPENAI,
+    name: "OpenAI (GPT)",
+    configureUrl: "https://platform.openai.com/api-keys",
+    apiKeyPlaceholder: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  },
+  {
+    value: AiProviderEnum.GEMINI,
+    name: "Google Gemini",
+    configureUrl: "https://aistudio.google.com/apikey",
+    apiKeyPlaceholder: "AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  },
 ];
+
+export function getAiProvider(provider: AiProviderEnum): AiProviderConfig {
+  const config = AI_PROVIDERS.find((p) => p.value === provider);
+
+  if (!config) {
+    throw new Error(`AI provider not found: ${provider}`);
+  }
+
+  return config;
+}
