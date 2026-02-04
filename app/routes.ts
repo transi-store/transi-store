@@ -19,7 +19,7 @@ export default [
   route("orgs/:orgSlug", "routes/orgs.$orgSlug.tsx", [
     index("routes/orgs.$orgSlug._index.tsx"),
     route("members", "routes/orgs.$orgSlug.members.tsx"),
-    route("settings", "routes/orgs.$orgSlug.settings.tsx"),
+    route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
   ]),
 
   // Projects routes
