@@ -20,6 +20,7 @@ import {
   getInvitationByCode,
   acceptInvitation,
 } from "~/lib/invitations.server";
+import { useTranslation } from "react-i18next";
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const sessionUser = await getUserFromSession(request);
@@ -67,24 +68,23 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function AcceptInvitation() {
   const { invitation, sessionUser } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const { t } = useTranslation();
 
   return (
     <Container maxW="container.md" py={20}>
       <VStack gap={8} align="stretch">
         <Box textAlign="center">
           <Heading as="h1" size="2xl" mb={4}>
-            Invitation à rejoindre une organisation
+            {t("invite.code.title")}
           </Heading>
-          <Text color="gray.600">
-            Vous avez été invité à rejoindre l'organisation
-          </Text>
+          <Text color="gray.600">{t("invite.code.description")}</Text>
         </Box>
 
         {actionData?.error && (
           <Alert.Root status="error">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title>Erreur</Alert.Title>
+              <Alert.Title>{t("error")}</Alert.Title>
               <Alert.Description>{actionData.error}</Alert.Description>
             </Alert.Content>
           </Alert.Root>
@@ -102,11 +102,13 @@ export default function AcceptInvitation() {
           </Heading>
           {invitation.isUnlimited ? (
             <Text fontSize="sm" color="gray.600">
-              Lien d'invitation pour l'organisation
+              {t("invite.code.unlimitedLink")}
             </Text>
           ) : (
             <Text fontSize="sm" color="gray.600">
-              Invité par {invitation.inviter!.name || invitation.inviter!.email}
+              {t("invite.code.invitedBy", {
+                name: invitation.inviter?.name || invitation.inviter?.email,
+              })}
             </Text>
           )}
         </Box>
@@ -114,7 +116,7 @@ export default function AcceptInvitation() {
         {sessionUser ? (
           <VStack gap={4}>
             <Text textAlign="center">
-              Vous êtes connecté en tant que{" "}
+              {t("invite.code.loggedInAs")}
               <strong>{sessionUser.email}</strong>
             </Text>
             <form method="post" style={{ width: "100%" }}>
@@ -125,10 +127,10 @@ export default function AcceptInvitation() {
                   size="lg"
                   width="100%"
                 >
-                  Accepter l'invitation
+                  {t("invite.code.acceptInvite")}
                 </Button>
                 <Button asChild variant="outline" size="lg" width="100%">
-                  <Link to="/orgs">Retour aux organisations</Link>
+                  <Link to="/orgs">{t("invite.code.backToOrgs")}</Link>
                 </Button>
               </VStack>
             </form>
@@ -136,7 +138,7 @@ export default function AcceptInvitation() {
         ) : (
           <VStack gap={4}>
             <Text textAlign="center" color="gray.600">
-              Vous devez être connecté pour accepter cette invitation
+              {t("invite.code.mustBeLoggedIn")}
             </Text>
             <VStack gap={3} width="100%">
               <Button asChild colorPalette="brand" size="lg" width="100%">
@@ -145,7 +147,7 @@ export default function AcceptInvitation() {
                     `/orgs/invite/${invitation.invitationCode}`,
                   )}`}
                 >
-                  Se connecter
+                  {t("auth.login.title")}
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" width="100%">
@@ -154,7 +156,7 @@ export default function AcceptInvitation() {
                     `/orgs/invite/${invitation.invitationCode}`,
                   )}`}
                 >
-                  Créer un compte
+                  {t("auth.register")}
                 </Link>
               </Button>
             </VStack>
