@@ -10,6 +10,9 @@ import {
   Badge,
   Card,
   SimpleGrid,
+  Select,
+  createListCollection,
+  Portal,
 } from "@chakra-ui/react";
 import { Link, Form, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -57,6 +60,13 @@ export default function Search({ loaderData }: Route.ComponentProps) {
 
   const hasQuery = query && query.trim().length >= 2;
 
+  const itemCollection = createListCollection({
+    items: organizations.map((org) => ({
+      label: org.name,
+      value: String(org.id),
+    })),
+  });
+
   return (
     <Container maxW="container.xl" py={10}>
       <VStack gap={6} align="stretch">
@@ -80,23 +90,30 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                 <Text fontSize="sm" fontWeight="medium" mb={1}>
                   {t("search.organization")}
                 </Text>
-                <select
-                  name="org"
-                  defaultValue={searchParams.get("org") || ""}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  <option value="">{t("search.all")}</option>
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
+                <Select.Root collection={itemCollection} name="org">
+                  <Select.HiddenSelect />
+                  <Select.Control>
+                    <Select.Trigger>
+                      <Select.ValueText placeholder={t("search.all")} />
+                    </Select.Trigger>
+                    <Select.IndicatorGroup>
+                      <Select.ClearTrigger />
+                      <Select.Indicator />
+                    </Select.IndicatorGroup>
+                  </Select.Control>
+                  <Portal>
+                    <Select.Positioner>
+                      <Select.Content>
+                        {itemCollection.items.map((framework) => (
+                          <Select.Item item={framework} key={framework.value}>
+                            {framework.label}
+                            <Select.ItemIndicator />
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Positioner>
+                  </Portal>
+                </Select.Root>
               </Box>
 
               <Box>
