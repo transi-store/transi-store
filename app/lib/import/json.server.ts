@@ -12,15 +12,17 @@ type ImportParams = {
   strategy: "overwrite" | "skip";
 };
 
+export type ImportStats = {
+  total: number;
+  keysCreated: number;
+  translationsCreated: number;
+  translationsUpdated: number;
+  translationsSkipped: number;
+};
+
 type ImportResult = {
   success: boolean;
-  stats: {
-    total: number;
-    keysCreated: number;
-    translationsCreated: number;
-    translationsUpdated: number;
-    translationsSkipped: number;
-  };
+  stats: ImportStats;
   errors: Array<string>;
 };
 
@@ -75,7 +77,9 @@ export function parseImportJSON(fileContent: string): ParseResult {
 /**
  * Validate import data structure
  */
-export function validateImportData(data: Record<string, string>): Array<string> {
+export function validateImportData(
+  data: Record<string, string>,
+): Array<string> {
   const errors: Array<string> = [];
 
   const entries = Object.entries(data);

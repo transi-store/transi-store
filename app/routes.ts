@@ -31,7 +31,7 @@ export default [
       index("routes/orgs.$orgSlug.projects.$projectSlug._index.tsx"),
       route(
         "translations",
-        "routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx",
+        "routes/orgs.$orgSlug.projects.$projectSlug.translations/index.tsx",
       ),
       route(
         "settings",
@@ -39,7 +39,7 @@ export default [
       ),
       route(
         "import-export",
-        "routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx",
+        "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
       ),
     ],
   ),
