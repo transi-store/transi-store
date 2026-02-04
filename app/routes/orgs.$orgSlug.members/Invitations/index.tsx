@@ -45,7 +45,10 @@ export default function Invitations({
         <Heading as="h2" size="lg">
           {t("members.title")}
         </Heading>
-        <Button colorScheme="brand" onClick={() => setIsInviteDialogOpen(true)}>
+        <Button
+          colorPalette="brand"
+          onClick={() => setIsInviteDialogOpen(true)}
+        >
           <LuPlus /> {t("members.invite")}
         </Button>
       </HStack>

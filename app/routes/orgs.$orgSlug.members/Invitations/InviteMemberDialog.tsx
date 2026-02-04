@@ -55,7 +55,7 @@ export function InviteMemberDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 {t("cancel")}
               </Button>
-              <Button type="submit" form="invite-form" colorScheme="brand">
+              <Button type="submit" form="invite-form" colorPalette="brand">
                 {t("members.createInvitation")}
               </Button>
             </DialogFooter>

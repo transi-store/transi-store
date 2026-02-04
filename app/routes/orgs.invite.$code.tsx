@@ -122,7 +122,7 @@ export default function AcceptInvitation() {
               <VStack gap={3}>
                 <Button
                   type="submit"
-                  colorScheme="brand"
+                  colorPalette="brand"
                   size="lg"
                   width="100%"
                 >
@@ -140,7 +140,7 @@ export default function AcceptInvitation() {
               Vous devez être connecté pour accepter cette invitation
             </Text>
             <VStack gap={3} width="100%">
-              <Button asChild colorScheme="brand" size="lg" width="100%">
+              <Button asChild colorPalette="brand" size="lg" width="100%">
                 <Link
                   to={`/auth/login?redirect=${encodeURIComponent(
                     `/orgs/invite/${invitation.invitationCode}`,

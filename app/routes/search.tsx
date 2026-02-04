@@ -153,7 +153,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                         <HStack justify="space-between" align="start">
                           <Box flex={1}>
                             <HStack mb={2}>
-                              <Badge colorScheme="purple" size="sm">
+                              <Badge colorPalette="purple" size="sm">
                                 {result.matchType === "key"
                                   ? t("search.badgeKey")
                                   : t("search.badgeTranslation")}

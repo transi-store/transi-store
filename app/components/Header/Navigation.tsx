@@ -1,6 +1,7 @@
-import { HStack, Text } from "@chakra-ui/react";
-import { Link } from "react-router";
+import { HStack, Text, Input, IconButton } from "@chakra-ui/react";
+import { Link, Form } from "react-router";
 import { useTranslation } from "react-i18next";
+import { LuSearch } from "react-icons/lu";
 
 type NavigationProps = {
   lastOrganizationSlug?: string;
@@ -22,13 +23,27 @@ export function Navigation({ lastOrganizationSlug }: NavigationProps) {
           </Link>
         </Text>
       )}
-      <Text
-        asChild
-        color="brand.600"
-        _hover={{ textDecoration: "underline", color: "brand.700" }}
-      >
-        <Link to="/search">{t("header.search")}</Link>
-      </Text>
+      <Form method="get" action="/search">
+        <HStack gap={1}>
+          <Input
+            bgColor="var(--chakra-colors-bg)"
+            type="text"
+            name="q"
+            placeholder={t("header.search")}
+            size="sm"
+            width="200px"
+          />
+          <IconButton
+            type="submit"
+            aria-label={t("header.search")}
+            size="sm"
+            colorPalette="brand"
+            variant="solid"
+          >
+            <LuSearch />
+          </IconButton>
+        </HStack>
+      </Form>
     </HStack>
   );
 }

@@ -23,7 +23,7 @@ export function PendingInvitationItem({
             <HStack>
               <LuMail />
               <Text fontWeight="medium">{invitation.invitedEmail}</Text>
-              <Badge colorScheme="yellow">{t("members.pending")}</Badge>
+              <Badge colorPalette="yellow">{t("members.pending")}</Badge>
             </HStack>
             <Text fontSize="sm" color="gray.600">
               {t("members.invitedBy")}{" "}
@@ -49,7 +49,7 @@ export function PendingInvitationItem({
                 type="submit"
                 aria-label={t("members.cancelInvitationAria")}
                 variant="ghost"
-                colorScheme="red"
+                colorPalette="red"
               >
                 <LuTrash2 />
               </IconButton>

@@ -98,7 +98,7 @@ export function OrganizationInviteLink({
           </VStack>
           <Form method="post">
             <input type="hidden" name="intent" value="create-org-invitation" />
-            <Button type="submit" colorScheme="brand" mt={2}>
+            <Button type="submit" colorPalette="brand" mt={2}>
               <LuPlus /> {t("members.createOrgInvitation")}
             </Button>
           </Form>

@@ -103,7 +103,7 @@ export function TranslationKeyRow({
               <>
                 {key.matchType === "translation" && key.translationLocale && (
                   <HStack gap={2} mt={1}>
-                    <Badge colorScheme="purple" size="sm">
+                    <Badge colorPalette="purple" size="sm">
                       {t("translations.badgeTranslation")}
                     </Badge>
                     <Badge colorPalette="brand" size="sm">
@@ -112,7 +112,7 @@ export function TranslationKeyRow({
                   </HStack>
                 )}
                 {key.matchType === "key" && (
-                  <Badge colorScheme="purple" size="sm" mt={1}>
+                  <Badge colorPalette="purple" size="sm" mt={1}>
                     {t("translations.badgeKey")}
                   </Badge>
                 )}

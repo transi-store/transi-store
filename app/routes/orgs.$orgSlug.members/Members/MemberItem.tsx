@@ -26,7 +26,7 @@ export function MemberItem({ member }: MemberItemProps) {
                 {member.user.name || member.user.email}
               </Text>
               {member.isCurrentUser && (
-                <Badge colorScheme="blue">{t("members.you")}</Badge>
+                <Badge colorPalette="blue">{t("members.you")}</Badge>
               )}
             </HStack>
             <Text fontSize="sm" color="gray.600">
@@ -45,7 +45,7 @@ export function MemberItem({ member }: MemberItemProps) {
                 type="submit"
                 aria-label={t("members.removeMemberAria")}
                 variant="ghost"
-                colorScheme="red"
+                colorPalette="red"
                 onClick={(e) => {
                   if (!confirm(t("members.removeMemberConfirm"))) {
                     e.preventDefault();
