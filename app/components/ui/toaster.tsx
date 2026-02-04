@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Toaster as ChakraToaster,
   Portal,
@@ -40,4 +38,4 @@ export function Toaster() {
       </ChakraToaster>
     </Portal>
   );
-};
+}
