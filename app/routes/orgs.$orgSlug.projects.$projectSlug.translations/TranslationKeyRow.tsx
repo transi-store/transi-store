@@ -7,7 +7,9 @@ import {
   LinkOverlay,
   VStack,
   Button,
+  IconButton,
 } from "@chakra-ui/react";
+import { toaster } from "~/components/ui/toaster";
 import { Link, Form } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPencil, LuCopy } from "react-icons/lu";
@@ -25,6 +27,37 @@ type TranslationKeyRowProps = {
   currentUrl: string;
 };
 
+type CopyOptions = {
+  successTitle?: string;
+  successDescription?: string;
+  errorTitle?: string;
+  errorDescription?: string;
+};
+
+// TODO extract this "copy to clipboard" logic into a reusable hook
+function usehandleCopyText() {
+  const { t } = useTranslation();
+
+  const handleCopy = async (text: string, options?: CopyOptions) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toaster.success({
+        title: options?.successTitle ?? t("copy.success.title"),
+        description: options?.successDescription,
+        duration: 3000,
+      });
+    } catch (error) {
+      toaster.error({
+        title: options?.errorTitle ?? t("copy.error.title"),
+        description: options?.errorDescription,
+        duration: 3000,
+      });
+    }
+  };
+
+  return handleCopy;
+}
+
 export function TranslationKeyRow({
   translationKey: key,
   search,
@@ -34,21 +67,33 @@ export function TranslationKeyRow({
   currentUrl,
 }: TranslationKeyRowProps) {
   const { t } = useTranslation();
+  const handleCopyText = usehandleCopyText();
 
   return (
     <Table.Row key={key.id}>
       <Table.Cell>
         <LinkBox>
           <VStack align="stretch" gap={1}>
-            <LinkOverlay asChild>
-              <Link
-                to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirect=${encodeURIComponent(currentUrl)}`}
+            <HStack>
+              <LinkOverlay asChild>
+                <Link
+                  to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirect=${encodeURIComponent(currentUrl)}`}
+                >
+                  <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
+                    <TextHighlight text={key.keyName} query={search} />
+                  </Text>
+                </Link>
+              </LinkOverlay>
+
+              <IconButton
+                aria-label={t("translation.key.copy")}
+                variant="ghost"
+                onClick={() => handleCopyText(key.keyName)}
               >
-                <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
-                  <TextHighlight text={key.keyName} query={search} />
-                </Text>
-              </Link>
-            </LinkOverlay>
+                <LuCopy />
+              </IconButton>
+            </HStack>
+
             {key.description && (
               <Text fontSize="xs" color="gray.400">
                 <TextHighlight text={key.description} query={search} />
