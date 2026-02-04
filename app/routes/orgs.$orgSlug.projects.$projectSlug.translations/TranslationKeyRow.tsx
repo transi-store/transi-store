@@ -77,7 +77,7 @@ export function TranslationKeyRow({
             <HStack>
               <LinkOverlay asChild>
                 <Link
-                  to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirect=${encodeURIComponent(currentUrl)}`}
+                  to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirectTo=${encodeURIComponent(currentUrl)}`}
                 >
                   <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
                     <TextHighlight text={key.keyName} query={search} />
@@ -142,7 +142,7 @@ export function TranslationKeyRow({
         <HStack gap={2}>
           <Button asChild size="sm" colorPalette="brand">
             <Link
-              to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirect=${encodeURIComponent(currentUrl)}`}
+              to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirectTo=${encodeURIComponent(currentUrl)}`}
             >
               <LuPencil /> {t("translations.edit")}
             </Link>

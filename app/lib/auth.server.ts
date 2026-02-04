@@ -7,6 +7,8 @@ import {
   exchangeMapadoCode,
   exchangeGoogleCode,
   getGoogleUserInfo,
+  exchangeGithubCode,
+  getGithubUserInfo,
 } from "./auth-providers.server";
 
 type CallbackParams = {
@@ -32,6 +34,8 @@ async function handleCallback(params: CallbackParams) {
     return handleGoogleCallback(params);
   } else if (params.provider === "mapado") {
     return handleMapadoCallback(params);
+  } else if (params.provider === "github") {
+    return handleGithubCallback(params);
   }
 
   throw new Error(`Unknown OAuth provider: ${params.provider}`);
@@ -98,6 +102,28 @@ async function handleMapadoCallback(params: CallbackParams) {
     oauthSubject: decodedToken.sub,
     email,
     name: undefined,
+  });
+
+  return user;
+}
+
+async function handleGithubCallback(params: CallbackParams) {
+  // Échanger le code contre un access token
+  const tokens = await exchangeGithubCode(params.code);
+
+  // Récupérer les infos utilisateur depuis GitHub
+  const userInfo = await getGithubUserInfo(tokens.accessToken);
+
+  if (!userInfo.id) {
+    throw new Error("Missing user ID from GitHub");
+  }
+
+  // Créer ou mettre à jour l'utilisateur
+  const user = await upsertUser({
+    oauthProvider: "github",
+    oauthSubject: userInfo.id.toString(),
+    email: userInfo.email ?? `${userInfo.login}@users.noreply.github.com`,
+    name: userInfo.name ?? userInfo.login,
   });
 
   return user;
