@@ -13,6 +13,7 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
+import { LuImport, LuLanguages, LuSettings } from "react-icons/lu";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -37,9 +38,13 @@ export default function ProjectLayout() {
   const { t } = useTranslation();
 
   const navItems = [
-    { path: "translations", label: t("translations.title") },
-    { path: "settings", label: t("orgs.tab.settings") },
-    { path: "import-export", label: t("import.title") },
+    {
+      path: "translations",
+      label: t("translations.title"),
+      icon: <LuLanguages />,
+    },
+    { path: "settings", label: t("orgs.tab.settings"), icon: <LuSettings /> },
+    { path: "import-export", label: t("import.title"), icon: <LuImport /> },
   ];
 
   return (
@@ -63,7 +68,9 @@ export default function ProjectLayout() {
                 colorPalette={isActive ? "brand" : "gray"}
                 size="sm"
               >
-                <Link to={fullPath}>{item.label}</Link>
+                <Link to={fullPath}>
+                  {item.icon} {item.label}
+                </Link>
               </Button>
             );
           })}

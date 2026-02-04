@@ -120,7 +120,7 @@ export default function ProjectTranslations({
             <Link
               to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
             >
-              <LuPlus /> Nouvelle clé {t("translations.newKey")}
+              <LuPlus /> {t("translations.newKey")}
             </Link>
           </Button>
         )}
