@@ -44,7 +44,10 @@ export async function fetchTranslations({
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(output, JSON.stringify(data, null, 2), "utf-8");
+    fs.writeFileSync(output, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+    console.log(
+      `Translations for project "${project}" and locale "${locale}" "saved to "${output}"`,
+    );
   } catch (error) {
     console.error("Error exporting translations:", error);
     process.exit(1);
