@@ -92,7 +92,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   // Rediriger vers la page de modification de la clé avec l'URL de recherche en redirect
   return redirect(
-    `${getKeyUrl(params.orgSlug, params.projectSlug, keyId)}?redirect=${encodeURIComponent(redirectUrl)}`,
+    `${getKeyUrl(params.orgSlug, params.projectSlug, keyId)}?redirectTo=${encodeURIComponent(redirectUrl)}`,
   );
 }
 

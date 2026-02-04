@@ -16,7 +16,7 @@ const oauthStateCookie = createCookie("oauth_state", {
 
 export type OAuthState = {
   state: string;
-  codeVerifier: string;
+  codeVerifier?: string;
   redirectTo?: string;
 };
 

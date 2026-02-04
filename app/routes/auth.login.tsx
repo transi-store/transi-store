@@ -1,5 +1,8 @@
 import type { Route } from "./+types/auth.login";
-import { AVAILABLE_PROVIDERS, type ProviderConfig } from "~/lib/auth-providers.server";
+import {
+  AVAILABLE_PROVIDERS,
+  type ProviderConfig,
+} from "~/lib/auth-providers.server";
 import {
   Box,
   Button,
@@ -9,7 +12,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { Link, useSearchParams } from "react-router";
-import { FaGoogle } from "react-icons/fa";
+import { FaGithub, FaGoogle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 export async function loader(): Promise<{ providers: Array<ProviderConfig> }> {
@@ -20,8 +23,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
   const { providers } = loaderData;
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const redirectTo =
-    searchParams.get("redirect") || searchParams.get("redirectTo") || "/orgs";
+  const redirectTo = searchParams.get("redirectTo") || "/orgs";
   const enabledProviders = providers.filter((p) => p.enabled);
 
   if (enabledProviders.length === 0) {
@@ -31,9 +33,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
           <Heading size="lg" mb={4}>
             {t("auth.login.title")}
           </Heading>
-          <Text color="red.500">
-            {t("auth.login.noProvidersDescription")}
-          </Text>
+          <Text color="red.500">{t("auth.login.noProvidersDescription")}</Text>
         </Box>
       </Container>
     );
@@ -57,36 +57,60 @@ export default function Login({ loaderData }: Route.ComponentProps) {
               switch (provider.type) {
                 case "google":
                   return (
-                  <Button
-                    key={provider.type}
-                    asChild
-                    width="full"
-                    colorPalette="blue"
-                    size="lg"
-                  >
-                    <Link
-                      to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                    <Button
+                      key={provider.type}
+                      asChild
+                      width="full"
+                      colorPalette="blue"
+                      size="lg"
                     >
-                      <FaGoogle /> {t("auth.login.signInWith", { provider: provider.name })}
-                    </Link>
-                  </Button>
-                );
+                      <Link
+                        to={`/auth/google/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                      >
+                        <FaGoogle />{" "}
+                        {t("auth.login.signInWith", {
+                          provider: provider.name,
+                        })}
+                      </Link>
+                    </Button>
+                  );
                 case "mapado":
-                return (
-                  <Button
-                    key={provider.type}
-                    asChild
-                    width="full"
-                    colorPalette="brand"
-                    size="lg"
-                  >
-                    <Link
-                      to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                  return (
+                    <Button
+                      key={provider.type}
+                      asChild
+                      width="full"
+                      colorPalette="brand"
+                      size="lg"
                     >
-                      {t("auth.login.signInWith", { provider: provider.name })}
-                    </Link>
-                  </Button>
-                );
+                      <Link
+                        to={`/auth/mapado/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                      >
+                        {t("auth.login.signInWith", {
+                          provider: provider.name,
+                        })}
+                      </Link>
+                    </Button>
+                  );
+                case "github":
+                  return (
+                    <Button
+                      key={provider.type}
+                      asChild
+                      width="full"
+                      colorPalette="gray"
+                      size="lg"
+                    >
+                      <Link
+                        to={`/auth/github/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+                      >
+                        <FaGithub />{" "}
+                        {t("auth.login.signInWith", {
+                          provider: provider.name,
+                        })}
+                      </Link>
+                    </Button>
+                  );
                 default:
                   return null;
               }

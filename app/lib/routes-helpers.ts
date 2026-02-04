@@ -17,7 +17,7 @@ export function getRedirectUrlFromRequest(
   defaultProjectSlug: string,
 ): string {
   const url = new URL(request.url);
-  const redirectParam = url.searchParams.get("redirect");
+  const redirectParam = url.searchParams.get("redirectTo");
   return (
     redirectParam ?? getTranslationsUrl(defaultOrgSlug, defaultProjectSlug)
   );

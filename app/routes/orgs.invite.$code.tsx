@@ -27,7 +27,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
   if (!sessionUser) {
     // Rediriger vers la page de connexion avec redirection de retour
     const url = new URL(request.url);
-    return redirect(`/auth/login?redirect=${encodeURIComponent(url.pathname)}`);
+    return redirect(
+      `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
+    );
   }
 
   try {
@@ -98,9 +100,6 @@ export default function AcceptInvitation() {
           <Heading as="h2" size="xl" mb={2}>
             {invitation.organization!.name}
           </Heading>
-          <Text color="gray.600" mb={6}>
-            /{invitation.organization!.slug}
-          </Text>
           {invitation.isUnlimited ? (
             <Text fontSize="sm" color="gray.600">
               Lien d'invitation pour l'organisation
@@ -142,7 +141,7 @@ export default function AcceptInvitation() {
             <VStack gap={3} width="100%">
               <Button asChild colorPalette="brand" size="lg" width="100%">
                 <Link
-                  to={`/auth/login?redirect=${encodeURIComponent(
+                  to={`/auth/login?redirectTo=${encodeURIComponent(
                     `/orgs/invite/${invitation.invitationCode}`,
                   )}`}
                 >
@@ -151,7 +150,7 @@ export default function AcceptInvitation() {
               </Button>
               <Button asChild variant="outline" size="lg" width="100%">
                 <Link
-                  to={`/auth/login?redirect=${encodeURIComponent(
+                  to={`/auth/login?redirectTo=${encodeURIComponent(
                     `/orgs/invite/${invitation.invitationCode}`,
                   )}`}
                 >

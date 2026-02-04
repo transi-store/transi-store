@@ -1,4 +1,4 @@
-import { Google, OAuth2Client } from "arctic";
+import { GitHub, Google, OAuth2Client } from "arctic";
 import crypto from "node:crypto";
 
 // Configuration OAuth2 générique (existant)
@@ -13,7 +13,12 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_REDIRECT_URI = `${process.env.DOMAIN_ROOT}/auth/google/callback`;
 
-export type OAuthProvider = "mapado" | "google";
+// Configuration GitHub OAuth
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GITHUB_REDIRECT_URI = `${process.env.DOMAIN_ROOT}/auth/github/callback`;
+
+export type OAuthProvider = "mapado" | "google" | "github";
 
 export type ProviderConfig = {
   type: OAuthProvider;
@@ -31,6 +36,11 @@ export const AVAILABLE_PROVIDERS: Array<ProviderConfig> = [
     type: "google",
     name: "Google",
     enabled: !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET),
+  },
+  {
+    type: "github",
+    name: "GitHub",
+    enabled: !!(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET),
   },
 ];
 
@@ -52,6 +62,16 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URI,
+  );
+}
+
+// GitHub OAuth
+let githubClient: GitHub | null = null;
+if (GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET) {
+  githubClient = new GitHub(
+    GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET,
+    GITHUB_REDIRECT_URI,
   );
 }
 
@@ -185,4 +205,98 @@ export async function exchangeMapadoCode(
   );
 
   return tokens.accessToken();
+}
+
+// GitHub OAuth
+export async function generateGithubAuthorizationUrl(): Promise<AuthorizationUrlResult> {
+  if (!githubClient) {
+    throw new Error("GitHub OAuth is not configured");
+  }
+
+  const state = generateRandomString();
+  const url = githubClient.createAuthorizationURL(state, ["user:email"]);
+
+  return { url: url.toString(), state };
+}
+
+export type GitHubTokens = {
+  accessToken: string;
+};
+
+export async function exchangeGithubCode(code: string): Promise<GitHubTokens> {
+  if (!githubClient) {
+    throw new Error("GitHub OAuth is not configured");
+  }
+
+  const tokens = await githubClient.validateAuthorizationCode(code);
+
+  return {
+    accessToken: tokens.accessToken(),
+  };
+}
+
+export type GitHubUserInfo = {
+  id: number;
+  login: string;
+  email?: string | null;
+  name?: string | null;
+  avatar_url?: string;
+};
+
+type GitHubEmail = {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+  visibility: string | null;
+};
+
+export async function getGithubUserInfo(
+  accessToken: string,
+): Promise<GitHubUserInfo> {
+  const response = await fetch("https://api.github.com/user", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch GitHub user info: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const userInfo = await response.json();
+
+  // Si l'email n'est pas public, on va le chercher via l'API emails
+  if (!userInfo.email) {
+    const emails = await getGithubUserEmails(accessToken);
+    const primaryEmail = emails.find((e) => e.primary && e.verified);
+    if (primaryEmail) {
+      userInfo.email = primaryEmail.email;
+    }
+  }
+
+  return userInfo;
+}
+
+async function getGithubUserEmails(
+  accessToken: string,
+): Promise<GitHubEmail[]> {
+  const response = await fetch("https://api.github.com/user/emails", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch GitHub user emails: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return await response.json();
 }

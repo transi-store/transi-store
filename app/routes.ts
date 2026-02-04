@@ -7,6 +7,8 @@ export default [
   route("auth/login", "routes/auth.login.tsx"),
   route("auth/google/login", "routes/auth.google.login.tsx"),
   route("auth/google/callback", "routes/auth.google.callback.tsx"),
+  route("auth/github/login", "routes/auth.github.login.tsx"),
+  route("auth/github/callback", "routes/auth.github.callback.tsx"),
   route("auth/mapado/login", "routes/auth.mapado.login.tsx"),
   route("auth/mapado/callback", "routes/auth.mapado.callback.tsx"),
   route("auth/logout", "routes/auth.logout.tsx"),
