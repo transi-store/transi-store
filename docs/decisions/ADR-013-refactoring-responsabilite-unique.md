@@ -94,9 +94,11 @@ app/routes/orgs.$orgSlug.settings/
 - `AiTranslationProviderItem` : Affichage d'un fournisseur avec badges et actions
 - `AiTranslationConfigDialog` : Modale de configuration d'un fournisseur
 
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
+
 ---
 
-#### 2. [app/routes/orgs.$orgSlug.members.tsx](../../app/routes/orgs.$orgSlug.members.tsx) (589 lignes)
+#### 2. ~~[app/routes/orgs.$orgSlug.members.tsx](../../app/routes/orgs.$orgSlug.members.tsx)~~ (589 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -107,38 +109,43 @@ app/routes/orgs.$orgSlug.settings/
 - Multiple modales avec logique complexe
 - Gestion de la copie de liens avec fallback
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/routes/orgs.$orgSlug.members/
 ├── index.tsx (loader, action, composant principal de la route)
 ├── Members/
-│   ├── index.tsx
-│   ├── MembersList.tsx
+│   ├── index.tsx (MembersList)
 │   └── MemberItem.tsx
-├── Invitations/
-│   ├── index.tsx
-│   ├── PendingInvitationsList.tsx
-│   ├── PendingInvitationItem.tsx
-│   ├── OrganizationInviteLink.tsx
-│   ├── InviteMemberDialog.tsx
-│   └── InviteLinkCopyDialog.tsx
+└── Invitations/
+    ├── index.tsx (composant principal avec états)
+    ├── useCopyInvitationLink.ts (hook pour copie clipboard)
+    ├── PendingInvitationsList.tsx
+    ├── PendingInvitationItem.tsx
+    ├── OrganizationInviteLink.tsx
+    ├── NewInvitationAlert.tsx
+    ├── InviteMemberDialog.tsx
+    └── CopyLinkFallbackDialog.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `MembersList` : Liste des membres avec titre
-- `MemberItem` : Carte d'un membre avec badge "vous" et bouton de suppression
-- `PendingInvitationsList` : Section des invitations en attente
-- `PendingInvitationItem` : Carte d'une invitation avec actions
-- `OrganizationInviteLink` : Section du lien permanent avec alerte info/création
-- `InviteMemberDialog` : Modale d'invitation par email
-- `InviteLinkCopyDialog` : Modale de fallback pour copier le lien
-- **Utilitaire** : `useCopyInvitationLink` (hook personnalisé pour la logique de copie)
+- `Members/index.tsx` : Liste des membres avec titre
+- `Members/MemberItem.tsx` : Carte d'un membre avec badge "vous" et bouton de suppression
+- `Invitations/index.tsx` : Composant principal gérant les états (dialog ouvert, fallback modal)
+- `Invitations/useCopyInvitationLink.ts` : Hook personnalisé pour la logique de copie avec fallback
+- `Invitations/PendingInvitationsList.tsx` : Section des invitations en attente
+- `Invitations/PendingInvitationItem.tsx` : Carte d'une invitation avec actions
+- `Invitations/OrganizationInviteLink.tsx` : Section du lien permanent avec alerte info/création
+- `Invitations/NewInvitationAlert.tsx` : Alerte affichée après création d'invitation
+- `Invitations/InviteMemberDialog.tsx` : Modale d'invitation par email
+- `Invitations/CopyLinkFallbackDialog.tsx` : Modale de fallback pour copier le lien
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 
-#### 3. [app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx) (428 lignes)
+#### 3. ~~[app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx)~~ (428 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -148,32 +155,35 @@ app/routes/orgs.$orgSlug.members/
 - Logique métier complexe dans l'action (validation multi-étapes)
 - Mélange de logique UI et logique de validation
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/
 ├── index.tsx (loader, action, composant principal de la route)
 ├── Import/
-│   ├── index.tsx
+│   ├── index.tsx (ImportSection avec états)
 │   ├── ImportForm.tsx
 │   └── ImportResults.tsx
 └── Export/
-    ├── index.tsx
-    ├── ExportLanguageCard.tsx
-    └── ExportLanguageList.tsx
+    ├── index.tsx (ExportSection)
+    ├── ExportJsonSection.tsx
+    └── ExportXliffSection.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `ImportSection` : Section d'import avec titre et gestion état
-- `ImportForm` : Formulaire d'import avec sélection fichier/locale/stratégie
-- `ImportResults` : Affichage des résultats d'import (succès/erreur/stats)
-- `ExportSection` : Section d'export avec grille de langues
-- `ExportLanguageCard` : Carte pour exporter une langue avec boutons JSON/CSV
+- `Import/index.tsx` : Section d'import avec états (shouldOverwrite, formRef)
+- `Import/ImportForm.tsx` : Formulaire d'import avec sélection fichier/locale/stratégie
+- `Import/ImportResults.tsx` : Affichage des résultats d'import (succès/erreur/stats)
+- `Export/index.tsx` : Section d'export principale
+- `Export/ExportJsonSection.tsx` : Grille de boutons d'export JSON par langue
+- `Export/ExportXliffSection.tsx` : Export XLIFF (source → target)
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 
-#### 4. [app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx) (405 lignes)
+#### 4. ~~[app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx](../../app/routes/orgs.$orgSlug.projects.$projectSlug.translations.tsx)~~ (405 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -181,7 +191,7 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/
 - Logique de recherche et pagination
 - Mélange de logique d'affichage et de calcul de progression
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
@@ -193,19 +203,21 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
 └── TranslationsPagination.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `TranslationsSearchBar` : Barre de recherche avec boutons
-- `TranslationsTable` : Tableau avec en-têtes et corps
-- `TranslationKeyRow` : Ligne du tableau pour une clé de traduction
-- `TranslationProgress` : Barre de progression de traduction
-- `TranslationsPagination` : Composant de pagination réutilisable
+- `TranslationsSearchBar.tsx` : Barre de recherche avec boutons (40 lignes)
+- `TranslationsTable.tsx` : Tableau avec en-têtes et corps (60 lignes)
+- `TranslationKeyRow.tsx` : Ligne du tableau pour une clé de traduction (125 lignes)
+- `TranslationProgress.tsx` : Barre de progression de traduction (45 lignes)
+- `TranslationsPagination.tsx` : Composant de pagination réutilisable (55 lignes)
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 
 ### 🟡 Priorité moyenne
 
-#### 5. [app/components/Header.tsx](../../app/components/Header.tsx) (163 lignes)
+#### 5. ~~[app/components/Header.tsx](../../app/components/Header.tsx)~~ (163 lignes) → ✅ TERMINÉ
 
 **Problèmes identifiés :**
 
@@ -213,21 +225,23 @@ app/routes/orgs.$orgSlug.projects.$projectSlug.translations/
 - Logique de construction d'URL pour changement de langue
 - Pourrait être divisé pour meilleure réutilisabilité
 
-**Refactorisation recommandée :**
+**Refactorisation effectuée :**
 
 ```
 app/components/Header/
 ├── index.tsx (composant principal)
 ├── Navigation.tsx
 ├── LanguageSelector.tsx
-├── UserMenu.tsx
+└── UserMenu.tsx
 ```
 
-**Composants à créer :**
+**Composants créés :**
 
-- `Navigation` : Liens de navigation (projets, recherche)
-- `LanguageSelector` : Menu déroulant de sélection de langue
-- `UserMenu` : Menu utilisateur avec dropdown organisations/logout
+- `Navigation.tsx` : Liens de navigation (projets, recherche)
+- `LanguageSelector.tsx` : Menu déroulant de sélection de langue avec logique URL
+- `UserMenu.tsx` : Menu utilisateur avec dropdown organisations/logout
+
+**Statut** : ✅ **Terminé** - Refactorisé en structure de dossiers modulaire.
 
 ---
 
