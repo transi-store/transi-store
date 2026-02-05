@@ -94,7 +94,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return (
     <main style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
       <h1>{message}</h1>
-      <p>{details}</p>
+      <p>
+        {details} (status {error.status})
+      </p>
       {stack && (
         <pre
           style={{
