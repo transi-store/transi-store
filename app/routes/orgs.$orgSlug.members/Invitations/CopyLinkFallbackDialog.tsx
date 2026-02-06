@@ -38,7 +38,7 @@ export function CopyLinkFallbackDialog({
             </DialogHeader>
             <DialogBody>
               <VStack align="stretch" gap={4}>
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color="fg.muted">
                   {t("members.inviteLink.copyError")}
                 </Text>
                 <Input

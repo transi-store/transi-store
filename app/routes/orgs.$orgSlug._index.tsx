@@ -49,7 +49,7 @@ export default function OrganizationProjects() {
 
       {projects.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-          <Text color="gray.600" mb={4}>
+          <Text color="fg.muted" mb={4}>
             {t("orgs.noProjects")}
           </Text>
           <Button asChild colorPalette="brand">
@@ -68,7 +68,7 @@ export default function OrganizationProjects() {
                     {project.name}
                   </Heading>
                   {project.description && (
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color="fg.muted">
                       {project.description}
                     </Text>
                   )}

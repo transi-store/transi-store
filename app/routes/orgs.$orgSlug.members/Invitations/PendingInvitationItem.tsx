@@ -25,7 +25,7 @@ export function PendingInvitationItem({
               <Text fontWeight="medium">{invitation.invitedEmail}</Text>
               <Badge colorPalette="yellow">{t("members.pending")}</Badge>
             </HStack>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="fg.muted">
               {t("members.invitedBy")}{" "}
               {invitation.inviter?.name ||
                 invitation.inviter?.email ||

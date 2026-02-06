@@ -84,7 +84,7 @@ export function AiTranslationConfigDialog({
                       }
                       required
                     />
-                    <Text fontSize="xs" color="gray.600" mt={1}>
+                    <Text fontSize="xs" color="fg.muted" mt={1}>
                       {selectedProviderConfig && (
                         <>
                           {t("settings.ai.getApiKeyOn")}{" "}

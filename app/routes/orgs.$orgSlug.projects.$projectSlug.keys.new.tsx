@@ -113,7 +113,7 @@ export default function NewTranslationKey({
         </Heading>
 
         {actionData?.error && (
-          <Box p={4} bg="red.100" color="red.700" borderRadius="md">
+          <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md">
             {actionData.error}
           </Box>
         )}

@@ -18,9 +18,9 @@ export function Header({ user }: HeaderProps) {
     <Box
       as="header"
       borderBottomWidth={1}
-      borderColor="brand.200"
+      borderColor="border"
       py={4}
-      bg="brand.50"
+      bg="brand.subtle"
     >
       <Container maxW="container.xl">
         <HStack justify="space-between">
@@ -29,8 +29,8 @@ export function Header({ user }: HeaderProps) {
               asChild
               fontSize="xl"
               fontWeight="bold"
-              color="brand.700"
-              _hover={{ color: "brand.600" }}
+              color="brand.fg"
+              _hover={{ color: "brand.emphasized" }}
             >
               <Link to="/">{t("header.siteName")}</Link>
             </Text>

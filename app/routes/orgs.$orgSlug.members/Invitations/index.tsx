@@ -55,7 +55,7 @@ export default function Invitations({
 
       {/* Erreur éventuelle */}
       {actionError && (
-        <Box mb={4} p={3} bg="red.50" borderRadius="md" color="red.700">
+        <Box mb={4} p={3} bg="red.50" borderRadius="md" color="red.fg">
           {actionError}
         </Box>
       )}

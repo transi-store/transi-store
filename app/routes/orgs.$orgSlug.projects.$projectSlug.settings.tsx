@@ -124,21 +124,21 @@ export default function ProjectSettings() {
         </Heading>
         <VStack gap={2} align="stretch">
           <Box>
-            <Text fontSize="sm" color="gray.600" fontWeight="medium">
+            <Text fontSize="sm" color="fg.muted" fontWeight="medium">
               {t("settings.projectName")}
             </Text>
             <Text>{project.name}</Text>
           </Box>
           {project.description && (
             <Box>
-              <Text fontSize="sm" color="gray.600" fontWeight="medium">
+              <Text fontSize="sm" color="fg.muted" fontWeight="medium">
                 {t("settings.projectDescription")}
               </Text>
               <Text>{project.description}</Text>
             </Box>
           )}
           <Box>
-            <Text fontSize="sm" color="gray.600" fontWeight="medium">
+            <Text fontSize="sm" color="fg.muted" fontWeight="medium">
               {t("settings.projectSlug")}
             </Text>
             <Text fontFamily="mono" fontSize="sm">
@@ -155,13 +155,13 @@ export default function ProjectSettings() {
         </Heading>
 
         {actionData?.error && (
-          <Box p={4} bg="red.100" color="red.700" borderRadius="md" mb={4}>
+          <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md" mb={4}>
             {actionData.error}
           </Box>
         )}
 
         {actionData?.success && (
-          <Box p={4} bg="green.50" color="green.700" borderRadius="md" mb={4}>
+          <Box p={4} bg="green.subtle" color="green.fg" borderRadius="md" mb={4}>
             {t("settings.languageActionSuccess")}
           </Box>
         )}
@@ -174,7 +174,7 @@ export default function ProjectSettings() {
             borderRadius="lg"
             mb={4}
           >
-            <Text color="gray.600" mb={4}>
+            <Text color="fg.muted" mb={4}>
               {t("settings.noLanguages")}
             </Text>
           </Box>

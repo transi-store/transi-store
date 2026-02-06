@@ -90,7 +90,7 @@ export default function OrganizationLayout() {
         <SimpleGrid columns={{ base: 1, md: 3 }} gap={6}>
           <Card.Root>
             <Card.Body>
-              <Text fontSize="sm" color="gray.600" mb={1}>
+              <Text fontSize="sm" color="fg.muted" mb={1}>
                 {t("orgs.projects")}
               </Text>
               <Heading as="h3" size="xl">
@@ -101,7 +101,7 @@ export default function OrganizationLayout() {
 
           <Card.Root>
             <Card.Body>
-              <Text fontSize="sm" color="gray.600" mb={1}>
+              <Text fontSize="sm" color="fg.muted" mb={1}>
                 {t("orgs.members")}
               </Text>
               <Heading as="h3" size="xl">
@@ -112,7 +112,7 @@ export default function OrganizationLayout() {
 
           <Card.Root>
             <Card.Body>
-              <Text fontSize="sm" color="gray.600" mb={1}>
+              <Text fontSize="sm" color="fg.muted" mb={1}>
                 {t("orgs.apiKeys")}
               </Text>
               <Heading as="h3" size="xl">
@@ -123,7 +123,7 @@ export default function OrganizationLayout() {
         </SimpleGrid>
 
         {/* Navigation par tabs */}
-        <Box borderBottomWidth={1} borderColor="gray.200">
+        <Box borderBottomWidth={1} borderColor="border">
           <HStack gap={0} pb={0}>
             <NavLink
               to={`/orgs/${organization.slug}`}
@@ -135,11 +135,11 @@ export default function OrganizationLayout() {
                 padding: "0.75rem 1rem",
                 borderBottom: isActive ? "2px solid" : "2px solid transparent",
                 borderColor: isActive
-                  ? "var(--chakra-colors-brand-500)"
+                  ? "var(--chakra-colors-brand-solid)"
                   : "transparent",
                 color: isActive
-                  ? "var(--chakra-colors-brand-600)"
-                  : "var(--chakra-colors-gray-600)",
+                  ? "var(--chakra-colors-brand-fg)"
+                  : "var(--chakra-colors-fg-muted)",
                 fontWeight: isActive ? "600" : "400",
                 textDecoration: "none",
                 transition: "all 0.2s",
@@ -156,11 +156,11 @@ export default function OrganizationLayout() {
                 padding: "0.75rem 1rem",
                 borderBottom: isActive ? "2px solid" : "2px solid transparent",
                 borderColor: isActive
-                  ? "var(--chakra-colors-brand-500)"
+                  ? "var(--chakra-colors-brand-solid)"
                   : "transparent",
                 color: isActive
-                  ? "var(--chakra-colors-brand-600)"
-                  : "var(--chakra-colors-gray-600)",
+                  ? "var(--chakra-colors-brand-fg)"
+                  : "var(--chakra-colors-fg-muted)",
                 fontWeight: isActive ? "600" : "400",
                 textDecoration: "none",
                 transition: "all 0.2s",
@@ -177,11 +177,11 @@ export default function OrganizationLayout() {
                 padding: "0.75rem 1rem",
                 borderBottom: isActive ? "2px solid" : "2px solid transparent",
                 borderColor: isActive
-                  ? "var(--chakra-colors-brand-500)"
+                  ? "var(--chakra-colors-brand-solid)"
                   : "transparent",
                 color: isActive
-                  ? "var(--chakra-colors-brand-600)"
-                  : "var(--chakra-colors-gray-600)",
+                  ? "var(--chakra-colors-brand-fg)"
+                  : "var(--chakra-colors-fg-muted)",
                 fontWeight: isActive ? "600" : "400",
                 textDecoration: "none",
                 transition: "all 0.2s",

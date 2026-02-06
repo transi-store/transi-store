@@ -55,7 +55,7 @@ export default function ApiKeys({
       <Heading as="h3" size="md" mb={4}>
         {t("settings.apiKeys.title")}
       </Heading>
-      <Text color="gray.600" mb={4}>
+      <Text color="fg.muted" mb={4}>
         {t("settings.apiKeys.description")}
       </Text>
 

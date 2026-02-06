@@ -17,10 +17,10 @@ export function TranslationProgress({
   return (
     <VStack align="stretch" gap={2}>
       <HStack justify="space-between" fontSize="sm">
-        <Text color="gray.600">
+        <Text color="fg.muted">
           {translatedCount}/{totalLanguages}
         </Text>
-        <Text color="gray.600">{Math.round(progressPercent)}%</Text>
+        <Text color="fg.muted">{Math.round(progressPercent)}%</Text>
       </HStack>
       <Progress.Root value={progressPercent} size="sm" colorPalette="brand">
         <Progress.Track>

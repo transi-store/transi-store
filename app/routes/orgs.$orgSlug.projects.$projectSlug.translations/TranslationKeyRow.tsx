@@ -117,12 +117,12 @@ export function TranslationKeyRow({
                   </Badge>
                 )}
                 {key.matchType === "translation" && key.translationValue && (
-                  <Text fontSize="xs" color="gray.600" mt={1}>
+                  <Text fontSize="xs" color="fg.muted" mt={1}>
                     <TextHighlight text={key.translationValue} query={search} />
                   </Text>
                 )}
                 {key.matchType !== "translation" && key.defaultTranslation && (
-                  <Text fontSize="s" color="gray.600">
+                  <Text fontSize="s" color="fg.muted">
                     {key.defaultTranslation}
                   </Text>
                 )}

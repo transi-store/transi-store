@@ -23,7 +23,7 @@ export function ExportJsonSection({
         <Heading as="h3" size="md" mb={3}>
           {t("export.json.title")}
         </Heading>
-        <Text fontSize="sm" color="gray.600" mb={4}>
+        <Text fontSize="sm" color="fg.muted" mb={4}>
           {t("export.json.description")}
         </Text>
         <SimpleGrid columns={{ base: 2, md: 4 }} gap={2}>

@@ -77,7 +77,7 @@ export default function AcceptInvitation() {
           <Heading as="h1" size="2xl" mb={4}>
             {t("invite.code.title")}
           </Heading>
-          <Text color="gray.600">{t("invite.code.description")}</Text>
+          <Text color="fg.muted">{t("invite.code.description")}</Text>
         </Box>
 
         {actionData?.error && (
@@ -94,18 +94,18 @@ export default function AcceptInvitation() {
           p={8}
           borderWidth={1}
           borderRadius="lg"
-          bg="gray.50"
+          bg="bg.subtle"
           textAlign="center"
         >
           <Heading as="h2" size="xl" mb={2}>
             {invitation.organization!.name}
           </Heading>
           {invitation.isUnlimited ? (
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="fg.muted">
               {t("invite.code.unlimitedLink")}
             </Text>
           ) : (
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="fg.muted">
               {t("invite.code.invitedBy", {
                 name: invitation.inviter?.name || invitation.inviter?.email,
               })}
@@ -137,7 +137,7 @@ export default function AcceptInvitation() {
           </VStack>
         ) : (
           <VStack gap={4}>
-            <Text textAlign="center" color="gray.600">
+            <Text textAlign="center" color="fg.muted">
               {t("invite.code.mustBeLoggedIn")}
             </Text>
             <VStack gap={3} width="100%">

@@ -28,10 +28,10 @@ export function ExportXliffSection({
         <Heading as="h3" size="md" mb={3}>
           {t("export.xliff.title")}
         </Heading>
-        <Text fontSize="sm" color="gray.600" mb={4}>
+        <Text fontSize="sm" color="fg.muted" mb={4}>
           {t("export.xliff.description")}
         </Text>
-        <Text fontSize="xs" color="gray.500" mb={3}>
+        <Text fontSize="xs" color="fg.subtle" mb={3}>
           {t("export.xliff.example", {
             org: organizationSlug,
             project: projectSlug,

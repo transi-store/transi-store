@@ -87,7 +87,7 @@ export function ImportForm({
           </Switch.Root>
 
           <Box>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="fg.muted">
               {t("import.overwriteHelp")}
             </Text>
           </Box>

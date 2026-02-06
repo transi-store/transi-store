@@ -55,7 +55,7 @@ function EditorFallback({
         left="50%"
         transform="translate(-50%, -50%)"
       >
-        <Spinner size="sm" color="brand.500" />
+        <Spinner size="sm" color="brand.solid" />
       </Box>
     </Box>
   );

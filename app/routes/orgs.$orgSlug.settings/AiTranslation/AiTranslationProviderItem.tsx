@@ -23,7 +23,8 @@ export function AiTranslationProviderItem({
       p={4}
       borderWidth={1}
       borderRadius="md"
-      bg={configured?.isActive ? "green.50" : undefined}
+      bg={configured?.isActive ? "green.subtle" : undefined}
+      borderColor={configured?.isActive ? "green.muted" : "border"}
     >
       <HStack justify="space-between">
         <HStack flex={1}>
@@ -32,11 +33,11 @@ export function AiTranslationProviderItem({
             <>
               <Badge colorPalette="green">{t("settings.ai.configured")}</Badge>
               {configured.isActive && (
-                <Badge colorPalette="blue">{t("settings.ai.active")}</Badge>
+                <Badge colorPalette="brand">{t("settings.ai.active")}</Badge>
               )}
             </>
           ) : (
-            <Badge colorPalette="gray">{t("settings.ai.notConfigured")}</Badge>
+            <Badge>{t("settings.ai.notConfigured")}</Badge>
           )}
         </HStack>
         <HStack gap={2}>

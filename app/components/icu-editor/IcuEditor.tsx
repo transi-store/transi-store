@@ -2,7 +2,6 @@
  * ICU Editor Component
  * A CodeMirror-based editor with ICU syntax highlighting and validation
  */
-
 import { useEffect, useRef, useCallback, useState } from "react";
 import {
   Box,

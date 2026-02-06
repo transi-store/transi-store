@@ -22,7 +22,7 @@ export function ApiKeysList({
   if (existingKeys.length === 0) {
     return (
       <Box p={6} textAlign="center" borderWidth={1} borderRadius="lg" mb={4}>
-        <Text color="gray.600" mb={3}>
+        <Text color="fg.muted" mb={3}>
           {t("settings.apiKeys.none")}
         </Text>
       </Box>

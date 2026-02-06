@@ -13,11 +13,11 @@ export function ApiKeyDocumentation({
   const { t } = useTranslation();
 
   return (
-    <Box mt={6} p={4} borderWidth={1} borderRadius="lg" bg="gray.50">
+    <Box mt={6} p={4} borderWidth={1} borderRadius="lg" bg="bg.subtle">
       <Heading as="h4" size="sm" mb={2}>
         {t("settings.apiKeys.howToUse")}
       </Heading>
-      <Text fontSize="sm" color="gray.700" mb={2}>
+      <Text fontSize="sm" color="fg" mb={2}>
         {t("settings.apiKeys.howToUseDescription")}
         <Code>Authorization: Bearer YOUR_API_KEY</Code>{" "}
         {t("settings.apiKeys.howToUseDescription2")}

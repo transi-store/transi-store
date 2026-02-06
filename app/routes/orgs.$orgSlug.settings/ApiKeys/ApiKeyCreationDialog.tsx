@@ -49,7 +49,7 @@ export function ApiKeyCreationDialog({
                       placeholder={t("settings.apiKeys.namePlaceholder")}
                       maxLength={255}
                     />
-                    <Text fontSize="xs" color="gray.600" mt={1}>
+                    <Text fontSize="xs" color="fg.muted" mt={1}>
                       {t("settings.apiKeys.nameHelp")}
                     </Text>
                   </Box>

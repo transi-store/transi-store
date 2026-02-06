@@ -134,7 +134,7 @@ export default function ProjectTranslations({
 
       {languages.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-          <Text color="gray.600" mb={4}>
+          <Text color="fg.muted" mb={4}>
             {t("translations.noLanguages")}
           </Text>
           <Button asChild colorPalette="brand">
@@ -146,8 +146,8 @@ export default function ProjectTranslations({
           </Button>
         </Box>
       ) : data.length === 0 ? (
-        <Box p={8} textAlign="center" bg="gray.50" borderRadius="md">
-          <Text color="gray.600">
+        <Box p={8} textAlign="center" bg="bg.subtle" borderRadius="md">
+          <Text color="fg.muted">
             {search
               ? t("translations.noResultsForSearch")
               : t("translations.noKeysEmpty")}

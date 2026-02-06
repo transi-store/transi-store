@@ -43,7 +43,7 @@ export default function ImportSection({
 
       {languages.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-          <Text color="gray.600" mb={4}>
+          <Text color="fg.muted" mb={4}>
             {t("import.noLanguages")}
           </Text>
         </Box>

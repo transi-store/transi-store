@@ -154,10 +154,10 @@ export default function Search({ loaderData }: Route.ComponentProps) {
 
             {results.length === 0 ? (
               <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-                <Text color="gray.600">
+                <Text color="fg.muted">
                   {t("search.noResultsFor", { query })}
                 </Text>
-                <Text color="gray.500" fontSize="sm" mt={2}>
+                <Text color="fg.subtle" fontSize="sm" mt={2}>
                   {t("search.tryOtherKeywords")}
                 </Text>
               </Box>
@@ -195,7 +195,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                             </Text>
 
                             {result.keyDescription && (
-                              <Text color="gray.600" fontSize="sm" mb={2}>
+                              <Text color="fg.muted" fontSize="sm" mb={2}>
                                 <TextHighlight
                                   text={result.keyDescription}
                                   query={query}
@@ -206,10 +206,10 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                             {result.translationValue && (
                               <Box
                                 p={3}
-                                bg="gray.50"
+                                bg="bg.subtle"
                                 borderRadius="md"
                                 borderLeftWidth={3}
-                                borderLeftColor="blue.500"
+                                borderLeftColor="brand.solid"
                               >
                                 <Text fontSize="sm">
                                   <TextHighlight
@@ -220,7 +220,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                               </Box>
                             )}
 
-                            <HStack mt={3} fontSize="sm" color="gray.600">
+                            <HStack mt={3} fontSize="sm" color="fg.muted">
                               <Text>
                                 {result.organizationName} / {result.projectName}
                               </Text>
@@ -244,8 +244,8 @@ export default function Search({ loaderData }: Route.ComponentProps) {
           </>
         ) : (
           <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-            <Text color="gray.600">{t("search.enterQuery")}</Text>
-            <Text color="gray.500" fontSize="sm" mt={2}>
+            <Text color="fg.muted">{t("search.enterQuery")}</Text>
+            <Text color="fg.subtle" fontSize="sm" mt={2}>
               {t("search.searchInstructions")}
             </Text>
           </Box>

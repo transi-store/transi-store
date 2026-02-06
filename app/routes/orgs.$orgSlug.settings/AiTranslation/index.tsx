@@ -46,7 +46,7 @@ export default function AiTranslation({
           {t("settings.ai.title")}
         </Heading>
       </HStack>
-      <Text color="gray.600" mb={4}>
+      <Text color="fg.muted" mb={4}>
         {t("settings.ai.description")}
       </Text>
 

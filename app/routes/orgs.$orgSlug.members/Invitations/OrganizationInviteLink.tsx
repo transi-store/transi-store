@@ -80,18 +80,18 @@ export function OrganizationInviteLink({
     <Card.Root>
       <Card.Body>
         <VStack align="stretch" gap={3}>
-          <Text fontSize="sm" color="gray.600">
+          <Text fontSize="sm" color="fg.muted">
             {t("members.inviteLink.createDescription")}
           </Text>
           <Text fontSize="sm" fontWeight="medium">
             {t("members.inviteLink.differencesTitle")}
           </Text>
           <VStack align="stretch" gap={1} pl={4}>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="fg.muted">
               • <strong>{t("members.inviteLink.orgLinkLabel")}</strong>{" "}
               {t("members.inviteLink.orgLinkDesc")}
             </Text>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="fg.muted">
               • <strong>{t("members.inviteLink.emailInviteLabel")}</strong>{" "}
               {t("members.inviteLink.emailInviteDesc")}
             </Text>

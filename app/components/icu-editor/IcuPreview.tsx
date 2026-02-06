@@ -99,7 +99,7 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
   if (variables.length === 0 && !error) {
     return (
       <Box p={3} bg="bg.subtle" borderRadius="md" borderWidth={1}>
-        <Text fontSize="sm" color="gray" mb={1}>
+        <Text fontSize="sm" color="fg.muted" mb={1}>
           {t("icu.previewLabel")}
         </Text>
         <Text>{message || <em>{t("icu.emptyMessage")}</em>}</Text>
@@ -113,19 +113,19 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
       {variables.length > 0 && (
         <Box
           p={3}
-          bg="blue"
+          bg="brand.subtle"
           borderRadius="md"
           borderWidth={1}
-          borderColor="blue.200"
+          borderColor="brand.muted"
         >
-          <Text fontSize="sm" fontWeight="medium" color="blue.700" mb={2}>
+          <Text fontSize="sm" fontWeight="medium" color="brand.fg" mb={2}>
             {t("icu.variablesDetected")}
           </Text>
           <HStack flexWrap="wrap" gap={3}>
             {variables.map((varName) => (
               <Field.Root key={varName} width="auto">
                 <HStack gap={2}>
-                  <Badge colorPalette="blue" variant="subtle">
+                  <Badge colorPalette="brand" variant="subtle">
                     {varName}
                   </Badge>
                   <Input
@@ -145,25 +145,25 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
       {/* Preview */}
       <Box
         p={3}
-        bg={error ? "red.50" : "green.50"}
+        bg={error ? "red.subtle" : "green.subtle"}
         borderRadius="md"
         borderWidth={1}
-        borderColor={error ? "red.200" : "green.200"}
+        borderColor={error ? "red.muted" : "green.muted"}
       >
         <Text
           fontSize="sm"
           fontWeight="medium"
-          color={error ? "red.700" : "green.700"}
+          color={error ? "red.fg" : "green.fg"}
           mb={1}
         >
           {error ? t("icu.errorLabel") : t("icu.previewLabel")}
         </Text>
         {error ? (
-          <Text color="red.600" fontSize="sm">
+          <Text color="red.fg" fontSize="sm">
             {error}
           </Text>
         ) : (
-          <Text color="green.800">
+          <Text color="green.emphasized">
             {formatted || <em>{t("icu.emptyMessage")}</em>}
           </Text>
         )}

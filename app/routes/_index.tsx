@@ -11,8 +11,10 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
+import { TransiStoreLogo } from "../../figma-react-logo";
 
 export function meta() {
+  // TODO translate
   return [
     { title: "transi-store - Gestion des traductions" },
     {
@@ -51,13 +53,15 @@ export default function Index() {
             <Heading as="h1" size="2xl">
               {t("index.title")}
             </Heading>
-            <Text fontSize="xl" color="gray.600">
+            <Text fontSize="xl" color="fg.muted">
               {t("index.description")}
             </Text>
           </Box>
         </HStack>
         <Box p={6} borderWidth={1} borderRadius="lg">
           <Text>{t("index.welcome")}</Text>
+
+          <TransiStoreLogo />
         </Box>
       </VStack>
     </Container>

@@ -42,7 +42,7 @@ export default function OrganizationsIndex() {
 
         {organizations.length === 0 ? (
           <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-            <Text fontSize="lg" color="gray.600" mb={4}>
+            <Text fontSize="lg" color="fg.muted" mb={4}>
               {t("orgs.noOrganizations")}
             </Text>
             <Button asChild colorPalette="brand">

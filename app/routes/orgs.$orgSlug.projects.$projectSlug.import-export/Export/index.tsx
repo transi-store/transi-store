@@ -28,7 +28,7 @@ export default function ExportSection({
         <Heading as="h2" size="lg" mb={4}>
           {t("export.title")}
         </Heading>
-        <Text color="gray.600" mb={4}>
+        <Text color="fg.muted" mb={4}>
           {t("export.description")}
         </Text>
 

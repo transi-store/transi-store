@@ -39,7 +39,7 @@ export function ApiKeyItem({ apiKey, onCopyKey }: ApiKeyItemProps) {
             </Button>
           </HStack>
 
-          <Text fontSize="sm" color="gray.600">
+          <Text fontSize="sm" color="fg.muted">
             {t("settings.apiKeys.createdOn")}{" "}
             {new Date(apiKey.createdAt).toLocaleDateString()}
             {apiKey.lastUsedAt && (

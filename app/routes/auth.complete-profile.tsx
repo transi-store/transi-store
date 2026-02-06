@@ -87,19 +87,19 @@ export default function CompleteProfile() {
           <Heading as="h1" size="2xl">
             {t("auth.completeProfile.title")}
           </Heading>
-          <Text fontSize="md" color="gray.600" mt={2}>
+          <Text fontSize="md" color="fg.muted" mt={2}>
             {t("auth.completeProfile.description")}
           </Text>
         </Box>
 
         {actionData?.error && (
-          <Box p={4} bg="red.100" color="red.700" borderRadius="md">
+          <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md">
             {actionData.error}
           </Box>
         )}
 
-        <Box p={6} borderWidth={1} borderRadius="lg" bg="gray.50">
-          <Text fontSize="sm" color="gray.600">
+        <Box p={6} borderWidth={1} borderRadius="lg" bg="bg.subtle">
+          <Text fontSize="sm" color="fg.muted">
             Connecté en tant que: <strong>{email}</strong>
           </Text>
         </Box>

@@ -336,11 +336,11 @@ export default function EditTranslationKey({
                 <LuPencil />
               </IconButton>
             </HStack>
-            <Text color="gray.600" mt={2}>
+            <Text color="fg.muted" mt={2}>
               {t("keys.projectLabel")}: {project.name}
             </Text>
             {key.description && (
-              <Text fontSize="sm" color="gray.500" mt={2}>
+              <Text fontSize="sm" color="fg.subtle" mt={2}>
                 {key.description}
               </Text>
             )}
@@ -361,7 +361,7 @@ export default function EditTranslationKey({
         </HStack>
 
         {actionData?.error && (
-          <Box p={4} bg="red.100" color="red.700" borderRadius="md">
+          <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md">
             {actionData.error}
           </Box>
         )}
@@ -572,18 +572,18 @@ export default function EditTranslationKey({
                   aiFetcher.state === "loading" ? (
                     <VStack py={8}>
                       <Spinner size="lg" />
-                      <Text color="gray.600">
+                      <Text color="fg.muted">
                         Génération des traductions en cours...
                       </Text>
                     </VStack>
                   ) : aiFetcher.data?.error ? (
-                    <Box p={4} bg="red.50" borderRadius="md">
-                      <Text color="red.700">{aiFetcher.data.error}</Text>
+                    <Box p={4} bg="red.subtle" borderRadius="md">
+                      <Text color="red.fg">{aiFetcher.data.error}</Text>
                     </Box>
                   ) : aiFetcher.data?.suggestions ? (
                     <VStack align="stretch" gap={3}>
                       {aiFetcher.data.provider && (
-                        <Text fontSize="xs" color="gray.500">
+                        <Text fontSize="xs" color="fg.subtle">
                           {t("keys.translateWithAI.generatedBy", {
                             provider: getAiProvider(aiFetcher.data.provider)
                               .name,
@@ -596,7 +596,7 @@ export default function EditTranslationKey({
                           p={4}
                           borderWidth={1}
                           borderRadius="md"
-                          _hover={{ bg: "gray.50", cursor: "pointer" }}
+                          _hover={{ bg: "bg.muted", cursor: "pointer" }}
                           onClick={() =>
                             handleSelectSuggestion(suggestion.text)
                           }
@@ -605,21 +605,21 @@ export default function EditTranslationKey({
                             {suggestion.text}
                           </Text>
                           {suggestion.confidence && (
-                            <Text fontSize="xs" color="gray.500" mt={1}>
+                            <Text fontSize="xs" color="fg.subtle" mt={1}>
                               Confiance:{" "}
                               {Math.round(suggestion.confidence * 100)}%
                             </Text>
                           )}
                           {suggestion.notes && (
-                            <Box mt={2} p={2} bg="gray.100" borderRadius="sm">
-                              <Text fontSize="xs" color="gray.600">
+                            <Box mt={2} p={2} bg="bg.subtle" borderRadius="sm">
+                              <Text fontSize="xs" color="fg.muted">
                                 {suggestion.notes}
                               </Text>
                             </Box>
                           )}
                         </Box>
                       ))}
-                      <Text fontSize="xs" color="gray.500" mt={2}>
+                      <Text fontSize="xs" color="fg.subtle" mt={2}>
                         Cliquez sur une suggestion pour l'utiliser
                       </Text>
                     </VStack>

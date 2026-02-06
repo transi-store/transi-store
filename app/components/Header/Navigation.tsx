@@ -15,8 +15,8 @@ export function Navigation({ lastOrganizationSlug }: NavigationProps) {
       {lastOrganizationSlug && (
         <Text
           asChild
-          color="brand.600"
-          _hover={{ textDecoration: "underline", color: "brand.700" }}
+          color="brand.fg"
+          _hover={{ textDecoration: "underline", color: "brand.emphasized" }}
         >
           <Link to={`/orgs/${lastOrganizationSlug}`}>
             {t("header.projects")}
@@ -26,7 +26,8 @@ export function Navigation({ lastOrganizationSlug }: NavigationProps) {
       <Form method="get" action="/search">
         <HStack gap={1}>
           <Input
-            bgColor="var(--chakra-colors-bg)"
+            bg="bg"
+            borderColor="border"
             type="text"
             name="q"
             placeholder={t("header.search")}

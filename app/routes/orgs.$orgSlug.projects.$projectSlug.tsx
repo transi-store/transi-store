@@ -112,7 +112,7 @@ export default function ProjectLayout() {
 
         {project.description && (
           <Box>
-            <Text color="gray.600">{project.description}</Text>
+            <Text color="fg.muted">{project.description}</Text>
           </Box>
         )}
 

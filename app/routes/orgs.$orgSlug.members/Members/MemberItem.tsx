@@ -26,13 +26,13 @@ export function MemberItem({ member }: MemberItemProps) {
                 {member.user.name || member.user.email}
               </Text>
               {member.isCurrentUser && (
-                <Badge colorPalette="blue">{t("members.you")}</Badge>
+                <Badge colorPalette="brand">{t("members.you")}</Badge>
               )}
             </HStack>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="fg.muted">
               {member.user.email}
             </Text>
-            <Text fontSize="xs" color="gray.500">
+            <Text fontSize="xs" color="fg.subtle">
               {t("members.memberSince")}{" "}
               {new Date(member.createdAt).toLocaleDateString("fr-FR")}
             </Text>
