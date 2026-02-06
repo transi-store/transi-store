@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command, Option } from "@commander-js/extra-typings";
 import {
+  DEFAULT_DOMAIN_ROOT,
   fetchForConfig,
   fetchTranslations,
   type Config,
@@ -18,9 +19,14 @@ const apiKeyOption = new Option(
 program
   .command("download")
   .description("Download translations for a project")
+  .addOption(apiKeyOption)
+  .requiredOption(
+    "-d, --domain-root <domainRoot>",
+    "Root domain to download translations from (default is https://transi-store.com)",
+    DEFAULT_DOMAIN_ROOT,
+  )
   .requiredOption("-o, --org <org>", "Organization slug")
   .requiredOption("-p, --project <project>", "Project slug")
-  .addOption(apiKeyOption)
   .requiredOption("-l, --locale <locale>", "Locale to export")
   .requiredOption("-O, --output <output>", "Output file path")
   .option("-f, --format <format>", "Export format (json, csv, etc.)", "json")

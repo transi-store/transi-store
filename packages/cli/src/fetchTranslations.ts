@@ -2,7 +2,10 @@ import fs from "node:fs";
 import z from "zod";
 import schema from "./schema.ts";
 
+export const DEFAULT_DOMAIN_ROOT = "https://transi-store.com";
+
 export type Config = {
+  domainRoot: string;
   org: string;
   project: string;
   apiKey: string;
@@ -12,14 +15,15 @@ export type Config = {
 };
 
 export async function fetchTranslations({
+  domainRoot,
+  apiKey,
   org,
   project,
-  apiKey,
   format,
   locale,
   output,
 }: Config) {
-  const url = `https://transi-store.mapado.com/api/orgs/${org}/projects/${project}/export?format=${format}&locale=${locale}`;
+  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/export?format=${format}&locale=${locale}`;
 
   try {
     const content = await fetch(url, {
@@ -27,6 +31,15 @@ export async function fetchTranslations({
         Authorization: `Bearer ${apiKey}`,
       },
     });
+
+    if (!content.ok) {
+      const errorData = await content.text();
+      console.error(
+        `Failed to fetch translations: ${content.status} ${content.statusText}\n`,
+        errorData,
+      );
+      process.exit(1);
+    }
 
     const data = await content.json();
 
@@ -54,7 +67,10 @@ export async function fetchTranslations({
   }
 }
 
-export async function fetchForConfig(configPath: string, apiKey: string) {
+export async function fetchForConfig(
+  configPath: string,
+  apiKey: string,
+): Promise<void> {
   const cwd = process.cwd();
 
   const fullPath = `${cwd}/${configPath}`;
@@ -73,12 +89,19 @@ export async function fetchForConfig(configPath: string, apiKey: string) {
     process.exit(1);
   }
 
+  const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
+
+  console.log(
+    `Fetching translations from domain "${domainRoot}" for org "${result.data.org}"...`,
+  );
+
   for (const configItem of result.data.projects) {
     for (const locale of configItem.langs) {
       const options = {
+        domainRoot,
+        apiKey,
         org: result.data.org,
         project: configItem.project,
-        apiKey,
         format: configItem.format,
         locale,
         output: configItem.output

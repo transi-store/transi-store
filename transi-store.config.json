@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+  "domainRoot": "https://transi-store.com",
   "org": "transi-store",
   "projects": [
     {
