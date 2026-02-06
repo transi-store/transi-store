@@ -11,7 +11,6 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
-import { TransiStoreLogo } from "../../figma-react-logo";
 
 export function meta() {
   // TODO translate
@@ -60,8 +59,6 @@ export default function Index() {
         </HStack>
         <Box p={6} borderWidth={1} borderRadius="lg">
           <Text>{t("index.welcome")}</Text>
-
-          <TransiStoreLogo />
         </Box>
       </VStack>
     </Container>

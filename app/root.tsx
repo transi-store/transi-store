@@ -10,7 +10,7 @@ import {
   useLoaderData,
 } from "react-router";
 import type { Route } from "./+types/root";
-import { ChakraProvider, Box } from "@chakra-ui/react";
+import { ChakraProvider, Box, Alert, Container } from "@chakra-ui/react";
 import {
   getLocale,
   i18nextMiddleware,
@@ -87,31 +87,40 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     message = error.status === 404 ? "404" : "Error";
     details =
       error.status === 404
-        ? "The requested page could not be found."
+        ? `The requested page could not be found.`
         : error.statusText || details;
+
+    details += ` (status ${error.status})`;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
+    console.log(error);
     details = error.message;
     stack = error.stack;
   }
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1>{message}</h1>
-      <p>
-        {details} (status {error.status})
-      </p>
-      {stack && (
-        <pre
-          style={{
-            width: "100%",
-            padding: "1rem",
-            overflow: "auto",
-            background: "#f5f5f5",
-          }}
-        >
-          {stack}
-        </pre>
-      )}
-    </main>
+    <Container maxW="container.lg" py={10}>
+      <Alert.Root status="error">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>{message}</Alert.Title>
+          <Alert.Description>
+            {details}
+            {stack && (
+              <Box
+                mt={4}
+                p={4}
+                bg="gray.100"
+                borderRadius="md"
+                overflow="auto"
+                fontFamily="mono"
+                fontSize="sm"
+              >
+                {stack}
+              </Box>
+            )}
+          </Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
+    </Container>
   );
 }
