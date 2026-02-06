@@ -77,7 +77,7 @@
   "import.submit": "Import",
   "import.success.title": "Import successful!",
   "import.targetLang": "Target language",
-  "import.title": "Import translations",
+  "import.title": "Import / export",
   "import.upload": "Upload file",
   "index.description": "Multi-project translation management tool",
   "index.title": "transi-store",

@@ -1,0 +1,10 @@
+{
+  "api.translate.keyNotFound": "Clave no encontrada",
+  "api.translate.missingParams": "keyId y targetLocale son obligatorios",
+  "api.translate.noAiProvider": "No hay ningún servicio de IA configurado. Configúrelo en los ajustes de la organización.",
+  "api.translate.noSourceTranslation": "Traducción de origen no disponible",
+  "auth.login.title": "Conexión",
+  "invite.code.backToOrgs": "Regresar a las organizaciones",
+  "orgs.return": "Regresar a las organizaciones",
+  "translations.newKey": "Nueva clave"
+}
