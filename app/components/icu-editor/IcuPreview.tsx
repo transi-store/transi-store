@@ -98,8 +98,8 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
 
   if (variables.length === 0 && !error) {
     return (
-      <Box p={3} bg="gray.50" borderRadius="md" borderWidth={1}>
-        <Text fontSize="sm" color="gray.600" mb={1}>
+      <Box p={3} bg="bg.subtle" borderRadius="md" borderWidth={1}>
+        <Text fontSize="sm" color="gray" mb={1}>
           {t("icu.previewLabel")}
         </Text>
         <Text>{message || <em>{t("icu.emptyMessage")}</em>}</Text>
@@ -113,7 +113,7 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
       {variables.length > 0 && (
         <Box
           p={3}
-          bg="blue.50"
+          bg="blue"
           borderRadius="md"
           borderWidth={1}
           borderColor="blue.200"
@@ -163,7 +163,9 @@ export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
             {error}
           </Text>
         ) : (
-          <Text color="green.800">{formatted || <em>{t("icu.emptyMessage")}</em>}</Text>
+          <Text color="green.800">
+            {formatted || <em>{t("icu.emptyMessage")}</em>}
+          </Text>
         )}
       </Box>
     </VStack>

@@ -21,6 +21,7 @@ import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
 import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
+import { ColorModeProvider } from "./components/ui/color-mode";
 
 export const middleware = [i18nextMiddleware];
 
@@ -46,7 +47,9 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body>
-        <ChakraProvider value={system}>{children}</ChakraProvider>
+        <ChakraProvider value={system}>
+          <ColorModeProvider>{children}</ColorModeProvider>
+        </ChakraProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

@@ -57,12 +57,9 @@ export default function OrganizationsIndex() {
               <Card.Root key={org.id} asChild>
                 <Link to={`/orgs/${org.slug}`}>
                   <Card.Body>
-                    <Heading as="h3" size="md" mb={2}>
+                    <Heading as="h3" size="md">
                       {org.name}
                     </Heading>
-                    <Text fontSize="sm" color="gray.600">
-                      /{org.slug}
-                    </Text>
                   </Card.Body>
                 </Link>
               </Card.Root>

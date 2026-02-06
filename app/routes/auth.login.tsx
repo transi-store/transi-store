@@ -4,6 +4,7 @@ import {
   type ProviderConfig,
 } from "~/lib/auth-providers.server";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -29,11 +30,13 @@ export default function Login({ loaderData }: Route.ComponentProps) {
   if (enabledProviders.length === 0) {
     return (
       <Container maxW="md" py={10}>
-        <Box p={8} borderWidth={1} borderRadius="lg" bg="white">
+        <Box p={8} borderWidth={1} borderRadius="lg">
           <Heading size="lg" mb={4}>
             {t("auth.login.title")}
           </Heading>
-          <Text color="red.500">{t("auth.login.noProvidersDescription")}</Text>
+          <Alert.Root status="warning">
+            <Alert.Title>{t("auth.login.noProvidersDescription")}</Alert.Title>
+          </Alert.Root>
         </Box>
       </Container>
     );
@@ -44,13 +47,11 @@ export default function Login({ loaderData }: Route.ComponentProps) {
 
   return (
     <Container maxW="md" py={10}>
-      <Box p={8} borderWidth={1} borderRadius="lg" bg="white">
+      <Box p={8} borderWidth={1} borderRadius="lg">
         <Heading size="lg" mb={2}>
           {t("auth.login.title")}
         </Heading>
-        <Text color="gray.600" mb={6}>
-          {t("auth.login.chooseMethod")}
-        </Text>
+        <Text mb={6}>{t("auth.login.chooseMethod")}</Text>
         <VStack gap={3}>
           {enabledProviders.map((provider) => {
             const getProviderButton = () => {
@@ -61,7 +62,14 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                       key={provider.type}
                       asChild
                       width="full"
-                      colorPalette="blue"
+                      bg="#FFFFFF"
+                      color="#1F1F1F"
+                      border="1px solid #747775"
+                      _dark={{
+                        bg: "#131314",
+                        color: "#E3E3E3",
+                        border: "1px solid #8E918F",
+                      }}
                       size="lg"
                     >
                       <Link
@@ -80,7 +88,8 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                       key={provider.type}
                       asChild
                       width="full"
-                      colorPalette="brand"
+                      bg="#00859c"
+                      color="#f7f5f7"
                       size="lg"
                     >
                       <Link
@@ -98,7 +107,14 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                       key={provider.type}
                       asChild
                       width="full"
-                      colorPalette="gray"
+                      bg="none"
+                      color="#24292f"
+                      border="1px solid rgba(13, 17, 23, 0.161)"
+                      _dark={{
+                        bg: "#1f2328",
+                        color: "#ffffff",
+                        border: "1px solid #1f2328",
+                      }}
                       size="lg"
                     >
                       <Link

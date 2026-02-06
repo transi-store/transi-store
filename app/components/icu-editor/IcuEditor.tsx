@@ -218,7 +218,7 @@ export function IcuEditor({
       />
 
       {/* Status bar */}
-      <HStack justify="space-between" fontSize="xs" color="gray.600">
+      <HStack justify="space-between" fontSize="xs" color="gray">
         <HStack gap={2}>
           {isValid ? (
             <HStack color="green.600">
@@ -235,7 +235,7 @@ export function IcuEditor({
 
         <HStack gap={1}>
           {variables.map((v) => (
-            <Badge key={v} size="sm" colorPalette="blue" variant="subtle">
+            <Badge key={v} size="sm" colorPalette="primary" variant="subtle">
               {v}
             </Badge>
           ))}
@@ -249,12 +249,12 @@ export function IcuEditor({
             as="button"
             w="100%"
             p={2}
-            bg="gray.50"
+            bg="bg.subtle"
             cursor="pointer"
             display="flex"
             alignItems="center"
             gap={2}
-            _hover={{ bg: "gray.100" }}
+            _hover={{ bg: "bg.subtle.hover" }}
             onClick={() => setIsPreviewOpen(!isPreviewOpen)}
           >
             {isPreviewOpen ? <LuChevronDown /> : <LuChevronRight />}

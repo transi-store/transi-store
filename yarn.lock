@@ -4791,6 +4791,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"next-themes@npm:^0.4.6":
+  version: 0.4.6
+  resolution: "next-themes@npm:0.4.6"
+  peerDependencies:
+    react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+    react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+  checksum: 10c0/83590c11d359ce7e4ced14f6ea9dd7a691d5ce6843fe2dc520fc27e29ae1c535118478d03e7f172609c41b1ef1b8da6b8dd2d2acd6cd79cac1abbdbd5b99f2c4
+  languageName: node
+  linkType: hard
+
 "node-gyp@npm:latest":
   version: 12.1.0
   resolution: "node-gyp@npm:12.1.0"
@@ -5947,6 +5957,7 @@ __metadata:
     jose: "npm:^6.1.3"
     knip: "npm:^5.82.1"
     lint-staged: "npm:^16.2.7"
+    next-themes: "npm:^0.4.6"
     pg: "npm:^8.17.2"
     prettier: "npm:^3.8.1"
     pretty-cache-header: "npm:^1.0.0"

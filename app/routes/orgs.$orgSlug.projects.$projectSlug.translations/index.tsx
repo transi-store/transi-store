@@ -111,12 +111,12 @@ export default function ProjectTranslations({
           <Heading as="h2" size="lg">
             {t("translations.title")}
           </Heading>
-          <Text color="gray.600" mt={2}>
+          <Text color="gray" mt={2}>
             {t("translations.count", { count })}
           </Text>
         </Box>
         {languages.length > 0 && (
-          <Button asChild colorPalette="brand">
+          <Button asChild colorPalette="accent">
             <Link
               to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
             >
