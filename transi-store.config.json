@@ -5,7 +5,7 @@
   "projects": [
     {
       "project": "website",
-      "langs": ["en", "fr"],
+      "langs": ["en", "fr", "es"],
       "format": "json",
       "output": "app/locales/<lang>/translation.json"
     }
