@@ -30,6 +30,7 @@ import {
   LuCircleCheck,
 } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
+import { useColorMode } from "../ui/color-mode";
 
 type IcuEditorProps = {
   /** Initial value */
@@ -64,6 +65,7 @@ export function IcuEditor({
   name,
 }: IcuEditorProps) {
   const { t } = useTranslation();
+  const { colorMode } = useColorMode();
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
   const onBlurRef = useRef(onBlur);
@@ -134,8 +136,11 @@ export function IcuEditor({
       keymap.of([...defaultKeymap, ...historyKeymap]),
 
       // ICU language support
-      icuLanguage(),
       icuLinter(),
+
+      icuLanguage({ colorMode }),
+
+      EditorView.darkTheme.of(colorMode === "dark"),
 
       // Placeholder
       placeholderExt(placeholder),
@@ -162,15 +167,15 @@ export function IcuEditor({
       // Line wrapping
       EditorView.lineWrapping,
 
-      // Custom styling
-      EditorView.theme({
-        "&": {
-          minHeight,
-        },
-        ".cm-scroller": {
-          overflow: "auto",
-        },
-      }),
+      // Base theme (works for both light and dark)
+      // EditorView.theme({
+      //   "&": {
+      //     minHeight,
+      //   },
+      //   ".cm-scroller": {
+      //     overflow: "auto",
+      //   },
+      // }),
     ];
 
     const state = EditorState.create({
@@ -189,7 +194,7 @@ export function IcuEditor({
       view.destroy();
       editorRef.current = null;
     };
-  }, [placeholder, disabled, minHeight]);
+  }, [placeholder, disabled, minHeight, colorMode]);
 
   const isValid = errors.length === 0;
 
@@ -207,25 +212,29 @@ export function IcuEditor({
       {/* Editor container */}
       <Box
         ref={containerRef}
+        borderWidth={1}
+        borderColor="border"
+        bg="bg"
         borderRadius="md"
         overflow="hidden"
         opacity={disabled ? 0.6 : 1}
         cursor={disabled ? "not-allowed" : "text"}
         _focusWithin={{
-          boxShadow: "0 0 0 2px var(--chakra-colors-brand-500)",
+          outlineWidth: "2px",
+          outlineColor: "brand.focusRing",
         }}
       />
 
       {/* Status bar */}
-      <HStack justify="space-between" fontSize="xs" color="gray">
+      <HStack justify="space-between" fontSize="xs" color="fg.muted">
         <HStack gap={2}>
           {isValid ? (
-            <HStack color="green.600">
+            <HStack color="green.fg">
               <LuCircleCheck />
               <Text>Syntaxe valide</Text>
             </HStack>
           ) : (
-            <HStack color="red.600">
+            <HStack color="red.fg">
               <LuCircleAlert />
               <Text>{errors[0]}</Text>
             </HStack>
@@ -234,7 +243,7 @@ export function IcuEditor({
 
         <HStack gap={1}>
           {variables.map((v) => (
-            <Badge key={v} size="sm" colorPalette="primary" variant="subtle">
+            <Badge key={v} size="sm" colorPalette="brand" variant="subtle">
               {v}
             </Badge>
           ))}

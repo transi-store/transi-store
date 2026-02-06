@@ -23,7 +23,7 @@ interface UseColorModeReturn {
   toggleColorMode: () => void;
 }
 
-function useColorMode(): UseColorModeReturn {
+export function useColorMode(): UseColorModeReturn {
   const { resolvedTheme, setTheme, forcedTheme } = useTheme();
   const colorMode = forcedTheme || resolvedTheme;
   const toggleColorMode = () => {

@@ -4,6 +4,7 @@
  */
 
 import { EditorView, Decoration, ViewPlugin } from "@codemirror/view";
+import { oneDark } from "@codemirror/theme-one-dark";
 import type { DecorationSet, ViewUpdate } from "@codemirror/view";
 import type { Extension } from "@codemirror/state";
 
@@ -204,54 +205,93 @@ function createIcuDecorator() {
 
 // Theme for the ICU editor
 const icuEditorTheme = EditorView.theme({
-  "&": {
-    fontSize: "14px",
-    border: "1px solid #d0d7de",
-    borderRadius: "6px",
-    backgroundColor: "#ffffff",
-  },
-  "&.cm-focused": {
-    outline: "none",
-    borderColor: "#0969da",
-    boxShadow: "0 0 0 3px rgba(9, 105, 218, 0.3)",
-  },
-  ".cm-content": {
-    padding: "8px 12px",
-    fontFamily: "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace",
-  },
-  ".cm-line": {
-    padding: "2px 0",
-  },
+  // "&": {
+  // fontSize: "14px",
+  // border: "1px solid #d0d7de",
+  // borderRadius: "6px",
+  // backgroundColor: "#ffffff",
+  // },
+  // "&.cm-focused": {
+  //   outline: "none",
+  //   borderColor: "#0969da",
+  //   boxShadow: "0 0 0 3px rgba(9, 105, 218, 0.3)",
+  // },
+  // ".cm-content": {
+  //   padding: "8px 12px",
+  //   fontFamily: "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace",
+  // },
+  // ".cm-line": {
+  //   padding: "2px 0",
+  // },
   // ICU syntax highlighting
   ".icu-variable": {
-    color: "#0550ae",
+    color: "#3B82F6",
     fontWeight: "600",
-    backgroundColor: "rgba(5, 80, 174, 0.1)",
+    backgroundColor: "rgba(59, 130, 246, 0.12)",
     borderRadius: "3px",
     padding: "1px 2px",
   },
   ".icu-plural-keyword": {
-    color: "#8250df",
+    color: "#6D28D9",
     fontWeight: "600",
   },
   ".icu-select-keyword": {
-    color: "#cf222e",
+    color: "#B42318",
     fontWeight: "600",
   },
   ".icu-argument": {
-    color: "#116329",
+    color: "#65A30D",
     fontWeight: "500",
     fontStyle: "italic",
   },
   ".icu-brace": {
-    color: "#6e7781",
+    color: "#4B5563",
     fontWeight: "bold",
   },
 });
 
+const icuEditorThemeDark = EditorView.theme(
+  {
+    // ICU syntax highlighting (One Dark-friendly colors)
+    ".icu-variable": {
+      color: "#84CAFF",
+      fontWeight: "600",
+      backgroundColor: "rgba(132, 202, 255, 0.18)",
+      borderRadius: "3px",
+      padding: "1px 2px",
+    },
+    ".icu-plural-keyword": {
+      color: "#D6B4FF",
+      fontWeight: "600",
+    },
+    ".icu-select-keyword": {
+      color: "#FF9AA2",
+      fontWeight: "600",
+    },
+    ".icu-argument": {
+      color: "#BEF264",
+      fontWeight: "500",
+      fontStyle: "italic",
+    },
+    ".icu-brace": {
+      color: "#D0D4DB",
+      fontWeight: "bold",
+    },
+  },
+  { dark: true },
+);
+
 /**
  * Complete ICU language extension for CodeMirror
  */
-export function icuLanguage(): Extension {
+export function icuLanguage({
+  colorMode,
+}: {
+  colorMode: "light" | "dark";
+}): Extension {
+  if (colorMode === "dark") {
+    return [oneDark, icuEditorThemeDark, createIcuDecorator()];
+  }
+
   return [icuEditorTheme, createIcuDecorator()];
 }
