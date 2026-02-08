@@ -61,6 +61,9 @@ export const ColorModeButton = React.forwardRef<
         size="sm"
         ref={ref}
         {...props}
+        bg="header.bg"
+        color="header.fg"
+        _hover={{ bg: "header.bgHover" }}
         css={{
           _icon: {
             width: "5",

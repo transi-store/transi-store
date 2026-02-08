@@ -40,7 +40,7 @@ const config = defineConfig({
           700: { value: "#4D7C0F" },
           800: { value: "#3F6212" },
           900: { value: "#365314" },
-          950: { value: "#1A2E05" },
+          950: { value: "#121B28" },
         },
       },
     },
@@ -49,45 +49,89 @@ const config = defineConfig({
         // Couleurs de marque (bleu principal)
         brand: {
           solid: {
-            value: { _light: "{colors.brand.500}", _dark: "{colors.brand.400}" },
+            value: {
+              _light: "{colors.brand.500}",
+              _dark: "{colors.brand.400}",
+            },
           },
           contrast: { value: "white" },
           fg: {
-            value: { _light: "{colors.brand.700}", _dark: "{colors.brand.300}" },
+            value: {
+              _light: "{colors.brand.700}",
+              _dark: "{colors.brand.300}",
+            },
           },
           muted: {
-            value: { _light: "{colors.brand.100}", _dark: "{colors.brand.900}" },
+            value: {
+              _light: "{colors.brand.100}",
+              _dark: "{colors.brand.900}",
+            },
           },
           subtle: {
             value: { _light: "{colors.brand.50}", _dark: "{colors.brand.950}" },
           },
           emphasized: {
-            value: { _light: "{colors.brand.600}", _dark: "{colors.brand.500}" },
+            value: {
+              _light: "{colors.brand.600}",
+              _dark: "{colors.brand.500}",
+            },
           },
           focusRing: {
-            value: { _light: "{colors.brand.500}", _dark: "{colors.brand.400}" },
+            value: {
+              _light: "{colors.brand.500}",
+              _dark: "{colors.brand.400}",
+            },
           },
         },
         // Couleurs d'accent (vert)
         accent: {
           solid: {
-            value: { _light: "{colors.accent.500}", _dark: "{colors.accent.400}" },
+            value: {
+              _light: "{colors.accent.500}",
+              _dark: "{colors.accent.400}",
+            },
           },
           contrast: { value: "white" },
           fg: {
-            value: { _light: "{colors.accent.700}", _dark: "{colors.accent.300}" },
+            value: {
+              _light: "{colors.accent.700}",
+              _dark: "{colors.accent.300}",
+            },
           },
           muted: {
-            value: { _light: "{colors.accent.100}", _dark: "{colors.accent.900}" },
+            value: {
+              _light: "{colors.accent.100}",
+              _dark: "{colors.accent.900}",
+            },
           },
           subtle: {
-            value: { _light: "{colors.accent.50}", _dark: "{colors.accent.950}" },
+            value: {
+              _light: "{colors.accent.50}",
+              _dark: "{colors.accent.950}",
+            },
           },
           emphasized: {
-            value: { _light: "{colors.accent.600}", _dark: "{colors.accent.500}" },
+            value: {
+              _light: "{colors.accent.600}",
+              _dark: "{colors.accent.500}",
+            },
           },
           focusRing: {
-            value: { _light: "{colors.accent.500}", _dark: "{colors.accent.400}" },
+            value: {
+              _light: "{colors.accent.500}",
+              _dark: "{colors.accent.400}",
+            },
+          },
+        },
+        header: {
+          bg: {
+            value: "{colors.accent.950}",
+          },
+          bgHover: {
+            value: "{colors.gray.700}",
+          },
+          fg: {
+            value: "white",
           },
         },
       },

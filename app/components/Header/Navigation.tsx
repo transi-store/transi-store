@@ -1,4 +1,4 @@
-import { HStack, Text, Input, IconButton } from "@chakra-ui/react";
+import { HStack, Input, IconButton, Button } from "@chakra-ui/react";
 import { Link, Form } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuSearch } from "react-icons/lu";
@@ -13,15 +13,11 @@ export function Navigation({ lastOrganizationSlug }: NavigationProps) {
   return (
     <HStack gap={4} fontSize="sm">
       {lastOrganizationSlug && (
-        <Text
-          asChild
-          color="brand.fg"
-          _hover={{ textDecoration: "underline", color: "brand.emphasized" }}
-        >
+        <Button asChild _hover={{ bg: "header.bgHover" }}>
           <Link to={`/orgs/${lastOrganizationSlug}`}>
             {t("header.projects")}
           </Link>
-        </Text>
+        </Button>
       )}
       <Form method="get" action="/search">
         <HStack gap={1}>

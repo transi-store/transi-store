@@ -20,19 +20,24 @@ export function Header({ user }: HeaderProps) {
       borderBottomWidth={1}
       borderColor="border"
       py={4}
-      bg="brand.subtle"
+      bg="header.bg"
+      color="header.fg"
     >
       <Container maxW="container.xl">
         <HStack justify="space-between">
           <HStack gap={6}>
-            <Text
-              asChild
-              fontSize="xl"
-              fontWeight="bold"
-              color="brand.fg"
-              _hover={{ color: "brand.emphasized" }}
-            >
-              <Link to="/">{t("header.siteName")}</Link>
+            <Link to="/">
+              <img src="/logo-square.svg" alt="Logo" width={32} height={32} />
+            </Link>
+            <Text asChild fontSize="xl" fontWeight="bold" color="brand.fg">
+              <Link to="/">
+                <Text as="span" color="header.fg">
+                  Transi-
+                </Text>
+                <Text as="span" color="accent.solid">
+                  Store
+                </Text>
+              </Link>
             </Text>
 
             {user && (
@@ -48,7 +53,7 @@ export function Header({ user }: HeaderProps) {
             {user ? (
               <UserMenu user={user} />
             ) : (
-              <Button asChild size="sm" colorPalette="brand">
+              <Button asChild size="sm" _hover={{ bg: "header.bgHover" }}>
                 <Link to="/auth/login">{t("header.login")}</Link>
               </Button>
             )}
