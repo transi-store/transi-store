@@ -180,4 +180,5 @@ Consultez le dossier [`docs/technical-notes/`](./docs/technical-notes/) pour com
 
 ## Licence
 
-GNU AFFERO GENERAL PUBLIC LICENSE Version 3 (AGPL-3.0). See [LICENSE](./LICENSE.md) for details.
+GNU AFFERO GENERAL PUBLIC LICENSE Version 3 (AGPL-3.0). See [LICENSE](./LICENSE) for details.
+
