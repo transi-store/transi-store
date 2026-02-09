@@ -132,7 +132,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true, keyName, search: keyName, action: "createKey" };
   }
 
-  return { error: "Action inconnue" };
+  throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });
 }
 
 export default function ProjectTranslations({
@@ -171,17 +171,6 @@ export default function ProjectTranslations({
       );
     }
   }, [actionData, navigation.state, organization.slug, project.slug, navigate]);
-
-  // Keep modal open if there's an error for createKey action
-  useEffect(() => {
-    if (
-      actionData &&
-      "error" in actionData &&
-      actionData.action === "createKey"
-    ) {
-      setIsCreateKeyModalOpen(true);
-    }
-  }, [actionData]);
 
   return (
     <VStack gap={6} align="stretch">
