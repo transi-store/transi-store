@@ -45,6 +45,7 @@ import {
   deleteTranslationKey,
   updateTranslationKey,
   deleteTranslation,
+  getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -140,13 +141,26 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const keyName = formData.get("keyName");
     const description = formData.get("description");
 
+    if (!keyName || typeof keyName !== "string") {
+      return {
+        error: i18next.t("keys.new.errors.nameRequired"),
+        action,
+      };
+    }
+
+    // Vérifier que la clé n'existe pas déjà
+    const existing = await getTranslationKeyByName(project.id, keyName);
+    if (existing && existing.id !== key.id) {
+      return {
+        error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
+        action,
+      };
+    }
+
     await updateTranslationKey({
       keyId: key.id,
-      keyName: keyName && typeof keyName === "string" ? keyName : undefined,
-      description:
-        description && typeof description === "string"
-          ? description
-          : undefined,
+      keyName,
+      description: typeof description === "string" ? description : undefined,
     });
 
     return { success: true };
@@ -359,7 +373,7 @@ export default function EditTranslationKey({
           </Form>
         </HStack>
 
-        {actionData?.error && (
+        {actionData?.error && actionData?.action !== "editKey" && (
           <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md">
             {actionData.error}
           </Box>
@@ -493,6 +507,11 @@ export default function EditTranslationKey({
             keyName: key.keyName,
             description: key.description || "",
           }}
+          error={
+            actionData?.error && actionData?.action === "editKey"
+              ? actionData.error
+              : undefined
+          }
           isSubmitting={isSubmitting}
         />
 
