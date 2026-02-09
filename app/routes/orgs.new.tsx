@@ -81,7 +81,7 @@ export default function NewOrganization() {
         <Form method="post">
           <VStack gap={4} align="stretch">
             <Field.Root required>
-              <Field.Label>Nom de l'organisation</Field.Label>
+              <Field.Label>{t("org.new.name")}</Field.Label>
               <Input
                 name="name"
                 placeholder="Mon entreprise"
@@ -92,7 +92,7 @@ export default function NewOrganization() {
             </Field.Root>
 
             <Field.Root>
-              <Field.Label>Slug (optionnel)</Field.Label>
+              <Field.Label>{t("orgs.new.slug")}</Field.Label>
               <Input
                 name="slug"
                 placeholder={suggestedSlug || "mon-entreprise"}
@@ -101,9 +101,7 @@ export default function NewOrganization() {
               <Field.HelperText>
                 {suggestedSlug && `Suggestion: ${suggestedSlug}`}
               </Field.HelperText>
-              <Field.HelperText>
-                Utilise dans l'URL (ex: /orgs/mon-entreprise)
-              </Field.HelperText>
+              <Field.HelperText>{t("orgs.new.slugHelper")}</Field.HelperText>
             </Field.Root>
 
             <Box display="flex" gap={3}>
@@ -113,7 +111,7 @@ export default function NewOrganization() {
                 loading={isSubmitting}
                 flex={1}
               >
-                <LuPlus /> Creer l'organisation
+                <LuPlus /> {t("org.new.createOrganization")}
               </Button>
               <Button asChild variant="outline" disabled={isSubmitting}>
                 <Link to="/orgs">{t("cancel")}</Link>

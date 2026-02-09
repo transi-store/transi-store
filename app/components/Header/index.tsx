@@ -27,7 +27,7 @@ export function Header({ user }: HeaderProps) {
                     ? "/logo-square-white.svg"
                     : "/logo-square-black.svg"
                 }
-                alt="Logo"
+                alt={t("header.logoAlt")}
                 width={32}
                 height={32}
               />

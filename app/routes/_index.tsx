@@ -12,17 +12,6 @@ import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
 
-export function meta() {
-  // TODO translate
-  return [
-    { title: "transi-store - Gestion des traductions" },
-    {
-      name: "description",
-      content: "Outil de gestion de traductions multi-projets",
-    },
-  ];
-}
-
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
 
