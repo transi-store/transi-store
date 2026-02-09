@@ -1,6 +1,7 @@
 import { HStack, Input, Button } from "@chakra-ui/react";
 import { Form, Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { getTranslationsUrl } from "~/lib/routes-helpers";
 
 type TranslationsSearchBarProps = {
   search?: string;
@@ -28,9 +29,7 @@ export function TranslationsSearchBar({
         </Button>
         {search && (
           <Button asChild variant="outline">
-            <Link
-              to={`/orgs/${organizationSlug}/projects/${projectSlug}/translations`}
-            >
+            <Link to={getTranslationsUrl(organizationSlug, projectSlug)}>
               {t("translations.clear")}
             </Link>
           </Button>

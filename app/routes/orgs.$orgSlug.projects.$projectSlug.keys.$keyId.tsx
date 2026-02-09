@@ -57,7 +57,10 @@ import { toaster } from "~/components/ui/toaster";
 import type { TranslationSuggestion } from "~/lib/ai-translation.server";
 import { getInstance } from "~/middleware/i18next";
 import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
-import { TranslationKeyModal } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
+import {
+  TranslationKeyModal,
+  TRANSLATIONS_KEY_MODEL_MODE,
+} from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -502,7 +505,7 @@ export default function EditTranslationKey({
         <TranslationKeyModal
           isOpen={isEditKeyModalOpen}
           onOpenChange={setIsEditKeyModalOpen}
-          mode="edit"
+          mode={TRANSLATIONS_KEY_MODEL_MODE.EDIT}
           defaultValues={{
             keyName: key.keyName,
             description: key.description || "",

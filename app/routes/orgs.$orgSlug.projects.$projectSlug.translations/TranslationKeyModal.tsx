@@ -22,7 +22,7 @@ import { useTranslation } from "react-i18next";
 type TranslationKeyModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: "create" | "edit";
+  mode: TRANSLATIONS_KEY_MODEL_MODE;
   defaultValues?: {
     keyName?: string;
     description?: string;
@@ -30,6 +30,13 @@ type TranslationKeyModalProps = {
   error?: string;
   isSubmitting?: boolean;
 };
+
+export const TRANSLATIONS_KEY_MODEL_MODE = {
+  CREATE: "create",
+  EDIT: "edit",
+};
+export type TRANSLATIONS_KEY_MODEL_MODE =
+  (typeof TRANSLATIONS_KEY_MODEL_MODE)[keyof typeof TRANSLATIONS_KEY_MODEL_MODE];
 
 export function TranslationKeyModal({
   isOpen,
@@ -40,7 +47,7 @@ export function TranslationKeyModal({
   isSubmitting = false,
 }: TranslationKeyModalProps) {
   const { t } = useTranslation();
-  const isCreate = mode === "create";
+  const isCreate = mode === TRANSLATIONS_KEY_MODEL_MODE.CREATE;
 
   return (
     <DialogRoot open={isOpen} onOpenChange={(e) => onOpenChange(e.open)}>
@@ -75,7 +82,9 @@ export function TranslationKeyModal({
                 <VStack gap={4} align="stretch">
                   <Field.Root required>
                     <Field.Label>
-                      {isCreate ? t("keys.new.nameLabel") : t("keys.edit.keyLabel")}
+                      {isCreate
+                        ? t("keys.new.nameLabel")
+                        : t("keys.edit.keyLabel")}
                     </Field.Label>
                     <Input
                       name="keyName"

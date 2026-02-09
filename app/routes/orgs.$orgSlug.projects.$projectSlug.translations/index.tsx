@@ -23,8 +23,12 @@ import {
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
 import { TranslationsTable } from "./TranslationsTable";
 import { TranslationsPagination } from "./TranslationsPagination";
-import { TranslationKeyModal } from "./TranslationKeyModal";
+import {
+  TranslationKeyModal,
+  TRANSLATIONS_KEY_MODEL_MODE,
+} from "./TranslationKeyModal";
 import { getInstance } from "~/middleware/i18next";
+import { getKeyUrl, getTranslationsUrl } from "~/lib/routes-helpers";
 
 const LIMIT = 50;
 
@@ -93,9 +97,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     const newKeyId = await duplicateTranslationKey(parsedKeyId);
 
-    return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys/${newKeyId}`,
-    );
+    return redirect(getKeyUrl(params.orgSlug, params.projectSlug, newKeyId));
   }
 
   if (action === "createKey") {
@@ -155,7 +157,9 @@ export default function ProjectTranslations({
   const totalLanguages = languages.length;
 
   // Build redirect URL with current search params
-  const currentUrl = `/orgs/${organization.slug}/projects/${project.slug}/translations${search ? `?search=${encodeURIComponent(search)}` : ""}`;
+  const currentUrl = getTranslationsUrl(organization.slug, project.slug, {
+    search,
+  });
 
   // Close modal and navigate after successful creation
   useEffect(() => {
@@ -167,7 +171,9 @@ export default function ProjectTranslations({
       setIsCreateKeyModalOpen(false);
       // Navigate to filter by the newly created key
       navigate(
-        `/orgs/${organization.slug}/projects/${project.slug}/translations?search=${encodeURIComponent(actionData.keyName)}`,
+        getTranslationsUrl(organization.slug, project.slug, {
+          search: actionData.keyName,
+        }),
       );
     }
   }, [actionData, navigation.state, organization.slug, project.slug, navigate]);
@@ -246,7 +252,7 @@ export default function ProjectTranslations({
       <TranslationKeyModal
         isOpen={isCreateKeyModalOpen}
         onOpenChange={setIsCreateKeyModalOpen}
-        mode="create"
+        mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
         error={
           actionData?.error && actionData.action === "createKey"
             ? actionData.error

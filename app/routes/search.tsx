@@ -21,6 +21,7 @@ import { requireUser } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
 import { TextHighlight } from "../lib/highlight";
 import { globalSearch, type SearchResult } from "~/lib/search.server";
+import { getKeyUrl } from "~/lib/routes-helpers";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -229,7 +230,11 @@ export default function Search({ loaderData }: Route.ComponentProps) {
 
                           <Button asChild colorPalette="brand" size="sm">
                             <Link
-                              to={`/orgs/${result.organizationSlug}/projects/${result.projectSlug}/keys/${result.keyId}`}
+                              to={getKeyUrl(
+                                result.organizationSlug,
+                                result.projectSlug,
+                                result.keyId,
+                              )}
                             >
                               {t("search.edit")}
                             </Link>
