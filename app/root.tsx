@@ -43,6 +43,30 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        {/* Favicon pour thème light */}
+        <link
+          rel="icon"
+          type="image/svg+xml"
+          href="/logo-square-black-bg.svg"
+          media="(prefers-color-scheme: light)"
+        />
+
+        {/* Favicon pour thème dark */}
+        <link
+          rel="icon"
+          type="image/svg+xml"
+          href="/logo-square-white-bg.svg"
+          media="(prefers-color-scheme: dark)"
+        />
+
+        {/* Favicon par défaut (fallback) */}
+        <link
+          rel="icon"
+          type="image/svg+xml"
+          href="/logo-square-black-bg.svg"
+        />
+
         <Meta />
         <Links />
       </head>
