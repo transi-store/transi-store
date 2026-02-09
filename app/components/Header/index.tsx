@@ -5,7 +5,7 @@ import type { SessionData } from "~/lib/session.server";
 import { Navigation } from "./Navigation";
 import { LanguageSelector } from "./LanguageSelector";
 import { UserMenu } from "./UserMenu";
-import { ColorModeButton } from "../ui/color-mode";
+import { ColorModeButton, useColorMode } from "../ui/color-mode";
 
 type HeaderProps = {
   user: SessionData | null;
@@ -13,23 +13,26 @@ type HeaderProps = {
 
 export function Header({ user }: HeaderProps) {
   const { t } = useTranslation();
+  const { colorMode } = useColorMode();
 
   return (
-    <Box
-      as="header"
-      borderBottomWidth={1}
-      borderColor="border"
-      py={4}
-      bg="header.bg"
-      color="header.fg"
-    >
+    <Box as="header" borderBottomWidth={1} borderColor="border" py={4}>
       <Container maxW="container.xl">
         <HStack justify="space-between">
           <HStack gap={6}>
             <Link to="/">
-              <img src="/logo-square.svg" alt="Logo" width={32} height={32} />
+              <img
+                src={
+                  colorMode === "dark"
+                    ? "/logo-square.svg"
+                    : "/logo-square-black.svg"
+                }
+                alt="Logo"
+                width={32}
+                height={32}
+              />
             </Link>
-            <Text asChild fontSize="xl" fontWeight="bold" color="brand.fg">
+            <Text asChild fontSize="xl" fontWeight="bold">
               <Link to="/">
                 <Text as="span" color="header.fg">
                   Transi-
@@ -53,7 +56,7 @@ export function Header({ user }: HeaderProps) {
             {user ? (
               <UserMenu user={user} />
             ) : (
-              <Button asChild size="sm" _hover={{ bg: "header.bgHover" }}>
+              <Button asChild size="sm">
                 <Link to="/auth/login">{t("header.login")}</Link>
               </Button>
             )}

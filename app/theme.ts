@@ -124,14 +124,11 @@ const config = defineConfig({
           },
         },
         header: {
-          bg: {
-            value: "{colors.accent.950}",
-          },
-          bgHover: {
-            value: "{colors.gray.700}",
-          },
           fg: {
-            value: "white",
+            value: {
+              _light: "{colors.accent.950}",
+              _dark: "#ffffff",
+            },
           },
         },
       },

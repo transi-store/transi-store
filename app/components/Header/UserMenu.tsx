@@ -15,13 +15,7 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          color="header.fg"
-          _hover={{ bg: "header.bgHover" }}
-          _open={{ bg: "header.bgHover" }}
-        >
+        <Button variant="ghost" size="sm">
           {user.name || user.email}
           <LuChevronDown />
         </Button>

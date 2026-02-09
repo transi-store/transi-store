@@ -14,13 +14,7 @@ export function LanguageSelector() {
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label="Change language"
-          color="header.fg"
-          _hover={{ bg: "header.bgHover" }}
-        >
+        <Button variant="ghost" size="sm" aria-label="Change language">
           <LuLanguages />{" "}
           {AVAILABLE_LANGUAGES.find((l) => l.code === currentLang)?.flag}
         </Button>

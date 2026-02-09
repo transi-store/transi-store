@@ -13,7 +13,7 @@ export function Navigation({ lastOrganizationSlug }: NavigationProps) {
   return (
     <HStack gap={4} fontSize="sm">
       {lastOrganizationSlug && (
-        <Button asChild _hover={{ bg: "header.bgHover" }}>
+        <Button asChild variant="ghost">
           <Link to={`/orgs/${lastOrganizationSlug}`}>
             {t("header.projects")}
           </Link>
