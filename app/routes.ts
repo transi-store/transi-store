@@ -48,10 +48,6 @@ export default [
 
   // Translation keys routes
   route(
-    "orgs/:orgSlug/projects/:projectSlug/keys/new",
-    "routes/orgs.$orgSlug.projects.$projectSlug.keys.new.tsx",
-  ),
-  route(
     "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
     "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
   ),

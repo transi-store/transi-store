@@ -1,7 +1,15 @@
 import { Heading, VStack, Button, Box, Text, HStack } from "@chakra-ui/react";
-import { Link, useOutletContext, redirect } from "react-router";
+import {
+  Link,
+  useOutletContext,
+  redirect,
+  useActionData,
+  useNavigation,
+  useNavigate,
+} from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
+import { useState, useEffect } from "react";
 import type { Route } from "./+types/index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -9,10 +17,18 @@ import { getProjectBySlug } from "~/lib/projects.server";
 import {
   getTranslationKeys,
   duplicateTranslationKey,
+  createTranslationKey,
+  getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
 import { TranslationsTable } from "./TranslationsTable";
 import { TranslationsPagination } from "./TranslationsPagination";
+import {
+  TranslationKeyModal,
+  TRANSLATIONS_KEY_MODEL_MODE,
+} from "./TranslationKeyModal";
+import { getInstance } from "~/middleware/i18next";
+import { getKeyUrl, getTranslationsUrl } from "~/lib/routes-helpers";
 
 const LIMIT = 50;
 
@@ -49,7 +65,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { keys, search, page };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
     user,
@@ -80,12 +97,44 @@ export async function action({ request, params }: Route.ActionArgs) {
 
     const newKeyId = await duplicateTranslationKey(parsedKeyId);
 
-    return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/keys/${newKeyId}`,
-    );
+    return redirect(getKeyUrl(params.orgSlug, params.projectSlug, newKeyId));
   }
 
-  return { error: "Action inconnue" };
+  if (action === "createKey") {
+    const keyName = formData.get("keyName");
+    const description = formData.get("description");
+
+    if (!keyName || typeof keyName !== "string") {
+      return {
+        error: i18next.t("keys.new.errors.nameRequired"),
+        action: "createKey",
+      };
+    }
+
+    // Vérifier que la clé n'existe pas déjà
+    const existing = await getTranslationKeyByName(project.id, keyName);
+    if (existing) {
+      return {
+        error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
+        action: "createKey",
+      };
+    }
+
+    // Créer la clé
+    await createTranslationKey({
+      projectId: project.id,
+      keyName,
+      description:
+        description && typeof description === "string"
+          ? description
+          : undefined,
+    });
+
+    // Retourner le succès avec le nom de la clé (la navigation se fera côté client)
+    return { success: true, keyName, search: keyName, action: "createKey" };
+  }
+
+  throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });
 }
 
 export default function ProjectTranslations({
@@ -98,11 +147,36 @@ export default function ProjectTranslations({
     page,
   } = loaderData;
   const { organization, project, languages } = useOutletContext<ContextType>();
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const navigate = useNavigate();
+  const isSubmitting = navigation.state === "submitting";
+
+  const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
 
   const totalLanguages = languages.length;
 
   // Build redirect URL with current search params
-  const currentUrl = `/orgs/${organization.slug}/projects/${project.slug}/translations${search ? `?search=${encodeURIComponent(search)}` : ""}`;
+  const currentUrl = getTranslationsUrl(organization.slug, project.slug, {
+    search,
+  });
+
+  // Close modal and navigate after successful creation
+  useEffect(() => {
+    if (
+      actionData?.success &&
+      actionData.action === "createKey" &&
+      navigation.state === "idle"
+    ) {
+      setIsCreateKeyModalOpen(false);
+      // Navigate to filter by the newly created key
+      navigate(
+        getTranslationsUrl(organization.slug, project.slug, {
+          search: actionData.keyName,
+        }),
+      );
+    }
+  }, [actionData, navigation.state, organization.slug, project.slug, navigate]);
 
   return (
     <VStack gap={6} align="stretch">
@@ -116,12 +190,11 @@ export default function ProjectTranslations({
           </Text>
         </Box>
         {languages.length > 0 && (
-          <Button asChild colorPalette="accent">
-            <Link
-              to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
-            >
-              <LuPlus /> {t("translations.newKey")}
-            </Link>
+          <Button
+            colorPalette="accent"
+            onClick={() => setIsCreateKeyModalOpen(true)}
+          >
+            <LuPlus /> {t("translations.newKey")}
           </Button>
         )}
       </HStack>
@@ -174,6 +247,19 @@ export default function ProjectTranslations({
           />
         </>
       )}
+
+      {/* Modale de création de clé */}
+      <TranslationKeyModal
+        isOpen={isCreateKeyModalOpen}
+        onOpenChange={setIsCreateKeyModalOpen}
+        mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
+        error={
+          actionData?.error && actionData.action === "createKey"
+            ? actionData.error
+            : undefined
+        }
+        isSubmitting={isSubmitting}
+      />
     </VStack>
   );
 }

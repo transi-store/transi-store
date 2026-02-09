@@ -1,14 +1,41 @@
+import { generatePath } from "react-router";
+
 export function getTranslationsUrl(
   orgSlug: string,
   projectSlug: string,
-  search?: string,
-) {
-  const baseUrl = `/orgs/${orgSlug}/projects/${projectSlug}/translations`;
-  return search ? `${baseUrl}?search=${encodeURIComponent(search)}` : baseUrl;
+  queryParams?: { search?: string; page?: string },
+): string {
+  const params = new URLSearchParams(queryParams);
+
+  const baseUrl = generatePath(
+    `/orgs/:orgSlug/projects/:projectSlug/translations`,
+    {
+      orgSlug,
+      projectSlug,
+    },
+  );
+
+  return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
 }
 
-export function getKeyUrl(orgSlug: string, projectSlug: string, keyId: number) {
-  return `/orgs/${orgSlug}/projects/${projectSlug}/keys/${keyId}`;
+export function getKeyUrl(
+  orgSlug: string,
+  projectSlug: string,
+  keyId: number,
+  queryParams?: { redirectTo?: string },
+): string {
+  const params = new URLSearchParams(queryParams);
+
+  const baseUrl = generatePath(
+    `/orgs/:orgSlug/projects/:projectSlug/keys/:keyId`,
+    {
+      orgSlug,
+      projectSlug,
+      keyId: String(keyId),
+    },
+  );
+
+  return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
 }
 
 export function getRedirectUrlFromRequest(

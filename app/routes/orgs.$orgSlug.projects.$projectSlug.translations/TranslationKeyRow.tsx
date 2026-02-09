@@ -17,6 +17,7 @@ import { TextHighlight } from "~/lib/highlight";
 import { isSearchTranlation } from "~/lib/translation-helper";
 import { TranslationProgress } from "./TranslationProgress";
 import type { RegularDataRow, SearchDataRow } from "~/lib/translation-helper";
+import { getKeyUrl } from "~/lib/routes-helpers";
 
 type TranslationKeyRowProps = {
   translationKey: RegularDataRow | SearchDataRow;
@@ -77,7 +78,7 @@ export function TranslationKeyRow({
             <HStack>
               <LinkOverlay asChild>
                 <Link
-                  to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirectTo=${encodeURIComponent(currentUrl)}`}
+                  to={`${getKeyUrl(organizationSlug, projectSlug, key.id)}?redirectTo=${encodeURIComponent(currentUrl)}`}
                 >
                   <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
                     <TextHighlight text={key.keyName} query={search} />
@@ -142,7 +143,7 @@ export function TranslationKeyRow({
         <HStack gap={2}>
           <Button asChild size="sm" colorPalette="brand">
             <Link
-              to={`/orgs/${organizationSlug}/projects/${projectSlug}/keys/${key.id}?redirectTo=${encodeURIComponent(currentUrl)}`}
+              to={`${getKeyUrl(organizationSlug, projectSlug, key.id, { redirectTo: currentUrl })}`}
             >
               <LuPencil /> {t("translations.edit")}
             </Link>

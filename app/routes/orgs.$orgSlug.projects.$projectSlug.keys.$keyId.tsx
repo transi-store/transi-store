@@ -12,8 +12,6 @@ import {
   SimpleGrid,
   GridItem,
   Spinner,
-  Textarea,
-  Input,
   DialogRoot,
   DialogContent,
   DialogHeader,
@@ -47,6 +45,7 @@ import {
   deleteTranslationKey,
   updateTranslationKey,
   deleteTranslation,
+  getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -58,6 +57,10 @@ import { toaster } from "~/components/ui/toaster";
 import type { TranslationSuggestion } from "~/lib/ai-translation.server";
 import { getInstance } from "~/middleware/i18next";
 import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
+import {
+  TranslationKeyModal,
+  TRANSLATIONS_KEY_MODEL_MODE,
+} from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -141,13 +144,26 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const keyName = formData.get("keyName");
     const description = formData.get("description");
 
+    if (!keyName || typeof keyName !== "string") {
+      return {
+        error: i18next.t("keys.new.errors.nameRequired"),
+        action,
+      };
+    }
+
+    // Vérifier que la clé n'existe pas déjà
+    const existing = await getTranslationKeyByName(project.id, keyName);
+    if (existing && existing.id !== key.id) {
+      return {
+        error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
+        action,
+      };
+    }
+
     await updateTranslationKey({
       keyId: key.id,
-      keyName: keyName && typeof keyName === "string" ? keyName : undefined,
-      description:
-        description && typeof description === "string"
-          ? description
-          : undefined,
+      keyName,
+      description: typeof description === "string" ? description : undefined,
     });
 
     return { success: true };
@@ -360,7 +376,7 @@ export default function EditTranslationKey({
           </Form>
         </HStack>
 
-        {actionData?.error && (
+        {actionData?.error && actionData?.action !== "editKey" && (
           <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md">
             {actionData.error}
           </Box>
@@ -486,61 +502,21 @@ export default function EditTranslationKey({
         )}
 
         {/* Modale d'édition de la clé */}
-        <DialogRoot
-          open={isEditKeyModalOpen}
-          onOpenChange={(e) => setIsEditKeyModalOpen(e.open)}
-        >
-          <Portal>
-            <DialogBackdrop />
-            <DialogPositioner>
-              <DialogContent>
-                <Form method="post">
-                  <input type="hidden" name="_action" value="editKey" />
-                  <DialogHeader>
-                    <DialogTitle>{t("keys.edit.title")}</DialogTitle>
-                  </DialogHeader>
-                  <DialogCloseTrigger />
-                  <DialogBody pb={6}>
-                    <VStack gap={4} align="stretch">
-                      <Field.Root>
-                        <Field.Label>{t("keys.edit.keyLabel")}</Field.Label>
-                        <Input
-                          name="keyName"
-                          defaultValue={key.keyName}
-                          required
-                          fontFamily="monospace"
-                        />
-                      </Field.Root>
-                      <Field.Root>
-                        <Field.Label>
-                          {t("keys.edit.descriptionLabel")}
-                        </Field.Label>
-                        <Textarea
-                          name="description"
-                          placeholder={t("keys.edit.descriptionPlaceholder")}
-                          defaultValue={key.description || ""}
-                          rows={3}
-                        />
-                      </Field.Root>
-                    </VStack>
-                  </DialogBody>
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsEditKeyModalOpen(false)}
-                    >
-                      {t("settings.cancel")}
-                    </Button>
-                    <Button type="submit" colorPalette="brand">
-                      {t("keys.edit.save")}
-                    </Button>
-                  </DialogFooter>
-                </Form>
-              </DialogContent>
-            </DialogPositioner>
-          </Portal>
-        </DialogRoot>
+        <TranslationKeyModal
+          isOpen={isEditKeyModalOpen}
+          onOpenChange={setIsEditKeyModalOpen}
+          mode={TRANSLATIONS_KEY_MODEL_MODE.EDIT}
+          defaultValues={{
+            keyName: key.keyName,
+            description: key.description || "",
+          }}
+          error={
+            actionData?.error && actionData?.action === "editKey"
+              ? actionData.error
+              : undefined
+          }
+          isSubmitting={isSubmitting}
+        />
 
         {/* Modale de suggestions IA */}
         <DialogRoot
