@@ -1,7 +1,35 @@
-import { Heading, VStack, Button, Box, Text, HStack } from "@chakra-ui/react";
-import { Link, useOutletContext, redirect } from "react-router";
+import {
+  Heading,
+  VStack,
+  Button,
+  Box,
+  Text,
+  HStack,
+  Input,
+  Field,
+  Textarea,
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogCloseTrigger,
+  DialogBackdrop,
+  DialogPositioner,
+  Portal,
+} from "@chakra-ui/react";
+import {
+  Link,
+  useOutletContext,
+  redirect,
+  Form,
+  useActionData,
+  useNavigation,
+} from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
+import { useState, useEffect } from "react";
 import type { Route } from "./+types/index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -9,10 +37,13 @@ import { getProjectBySlug } from "~/lib/projects.server";
 import {
   getTranslationKeys,
   duplicateTranslationKey,
+  createTranslationKey,
+  getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
 import { TranslationsTable } from "./TranslationsTable";
 import { TranslationsPagination } from "./TranslationsPagination";
+import { getInstance } from "~/middleware/i18next";
 
 const LIMIT = 50;
 
@@ -49,7 +80,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { keys, search, page };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
     user,
@@ -85,6 +117,42 @@ export async function action({ request, params }: Route.ActionArgs) {
     );
   }
 
+  if (action === "createKey") {
+    const keyName = formData.get("keyName");
+    const description = formData.get("description");
+
+    if (!keyName || typeof keyName !== "string") {
+      return {
+        error: i18next.t("keys.new.errors.nameRequired"),
+        action: "createKey",
+      };
+    }
+
+    // Vérifier que la clé n'existe pas déjà
+    const existing = await getTranslationKeyByName(project.id, keyName);
+    if (existing) {
+      return {
+        error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
+        action: "createKey",
+      };
+    }
+
+    // Créer la clé
+    await createTranslationKey({
+      projectId: project.id,
+      keyName,
+      description:
+        description && typeof description === "string"
+          ? description
+          : undefined,
+    });
+
+    // Rediriger vers la page de traductions avec le filtre de recherche pour afficher la nouvelle clé
+    return redirect(
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations?search=${encodeURIComponent(keyName)}`,
+    );
+  }
+
   return { error: "Action inconnue" };
 }
 
@@ -98,11 +166,38 @@ export default function ProjectTranslations({
     page,
   } = loaderData;
   const { organization, project, languages } = useOutletContext<ContextType>();
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+
+  const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
 
   const totalLanguages = languages.length;
 
   // Build redirect URL with current search params
   const currentUrl = `/orgs/${organization.slug}/projects/${project.slug}/translations${search ? `?search=${encodeURIComponent(search)}` : ""}`;
+
+  // Close modal after successful creation (when redirecting)
+  useEffect(() => {
+    if (
+      actionData &&
+      !("error" in actionData) &&
+      navigation.state === "idle"
+    ) {
+      setIsCreateKeyModalOpen(false);
+    }
+  }, [actionData, navigation.state]);
+
+  // Keep modal open if there's an error for createKey action
+  useEffect(() => {
+    if (
+      actionData &&
+      "error" in actionData &&
+      actionData.action === "createKey"
+    ) {
+      setIsCreateKeyModalOpen(true);
+    }
+  }, [actionData]);
 
   return (
     <VStack gap={6} align="stretch">
@@ -116,12 +211,11 @@ export default function ProjectTranslations({
           </Text>
         </Box>
         {languages.length > 0 && (
-          <Button asChild colorPalette="accent">
-            <Link
-              to={`/orgs/${organization.slug}/projects/${project.slug}/keys/new`}
-            >
-              <LuPlus /> {t("translations.newKey")}
-            </Link>
+          <Button
+            colorPalette="accent"
+            onClick={() => setIsCreateKeyModalOpen(true)}
+          >
+            <LuPlus /> {t("translations.newKey")}
           </Button>
         )}
       </HStack>
@@ -174,6 +268,82 @@ export default function ProjectTranslations({
           />
         </>
       )}
+
+      {/* Modale de création de clé */}
+      <DialogRoot
+        open={isCreateKeyModalOpen}
+        onOpenChange={(e) => setIsCreateKeyModalOpen(e.open)}
+      >
+        <Portal>
+          <DialogBackdrop />
+          <DialogPositioner>
+            <DialogContent>
+              <Form method="post">
+                <input type="hidden" name="_action" value="createKey" />
+                <DialogHeader>
+                  <DialogTitle>{t("keys.new.title")}</DialogTitle>
+                </DialogHeader>
+                <DialogCloseTrigger />
+                <DialogBody pb={6}>
+                  {actionData?.error && actionData.action === "createKey" && (
+                    <Box
+                      p={4}
+                      bg="red.subtle"
+                      color="red.fg"
+                      borderRadius="md"
+                      mb={4}
+                    >
+                      {actionData.error}
+                    </Box>
+                  )}
+                  <VStack gap={4} align="stretch">
+                    <Field.Root required>
+                      <Field.Label>{t("keys.new.nameLabel")}</Field.Label>
+                      <Input
+                        name="keyName"
+                        placeholder={t("keys.new.namePlaceholder")}
+                        disabled={isSubmitting}
+                        fontFamily="mono"
+                      />
+                      <Field.HelperText>
+                        {t("keys.new.nameHelper")}
+                      </Field.HelperText>
+                    </Field.Root>
+                    <Field.Root>
+                      <Field.Label>
+                        {t("keys.new.descriptionLabel")}
+                      </Field.Label>
+                      <Textarea
+                        name="description"
+                        placeholder={t("keys.edit.descriptionPlaceholder")}
+                        disabled={isSubmitting}
+                        rows={3}
+                      />
+                    </Field.Root>
+                  </VStack>
+                </DialogBody>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreateKeyModalOpen(false)}
+                    disabled={isSubmitting}
+                  >
+                    {t("settings.cancel")}
+                  </Button>
+                  <Button
+                    type="submit"
+                    colorPalette="brand"
+                    loading={isSubmitting}
+                  >
+                    {t("keys.new.create")}
+                  </Button>
+                </DialogFooter>
+              </Form>
+            </DialogContent>
+          </DialogPositioner>
+        </Portal>
+      </DialogRoot>
     </VStack>
   );
 }
