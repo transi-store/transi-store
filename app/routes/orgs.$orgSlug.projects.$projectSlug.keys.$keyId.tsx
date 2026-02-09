@@ -12,8 +12,6 @@ import {
   SimpleGrid,
   GridItem,
   Spinner,
-  Textarea,
-  Input,
   DialogRoot,
   DialogContent,
   DialogHeader,
@@ -58,6 +56,7 @@ import { toaster } from "~/components/ui/toaster";
 import type { TranslationSuggestion } from "~/lib/ai-translation.server";
 import { getInstance } from "~/middleware/i18next";
 import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
+import { TranslationKeyModal } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -486,61 +485,16 @@ export default function EditTranslationKey({
         )}
 
         {/* Modale d'édition de la clé */}
-        <DialogRoot
-          open={isEditKeyModalOpen}
-          onOpenChange={(e) => setIsEditKeyModalOpen(e.open)}
-        >
-          <Portal>
-            <DialogBackdrop />
-            <DialogPositioner>
-              <DialogContent>
-                <Form method="post">
-                  <input type="hidden" name="_action" value="editKey" />
-                  <DialogHeader>
-                    <DialogTitle>{t("keys.edit.title")}</DialogTitle>
-                  </DialogHeader>
-                  <DialogCloseTrigger />
-                  <DialogBody pb={6}>
-                    <VStack gap={4} align="stretch">
-                      <Field.Root>
-                        <Field.Label>{t("keys.edit.keyLabel")}</Field.Label>
-                        <Input
-                          name="keyName"
-                          defaultValue={key.keyName}
-                          required
-                          fontFamily="monospace"
-                        />
-                      </Field.Root>
-                      <Field.Root>
-                        <Field.Label>
-                          {t("keys.edit.descriptionLabel")}
-                        </Field.Label>
-                        <Textarea
-                          name="description"
-                          placeholder={t("keys.edit.descriptionPlaceholder")}
-                          defaultValue={key.description || ""}
-                          rows={3}
-                        />
-                      </Field.Root>
-                    </VStack>
-                  </DialogBody>
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsEditKeyModalOpen(false)}
-                    >
-                      {t("settings.cancel")}
-                    </Button>
-                    <Button type="submit" colorPalette="brand">
-                      {t("keys.edit.save")}
-                    </Button>
-                  </DialogFooter>
-                </Form>
-              </DialogContent>
-            </DialogPositioner>
-          </Portal>
-        </DialogRoot>
+        <TranslationKeyModal
+          isOpen={isEditKeyModalOpen}
+          onOpenChange={setIsEditKeyModalOpen}
+          mode="edit"
+          defaultValues={{
+            keyName: key.keyName,
+            description: key.description || "",
+          }}
+          isSubmitting={isSubmitting}
+        />
 
         {/* Modale de suggestions IA */}
         <DialogRoot

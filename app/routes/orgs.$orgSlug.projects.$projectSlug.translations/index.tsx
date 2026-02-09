@@ -1,29 +1,8 @@
-import {
-  Heading,
-  VStack,
-  Button,
-  Box,
-  Text,
-  HStack,
-  Input,
-  Field,
-  Textarea,
-  DialogRoot,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  DialogCloseTrigger,
-  DialogBackdrop,
-  DialogPositioner,
-  Portal,
-} from "@chakra-ui/react";
+import { Heading, VStack, Button, Box, Text, HStack } from "@chakra-ui/react";
 import {
   Link,
   useOutletContext,
   redirect,
-  Form,
   useActionData,
   useNavigation,
 } from "react-router";
@@ -43,6 +22,7 @@ import {
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
 import { TranslationsTable } from "./TranslationsTable";
 import { TranslationsPagination } from "./TranslationsPagination";
+import { TranslationKeyModal } from "./TranslationKeyModal";
 import { getInstance } from "~/middleware/i18next";
 
 const LIMIT = 50;
@@ -270,80 +250,17 @@ export default function ProjectTranslations({
       )}
 
       {/* Modale de création de clé */}
-      <DialogRoot
-        open={isCreateKeyModalOpen}
-        onOpenChange={(e) => setIsCreateKeyModalOpen(e.open)}
-      >
-        <Portal>
-          <DialogBackdrop />
-          <DialogPositioner>
-            <DialogContent>
-              <Form method="post">
-                <input type="hidden" name="_action" value="createKey" />
-                <DialogHeader>
-                  <DialogTitle>{t("keys.new.title")}</DialogTitle>
-                </DialogHeader>
-                <DialogCloseTrigger />
-                <DialogBody pb={6}>
-                  {actionData?.error && actionData.action === "createKey" && (
-                    <Box
-                      p={4}
-                      bg="red.subtle"
-                      color="red.fg"
-                      borderRadius="md"
-                      mb={4}
-                    >
-                      {actionData.error}
-                    </Box>
-                  )}
-                  <VStack gap={4} align="stretch">
-                    <Field.Root required>
-                      <Field.Label>{t("keys.new.nameLabel")}</Field.Label>
-                      <Input
-                        name="keyName"
-                        placeholder={t("keys.new.namePlaceholder")}
-                        disabled={isSubmitting}
-                        fontFamily="mono"
-                      />
-                      <Field.HelperText>
-                        {t("keys.new.nameHelper")}
-                      </Field.HelperText>
-                    </Field.Root>
-                    <Field.Root>
-                      <Field.Label>
-                        {t("keys.new.descriptionLabel")}
-                      </Field.Label>
-                      <Textarea
-                        name="description"
-                        placeholder={t("keys.edit.descriptionPlaceholder")}
-                        disabled={isSubmitting}
-                        rows={3}
-                      />
-                    </Field.Root>
-                  </VStack>
-                </DialogBody>
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsCreateKeyModalOpen(false)}
-                    disabled={isSubmitting}
-                  >
-                    {t("settings.cancel")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    colorPalette="brand"
-                    loading={isSubmitting}
-                  >
-                    {t("keys.new.create")}
-                  </Button>
-                </DialogFooter>
-              </Form>
-            </DialogContent>
-          </DialogPositioner>
-        </Portal>
-      </DialogRoot>
+      <TranslationKeyModal
+        isOpen={isCreateKeyModalOpen}
+        onOpenChange={setIsCreateKeyModalOpen}
+        mode="create"
+        error={
+          actionData?.error && actionData.action === "createKey"
+            ? actionData.error
+            : undefined
+        }
+        isSubmitting={isSubmitting}
+      />
     </VStack>
   );
 }
