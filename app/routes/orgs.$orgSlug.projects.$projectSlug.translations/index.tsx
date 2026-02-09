@@ -5,6 +5,7 @@ import {
   redirect,
   useActionData,
   useNavigation,
+  useNavigate,
 } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
@@ -127,10 +128,8 @@ export async function action({ request, params, context }: Route.ActionArgs) {
           : undefined,
     });
 
-    // Rediriger vers la page de traductions avec le filtre de recherche pour afficher la nouvelle clé
-    return redirect(
-      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations?search=${encodeURIComponent(keyName)}`,
-    );
+    // Retourner le succès avec le nom de la clé (la navigation se fera côté client)
+    return { success: true, keyName, search: keyName, action: "createKey" };
   }
 
   return { error: "Action inconnue" };
@@ -148,6 +147,7 @@ export default function ProjectTranslations({
   const { organization, project, languages } = useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const navigate = useNavigate();
   const isSubmitting = navigation.state === "submitting";
 
   const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
@@ -157,16 +157,20 @@ export default function ProjectTranslations({
   // Build redirect URL with current search params
   const currentUrl = `/orgs/${organization.slug}/projects/${project.slug}/translations${search ? `?search=${encodeURIComponent(search)}` : ""}`;
 
-  // Close modal after successful creation (when redirecting)
+  // Close modal and navigate after successful creation
   useEffect(() => {
     if (
-      actionData &&
-      !("error" in actionData) &&
+      actionData?.success &&
+      actionData.action === "createKey" &&
       navigation.state === "idle"
     ) {
       setIsCreateKeyModalOpen(false);
+      // Navigate to filter by the newly created key
+      navigate(
+        `/orgs/${organization.slug}/projects/${project.slug}/translations?search=${encodeURIComponent(actionData.keyName)}`,
+      );
     }
-  }, [actionData, navigation.state]);
+  }, [actionData, navigation.state, organization.slug, project.slug, navigate]);
 
   // Keep modal open if there's an error for createKey action
   useEffect(() => {
