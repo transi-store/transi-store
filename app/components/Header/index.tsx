@@ -24,7 +24,7 @@ export function Header({ user }: HeaderProps) {
               <img
                 src={
                   colorMode === "dark"
-                    ? "/logo-square.svg"
+                    ? "/logo-square-white.svg"
                     : "/logo-square-black.svg"
                 }
                 alt="Logo"
