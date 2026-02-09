@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { DEFAULT_LANGUAGE_CODE, AVAILABLE_LANGUAGES } from "~/lib/i18n";
 
 export function LanguageSelector() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const location = useLocation();
 
   const currentLang = i18n.language || DEFAULT_LANGUAGE_CODE;
@@ -14,7 +14,11 @@ export function LanguageSelector() {
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <Button variant="ghost" size="sm" aria-label="Change language">
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t("languageSelector.label")}
+        >
           <LuLanguages />{" "}
           {AVAILABLE_LANGUAGES.find((l) => l.code === currentLang)?.flag}
         </Button>

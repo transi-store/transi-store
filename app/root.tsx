@@ -83,7 +83,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
 export default function App() {
   const { user, locale } = useLoaderData<typeof loader>();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   useEffect(() => {
     if (i18n.language !== locale) {
@@ -93,6 +93,9 @@ export default function App() {
 
   return (
     <>
+      <title>{t("website.title")}</title>
+      <meta name="description" content={t("website.description")} />
+
       <Toaster />
       <Header user={user} />
       <Box as="main">

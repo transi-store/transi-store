@@ -282,18 +282,20 @@ export default function EditTranslationKey({
 
       // Show toast immediately after submitting
       toaster.success({
-        title: "Sauvegarde en cours...",
-        // description: `Clé: ${key.keyName} • Locale: ${locale} • Valeur: ${value || "(vide)"}`,
+        title: t("common.saveInProgress"),
         description: (
           <VStack align="start" gap={1}>
             <Text>
-              <strong>Clé:</strong> {key.keyName}
+              <strong>{t("key.save.key")} </strong>
+              {key.keyName}
             </Text>
             <Text>
-              <strong>Locale:</strong> {locale}
+              <strong>{t("key.save.locale")}</strong>
+              {locale}
             </Text>
             <Text>
-              <strong>Valeur:</strong> {value || "(vide)"}
+              <strong>{t("key.save.value")}</strong>{" "}
+              {value || t("key.save.empty")}
             </Text>
           </VStack>
         ),
@@ -533,7 +535,10 @@ export default function EditTranslationKey({
                   <DialogTitle>
                     <HStack>
                       <LuSparkles />
-                      <Text>Suggestions de traduction</Text>
+                      <Text>
+                        {t("keys.translateWithAI.suggestionsTitle")}
+                        Suggestions de traduction
+                      </Text>
                       {aiDialogLocale && (
                         <Badge colorPalette="purple">
                           {aiDialogLocale.toUpperCase()}
@@ -549,7 +554,7 @@ export default function EditTranslationKey({
                     <VStack py={8}>
                       <Spinner size="lg" />
                       <Text color="fg.muted">
-                        Génération des traductions en cours...
+                        {t("keys.translateWithAI.generating")}
                       </Text>
                     </VStack>
                   ) : aiFetcher.data?.error ? (
@@ -582,7 +587,7 @@ export default function EditTranslationKey({
                           </Text>
                           {suggestion.confidence && (
                             <Text fontSize="xs" color="fg.subtle" mt={1}>
-                              Confiance:{" "}
+                              {t("keys.translateWithAI.confidence")}
                               {Math.round(suggestion.confidence * 100)}%
                             </Text>
                           )}
@@ -596,7 +601,7 @@ export default function EditTranslationKey({
                         </Box>
                       ))}
                       <Text fontSize="xs" color="fg.subtle" mt={2}>
-                        Cliquez sur une suggestion pour l'utiliser
+                        {t("keys.translateWithAI.clickOnSuggestion")}
                       </Text>
                     </VStack>
                   ) : null}
@@ -606,7 +611,7 @@ export default function EditTranslationKey({
                     variant="outline"
                     onClick={() => setAiDialogLocale(null)}
                   >
-                    Fermer
+                    {t("common.close")}
                   </Button>
                 </DialogFooter>
               </DialogContent>

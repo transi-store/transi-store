@@ -52,3 +52,25 @@ jobs:
 
       - name: Run knip
         run: yarn knip
+        
+  i18next:
+    name: i18next Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run i18next
+        run: yarn i18next-cli lint
