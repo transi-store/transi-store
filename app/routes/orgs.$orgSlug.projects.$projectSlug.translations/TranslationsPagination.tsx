@@ -8,6 +8,7 @@ type TranslationsPaginationProps = {
   pageSize: number;
   currentPage: number;
   search?: string;
+  sort: "alphabetical" | "createdAt" | "relevance";
   organizationSlug: string;
   projectSlug: string;
 };
@@ -17,6 +18,7 @@ export function TranslationsPagination({
   pageSize,
   currentPage,
   search,
+  sort,
   organizationSlug,
   projectSlug,
 }: TranslationsPaginationProps) {
@@ -24,6 +26,7 @@ export function TranslationsPagination({
     return getTranslationsUrl(organizationSlug, projectSlug, {
       search,
       page: String(page),
+      sort,
     });
   };
 

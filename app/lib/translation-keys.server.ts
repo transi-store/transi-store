@@ -1,7 +1,9 @@
 import { db, schema } from "./db.server";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
+
+export type TranslationKeysSort = "alphabetical" | "createdAt" | "relevance";
 
 type TranslationKeysReturnType = {
   count: number;
@@ -14,6 +16,7 @@ export async function getTranslationKeys(
     search?: string;
     limit?: number;
     offset?: number;
+    sort?: TranslationKeysSort;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -31,6 +34,9 @@ export async function getTranslationKeys(
     },
   });
 
+  const sort =
+    options?.sort ?? (options?.search ? "relevance" : "alphabetical");
+
   if (options?.search) {
     const searchQuery = options.search.trim();
     const keysWithSimilarity = await searchTranslationKeys(
@@ -41,6 +47,16 @@ export async function getTranslationKeys(
         offset: options?.offset ?? 0,
       },
     );
+    if (sort === "alphabetical") {
+      keysWithSimilarity.sort((a, b) =>
+        a.key.keyName.localeCompare(b.key.keyName),
+      );
+    }
+    if (sort === "createdAt") {
+      keysWithSimilarity.sort(
+        (a, b) => b.key.createdAt.getTime() - a.key.createdAt.getTime(),
+      );
+    }
     keys = keysWithSimilarity.map(
       (
         row,
@@ -60,7 +76,11 @@ export async function getTranslationKeys(
       .where(eq(schema.translationKeys.projectId, projectId))
       .limit(options?.limit ?? 50)
       .offset(options?.offset ?? 0)
-      .orderBy(schema.translationKeys.keyName);
+      .orderBy(
+        sort === "createdAt"
+          ? desc(schema.translationKeys.createdAt)
+          : schema.translationKeys.keyName,
+      );
 
     count = await db.$count(
       schema.translationKeys,

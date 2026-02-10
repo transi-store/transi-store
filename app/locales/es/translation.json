@@ -94,6 +94,10 @@
   "orgs.new.slugHelper": "Se utiliza en la URL (ej.: /orgs/mi-empresa)",
   "orgs.return": "Regresar a las organizaciones",
   "translations.newKey": "Nueva clave",
+  "translations.sort.alphabetical": "Alfabético",
+  "translations.sort.createdAt": "Fecha de creación",
+  "translations.sort.label": "Ordenar por",
+  "translations.sort.relevance": "Pertinencia",
   "website.description": "Herramienta de gestión de traducciones para múltiples proyectos",
   "website.title": "Transi-Store - Sistema de traducción sencillo y potente"
 }
