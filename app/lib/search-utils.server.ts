@@ -31,6 +31,8 @@ type SearchTranslationKeyResult = {
   translationValue?: string;
 };
 
+type SearchTranslationKeySort = "relevance" | "alphabetical" | "createdAt";
+
 // Recherche universelle sur les clés et traductions, filtrable par projectIds
 export async function searchTranslationKeys(
   searchQuery: string,
@@ -39,10 +41,18 @@ export async function searchTranslationKeys(
     limit?: number;
     offset?: number;
     locale?: string;
+    sort?: SearchTranslationKeySort;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit ?? 50;
   const offset = options?.offset ?? 0;
+  const sort = options?.sort ?? "relevance";
+  const orderBy =
+    sort === "createdAt"
+      ? desc(schema.translationKeys.createdAt)
+      : sort === "alphabetical"
+        ? schema.translationKeys.keyName
+        : desc(sql`similarity`);
 
   // Matches sur keyName et description
   const keyResults = await db
@@ -63,7 +73,7 @@ export async function searchTranslationKeys(
         )!,
       ),
     )
-    .orderBy(desc(sql`similarity`))
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 
@@ -91,7 +101,7 @@ export async function searchTranslationKeys(
       eq(schema.translationKeys.id, schema.translations.keyId),
     )
     .where(and(...translationWhere))
-    .orderBy(desc(sql`similarity`))
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 

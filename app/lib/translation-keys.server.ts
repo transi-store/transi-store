@@ -45,17 +45,9 @@ export async function getTranslationKeys(
       {
         limit: options?.limit ?? 50,
         offset: options?.offset ?? 0,
+        sort,
       },
     );
-    if (sort === "alphabetical") {
-      keysWithSimilarity.sort((a, b) =>
-        a.key.keyName.localeCompare(b.key.keyName),
-      );
-    } else if (sort === "createdAt") {
-      keysWithSimilarity.sort(
-        (a, b) => b.key.createdAt.getTime() - a.key.createdAt.getTime(),
-      );
-    }
     keys = keysWithSimilarity.map(
       (
         row,
@@ -68,7 +60,7 @@ export async function getTranslationKeys(
     );
     count = keysWithSimilarity.length;
   } else {
-    // No search query - use regular query ordered by keyName
+    // No search query - use regular query ordered by selected sort
     keys = await db
       .select()
       .from(schema.translationKeys)
