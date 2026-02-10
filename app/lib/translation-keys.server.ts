@@ -2,8 +2,7 @@ import { db, schema } from "./db.server";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
-
-export type TranslationKeysSort = "alphabetical" | "createdAt" | "relevance";
+import { TranslationKeysSort } from "./sort/keySort";
 
 type TranslationKeysReturnType = {
   count: number;
@@ -34,9 +33,6 @@ export async function getTranslationKeys(
     },
   });
 
-  const sort =
-    options?.sort ?? (options?.search ? "relevance" : "alphabetical");
-
   if (options?.search) {
     const searchQuery = options.search.trim();
     const keysWithSimilarity = await searchTranslationKeys(
@@ -45,7 +41,7 @@ export async function getTranslationKeys(
       {
         limit: options?.limit ?? 50,
         offset: options?.offset ?? 0,
-        sort,
+        sort: options?.sort ?? TranslationKeysSort.RELEVANCE,
       },
     );
     keys = keysWithSimilarity.map(
@@ -68,7 +64,7 @@ export async function getTranslationKeys(
       .limit(options?.limit ?? 50)
       .offset(options?.offset ?? 0)
       .orderBy(
-        sort === "createdAt"
+        options?.sort === TranslationKeysSort.CREATED_AT
           ? desc(schema.translationKeys.createdAt)
           : schema.translationKeys.keyName,
       );

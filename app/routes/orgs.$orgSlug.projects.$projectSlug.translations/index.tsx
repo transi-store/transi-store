@@ -19,7 +19,6 @@ import {
   duplicateTranslationKey,
   createTranslationKey,
   getTranslationKeyByName,
-  type TranslationKeysSort,
 } from "~/lib/translation-keys.server";
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
 import { TranslationsTable } from "./TranslationsTable";
@@ -30,21 +29,28 @@ import {
 } from "./TranslationKeyModal";
 import { getInstance } from "~/middleware/i18next";
 import { getKeyUrl, getTranslationsUrl } from "~/lib/routes-helpers";
+import { TranslationKeysSort } from "~/lib/sort/keySort";
 
 const LIMIT = 50;
-const SORT_OPTIONS = ["alphabetical", "createdAt", "relevance"] as const;
 
-function resolveSort(
+export function resolveSort(
   sortParam: string | null,
   hasSearch: boolean,
 ): TranslationKeysSort {
-  const sort = SORT_OPTIONS.includes(sortParam as TranslationKeysSort)
+  const sort = Object.values(TranslationKeysSort).includes(
+    sortParam as TranslationKeysSort,
+  )
     ? (sortParam as TranslationKeysSort)
     : undefined;
-  if (!hasSearch && sort === "relevance") {
-    return "alphabetical";
+  if (!hasSearch && sort === TranslationKeysSort.RELEVANCE) {
+    return TranslationKeysSort.ALPHABETICAL;
   }
-  return sort ?? (hasSearch ? "relevance" : "alphabetical");
+  return (
+    sort ??
+    (hasSearch
+      ? TranslationKeysSort.RELEVANCE
+      : TranslationKeysSort.ALPHABETICAL)
+  );
 }
 
 type ContextType = {

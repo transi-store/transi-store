@@ -1,20 +1,29 @@
 import { generatePath } from "react-router";
 
+export function removeUndefinedValues<
+  T extends Record<string, string | undefined | null>,
+>(obj: T | undefined): Record<string, string> {
+  if (!obj) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([_, value]) => value !== undefined && value !== null,
+    ),
+  ) as Record<string, string>;
+}
+
 export function getTranslationsUrl(
   orgSlug: string,
   projectSlug: string,
-  queryParams?: { search?: string; page?: string; sort?: string },
+  queryParams?: {
+    search?: string | null;
+    page?: string | null;
+    sort?: string | null;
+  },
 ): string {
-  const params = new URLSearchParams();
-  if (queryParams?.search) {
-    params.set("search", queryParams.search);
-  }
-  if (queryParams?.page) {
-    params.set("page", queryParams.page);
-  }
-  if (queryParams?.sort) {
-    params.set("sort", queryParams.sort);
-  }
+  const params = new URLSearchParams(removeUndefinedValues(queryParams));
 
   const baseUrl = generatePath(
     `/orgs/:orgSlug/projects/:projectSlug/translations`,
