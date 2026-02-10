@@ -13,20 +13,8 @@ jobs:
     name: TypeScript Typecheck
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Init repository dependencies
+        uses: ./.github/actions/setup-project
 
       - name: Run lint:types
         run: yarn lint:types
@@ -35,20 +23,9 @@ jobs:
     name: Knip Validation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Init repository dependencies
+        uses: ./.github/actions/setup-project
 
       - name: Run knip
         run: yarn knip
@@ -57,20 +34,8 @@ jobs:
     name: i18next Validation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Init repository dependencies
+        uses: ./.github/actions/setup-project
 
       - name: Run i18next
         run: yarn i18next-cli lint
