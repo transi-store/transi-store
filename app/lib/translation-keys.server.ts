@@ -51,8 +51,7 @@ export async function getTranslationKeys(
       keysWithSimilarity.sort((a, b) =>
         a.key.keyName.localeCompare(b.key.keyName),
       );
-    }
-    if (sort === "createdAt") {
+    } else if (sort === "createdAt") {
       keysWithSimilarity.sort(
         (a, b) => b.key.createdAt.getTime() - a.key.createdAt.getTime(),
       );
