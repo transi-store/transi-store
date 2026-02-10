@@ -13,6 +13,9 @@ jobs:
     name: TypeScript Typecheck
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code 
+        uses: actions/checkout@v4 
+ 
       - name: Init repository dependencies
         uses: ./.github/actions/setup-project
 
@@ -23,7 +26,9 @@ jobs:
     name: Knip Validation
     runs-on: ubuntu-latest
     steps:
-
+      - name: Checkout code 
+        uses: actions/checkout@v4 
+ 
       - name: Init repository dependencies
         uses: ./.github/actions/setup-project
 
@@ -34,6 +39,9 @@ jobs:
     name: i18next Validation
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code 
+        uses: actions/checkout@v4 
+ 
       - name: Init repository dependencies
         uses: ./.github/actions/setup-project
 
