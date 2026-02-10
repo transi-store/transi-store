@@ -4,9 +4,6 @@ description: Setup Node.js with Corepack and install dependencies via Yarn
 runs:
   using: composite
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Enable Corepack
       run: corepack enable
       shell:
