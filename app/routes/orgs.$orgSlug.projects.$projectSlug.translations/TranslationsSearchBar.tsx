@@ -49,7 +49,7 @@ export function TranslationsSearchBar({
     sortOptions.find((option) => option.value === sort)?.value ??
     sortOptions[0]?.value ??
     "alphabetical";
-  const clearSort = sort === "relevance" ? undefined : sort;
+  const preservedSort = sort === "relevance" ? undefined : sort;
 
   return (
     <Form method="get">
@@ -97,7 +97,7 @@ export function TranslationsSearchBar({
           <Button asChild variant="outline">
             <Link
               to={getTranslationsUrl(organizationSlug, projectSlug, {
-                sort: clearSort,
+                sort: preservedSort,
               })}
             >
               {t("translations.clear")}
