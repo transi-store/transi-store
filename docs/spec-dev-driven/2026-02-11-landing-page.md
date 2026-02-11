@@ -2,16 +2,16 @@
 
 ## Contexte
 
-Actuellement la page d'accueil du projet est très basique et ne présente pas vraiment le projet de manière attrayante. Pour attirer plus d'utilisateurs et les convaincre d'utiliser TransiStore, il serait intéressant de créer une landing page plus attrayante et informative.
+Actuellement la page d'accueil du projet est très basique et ne présente pas vraiment le projet de manière attrayante. Pour attirer plus d'utilisateurs et les convaincre d'utiliser Transi-Store, il serait intéressant de créer une landing page plus attrayante et informative.
 
 ## Spécifications techniques
 
-La landing page doit présenter les fonctionnalités clés de TransiStore, les avantages pour les utilisateurs.
+La landing page doit présenter les fonctionnalités clés de Transi-Store, les avantages pour les utilisateurs.
 La page doit être très jolie, et très moderne, avec des animations et des illustrations pour rendre le tout plus attrayant.
 
 Le design de la page doit être responsive, pour être consultable sur mobile et desktop.
 Le design doit reprendre les codes des sites modernes, avec une navigation claire et intuitive.
-On doit comprendre rapidement ce qu'est TransiStore et pourquoi l'utiliser.
+On doit comprendre rapidement ce qu'est Transi-Store et pourquoi l'utiliser.
 
 ### Open-source vs SaaS
 
@@ -23,7 +23,7 @@ le pricing doit présenter les différentes offres :
 
 - Offre open-source : gratuite, avec les fonctionnalités de base, à auto-héberger.
 - Offre SaaS : gratuite pour les projets open-source.
-- Offre SaaS : payante, avec des fonctionnalités avancées, hébergée par TransiStore, à partir de 29 € / mois. Le premier mois est gratuit.
+- Offre SaaS : payante, avec des fonctionnalités avancées, hébergée par Transi-Store, à partir de 29 € / mois. Le premier mois est gratuit.
 
 Dans le cas de l'auto-hébergement et l'offre saas payante, le nombre de projet et d'utilisateur est illimité.
 Dans le cas de l'offre saas gratuite pour les projets open-source, les utilisateurs sont limités aux contributeurs du projet open-source.

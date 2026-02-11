@@ -1,16 +1,11 @@
-import {
-  Box,
-  Heading,
-  Text,
-  Container,
-  VStack,
-  HStack,
-} from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
 import { redirect } from "react-router";
 import type { Route } from "./+types/_index";
 import { getUserFromSession } from "~/lib/session.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
+import { HeroSection } from "~/components/landing/HeroSection";
+import { FeaturesSection } from "~/components/landing/FeaturesSection";
+import { HowItWorksSection } from "~/components/landing/HowItWorksSection";
+import { CTASection } from "~/components/landing/CTASection";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
@@ -32,24 +27,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Index() {
-  const { t } = useTranslation();
   return (
-    <Container maxW="container.lg" py={10}>
-      <VStack gap={6} align="stretch">
-        <HStack justify="space-between" align="start">
-          <Box>
-            <Heading as="h1" size="2xl">
-              {t("index.title")}
-            </Heading>
-            <Text fontSize="xl" color="fg.muted">
-              {t("index.description")}
-            </Text>
-          </Box>
-        </HStack>
-        <Box p={6} borderWidth={1} borderRadius="lg">
-          <Text>{t("index.welcome")}</Text>
-        </Box>
-      </VStack>
-    </Container>
+    <>
+      <HeroSection />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <CTASection />
+    </>
   );
 }
