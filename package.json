@@ -13,7 +13,7 @@
     "build:cli": "yarn workspace @transi-store/cli build && yarn build:cli:schema",
     "build:cli:schema": "node ./scripts/create-json-schema.mjs",
     "start": "react-router-serve ./build/server/index.js",
-    "download-translations": "yarn build:cli && yarn transi-store",
+    "download-translations": "yarn transi-store",
     "lint:types": "react-router typegen && tsc --noEmit && yarn workspace @transi-store/cli lint:types",
     "knip": "react-router typegen && knip",
     "db:generate": "drizzle-kit generate",

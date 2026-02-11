@@ -2,12 +2,14 @@ import { Center, ButtonGroup, IconButton, Pagination } from "@chakra-ui/react";
 import { Link } from "react-router";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { getTranslationsUrl } from "~/lib/routes-helpers";
+import type { TranslationKeysSort } from "~/lib/sort/keySort";
 
 type TranslationsPaginationProps = {
   count: number;
   pageSize: number;
   currentPage: number;
   search?: string;
+  sort: TranslationKeysSort;
   organizationSlug: string;
   projectSlug: string;
 };
@@ -17,6 +19,7 @@ export function TranslationsPagination({
   pageSize,
   currentPage,
   search,
+  sort,
   organizationSlug,
   projectSlug,
 }: TranslationsPaginationProps) {
@@ -24,6 +27,7 @@ export function TranslationsPagination({
     return getTranslationsUrl(organizationSlug, projectSlug, {
       search,
       page: String(page),
+      sort,
     });
   };
 

@@ -344,6 +344,8 @@
   "translations.noResultsForSearch": "No keys found for this search",
   "translations.search": "Search",
   "translations.searchPlaceholder": "Search for a key...",
+  "translations.sort": "{sortValue, select,\n  alphabetical {alphabetical}\n  createdAt {created at}\n  relevance {pertinance}\n  other {translations.sort}\n}",
+  "translations.sort.label": "Sort by",
   "translations.table.actions": "Actions",
   "translations.table.keyName": "Key name",
   "translations.table.translations": "Translations",

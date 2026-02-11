@@ -1,5 +1,6 @@
 import { eq, sql, and, or, inArray, desc } from "drizzle-orm";
 import { db, schema } from "./db.server";
+import { TranslationKeysSort } from "./sort/keySort";
 
 /**
  * Seuil de similarité minimum pour la recherche floue (0-1)
@@ -39,10 +40,18 @@ export async function searchTranslationKeys(
     limit?: number;
     offset?: number;
     locale?: string;
+    sort?: TranslationKeysSort;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit ?? 50;
   const offset = options?.offset ?? 0;
+  const sort = options?.sort ?? TranslationKeysSort.RELEVANCE;
+  const orderBy =
+    sort === TranslationKeysSort.CREATED_AT
+      ? desc(schema.translationKeys.createdAt)
+      : sort === TranslationKeysSort.ALPHABETICAL
+        ? schema.translationKeys.keyName
+        : desc(sql`similarity`);
 
   // Matches sur keyName et description
   const keyResults = await db
@@ -63,7 +72,7 @@ export async function searchTranslationKeys(
         )!,
       ),
     )
-    .orderBy(desc(sql`similarity`))
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 
@@ -91,7 +100,7 @@ export async function searchTranslationKeys(
       eq(schema.translationKeys.id, schema.translations.keyId),
     )
     .where(and(...translationWhere))
-    .orderBy(desc(sql`similarity`))
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 

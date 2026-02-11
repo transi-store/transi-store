@@ -29,8 +29,29 @@ import {
 } from "./TranslationKeyModal";
 import { getInstance } from "~/middleware/i18next";
 import { getKeyUrl, getTranslationsUrl } from "~/lib/routes-helpers";
+import { TranslationKeysSort } from "~/lib/sort/keySort";
 
 const LIMIT = 50;
+
+export function resolveSort(
+  sortParam: string | null,
+  hasSearch: boolean,
+): TranslationKeysSort {
+  const sort = Object.values(TranslationKeysSort).includes(
+    sortParam as TranslationKeysSort,
+  )
+    ? (sortParam as TranslationKeysSort)
+    : undefined;
+  if (!hasSearch && sort === TranslationKeysSort.RELEVANCE) {
+    return TranslationKeysSort.ALPHABETICAL;
+  }
+  return (
+    sort ??
+    (hasSearch
+      ? TranslationKeysSort.RELEVANCE
+      : TranslationKeysSort.ALPHABETICAL)
+  );
+}
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -53,6 +74,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   const url = new URL(request.url);
   const search = url.searchParams.get("search") || undefined;
+  const sort = resolveSort(url.searchParams.get("sort"), Boolean(search));
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const offset = (page - 1) * LIMIT;
 
@@ -60,9 +82,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     search,
     limit: LIMIT,
     offset,
+    sort,
   });
 
-  return { keys, search, page };
+  return { keys, search, page, sort };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -145,6 +168,7 @@ export default function ProjectTranslations({
     keys: { data, count },
     search,
     page,
+    sort,
   } = loaderData;
   const { organization, project, languages } = useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
@@ -159,6 +183,7 @@ export default function ProjectTranslations({
   // Build redirect URL with current search params
   const currentUrl = getTranslationsUrl(organization.slug, project.slug, {
     search,
+    sort,
   });
 
   // Close modal and navigate after successful creation
@@ -201,6 +226,7 @@ export default function ProjectTranslations({
 
       <TranslationsSearchBar
         search={search}
+        sort={sort}
         organizationSlug={organization.slug}
         projectSlug={project.slug}
       />
@@ -242,6 +268,7 @@ export default function ProjectTranslations({
             pageSize={LIMIT}
             currentPage={page}
             search={search}
+            sort={sort}
             organizationSlug={organization.slug}
             projectSlug={project.slug}
           />

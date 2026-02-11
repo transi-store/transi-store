@@ -344,6 +344,8 @@
   "translations.noResultsForSearch": "Aucune clé trouvée pour cette recherche",
   "translations.search": "Rechercher",
   "translations.searchPlaceholder": "Rechercher une clé...",
+  "translations.sort": "{sortValue, select,\n  alphabetical {alphabétique}\n  createdAt {date de création}\n  relevance {pertinence}\n  other {translations.sort}\n}",
+  "translations.sort.label": "Trier par",
   "translations.table.actions": "Actions",
   "translations.table.keyName": "Nom de la clé",
   "translations.table.translations": "Traductions",
