@@ -18,8 +18,16 @@ export function Header({ user }: HeaderProps) {
   return (
     <Box as="header" borderBottomWidth={1} borderColor="border" py={4}>
       <Container maxW="container.xl">
-        <HStack justify="space-between" flexWrap="wrap" gap={{ base: 2, md: 4 }}>
-          <HStack gap={{ base: 2, md: 6 }} minW={{ base: "auto", md: 0 }}>
+        <HStack
+          justify="space-between"
+          flexWrap="wrap"
+          gap={{ base: 2, md: 4 }}
+          mdDown={{ flexDirection: "column", alignItems: "stretch" }}
+        >
+          <HStack
+            gap={{ base: 2, md: 6 }}
+            mdDown={{ justifyContent: "center" }}
+          >
             <Link to="/">
               <img
                 src={
@@ -50,23 +58,27 @@ export function Header({ user }: HeaderProps) {
             )}
           </HStack>
 
-          <HStack gap={2} flexShrink={0}>
-            <LanguageSelector />
+          <HStack gap={2} mdDown={{ justifyContent: "space-between" }}>
+            <Box>
+              <LanguageSelector />
 
-            <ColorModeButton />
+              <ColorModeButton />
+            </Box>
 
-            {user ? (
-              <UserMenu user={user} />
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm" hideBelow="sm">
-                  <Link to="/pricing">{t("header.pricing")}</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link to="/auth/login">{t("header.login")}</Link>
-                </Button>
-              </>
-            )}
+            <Box>
+              {user ? (
+                <UserMenu user={user} />
+              ) : (
+                <>
+                  <Button asChild variant="ghost" size="sm" hideBelow="sm">
+                    <Link to="/pricing">{t("header.pricing")}</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to="/auth/login">{t("header.login")}</Link>
+                  </Button>
+                </>
+              )}
+            </Box>
           </HStack>
         </HStack>
       </Container>
