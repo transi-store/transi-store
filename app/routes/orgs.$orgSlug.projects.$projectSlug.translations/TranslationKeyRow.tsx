@@ -77,6 +77,7 @@ export function TranslationKeyRow({
   return (
     <Table.Row
       key={key.id}
+      mdDown={{ display: "flex", flexDirection: "column" }}
       bg={
         highlight?.split(",").includes(key.keyName)
           ? "accent.subtle"
@@ -91,7 +92,12 @@ export function TranslationKeyRow({
                 <Link
                   to={`${getKeyUrl(organizationSlug, projectSlug, key.id)}?redirectTo=${encodeURIComponent(currentUrl)}`}
                 >
-                  <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
+                  <Text
+                    fontFamily="mono"
+                    fontSize="sm"
+                    fontWeight="medium"
+                    wordBreak="break-all"
+                  >
                     <TextHighlight text={key.keyName} query={search} />
                   </Text>
                 </Link>
