@@ -74,6 +74,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
   const url = new URL(request.url);
   const search = url.searchParams.get("search") || undefined;
+  const highlight = url.searchParams.get("highlight") || undefined;
   const sort = resolveSort(url.searchParams.get("sort"), Boolean(search));
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const offset = (page - 1) * LIMIT;
@@ -85,7 +86,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     sort,
   });
 
-  return { keys, search, page, sort };
+  return { keys, search, highlight, page, sort };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -167,6 +168,7 @@ export default function ProjectTranslations({
   const {
     keys: { data, count },
     search,
+    highlight,
     page,
     sort,
   } = loaderData;
@@ -184,6 +186,7 @@ export default function ProjectTranslations({
   const currentUrl = getTranslationsUrl(organization.slug, project.slug, {
     search,
     sort,
+    highlight,
   });
 
   // Close modal and navigate after successful creation
@@ -198,6 +201,9 @@ export default function ProjectTranslations({
       navigate(
         getTranslationsUrl(organization.slug, project.slug, {
           sort: TranslationKeysSort.CREATED_AT,
+          highlight: highlight
+            ? `${highlight},${actionData.keyName}`
+            : actionData.keyName,
         }),
       );
     }

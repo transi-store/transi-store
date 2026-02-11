@@ -10,7 +10,7 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { toaster } from "~/components/ui/toaster";
-import { Link, Form } from "react-router";
+import { Link, Form, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPencil, LuCopy } from "react-icons/lu";
 import { TextHighlight } from "~/lib/highlight";
@@ -70,8 +70,19 @@ export function TranslationKeyRow({
   const { t } = useTranslation();
   const handleCopyText = usehandleCopyText();
 
+  const [searchParams] = useSearchParams();
+
+  const highlight = searchParams.get("highlight");
+
   return (
-    <Table.Row key={key.id}>
+    <Table.Row
+      key={key.id}
+      bg={
+        highlight?.split(",").includes(key.keyName)
+          ? "accent.subtle"
+          : undefined
+      }
+    >
       <Table.Cell>
         <LinkBox>
           <VStack align="stretch" gap={1}>

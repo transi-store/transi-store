@@ -23,7 +23,7 @@ export function TranslationsTable({
   const { t } = useTranslation();
 
   return (
-    <Table.Root variant="outline">
+    <Table.Root variant="outline" interactive>
       <Table.Header>
         <Table.Row>
           <Table.ColumnHeader>
