@@ -1,4 +1,4 @@
-import { Heading, VStack, Button, Box, Text, HStack } from "@chakra-ui/react";
+import { Heading, VStack, Button, Box, Text, Stack } from "@chakra-ui/react";
 import {
   Link,
   useOutletContext,
@@ -211,7 +211,12 @@ export default function ProjectTranslations({
 
   return (
     <VStack gap={6} align="stretch">
-      <HStack justify="space-between">
+      <Stack
+        direction={{ base: "column", sm: "row" }}
+        justify="space-between"
+        align={{ base: "stretch", sm: "center" }}
+        gap={{ base: 3, sm: 0 }}
+      >
         <Box>
           <Heading as="h2" size="lg">
             {t("translations.title")}
@@ -224,11 +229,12 @@ export default function ProjectTranslations({
           <Button
             colorPalette="accent"
             onClick={() => setIsCreateKeyModalOpen(true)}
+            width={{ base: "full", sm: "auto" }}
           >
             <LuPlus /> {t("translations.newKey")}
           </Button>
         )}
-      </HStack>
+      </Stack>
 
       <TranslationsSearchBar
         search={search}

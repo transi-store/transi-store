@@ -11,9 +11,9 @@ export function Navigation({ lastOrganizationSlug }: NavigationProps) {
   const { t } = useTranslation();
 
   return (
-    <HStack gap={4} fontSize="sm">
+    <HStack gap={{ base: 2, md: 4 }} fontSize="sm">
       {lastOrganizationSlug && (
-        <Button asChild variant="ghost">
+        <Button asChild variant="ghost" size={{ base: "xs", md: "sm" }}>
           <Link to={`/orgs/${lastOrganizationSlug}`}>
             {t("header.projects")}
           </Link>
@@ -28,7 +28,7 @@ export function Navigation({ lastOrganizationSlug }: NavigationProps) {
             name="q"
             placeholder={t("header.search")}
             size="sm"
-            width="200px"
+            width={{ base: "120px", md: "200px" }}
           />
           <IconButton
             type="submit"

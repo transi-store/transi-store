@@ -18,8 +18,8 @@ export function Header({ user }: HeaderProps) {
   return (
     <Box as="header" borderBottomWidth={1} borderColor="border" py={4}>
       <Container maxW="container.xl">
-        <HStack justify="space-between">
-          <HStack gap={6}>
+        <HStack justify="space-between" flexWrap="wrap" gap={{ base: 2, md: 4 }}>
+          <HStack gap={{ base: 2, md: 6 }} minW={{ base: "auto", md: 0 }}>
             <Link to="/">
               <img
                 src={
@@ -32,7 +32,7 @@ export function Header({ user }: HeaderProps) {
                 height={32}
               />
             </Link>
-            <Text asChild fontSize="xl" fontWeight="bold">
+            <Text asChild fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
               <Link to="/">
                 <Text as="span" color="header.fg">
                   Transi-
@@ -44,11 +44,13 @@ export function Header({ user }: HeaderProps) {
             </Text>
 
             {user && (
-              <Navigation lastOrganizationSlug={user.lastOrganizationSlug} />
+              <Box hideBelow="md">
+                <Navigation lastOrganizationSlug={user.lastOrganizationSlug} />
+              </Box>
             )}
           </HStack>
 
-          <HStack gap={2}>
+          <HStack gap={2} flexShrink={0}>
             <LanguageSelector />
 
             <ColorModeButton />
@@ -57,7 +59,7 @@ export function Header({ user }: HeaderProps) {
               <UserMenu user={user} />
             ) : (
               <>
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild variant="ghost" size="sm" hideBelow="sm">
                   <Link to="/pricing">{t("header.pricing")}</Link>
                 </Button>
                 <Button asChild size="sm">
