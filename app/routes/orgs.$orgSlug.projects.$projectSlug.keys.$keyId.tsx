@@ -61,6 +61,7 @@ import {
   TranslationKeyModal,
   TRANSLATIONS_KEY_MODEL_MODE,
 } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
+import { Tooltip } from "~/components/ui/tooltip";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -406,7 +407,7 @@ export default function EditTranslationKey({
                 {t("translations.title")}
               </Heading>
 
-              <SimpleGrid columns={2} gap={6}>
+              <SimpleGrid columns={{ base: 1, md: 2 }} gap={6}>
                 {/* Langue par défaut en premier */}
                 {languages
                   .filter((lang) => lang.isDefault)
@@ -416,7 +417,10 @@ export default function EditTranslationKey({
                         <Field.Label>
                           <HStack>
                             <Text>{lang.locale.toUpperCase()}</Text>
-                            {hasAiProvider && (
+                            <Tooltip
+                              content={t("keys.translateWithAI.noProvider")}
+                              present={!hasAiProvider}
+                            >
                               <Button
                                 size="xs"
                                 variant="ghost"
@@ -424,11 +428,11 @@ export default function EditTranslationKey({
                                 onClick={() =>
                                   handleRequestAiTranslation(lang.locale)
                                 }
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || !hasAiProvider}
                               >
                                 <LuSparkles /> {t("keys.translateWithAI")}
                               </Button>
-                            )}
+                            </Tooltip>
 
                             <Badge colorPalette="brand" size="sm">
                               {t("translations.badgeDefault")}
@@ -462,7 +466,10 @@ export default function EditTranslationKey({
                         <Field.Label>
                           <HStack justify="space-between" w="100%">
                             <Text>{lang.locale.toUpperCase()}</Text>
-                            {hasAiProvider && (
+                            <Tooltip
+                              content={t("keys.translateWithAI.noProvider")}
+                              present={!hasAiProvider}
+                            >
                               <Button
                                 size="xs"
                                 variant="ghost"
@@ -470,11 +477,11 @@ export default function EditTranslationKey({
                                 onClick={() =>
                                   handleRequestAiTranslation(lang.locale)
                                 }
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || !hasAiProvider}
                               >
                                 <LuSparkles /> {t("keys.translateWithAI")}
                               </Button>
-                            )}
+                            </Tooltip>
                           </HStack>
                         </Field.Label>
                         <IcuEditorClient
