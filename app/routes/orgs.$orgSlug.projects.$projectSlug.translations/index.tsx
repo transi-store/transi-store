@@ -197,7 +197,7 @@ export default function ProjectTranslations({
       // Navigate to filter by the newly created key
       navigate(
         getTranslationsUrl(organization.slug, project.slug, {
-          search: actionData.keyName,
+          sort: TranslationKeysSort.CREATED_AT,
         }),
       );
     }
