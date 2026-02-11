@@ -21,6 +21,7 @@ export function getTranslationsUrl(
     search?: string | null;
     page?: string | null;
     sort?: string | null;
+    highlight?: string | null;
   },
 ): string {
   const params = new URLSearchParams(removeUndefinedValues(queryParams));
