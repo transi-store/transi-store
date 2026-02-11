@@ -18,8 +18,16 @@ export function Header({ user }: HeaderProps) {
   return (
     <Box as="header" borderBottomWidth={1} borderColor="border" py={4}>
       <Container maxW="container.xl">
-        <HStack justify="space-between">
-          <HStack gap={6}>
+        <HStack
+          justify="space-between"
+          flexWrap="wrap"
+          gap={{ base: 2, md: 4 }}
+          mdDown={{ flexDirection: "column", alignItems: "stretch" }}
+        >
+          <HStack
+            gap={{ base: 2, md: 6 }}
+            mdDown={{ justifyContent: "center" }}
+          >
             <Link to="/">
               <img
                 src={
@@ -32,7 +40,7 @@ export function Header({ user }: HeaderProps) {
                 height={32}
               />
             </Link>
-            <Text asChild fontSize="xl" fontWeight="bold">
+            <Text asChild fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
               <Link to="/">
                 <Text as="span" color="header.fg">
                   Transi-
@@ -44,27 +52,33 @@ export function Header({ user }: HeaderProps) {
             </Text>
 
             {user && (
-              <Navigation lastOrganizationSlug={user.lastOrganizationSlug} />
+              <Box hideBelow="md">
+                <Navigation lastOrganizationSlug={user.lastOrganizationSlug} />
+              </Box>
             )}
           </HStack>
 
-          <HStack gap={2}>
-            <LanguageSelector />
+          <HStack gap={2} mdDown={{ justifyContent: "space-between" }}>
+            <Box>
+              <LanguageSelector />
 
-            <ColorModeButton />
+              <ColorModeButton />
+            </Box>
 
-            {user ? (
-              <UserMenu user={user} />
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/pricing">{t("header.pricing")}</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link to="/auth/login">{t("header.login")}</Link>
-                </Button>
-              </>
-            )}
+            <Box>
+              {user ? (
+                <UserMenu user={user} />
+              ) : (
+                <>
+                  <Button asChild variant="ghost" size="sm" hideBelow="sm">
+                    <Link to="/pricing">{t("header.pricing")}</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to="/auth/login">{t("header.login")}</Link>
+                  </Button>
+                </>
+              )}
+            </Box>
           </HStack>
         </HStack>
       </Container>

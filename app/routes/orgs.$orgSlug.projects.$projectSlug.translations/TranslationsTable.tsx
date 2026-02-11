@@ -24,7 +24,7 @@ export function TranslationsTable({
 
   return (
     <Table.Root variant="outline" interactive>
-      <Table.Header>
+      <Table.Header mdDown={{ display: "flex", flexDirection: "column" }}>
         <Table.Row>
           <Table.ColumnHeader>
             {t("translations.table.keyName")}

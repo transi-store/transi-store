@@ -7,7 +7,7 @@ import {
   Box,
   HStack,
   Text,
-  Spacer,
+  Stack,
 } from "@chakra-ui/react";
 import {
   Link,
@@ -61,54 +61,67 @@ export default function ProjectLayout() {
 
       <VStack gap={4} align="stretch">
         {/* Navigation */}
-        <HStack gap={2} borderBottomWidth={1} pb={2}>
-          <Breadcrumb.Root>
-            <Breadcrumb.List>
-              <Breadcrumb.Item>
-                <Breadcrumb.Link asChild>
-                  <NavLink to="/orgs">{t("header.myOrganizations")}</NavLink>
-                </Breadcrumb.Link>
-              </Breadcrumb.Item>
-              <Breadcrumb.Separator />
-              <Breadcrumb.Item>
-                <Breadcrumb.Link asChild>
-                  <NavLink to={`/orgs/${organization.slug}`}>
-                    {organization.name}
-                  </NavLink>
-                </Breadcrumb.Link>
-              </Breadcrumb.Item>
-              <Breadcrumb.Separator />
-              <Breadcrumb.Item>
-                <Breadcrumb.CurrentLink>
-                  <Heading as="span" size="sm">
-                    {project.name}
-                  </Heading>
-                </Breadcrumb.CurrentLink>
-              </Breadcrumb.Item>
-            </Breadcrumb.List>
-          </Breadcrumb.Root>
+        <Stack
+          direction={{ base: "column", md: "row" }}
+          gap={2}
+          borderBottomWidth={1}
+          pb={2}
+          align={{ base: "stretch", md: "center" }}
+        >
+          <Box flex={{ base: "1", md: "auto" }} overflow="hidden">
+            <Breadcrumb.Root>
+              <Breadcrumb.List>
+                <Breadcrumb.Item>
+                  <Breadcrumb.Link asChild>
+                    <NavLink to="/orgs">{t("header.myOrganizations")}</NavLink>
+                  </Breadcrumb.Link>
+                </Breadcrumb.Item>
+                <Breadcrumb.Separator />
+                <Breadcrumb.Item hideBelow="sm">
+                  <Breadcrumb.Link asChild>
+                    <NavLink to={`/orgs/${organization.slug}`}>
+                      {organization.name}
+                    </NavLink>
+                  </Breadcrumb.Link>
+                </Breadcrumb.Item>
+                <Breadcrumb.Separator hideBelow="sm" />
+                <Breadcrumb.Item>
+                  <Breadcrumb.CurrentLink>
+                    <Heading as="span" size="sm">
+                      {project.name}
+                    </Heading>
+                  </Breadcrumb.CurrentLink>
+                </Breadcrumb.Item>
+              </Breadcrumb.List>
+            </Breadcrumb.Root>
+          </Box>
 
-          <Spacer />
+          <HStack
+            gap={2}
+            flexWrap="wrap"
+            justify={{ base: "flex-start", md: "flex-end" }}
+            flex={{ base: "1", md: "auto" }}
+          >
+            {navItems.map((item) => {
+              const fullPath = `/orgs/${organization.slug}/projects/${project.slug}/${item.path}`;
+              const isActive = location.pathname === fullPath;
 
-          {navItems.map((item) => {
-            const fullPath = `/orgs/${organization.slug}/projects/${project.slug}/${item.path}`;
-            const isActive = location.pathname === fullPath;
-
-            return (
-              <Button
-                key={item.path}
-                asChild
-                variant={isActive ? "solid" : "ghost"}
-                colorPalette={isActive ? "brand" : "gray"}
-                size="sm"
-              >
-                <Link to={fullPath}>
-                  {item.icon} {item.label}
-                </Link>
-              </Button>
-            );
-          })}
-        </HStack>
+              return (
+                <Button
+                  key={item.path}
+                  asChild
+                  variant={isActive ? "solid" : "ghost"}
+                  colorPalette={isActive ? "brand" : "gray"}
+                  size="sm"
+                >
+                  <Link to={fullPath}>
+                    {item.icon} {item.label}
+                  </Link>
+                </Button>
+              );
+            })}
+          </HStack>
+        </Stack>
 
         {project.description && (
           <Box>
