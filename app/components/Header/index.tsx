@@ -56,9 +56,14 @@ export function Header({ user }: HeaderProps) {
             {user ? (
               <UserMenu user={user} />
             ) : (
-              <Button asChild size="sm">
-                <Link to="/auth/login">{t("header.login")}</Link>
-              </Button>
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/pricing">{t("header.pricing")}</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link to="/auth/login">{t("header.login")}</Link>
+                </Button>
+              </>
             )}
           </HStack>
         </HStack>
