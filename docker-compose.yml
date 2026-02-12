@@ -37,7 +37,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    restart: no # unless-stopped mais bug et restart en boucle
+    restart: unless-stopped
     ports:
       - "${APP_PORT:-5173}:5173"
       - "${APP_PORT_PROD:-3000}:3000" # Pour le start en prod

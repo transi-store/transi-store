@@ -5,18 +5,17 @@ WORKDIR /app
 # Activer corepack pour yarn
 RUN corepack enable
 
-# Copier les fichiers de dépendances
+# Copier les fichiers de dépendances et les workspaces
 COPY package.json yarn.lock ./
 COPY .yarn ./.yarn
 COPY .yarnrc.yml* ./
-
-# Installer les dépendances
-RUN yarn install --immutable
 
 # Copier le reste du code (seulement en production)
 # En dev, le code est monté via volume
 COPY . .
 
-RUN yarn build
+# Installer les dépendances
+RUN yarn install --immutable
 
-CMD ["yarn", "start"]
+# Garder le conteneur actif en arrière-plan
+CMD ["tail", "-f", "/dev/null"]
