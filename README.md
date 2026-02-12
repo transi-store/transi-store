@@ -29,19 +29,6 @@ transi-store est une application web permettant de gerer les traductions de chai
 - **Multi-utilisateurs** : Plusieurs membres par organisation avec acces partage aux projets
 - **Authentification OAuth2/OIDC** : Support multi-provider (Google, Mapado) avec PKCE
 
-## Stack technique
-
-| Composant       | Technologie                      |
-| --------------- | -------------------------------- |
-| Frontend        | React 19 + TypeScript            |
-| Build           | Vite                             |
-| Routing         | React Router v7 (mode framework) |
-| Design System   | Chakra UI v3                     |
-| Package Manager | Yarn Berry (v4)                  |
-| Base de donnees | PostgreSQL                       |
-| ORM             | Drizzle ORM                      |
-| Auth            | OAuth2/OIDC                      |
-
 ## Demarrage rapide
 
 ### Prerequis
@@ -75,10 +62,12 @@ cp .env.example .env
 3. Configurer les variables d'environnement dans `.env` :
 
 - `DATABASE_URL` : Utiliser `postgres` comme host (ex: `postgresql://transi-store:transi-store@postgres:5432/transi-store`)
-- `MAPADO_CLIENT_ID` / `MAPADO_CLIENT_SECRET` : Identifiants OAuth Mapado
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` : Identifiants OAuth Google (optionnel)
 - `SESSION_SECRET` : Secret pour les sessions
 - `ENCRYPTION_KEY` : Clé de chiffrement
+- Configurer les providers OAuth si nécessaire (au moins un provider est requis pour l'authentification) :
+  - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` : Identifiants OAuth Google
+  - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` : Identifiants OAuth GitHub
+  - `MAPADO_CLIENT_ID` / `MAPADO_CLIENT_SECRET` : Identifiants OAuth Mapado
 
 4. Setup complet en une commande :
 
@@ -161,6 +150,19 @@ transi-store/
 └── docker-compose.yml     # Configuration Docker
 ```
 
+## Stack technique
+
+| Composant       | Technologie                      |
+| --------------- | -------------------------------- |
+| Frontend        | React 19 + TypeScript            |
+| Build           | Vite                             |
+| Routing         | React Router v7 (mode framework) |
+| Design System   | Chakra UI v3                     |
+| Package Manager | Yarn Berry (v4)                  |
+| Base de donnees | PostgreSQL                       |
+| ORM             | Drizzle ORM                      |
+| Auth            | OAuth2/OIDC                      |
+
 ## Documentation technique
 
 ### Architecture et implementation
@@ -181,4 +183,3 @@ Consultez le dossier [`docs/technical-notes/`](./docs/technical-notes/) pour com
 ## Licence
 
 GNU AFFERO GENERAL PUBLIC LICENSE Version 3 (AGPL-3.0). See [LICENSE](./LICENSE) for details.
-
