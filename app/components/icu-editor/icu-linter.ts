@@ -123,11 +123,13 @@ export function icuLinter(): Extension {
 }
 
 /**
- * Extract variable names from an AST
+ * Extract variable names from an ICU message
  */
-export function extractVariablesFromAst(
-  ast: Array<MessageFormatElement>,
-): Array<string> {
+export function extractVariables(text: string): Array<string> {
+  const ast = parseIcu(text);
+  if (!ast) {
+    return [];
+  }
   const variables = new Set<string>();
 
   function walkAst(nodes: Array<MessageFormatElement>): void {
@@ -158,16 +160,6 @@ export function extractVariablesFromAst(
   }
 
   walkAst(ast);
-  return Array.from(variables).sort();
-}
 
-/**
- * Extract variable names from an ICU message
- */
-export function extractVariables(text: string): Array<string> {
-  const ast = parseIcu(text);
-  if (!ast) {
-    return [];
-  }
-  return extractVariablesFromAst(ast);
+  return Array.from(variables).sort();
 }

@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  parseIcu,
-  extractVariables,
-  extractVariablesFromAst,
-} from "./icu-linter";
+import { parseIcu, extractVariables } from "./icu-linter";
 
 describe("parseIcu", () => {
   it("should return null for empty text", () => {
@@ -26,37 +22,6 @@ describe("parseIcu", () => {
   it("should return null for invalid syntax", () => {
     const ast = parseIcu("{invalid");
     expect(ast).toBeNull();
-  });
-});
-
-describe("extractVariablesFromAst", () => {
-  it("should extract variables from AST", () => {
-    const ast = parseIcu("Hello {name}, you have {count} items");
-    expect(ast).not.toBeNull();
-    if (ast) {
-      const variables = extractVariablesFromAst(ast);
-      expect(variables).toEqual(["count", "name"]);
-    }
-  });
-
-  it("should handle plural patterns", () => {
-    const ast = parseIcu("{count, plural, one {# item} other {# items}}");
-    expect(ast).not.toBeNull();
-    if (ast) {
-      const variables = extractVariablesFromAst(ast);
-      expect(variables).toEqual(["count"]);
-    }
-  });
-
-  it("should handle nested variables", () => {
-    const ast = parseIcu(
-      "{count, plural, one {{owner} has # item} other {{owner} has # items}}",
-    );
-    expect(ast).not.toBeNull();
-    if (ast) {
-      const variables = extractVariablesFromAst(ast);
-      expect(variables).toEqual(["count", "owner"]);
-    }
   });
 });
 
