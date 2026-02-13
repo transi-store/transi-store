@@ -60,20 +60,17 @@ function createIcuDecorator() {
             const end = node.location.end.offset;
 
             if (node.type === TYPE.argument) {
-              // Simple variable like {name}
-              // Highlight opening brace
               decorations.push({
                 from: start,
                 to: start + 1,
                 decoration: braceDecoration,
               });
-              // Highlight variable name
               decorations.push({
                 from: start + 1,
                 to: end - 1,
                 decoration: variableDecoration,
               });
-              // Highlight closing brace
+
               decorations.push({
                 from: end - 1,
                 to: end,
@@ -81,14 +78,12 @@ function createIcuDecorator() {
               });
             } else if (node.type === TYPE.plural) {
               // Plural pattern like {count, plural, ...}
-              // Highlight opening brace
               decorations.push({
                 from: start,
                 to: start + 1,
                 decoration: braceDecoration,
               });
 
-              // Highlight variable name
               const varName = node.value;
               const varStart = start + 1;
               const varEnd = varStart + varName.length;
@@ -256,6 +251,13 @@ function createIcuDecorator() {
               if ("children" in node) {
                 walkAst(node.children);
               }
+            } else if (node.type === TYPE.pound) {
+              // Pound symbol in plural - highlight as argument
+              decorations.push({
+                from: start,
+                to: end,
+                decoration: argumentDecoration,
+              });
             }
           }
         }
@@ -317,7 +319,7 @@ const icuEditorTheme = EditorView.theme({
     fontStyle: "italic",
   },
   ".icu-brace": {
-    color: "#4B5563",
+    color: "#757f8d",
     fontWeight: "bold",
   },
 });
