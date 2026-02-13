@@ -7,6 +7,11 @@ import { EditorView, Decoration, ViewPlugin } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
 import type { DecorationSet, ViewUpdate } from "@codemirror/view";
 import type { Extension } from "@codemirror/state";
+import { parseIcu } from "./icu-linter";
+import {
+  TYPE,
+  type MessageFormatElement,
+} from "@formatjs/icu-messageformat-parser";
 
 // CSS classes for decorations
 const variableDecoration = Decoration.mark({ class: "icu-variable" });
@@ -15,124 +20,6 @@ const pluralKeywordDecoration = Decoration.mark({
 });
 const argumentDecoration = Decoration.mark({ class: "icu-argument" });
 const braceDecoration = Decoration.mark({ class: "icu-brace" });
-
-type Token = {
-  type:
-    | "variable"
-    | "pluralKeyword"
-    | "selectKeyword"
-    | "argument"
-    | "brace"
-    | "text";
-  from: number;
-  to: number;
-  value: string;
-};
-
-/**
- * Simple tokenizer for ICU messages
- * Identifies variables, keywords, and arguments
- */
-function tokenizeIcu(text: string): Array<Token> {
-  const tokens: Array<Token> = [];
-  let i = 0;
-  let depth = 0;
-
-  while (i < text.length) {
-    const char = text[i];
-
-    if (char === "{") {
-      // Found opening brace
-      tokens.push({ type: "brace", from: i, to: i + 1, value: "{" });
-      depth++;
-
-      // Try to parse variable name
-      const remaining = text.slice(i + 1);
-      const varMatch = remaining.match(/^([a-zA-Z_][a-zA-Z0-9_]*)/);
-
-      if (varMatch) {
-        const varName = varMatch[1];
-        const varStart = i + 1;
-        const varEnd = varStart + varName.length;
-
-        // Check what comes after the variable name
-        const afterVar = text
-          .slice(varEnd)
-          .match(/^\s*,\s*(plural|selectordinal|select|number|date|time)/);
-
-        if (afterVar) {
-          // It's a complex pattern like {count, plural, ...}
-          tokens.push({
-            type: "variable",
-            from: varStart,
-            to: varEnd,
-            value: varName,
-          });
-
-          const keyword = afterVar[1];
-          const keywordStart = text.indexOf(keyword, varEnd);
-          const keywordEnd = keywordStart + keyword.length;
-
-          if (keyword === "plural" || keyword === "selectordinal") {
-            tokens.push({
-              type: "pluralKeyword",
-              from: keywordStart,
-              to: keywordEnd,
-              value: keyword,
-            });
-          } else if (keyword === "select") {
-            tokens.push({
-              type: "selectKeyword",
-              from: keywordStart,
-              to: keywordEnd,
-              value: keyword,
-            });
-          }
-
-          i = keywordEnd;
-        } else {
-          // Simple variable like {name}
-          tokens.push({
-            type: "variable",
-            from: varStart,
-            to: varEnd,
-            value: varName,
-          });
-          i = varEnd;
-        }
-      } else {
-        i++;
-      }
-    } else if (char === "}") {
-      tokens.push({ type: "brace", from: i, to: i + 1, value: "}" });
-      depth--;
-      i++;
-    } else if (depth > 0) {
-      // Inside a complex pattern, look for arguments
-      const remaining = text.slice(i);
-      const argMatch = remaining.match(
-        /^(zero|one|two|few|many|other|male|female|=\d+)\b/,
-      );
-
-      if (argMatch) {
-        const arg = argMatch[1];
-        tokens.push({
-          type: "argument",
-          from: i,
-          to: i + arg.length,
-          value: arg,
-        });
-        i += arg.length;
-      } else {
-        i++;
-      }
-    } else {
-      i++;
-    }
-  }
-
-  return tokens;
-}
 
 // Combined decorator plugin
 function createIcuDecorator() {
@@ -151,47 +38,232 @@ function createIcuDecorator() {
       }
 
       buildDecorations(view: EditorView): DecorationSet {
-        const decorations: {
+        const decorations: Array<{
           from: number;
           to: number;
           decoration: Decoration;
-        }[] = [];
+        }> = [];
         const doc = view.state.doc.toString();
 
-        // Tokenize ICU message
-        const tokens = tokenizeIcu(doc);
+        // Parse ICU message to get AST
+        const ast = parseIcu(doc);
+        if (!ast) {
+          return Decoration.set([]);
+        }
 
-        for (const token of tokens) {
-          let decoration: Decoration | null = null;
+        // Walk the AST and create decorations directly
+        function walkAst(nodes: Array<MessageFormatElement>): void {
+          for (const node of nodes) {
+            if (!node.location) continue;
 
-          switch (token.type) {
-            case "variable":
-              decoration = variableDecoration;
-              break;
-            case "pluralKeyword":
-            case "selectKeyword":
-              decoration = pluralKeywordDecoration;
-              break;
-            case "argument":
-              decoration = argumentDecoration;
-              break;
-            case "brace":
-              decoration = braceDecoration;
-              break;
-          }
+            const start = node.location.start.offset;
+            const end = node.location.end.offset;
 
-          if (decoration) {
-            decorations.push({
-              from: token.from,
-              to: token.to,
-              decoration,
-            });
+            if (node.type === TYPE.argument) {
+              // Simple variable like {name}
+              // Highlight opening brace
+              decorations.push({
+                from: start,
+                to: start + 1,
+                decoration: braceDecoration,
+              });
+              // Highlight variable name
+              decorations.push({
+                from: start + 1,
+                to: end - 1,
+                decoration: variableDecoration,
+              });
+              // Highlight closing brace
+              decorations.push({
+                from: end - 1,
+                to: end,
+                decoration: braceDecoration,
+              });
+            } else if (node.type === TYPE.plural) {
+              // Plural pattern like {count, plural, ...}
+              // Highlight opening brace
+              decorations.push({
+                from: start,
+                to: start + 1,
+                decoration: braceDecoration,
+              });
+
+              // Highlight variable name
+              const varName = node.value;
+              const varStart = start + 1;
+              const varEnd = varStart + varName.length;
+              decorations.push({
+                from: varStart,
+                to: varEnd,
+                decoration: variableDecoration,
+              });
+
+              // Highlight "plural" keyword
+              const pluralPos = doc.indexOf("plural", varEnd);
+              if (pluralPos !== -1 && pluralPos < end) {
+                decorations.push({
+                  from: pluralPos,
+                  to: pluralPos + 6,
+                  decoration: pluralKeywordDecoration,
+                });
+              }
+
+              // Highlight "selectordinal" keyword
+              const selectOrdinalPos = doc.indexOf("selectordinal", varEnd);
+              if (selectOrdinalPos !== -1 && selectOrdinalPos < end) {
+                decorations.push({
+                  from: selectOrdinalPos,
+                  to: selectOrdinalPos + 12,
+                  decoration: pluralKeywordDecoration,
+                });
+              }
+
+              // Process plural options
+              for (const [key, option] of Object.entries(node.options)) {
+                if (!option.location) continue;
+
+                const optionStart = option.location.start.offset;
+                const optionEnd = option.location.end.offset;
+
+                // Highlight option keyword (one, other, etc.)
+                const argPos = doc.lastIndexOf(key, optionStart);
+                if (argPos !== -1 && argPos < optionStart) {
+                  decorations.push({
+                    from: argPos,
+                    to: argPos + key.length,
+                    decoration: argumentDecoration,
+                  });
+                }
+
+                // Highlight braces around option content
+                decorations.push({
+                  from: optionStart,
+                  to: optionStart + 1,
+                  decoration: braceDecoration,
+                });
+                decorations.push({
+                  from: optionEnd - 1,
+                  to: optionEnd,
+                  decoration: braceDecoration,
+                });
+
+                // Recursively process option content
+                walkAst(option.value);
+              }
+
+              // Highlight closing brace
+              decorations.push({
+                from: end - 1,
+                to: end,
+                decoration: braceDecoration,
+              });
+            } else if (node.type === TYPE.select) {
+              // Select pattern like {gender, select, ...}
+              // Highlight opening brace
+              decorations.push({
+                from: start,
+                to: start + 1,
+                decoration: braceDecoration,
+              });
+
+              // Highlight variable name
+              const varName = node.value;
+              const varStart = start + 1;
+              const varEnd = varStart + varName.length;
+              decorations.push({
+                from: varStart,
+                to: varEnd,
+                decoration: variableDecoration,
+              });
+
+              // Highlight "select" keyword
+              const selectPos = doc.indexOf("select", varEnd);
+
+              if (selectPos !== -1 && selectPos < end) {
+                decorations.push({
+                  from: selectPos,
+                  to: selectPos + 6,
+                  decoration: pluralKeywordDecoration,
+                });
+              }
+
+              // Process select options
+              for (const [key, option] of Object.entries(node.options)) {
+                if (!option.location) continue;
+
+                const optionStart = option.location.start.offset;
+                const optionEnd = option.location.end.offset;
+
+                // Highlight option keyword (male, female, other, etc.)
+                const argPos = doc.lastIndexOf(key, optionStart);
+                if (argPos !== -1 && argPos < optionStart) {
+                  decorations.push({
+                    from: argPos,
+                    to: argPos + key.length,
+                    decoration: argumentDecoration,
+                  });
+                }
+
+                // Highlight braces around option content
+                decorations.push({
+                  from: optionStart,
+                  to: optionStart + 1,
+                  decoration: braceDecoration,
+                });
+                decorations.push({
+                  from: optionEnd - 1,
+                  to: optionEnd,
+                  decoration: braceDecoration,
+                });
+
+                // Recursively process option content
+                walkAst(option.value);
+              }
+
+              // Highlight closing brace
+              decorations.push({
+                from: end - 1,
+                to: end,
+                decoration: braceDecoration,
+              });
+            } else if (
+              node.type === TYPE.number ||
+              node.type === TYPE.date ||
+              node.type === TYPE.time
+            ) {
+              // Number/Date/Time format
+              decorations.push({
+                from: start,
+                to: start + 1,
+                decoration: braceDecoration,
+              });
+
+              const varStart = start + 1;
+              const varEnd = varStart + node.value.length;
+              decorations.push({
+                from: varStart,
+                to: varEnd,
+                decoration: variableDecoration,
+              });
+
+              decorations.push({
+                from: end - 1,
+                to: end,
+                decoration: braceDecoration,
+              });
+            } else if (node.type === TYPE.tag) {
+              // Tag element - process children
+              if ("children" in node) {
+                walkAst(node.children);
+              }
+            }
           }
         }
 
-        // Sort by position
-        decorations.sort((a, b) => a.from - b.from);
+        walkAst(ast);
 
+        // Sort by position and convert to ranges
+        decorations.sort((a, b) => a.from - b.from);
         return Decoration.set(
           decorations.map((d) => d.decoration.range(d.from, d.to)),
         );
