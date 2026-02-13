@@ -5,7 +5,8 @@
 
 import { linter } from "@codemirror/lint";
 import type { Diagnostic } from "@codemirror/lint";
-import { parse } from "@formatjs/icu-messageformat-parser";
+import { parse, TYPE } from "@formatjs/icu-messageformat-parser";
+import type { MessageFormatElement } from "@formatjs/icu-messageformat-parser";
 import type { Extension } from "@codemirror/state";
 
 export type IcuError = {
@@ -15,6 +16,26 @@ export type IcuError = {
     end: { offset: number; line: number; column: number };
   };
 };
+
+/**
+ * Parse an ICU message and return the AST
+ * Returns null if parsing fails
+ */
+export function parseIcu(text: string): Array<MessageFormatElement> | null {
+  if (!text.trim()) {
+    return null;
+  }
+
+  try {
+    return parse(text, {
+      requiresOtherClause: false,
+      shouldParseSkeletons: true,
+      captureLocation: true,
+    });
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Validate an ICU message and return errors if any
@@ -105,53 +126,40 @@ export function icuLinter(): Extension {
  * Extract variable names from an ICU message
  */
 export function extractVariables(text: string): Array<string> {
-  if (!text.trim()) {
+  const ast = parseIcu(text);
+  if (!ast) {
     return [];
   }
+  const variables = new Set<string>();
 
-  try {
-    const ast = parse(text, {
-      requiresOtherClause: false,
-      shouldParseSkeletons: true,
-    });
-
-    const variables = new Set<string>();
-
-    function walkAst(nodes: typeof ast): void {
-      for (const node of nodes) {
-        if (node.type === 1) {
-          // ArgumentElement
-          variables.add(node.value);
-        } else if (node.type === 5 || node.type === 6) {
-          // PluralElement or SelectElement
-          variables.add(node.value);
-          for (const option of Object.values(node.options)) {
-            walkAst(option.value);
-          }
-        } else if (node.type === 2 || node.type === 3 || node.type === 4) {
-          // NumberElement, DateElement, TimeElement
-          variables.add(node.value);
-        } else if (node.type === 8) {
-          // TagElement - has children
-          if ("children" in node) {
-            walkAst(node.children);
-          }
+  function walkAst(nodes: Array<MessageFormatElement>): void {
+    for (const node of nodes) {
+      if (node.type === TYPE.argument) {
+        // ArgumentElement
+        variables.add(node.value);
+      } else if (node.type === TYPE.plural || node.type === TYPE.select) {
+        // PluralElement or SelectElement
+        variables.add(node.value);
+        for (const option of Object.values(node.options)) {
+          walkAst(option.value);
+        }
+      } else if (
+        node.type === TYPE.number ||
+        node.type === TYPE.date ||
+        node.type === TYPE.time
+      ) {
+        // NumberElement, DateElement, TimeElement
+        variables.add(node.value);
+      } else if (node.type === TYPE.tag) {
+        // TagElement - has children
+        if ("children" in node) {
+          walkAst(node.children);
         }
       }
     }
-
-    walkAst(ast);
-    return Array.from(variables).sort();
-  } catch {
-    // If parsing fails, try regex fallback
-    const variableRegex = /\{([a-zA-Z_][a-zA-Z0-9_]*)/g;
-    const matches = text.matchAll(variableRegex);
-    const variables = new Set<string>();
-
-    for (const match of matches) {
-      variables.add(match[1]);
-    }
-
-    return Array.from(variables).sort();
   }
+
+  walkAst(ast);
+
+  return Array.from(variables).sort();
 }
