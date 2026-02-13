@@ -9,6 +9,8 @@ import type { DecorationSet, ViewUpdate } from "@codemirror/view";
 import type { Extension } from "@codemirror/state";
 import { parseIcu } from "./icu-linter";
 import {
+  isPluralElement,
+  isSelectElement,
   TYPE,
   type MessageFormatElement,
 } from "@formatjs/icu-messageformat-parser";
@@ -54,39 +56,27 @@ function createIcuDecorator() {
         // Walk the AST and create decorations directly
         function walkAst(nodes: Array<MessageFormatElement>): void {
           for (const node of nodes) {
-            if (!node.location) continue;
+            if (!node.location) {
+              continue;
+            }
 
             const start = node.location.start.offset;
             const end = node.location.end.offset;
 
+            let bracesPositions: Array<number> = [];
+
             if (node.type === TYPE.argument) {
-              decorations.push({
-                from: start,
-                to: start + 1,
-                decoration: braceDecoration,
-              });
+              bracesPositions.push(start, end - 1);
+
               decorations.push({
                 from: start + 1,
                 to: end - 1,
                 decoration: variableDecoration,
               });
-
-              decorations.push({
-                from: end - 1,
-                to: end,
-                decoration: braceDecoration,
-              });
             } else if (node.type === TYPE.plural) {
               // Plural pattern like {count, plural, ...}
-              decorations.push({
-                from: start,
-                to: start + 1,
-                decoration: braceDecoration,
-              });
-
-              const varName = node.value;
               const varStart = start + 1;
-              const varEnd = varStart + varName.length;
+              const varEnd = varStart + node.value.length;
               decorations.push({
                 from: varStart,
                 to: varEnd,
@@ -113,53 +103,10 @@ function createIcuDecorator() {
                 });
               }
 
-              // Process plural options
-              for (const [key, option] of Object.entries(node.options)) {
-                if (!option.location) continue;
-
-                const optionStart = option.location.start.offset;
-                const optionEnd = option.location.end.offset;
-
-                // Highlight option keyword (one, other, etc.)
-                const argPos = doc.lastIndexOf(key, optionStart);
-                if (argPos !== -1 && argPos < optionStart) {
-                  decorations.push({
-                    from: argPos,
-                    to: argPos + key.length,
-                    decoration: argumentDecoration,
-                  });
-                }
-
-                // Highlight braces around option content
-                decorations.push({
-                  from: optionStart,
-                  to: optionStart + 1,
-                  decoration: braceDecoration,
-                });
-                decorations.push({
-                  from: optionEnd - 1,
-                  to: optionEnd,
-                  decoration: braceDecoration,
-                });
-
-                // Recursively process option content
-                walkAst(option.value);
-              }
-
-              // Highlight closing brace
-              decorations.push({
-                from: end - 1,
-                to: end,
-                decoration: braceDecoration,
-              });
+              // Highlight opening and closing brace
+              bracesPositions.push(start, end - 1);
             } else if (node.type === TYPE.select) {
               // Select pattern like {gender, select, ...}
-              // Highlight opening brace
-              decorations.push({
-                from: start,
-                to: start + 1,
-                decoration: braceDecoration,
-              });
 
               // Highlight variable name
               const varName = node.value;
@@ -182,14 +129,44 @@ function createIcuDecorator() {
                 });
               }
 
-              // Process select options
+              // Highlight opening and closing brace
+              bracesPositions.push(start, end - 1);
+            } else if (
+              node.type === TYPE.number ||
+              node.type === TYPE.date ||
+              node.type === TYPE.time
+            ) {
+              // Number/Date/Time format
+              const varStart = start + 1;
+              const varEnd = varStart + node.value.length;
+              decorations.push({
+                from: varStart,
+                to: varEnd,
+                decoration: variableDecoration,
+              });
+
+              bracesPositions.push(start, end - 1);
+            } else if (node.type === TYPE.tag) {
+              // Tag element - process children
+              walkAst(node.children);
+            } else if (node.type === TYPE.pound) {
+              // Pound symbol in plural - highlight as argument
+              decorations.push({
+                from: start,
+                to: end,
+                decoration: argumentDecoration,
+              });
+            }
+
+            if (isPluralElement(node) || isSelectElement(node)) {
+              // Process plural options
               for (const [key, option] of Object.entries(node.options)) {
                 if (!option.location) continue;
 
                 const optionStart = option.location.start.offset;
                 const optionEnd = option.location.end.offset;
 
-                // Highlight option keyword (male, female, other, etc.)
+                // Highlight option keyword (one, other, etc.)
                 const argPos = doc.lastIndexOf(key, optionStart);
                 if (argPos !== -1 && argPos < optionStart) {
                   decorations.push({
@@ -200,63 +177,18 @@ function createIcuDecorator() {
                 }
 
                 // Highlight braces around option content
-                decorations.push({
-                  from: optionStart,
-                  to: optionStart + 1,
-                  decoration: braceDecoration,
-                });
-                decorations.push({
-                  from: optionEnd - 1,
-                  to: optionEnd,
-                  decoration: braceDecoration,
-                });
+                bracesPositions.push(optionStart, optionEnd - 1);
 
                 // Recursively process option content
                 walkAst(option.value);
               }
+            }
 
-              // Highlight closing brace
+            for (const pos of bracesPositions) {
               decorations.push({
-                from: end - 1,
-                to: end,
+                from: pos,
+                to: pos + 1,
                 decoration: braceDecoration,
-              });
-            } else if (
-              node.type === TYPE.number ||
-              node.type === TYPE.date ||
-              node.type === TYPE.time
-            ) {
-              // Number/Date/Time format
-              decorations.push({
-                from: start,
-                to: start + 1,
-                decoration: braceDecoration,
-              });
-
-              const varStart = start + 1;
-              const varEnd = varStart + node.value.length;
-              decorations.push({
-                from: varStart,
-                to: varEnd,
-                decoration: variableDecoration,
-              });
-
-              decorations.push({
-                from: end - 1,
-                to: end,
-                decoration: braceDecoration,
-              });
-            } else if (node.type === TYPE.tag) {
-              // Tag element - process children
-              if ("children" in node) {
-                walkAst(node.children);
-              }
-            } else if (node.type === TYPE.pound) {
-              // Pound symbol in plural - highlight as argument
-              decorations.push({
-                from: start,
-                to: end,
-                decoration: argumentDecoration,
               });
             }
           }
