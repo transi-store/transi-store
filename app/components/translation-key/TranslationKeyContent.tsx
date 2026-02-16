@@ -172,7 +172,7 @@ export function TranslationKeyContent({
             {languages
               .filter((lang) => lang.isDefault)
               .map((lang) => (
-                <GridItem key={lang.id}>
+                <GridItem key={`lang-${lang.id}`}>
                   <LanguageEditor
                     lang={lang}
                     isDefault
@@ -199,7 +199,7 @@ export function TranslationKeyContent({
                     </GridItem>
                   )}
 
-                  <GridItem key={lang.id}>
+                  <GridItem key={`lang-${lang.id}`}>
                     <LanguageEditor
                       lang={lang}
                       isDefault={false}
@@ -233,6 +233,7 @@ export function TranslationKeyContent({
         error={editKeyError}
         isSubmitting={editKeyFetcher.state !== "idle"}
         actionUrl={actionUrl}
+        fetcher={editKeyFetcher}
       />
 
       {/* AI suggestions dialog */}

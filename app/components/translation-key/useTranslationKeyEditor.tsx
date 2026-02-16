@@ -197,23 +197,12 @@ export function useTranslationKeyEditor({
     ],
   );
 
-  const handleEditKeySubmit = useCallback(
-    (formData: FormData) => {
-      editKeyFetcher.submit(formData, {
-        method: "POST",
-        ...(actionUrl ? { action: actionUrl } : {}),
-      });
-    },
-    [actionUrl, editKeyFetcher],
-  );
-
   return {
     translationValues,
     handleTranslationChange,
     handleTranslationBlur,
     handleRequestAiTranslation,
     handleSelectSuggestion,
-    handleEditKeySubmit,
 
     // AI dialog
     aiDialogLocale,
