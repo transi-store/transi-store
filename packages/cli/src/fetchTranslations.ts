@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import z from "zod";
 import schema from "./schema.ts";
 
@@ -52,7 +54,7 @@ export async function fetchTranslations({
     }
 
     // create directory if not exists
-    const dir = output.substring(0, output.lastIndexOf("/"));
+    const dir = path.dirname(output);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -73,14 +75,14 @@ export async function fetchForConfig(
 ): Promise<void> {
   const cwd = process.cwd();
 
-  const fullPath = `${cwd}/${configPath}`;
+  const fullPath = path.resolve(cwd, configPath);
 
   if (!fs.existsSync(fullPath)) {
     console.error(`Config file not found: ${configPath}`);
     process.exit(1);
   }
 
-  const config = (await import(fullPath, { with: { type: "json" } })).default;
+  const config = (await import(pathToFileURL(fullPath).href, { with: { type: "json" } })).default;
   const result = schema.safeParse(config);
 
   if (!result.success) {
