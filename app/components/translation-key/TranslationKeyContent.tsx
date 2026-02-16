@@ -35,7 +35,7 @@ import {
   Portal,
   Separator,
 } from "@chakra-ui/react";
-import { Link } from "react-router";
+import { Link, type FetcherWithComponents } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPencil, LuSparkles } from "react-icons/lu";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -47,19 +47,24 @@ import {
 import { Tooltip } from "~/components/ui/tooltip";
 import { useTranslationKeyEditor } from "./useTranslationKeyEditor";
 import type {
-  TranslationKeyData,
-  LanguageData,
-  TranslationData,
-  OrganizationRef,
-  ProjectRef,
-} from "./types";
+  TranslationKey,
+  Translation,
+  ProjectLanguage,
+  Organization,
+  Project,
+} from "../../../drizzle/schema";
+import {
+  isErrorReturnType,
+  isSuggestionsReturnType,
+  type TranslateAction,
+} from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
 
 type TranslationKeyContentProps = {
-  translationKey: TranslationKeyData;
-  languages: Array<LanguageData>;
-  translations: Array<TranslationData>;
-  organization: OrganizationRef;
-  project: ProjectRef;
+  translationKey: TranslationKey;
+  languages: Array<ProjectLanguage>;
+  translations: Array<Translation>;
+  organization: Organization;
+  project: Project;
   hasAiProvider: boolean;
   /** URL to POST actions to. Defaults to current route (for the standalone page). */
   actionUrl?: string;
@@ -250,7 +255,7 @@ export function TranslationKeyContent({
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 type LanguageEditorProps = {
-  lang: LanguageData;
+  lang: ProjectLanguage;
   isDefault: boolean;
   value: string;
   onChange: (value: string) => void;
@@ -318,9 +323,7 @@ type AiSuggestionsDialogProps = {
   locale: string | null;
   onClose: () => void;
   onSelect: (text: string) => void;
-  aiFetcher: ReturnType<
-    typeof import("react-router").useFetcher<import("./types").AiFetcherData>
-  >;
+  aiFetcher: FetcherWithComponents<TranslateAction>;
 };
 
 function AiSuggestionsDialog({
@@ -363,11 +366,11 @@ function AiSuggestionsDialog({
                     {t("keys.translateWithAI.generating")}
                   </Text>
                 </VStack>
-              ) : aiFetcher.data?.error ? (
+              ) : isErrorReturnType(aiFetcher.data) ? (
                 <Box p={4} bg="red.subtle" borderRadius="md">
                   <Text color="red.fg">{aiFetcher.data.error}</Text>
                 </Box>
-              ) : aiFetcher.data?.suggestions ? (
+              ) : isSuggestionsReturnType(aiFetcher.data) ? (
                 <VStack align="stretch" gap={3}>
                   {aiFetcher.data.provider && (
                     <Text fontSize="xs" color="fg.subtle">
@@ -376,7 +379,7 @@ function AiSuggestionsDialog({
                       })}
                     </Text>
                   )}
-                  {aiFetcher.data.suggestions.map((suggestion, index) => (
+                  {aiFetcher.data.suggestions?.map((suggestion, index) => (
                     <Box
                       key={index}
                       p={4}

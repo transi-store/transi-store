@@ -1,27 +1,52 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useFetcher } from "react-router";
+import { useFetcher, type FetcherWithComponents } from "react-router";
 import { useTranslation } from "react-i18next";
 import { VStack, Text } from "@chakra-ui/react";
 import { toaster } from "~/components/ui/toaster";
 import type {
-  TranslationKeyData,
-  LanguageData,
-  TranslationData,
-  OrganizationRef,
-  ProjectRef,
-  AiFetcherData,
-} from "./types";
+  ProjectLanguage,
+  Translation,
+  TranslationKey,
+  Organization,
+  Project,
+} from "../../../drizzle/schema";
+import type { TranslateAction } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
 
 type UseTranslationKeyEditorParams = {
-  translationKey: TranslationKeyData;
-  languages: Array<LanguageData>;
-  translations: Array<TranslationData>;
-  organization: OrganizationRef;
-  project: ProjectRef;
+  translationKey: TranslationKey;
+  languages: Array<ProjectLanguage>;
+  translations: Array<Translation>;
+  organization: Organization;
+  project: Project;
   /** URL to POST actions to (save, editKey). Defaults to current route. */
   actionUrl?: string;
   /** Callback when the number of active fetchers changes. */
   onFetcherStateChange?: (activeFetchers: number) => void;
+};
+
+type ReturnType = {
+  translationValues: Record<string, string>;
+  handleTranslationChange: (locale: string, value: string) => void;
+  handleTranslationBlur: (locale: string) => void;
+  handleRequestAiTranslation: (locale: string) => void;
+  handleSelectSuggestion: (text: string) => void;
+
+  // AI dialog state
+  aiDialogLocale: string | null;
+  setAiDialogLocale: (locale: string | null) => void;
+  aiFetcher: FetcherWithComponents<TranslateAction>;
+
+  // Edit key modal state
+  isEditKeyModalOpen: boolean;
+  setIsEditKeyModalOpen: (open: boolean) => void;
+  editKeyFetcher: FetcherWithComponents<{
+    success?: boolean;
+    error?: string;
+    action?: string;
+  }>;
+
+  // Save state
+  isSaving: boolean;
 };
 
 export function useTranslationKeyEditor({
@@ -32,7 +57,7 @@ export function useTranslationKeyEditor({
   project,
   actionUrl,
   onFetcherStateChange,
-}: UseTranslationKeyEditorParams) {
+}: UseTranslationKeyEditorParams): ReturnType {
   const { t } = useTranslation();
 
   // Fetcher for auto-saving translations
@@ -89,7 +114,7 @@ export function useTranslationKeyEditor({
 
   // AI translation state
   const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);
-  const aiFetcher = useFetcher<AiFetcherData>();
+  const aiFetcher = useFetcher<TranslateAction>();
 
   // Track active fetchers
   useEffect(() => {
@@ -98,7 +123,12 @@ export function useTranslationKeyEditor({
       (editKeyFetcher.state !== "idle" ? 1 : 0) +
       (aiFetcher.state !== "idle" ? 1 : 0);
     onFetcherStateChange?.(count);
-  }, [saveFetcher.state, editKeyFetcher.state, aiFetcher.state, onFetcherStateChange]);
+  }, [
+    saveFetcher.state,
+    editKeyFetcher.state,
+    aiFetcher.state,
+    onFetcherStateChange,
+  ]);
 
   const handleTranslationChange = useCallback(
     (locale: string, value: string) => {
@@ -189,12 +219,7 @@ export function useTranslationKeyEditor({
         );
       }
     },
-    [
-      aiDialogLocale,
-      handleTranslationChange,
-      actionUrl,
-      saveFetcher,
-    ],
+    [aiDialogLocale, handleTranslationChange, actionUrl, saveFetcher],
   );
 
   return {
