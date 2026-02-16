@@ -16,7 +16,7 @@ import {
   Textarea,
   VStack,
 } from "@chakra-ui/react";
-import { Form } from "react-router";
+import { Form, type FetcherWithComponents } from "react-router";
 import { useTranslation } from "react-i18next";
 
 type TranslationKeyModalProps = {
@@ -29,6 +29,10 @@ type TranslationKeyModalProps = {
   };
   error?: string;
   isSubmitting?: boolean;
+  /** Optional action URL for the form (used when rendered outside the key route, e.g. in a drawer). */
+  actionUrl?: string;
+  /** Optional fetcher for non-navigating submissions (e.g. edit mode in drawer). */
+  fetcher?: FetcherWithComponents<unknown>;
 };
 
 export const TRANSLATIONS_KEY_MODEL_MODE = {
@@ -45,9 +49,12 @@ export function TranslationKeyModal({
   defaultValues,
   error,
   isSubmitting = false,
+  actionUrl,
+  fetcher,
 }: TranslationKeyModalProps) {
   const { t } = useTranslation();
   const isCreate = mode === TRANSLATIONS_KEY_MODEL_MODE.CREATE;
+  const FormComponent = fetcher ? fetcher.Form : Form;
 
   return (
     <DialogRoot open={isOpen} onOpenChange={(e) => onOpenChange(e.open)}>
@@ -55,7 +62,7 @@ export function TranslationKeyModal({
         <DialogBackdrop />
         <DialogPositioner>
           <DialogContent>
-            <Form method="post">
+            <FormComponent method="post" action={actionUrl}>
               <input
                 type="hidden"
                 name="_action"
@@ -135,7 +142,7 @@ export function TranslationKeyModal({
                   {isCreate ? t("keys.new.create") : t("keys.edit.save")}
                 </Button>
               </DialogFooter>
-            </Form>
+            </FormComponent>
           </DialogContent>
         </DialogPositioner>
       </Portal>

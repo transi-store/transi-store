@@ -12,7 +12,7 @@ import {
 import { toaster } from "~/components/ui/toaster";
 import { Link, Form, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { LuPencil, LuCopy } from "react-icons/lu";
+import { LuCopy, LuPanelRightOpen } from "react-icons/lu";
 import { TextHighlight } from "~/lib/highlight";
 import { isSearchTranlation } from "~/lib/translation-helper";
 import { TranslationProgress } from "./TranslationProgress";
@@ -26,6 +26,7 @@ type TranslationKeyRowProps = {
   organizationSlug: string;
   projectSlug: string;
   currentUrl: string;
+  onEditInDrawer: (keyId: number) => void;
 };
 
 type CopyOptions = {
@@ -66,6 +67,7 @@ export function TranslationKeyRow({
   organizationSlug,
   projectSlug,
   currentUrl,
+  onEditInDrawer,
 }: TranslationKeyRowProps) {
   const { t } = useTranslation();
   const handleCopyText = usehandleCopyText();
@@ -158,12 +160,12 @@ export function TranslationKeyRow({
       </Table.Cell>
       <Table.Cell>
         <HStack gap={2}>
-          <Button asChild size="sm" colorPalette="brand">
-            <Link
-              to={`${getKeyUrl(organizationSlug, projectSlug, key.id, { redirectTo: currentUrl })}`}
-            >
-              <LuPencil /> {t("translations.edit")}
-            </Link>
+          <Button
+            size="sm"
+            colorPalette="brand"
+            onClick={() => onEditInDrawer(key.id)}
+          >
+            <LuPanelRightOpen /> {t("translations.edit")}
           </Button>
           <Form method="post">
             <input type="hidden" name="_action" value="duplicate" />

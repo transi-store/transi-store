@@ -1,5 +1,4 @@
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.translate";
-// import { action as translateAction } from "./api.orgs.$orgSlug.projects.$projectSlug.translate.server";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
@@ -8,11 +7,41 @@ import {
   getTranslationsForKey,
 } from "~/lib/translation-keys.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
-import { translateWithAI } from "~/lib/ai-translation.server";
+import {
+  translateWithAI,
+  type TranslationSuggestion,
+} from "~/lib/ai-translation.server";
 import { getInstance } from "~/middleware/i18next";
-// import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.translate";
+import type { AiProviderEnum } from "~/lib/ai-providers";
 
-export async function action({ request, params, context }: Route.ActionArgs) {
+type SuggestionsReturnType = {
+  suggestions?: Array<TranslationSuggestion>;
+  provider?: AiProviderEnum;
+};
+
+type ErrorReturnType = {
+  error: string;
+};
+
+export function isSuggestionsReturnType(
+  data: TranslateAction | undefined,
+): data is SuggestionsReturnType {
+  return !!data && (data as SuggestionsReturnType).suggestions !== undefined;
+}
+
+export function isErrorReturnType(
+  data: TranslateAction | undefined,
+): data is ErrorReturnType {
+  return !!data && (data as ErrorReturnType).error !== undefined;
+}
+
+export type TranslateAction = SuggestionsReturnType | ErrorReturnType;
+
+export async function action({
+  request,
+  params,
+  context,
+}: Route.ActionArgs): Promise<TranslateAction | Response> {
   const i18next = getInstance(context);
   const { orgSlug, projectSlug } = params;
 
