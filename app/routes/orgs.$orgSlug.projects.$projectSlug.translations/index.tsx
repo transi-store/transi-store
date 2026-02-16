@@ -183,18 +183,12 @@ export default function ProjectTranslations({
 
   // Drawer state for inline editing
   const [drawerKeyId, setDrawerKeyId] = useState<number | null>(null);
-  // const revalidator = useRevalidator();
 
   const handleEditInDrawer = useCallback((keyId: number) => {
     setDrawerKeyId(keyId);
   }, []);
 
   const handleDrawerClosed = useCallback(() => {
-    setDrawerKeyId(null);
-    // revalidator.revalidate();
-  }, []);
-
-  const handleDrawerDeleted = useCallback(() => {
     setDrawerKeyId(null);
   }, []);
 
@@ -312,12 +306,7 @@ export default function ProjectTranslations({
           keyId={drawerKeyId}
           organizationSlug={organization.slug}
           projectSlug={project.slug}
-          open
-          onOpenChange={() => {
-            // Drawer will call this when ready to close
-          }}
           onClosed={handleDrawerClosed}
-          onDeleted={handleDrawerDeleted}
         />
       )}
 
