@@ -1,8 +1,11 @@
 import { db, schema } from "./db.server";
 import { eq, inArray } from "drizzle-orm";
 import type { SessionData } from "./session.server";
+import type { Organization } from "../../drizzle/schema";
 
-export async function getUserOrganizations(userId: number) {
+export async function getUserOrganizations(
+  userId: number,
+): Promise<Array<Organization>> {
   // Récupérer les IDs des organisations dont l'utilisateur est membre
   const memberships = await db
     .select({
@@ -26,7 +29,9 @@ export async function getUserOrganizations(userId: number) {
   return organizations;
 }
 
-async function getOrganizationBySlug(slug: string) {
+async function getOrganizationBySlug(
+  slug: string,
+): Promise<Organization | undefined> {
   return await db.query.organizations.findFirst({
     where: { slug },
   });
@@ -46,7 +51,7 @@ async function isUserMemberOfOrganization(
 export async function requireOrganizationMembership(
   user: SessionData,
   organizationSlug: string,
-) {
+): Promise<Organization> {
   const organization = await getOrganizationBySlug(organizationSlug);
 
   if (!organization) {

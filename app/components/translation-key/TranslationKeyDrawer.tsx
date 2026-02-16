@@ -32,20 +32,7 @@ import { useTranslation } from "react-i18next";
 import { LuExternalLink, LuTrash2 } from "react-icons/lu";
 import { getKeyUrl } from "~/lib/routes-helpers";
 import { TranslationKeyContent } from "./TranslationKeyContent";
-
-type DrawerLoaderData = {
-  organization: { id: number; slug: string; name: string };
-  project: { id: number; slug: string; name: string };
-  key: {
-    id: number;
-    keyName: string;
-    description: string | null;
-    projectId: number;
-  };
-  languages: Array<{ id: number; locale: string; isDefault: boolean }>;
-  translations: Array<{ locale: string; value: string }>;
-  hasAiProvider: boolean;
-};
+import type { KeyLoaderData } from "~/routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
 
 type TranslationKeyDrawerProps = {
   /** The key ID to edit. */
@@ -65,7 +52,7 @@ export function TranslationKeyDrawer({
   const { t } = useTranslation();
 
   // Fetcher for loading key data
-  const dataFetcher = useFetcher<DrawerLoaderData>();
+  const dataFetcher = useFetcher<KeyLoaderData>();
 
   // Track if user wants to close (wait for pending operations)
   const [isClosing, setIsClosing] = useState(false);

@@ -22,8 +22,28 @@ import {
 } from "~/lib/routes-helpers";
 import { getInstance } from "~/middleware/i18next";
 import { TranslationKeyContent } from "~/components/translation-key";
+import type {
+  Organization,
+  Project,
+  ProjectLanguage,
+  Translation,
+  TranslationKey,
+} from "../../drizzle/schema";
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export type KeyLoaderData = {
+  organization: Organization;
+  project: Project;
+  key: TranslationKey;
+  languages: Array<ProjectLanguage>;
+  translations: Array<Translation>;
+  hasAiProvider: boolean;
+  redirectUrl: string;
+};
+
+export async function loader({
+  request,
+  params,
+}: Route.LoaderArgs): Promise<KeyLoaderData> {
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
     user,
