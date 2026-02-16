@@ -26,6 +26,7 @@ type TranslationKeyRowProps = {
   organizationSlug: string;
   projectSlug: string;
   currentUrl: string;
+  onEditInDrawer: (keyId: number) => void;
 };
 
 type CopyOptions = {
@@ -66,6 +67,7 @@ export function TranslationKeyRow({
   organizationSlug,
   projectSlug,
   currentUrl,
+  onEditInDrawer,
 }: TranslationKeyRowProps) {
   const { t } = useTranslation();
   const handleCopyText = usehandleCopyText();
@@ -158,12 +160,12 @@ export function TranslationKeyRow({
       </Table.Cell>
       <Table.Cell>
         <HStack gap={2}>
-          <Button asChild size="sm" colorPalette="brand">
-            <Link
-              to={`${getKeyUrl(organizationSlug, projectSlug, key.id, { redirectTo: currentUrl })}`}
-            >
-              <LuPencil /> {t("translations.edit")}
-            </Link>
+          <Button
+            size="sm"
+            colorPalette="brand"
+            onClick={() => onEditInDrawer(key.id)}
+          >
+            <LuPencil /> {t("translations.edit")}
           </Button>
           <Form method="post">
             <input type="hidden" name="_action" value="duplicate" />

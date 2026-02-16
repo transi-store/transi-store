@@ -9,10 +9,11 @@ import {
 } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Route } from "./+types/index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
+import { TranslationKeyDrawer } from "~/components/translation-key";
 import { getProjectBySlug } from "~/lib/projects.server";
 import {
   getTranslationKeys,
@@ -180,6 +181,23 @@ export default function ProjectTranslations({
 
   const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
 
+  // Drawer state for inline editing
+  const [drawerKeyId, setDrawerKeyId] = useState<number | null>(null);
+  // const revalidator = useRevalidator();
+
+  const handleEditInDrawer = useCallback((keyId: number) => {
+    setDrawerKeyId(keyId);
+  }, []);
+
+  const handleDrawerClosed = useCallback(() => {
+    setDrawerKeyId(null);
+    // revalidator.revalidate();
+  }, []);
+
+  const handleDrawerDeleted = useCallback(() => {
+    setDrawerKeyId(null);
+  }, []);
+
   const totalLanguages = languages.length;
 
   // Build redirect URL with current search params
@@ -273,6 +291,7 @@ export default function ProjectTranslations({
             organizationSlug={organization.slug}
             projectSlug={project.slug}
             currentUrl={currentUrl}
+            onEditInDrawer={handleEditInDrawer}
           />
 
           <TranslationsPagination
@@ -285,6 +304,21 @@ export default function ProjectTranslations({
             projectSlug={project.slug}
           />
         </>
+      )}
+
+      {/* Drawer for inline key editing */}
+      {drawerKeyId !== null && (
+        <TranslationKeyDrawer
+          keyId={drawerKeyId}
+          organizationSlug={organization.slug}
+          projectSlug={project.slug}
+          open
+          onOpenChange={() => {
+            // Drawer will call this when ready to close
+          }}
+          onClosed={handleDrawerClosed}
+          onDeleted={handleDrawerDeleted}
+        />
       )}
 
       {/* Modale de création de clé */}

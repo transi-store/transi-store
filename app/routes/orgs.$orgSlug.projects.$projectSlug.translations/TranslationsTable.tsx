@@ -10,6 +10,7 @@ type TranslationsTableProps = {
   organizationSlug: string;
   projectSlug: string;
   currentUrl: string;
+  onEditInDrawer: (keyId: number) => void;
 };
 
 export function TranslationsTable({
@@ -19,6 +20,7 @@ export function TranslationsTable({
   organizationSlug,
   projectSlug,
   currentUrl,
+  onEditInDrawer,
 }: TranslationsTableProps) {
   const { t } = useTranslation();
 
@@ -47,6 +49,7 @@ export function TranslationsTable({
             organizationSlug={organizationSlug}
             projectSlug={projectSlug}
             currentUrl={currentUrl}
+            onEditInDrawer={onEditInDrawer}
           />
         ))}
       </Table.Body>

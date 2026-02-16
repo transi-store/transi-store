@@ -29,6 +29,8 @@ type TranslationKeyModalProps = {
   };
   error?: string;
   isSubmitting?: boolean;
+  /** Optional action URL for the form (used when rendered outside the key route, e.g. in a drawer). */
+  actionUrl?: string;
 };
 
 export const TRANSLATIONS_KEY_MODEL_MODE = {
@@ -45,6 +47,7 @@ export function TranslationKeyModal({
   defaultValues,
   error,
   isSubmitting = false,
+  actionUrl,
 }: TranslationKeyModalProps) {
   const { t } = useTranslation();
   const isCreate = mode === TRANSLATIONS_KEY_MODEL_MODE.CREATE;
@@ -55,7 +58,7 @@ export function TranslationKeyModal({
         <DialogBackdrop />
         <DialogPositioner>
           <DialogContent>
-            <Form method="post">
+            <Form method="post" action={actionUrl}>
               <input
                 type="hidden"
                 name="_action"
