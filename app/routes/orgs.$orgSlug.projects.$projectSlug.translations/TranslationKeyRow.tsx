@@ -12,7 +12,7 @@ import {
 import { toaster } from "~/components/ui/toaster";
 import { Link, Form, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { LuPencil, LuCopy } from "react-icons/lu";
+import { LuCopy, LuPanelRightOpen } from "react-icons/lu";
 import { TextHighlight } from "~/lib/highlight";
 import { isSearchTranlation } from "~/lib/translation-helper";
 import { TranslationProgress } from "./TranslationProgress";
@@ -165,7 +165,7 @@ export function TranslationKeyRow({
             colorPalette="brand"
             onClick={() => onEditInDrawer(key.id)}
           >
-            <LuPencil /> {t("translations.edit")}
+            <LuPanelRightOpen /> {t("translations.edit")}
           </Button>
           <Form method="post">
             <input type="hidden" name="_action" value="duplicate" />
