@@ -153,6 +153,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (action === "saveTranslation") {
     const locale = formData.get("locale");
     const value = formData.get("value");
+    const isFuzzy = formData.get("isFuzzy");
 
     if (locale && typeof locale === "string") {
       if (value && typeof value === "string" && value.trim()) {
@@ -161,6 +162,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
           keyId: key.id,
           locale: locale,
           value: value.trim(),
+          isFuzzy: isFuzzy === "true",
         });
       } else {
         // Delete the translation if the value is empty
