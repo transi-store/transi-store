@@ -19,10 +19,10 @@ import { extractVariables } from "./icu-linter";
 
 type IcuPreviewProps = {
   message: string;
-  locale?: string;
+  locale: string;
 };
 
-export function IcuPreview({ message, locale = "fr" }: IcuPreviewProps) {
+export function IcuPreview({ message, locale }: IcuPreviewProps) {
   const { t } = useTranslation();
   const variables = useMemo(() => extractVariables(message), [message]);
 

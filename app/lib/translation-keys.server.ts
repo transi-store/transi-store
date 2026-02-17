@@ -249,6 +249,7 @@ type UpsertTranslationParams = {
   keyId: number;
   locale: string;
   value: string;
+  isFuzzy?: boolean;
 };
 
 export async function upsertTranslation(params: UpsertTranslationParams) {
@@ -259,9 +260,15 @@ export async function upsertTranslation(params: UpsertTranslationParams) {
 
   if (existing) {
     // Update existing
+    const updateData: { value: string; isFuzzy?: boolean } = {
+      value: params.value,
+    };
+    if (params.isFuzzy !== undefined) {
+      updateData.isFuzzy = params.isFuzzy;
+    }
     await db
       .update(schema.translations)
-      .set({ value: params.value })
+      .set(updateData)
       .where(eq(schema.translations.id, existing.id));
 
     return existing.id;
@@ -273,6 +280,7 @@ export async function upsertTranslation(params: UpsertTranslationParams) {
         keyId: params.keyId,
         locale: params.locale,
         value: params.value,
+        isFuzzy: params.isFuzzy ?? false,
       })
       .returning();
 

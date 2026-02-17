@@ -26,8 +26,10 @@ type UseTranslationKeyEditorParams = {
 
 type ReturnType = {
   translationValues: Record<string, string>;
+  fuzzyFlags: Record<string, boolean>;
   handleTranslationChange: (locale: string, value: string) => void;
   handleTranslationBlur: (locale: string) => void;
+  handleFuzzyChange: (locale: string, isFuzzy: boolean) => void;
   handleRequestAiTranslation: (locale: string) => void;
   handleSelectSuggestion: (text: string) => void;
 
@@ -75,6 +77,7 @@ export function useTranslationKeyEditor({
 
   // Create a map of translations by locale for easier lookup
   const translationMap = new Map(translations.map((t) => [t.locale, t.value]));
+  const fuzzyMap = new Map(translations.map((t) => [t.locale, t.isFuzzy]));
 
   // State for translation values (for ICU editor)
   const [translationValues, setTranslationValues] = useState<
@@ -87,14 +90,27 @@ export function useTranslationKeyEditor({
     return initial;
   });
 
+  // State for fuzzy flags
+  const [fuzzyFlags, setFuzzyFlags] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    for (const lang of languages) {
+      initial[lang.locale] = fuzzyMap.get(lang.locale) || false;
+    }
+    return initial;
+  });
+
   // Reset translation values when key/translations change (e.g. drawer navigation)
   useEffect(() => {
     const newMap = new Map(translations.map((t) => [t.locale, t.value]));
+    const newFuzzyMap = new Map(translations.map((t) => [t.locale, t.isFuzzy]));
     const initial: Record<string, string> = {};
+    const initialFuzzy: Record<string, boolean> = {};
     for (const lang of languages) {
       initial[lang.locale] = newMap.get(lang.locale) || "";
+      initialFuzzy[lang.locale] = newFuzzyMap.get(lang.locale) || false;
     }
     setTranslationValues(initial);
+    setFuzzyFlags(initialFuzzy);
     originalValuesRef.current = initial;
   }, [translationKey.id, languages, translations]);
 
@@ -151,6 +167,7 @@ export function useTranslationKeyEditor({
             _action: "saveTranslation",
             locale,
             value: value || "",
+            isFuzzy: String(fuzzyFlags[locale] || false),
           },
           {
             method: "POST",
@@ -179,7 +196,29 @@ export function useTranslationKeyEditor({
         });
       }
     },
-    [translationValues, translationKey.keyName, actionUrl, saveFetcher, t],
+    [translationValues, fuzzyFlags, translationKey.keyName, actionUrl, saveFetcher, t],
+  );
+
+  const handleFuzzyChange = useCallback(
+    (locale: string, isFuzzy: boolean) => {
+      setFuzzyFlags((prev) => ({ ...prev, [locale]: isFuzzy }));
+
+      // Auto-save when fuzzy flag changes
+      const value = translationValues[locale];
+      saveFetcher.submit(
+        {
+          _action: "saveTranslation",
+          locale,
+          value: value || "",
+          isFuzzy: String(isFuzzy),
+        },
+        {
+          method: "POST",
+          ...(actionUrl ? { action: actionUrl } : {}),
+        },
+      );
+    },
+    [translationValues, actionUrl, saveFetcher],
   );
 
   const handleRequestAiTranslation = useCallback(
@@ -211,6 +250,7 @@ export function useTranslationKeyEditor({
             _action: "saveTranslation",
             locale: aiDialogLocale,
             value: text,
+            isFuzzy: String(fuzzyFlags[aiDialogLocale] || false),
           },
           {
             method: "POST",
@@ -219,13 +259,15 @@ export function useTranslationKeyEditor({
         );
       }
     },
-    [aiDialogLocale, handleTranslationChange, actionUrl, saveFetcher],
+    [aiDialogLocale, handleTranslationChange, fuzzyFlags, actionUrl, saveFetcher],
   );
 
   return {
     translationValues,
+    fuzzyFlags,
     handleTranslationChange,
     handleTranslationBlur,
+    handleFuzzyChange,
     handleRequestAiTranslation,
     handleSelectSuggestion,
 

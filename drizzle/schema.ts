@@ -172,6 +172,7 @@ export const translations = pgTable(
       .references(() => translationKeys.id, { onDelete: "cascade" }),
     locale: varchar("locale", { length: 10 }).notNull(),
     value: text("value").notNull(),
+    isFuzzy: boolean("is_fuzzy").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

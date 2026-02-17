@@ -3,34 +3,14 @@
  * Ensures CodeMirror only loads on the client side
  */
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, type JSX } from "react";
 import { Box, Textarea, Spinner } from "@chakra-ui/react";
+import type { IcuEditorProps } from "./IcuEditor";
 
 // Lazy load the editor only on client
 const IcuEditorLazy = lazy(() =>
   import("./IcuEditor").then((mod) => ({ default: mod.IcuEditor })),
 );
-
-type IcuEditorClientProps = {
-  /** Initial value */
-  value: string;
-  /** Callback when value changes */
-  onChange: (value: string) => void;
-  /** Callback when editor loses focus */
-  onBlur?: () => void;
-  /** Placeholder text */
-  placeholder?: string;
-  /** Whether the editor is disabled */
-  disabled?: boolean;
-  /** Locale for preview */
-  locale?: string;
-  /** Show preview panel */
-  showPreview?: boolean;
-  /** Minimum height */
-  minHeight?: string;
-  /** Name attribute for form submission */
-  name?: string;
-};
 
 // Fallback during loading
 function EditorFallback({
@@ -38,7 +18,10 @@ function EditorFallback({
   placeholder,
   disabled,
   name,
-}: Pick<IcuEditorClientProps, "value" | "placeholder" | "disabled" | "name">) {
+}: Pick<
+  IcuEditorProps,
+  "value" | "placeholder" | "disabled" | "name"
+>): JSX.Element {
   return (
     <Box position="relative">
       <Textarea
@@ -61,7 +44,7 @@ function EditorFallback({
   );
 }
 
-export function IcuEditorClient(props: IcuEditorClientProps) {
+export function IcuEditorClient(props: IcuEditorProps): JSX.Element {
   // Check if we're on the client
   if (typeof window === "undefined") {
     return (

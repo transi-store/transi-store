@@ -34,10 +34,12 @@ import {
   DialogPositioner,
   Portal,
   Separator,
+  Flex,
 } from "@chakra-ui/react";
+import { Switch } from "@chakra-ui/react/switch";
 import { Link, type FetcherWithComponents } from "react-router";
 import { useTranslation } from "react-i18next";
-import { LuPencil, LuSparkles } from "react-icons/lu";
+import { LuPencil, LuSparkles, LuCircleAlert } from "react-icons/lu";
 import { IcuEditorClient } from "~/components/icu-editor";
 import { getAiProvider } from "~/lib/ai-providers";
 import {
@@ -58,6 +60,7 @@ import {
   isSuggestionsReturnType,
   type TranslateAction,
 } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
+import { TranslationPreview } from "./TranslationPreview";
 
 type TranslationKeyContentProps = {
   translationKey: TranslationKey;
@@ -89,8 +92,10 @@ export function TranslationKeyContent({
 
   const {
     translationValues,
+    fuzzyFlags,
     handleTranslationChange,
     handleTranslationBlur,
+    handleFuzzyChange,
     handleRequestAiTranslation,
     handleSelectSuggestion,
     aiDialogLocale,
@@ -182,10 +187,14 @@ export function TranslationKeyContent({
                     lang={lang}
                     isDefault
                     value={translationValues[lang.locale] || ""}
+                    isFuzzy={fuzzyFlags[lang.locale] || false}
                     onChange={(value) =>
                       handleTranslationChange(lang.locale, value)
                     }
                     onBlur={() => handleTranslationBlur(lang.locale)}
+                    onFuzzyChange={(isFuzzy) =>
+                      handleFuzzyChange(lang.locale, isFuzzy)
+                    }
                     onRequestAi={() => handleRequestAiTranslation(lang.locale)}
                     hasAiProvider={hasAiProvider}
                     disabled={isSaving}
@@ -209,10 +218,14 @@ export function TranslationKeyContent({
                       lang={lang}
                       isDefault={false}
                       value={translationValues[lang.locale] || ""}
+                      isFuzzy={fuzzyFlags[lang.locale] || false}
                       onChange={(value) =>
                         handleTranslationChange(lang.locale, value)
                       }
                       onBlur={() => handleTranslationBlur(lang.locale)}
+                      onFuzzyChange={(isFuzzy) =>
+                        handleFuzzyChange(lang.locale, isFuzzy)
+                      }
                       onRequestAi={() =>
                         handleRequestAiTranslation(lang.locale)
                       }
@@ -258,8 +271,10 @@ type LanguageEditorProps = {
   lang: ProjectLanguage;
   isDefault: boolean;
   value: string;
+  isFuzzy: boolean;
   onChange: (value: string) => void;
   onBlur: () => void;
+  onFuzzyChange: (isFuzzy: boolean) => void;
   onRequestAi: () => void;
   hasAiProvider: boolean;
   disabled: boolean;
@@ -269,8 +284,10 @@ function LanguageEditor({
   lang,
   isDefault,
   value,
+  isFuzzy,
   onChange,
   onBlur,
+  onFuzzyChange,
   onRequestAi,
   hasAiProvider,
   disabled,
@@ -279,9 +296,14 @@ function LanguageEditor({
 
   return (
     <Field.Root>
-      <Field.Label>
+      <Flex justify="space-between" wrap="wrap" gap={2} w="full">
         <HStack>
           <Text>{lang.locale.toUpperCase()}</Text>
+          {isFuzzy && (
+            <Tooltip content={t("translations.fuzzyTooltip")}>
+              <LuCircleAlert color="orange" />
+            </Tooltip>
+          )}
           <Tooltip
             content={t("keys.translateWithAI.noProvider")}
             present={!hasAiProvider}
@@ -302,7 +324,24 @@ function LanguageEditor({
             </Badge>
           )}
         </HStack>
-      </Field.Label>
+
+        <Switch.Root
+          checked={isFuzzy}
+          onCheckedChange={(e: { checked: boolean }) =>
+            onFuzzyChange(e.checked)
+          }
+          disabled={disabled}
+          size="sm"
+        >
+          <Switch.HiddenInput />
+          <Switch.Label>
+            <Text fontSize="sm" color="fg.muted">
+              {t("translations.markAsFuzzy")}
+            </Text>
+          </Switch.Label>
+          <Switch.Control />
+        </Switch.Root>
+      </Flex>
       <IcuEditorClient
         name={`translation_${lang.locale}`}
         value={value}
@@ -313,8 +352,14 @@ function LanguageEditor({
         })}
         disabled={disabled}
         locale={lang.locale}
-        showPreview={true}
       />
+
+      {/* Preview panel */}
+      {value && (
+        <Box borderWidth={1} borderRadius="md" overflow="hidden" w="full">
+          <TranslationPreview value={value} locale={lang.locale} />
+        </Box>
+      )}
     </Field.Root>
   );
 }
