@@ -3,14 +3,7 @@
  * A CodeMirror-based editor with ICU syntax highlighting and validation
  */
 import { useEffect, useRef, useCallback, useState } from "react";
-import {
-  Box,
-  VStack,
-  Text,
-  Badge,
-  HStack,
-  Collapsible,
-} from "@chakra-ui/react";
+import { Box, VStack, Text, Badge, HStack } from "@chakra-ui/react";
 import {
   EditorView,
   keymap,
@@ -21,15 +14,8 @@ import type { Extension } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { icuLanguage } from "./icu-language";
 import { icuLinter, validateIcuMessage, extractVariables } from "./icu-linter";
-import { IcuPreview } from "./IcuPreview";
 import { IcuTemplateButtons } from "./IcuTemplateButtons";
-import {
-  LuChevronDown,
-  LuChevronRight,
-  LuCircleAlert,
-  LuCircleCheck,
-} from "react-icons/lu";
-import { useTranslation } from "react-i18next";
+import { LuCircleAlert, LuCircleCheck } from "react-icons/lu";
 import { useColorMode } from "../ui/color-mode";
 
 export type IcuEditorProps = {
@@ -53,12 +39,10 @@ export function IcuEditor({
   value,
   onChange,
   onBlur,
-  placeholder = "Entrez votre traduction ICU...",
-  disabled = false,
-  locale = "fr",
+  placeholder,
+  disabled,
   name,
 }: IcuEditorProps) {
-  const { t } = useTranslation();
   const { colorMode } = useColorMode();
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
@@ -67,7 +51,6 @@ export function IcuEditor({
   onBlurRef.current = onBlur;
 
   const [internalValue, setInternalValue] = useState(value);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [errors, setErrors] = useState<Array<string>>([]);
   const [variables, setVariables] = useState<Array<string>>([]);
 
@@ -243,37 +226,6 @@ export function IcuEditor({
           ))}
         </HStack>
       </HStack>
-
-      {/* Preview panel */}
-      {internalValue.trim() && (
-        <Box borderWidth={1} borderRadius="md" overflow="hidden">
-          <Box
-            as="button"
-            w="100%"
-            p={2}
-            bg="bg.subtle"
-            cursor="pointer"
-            display="flex"
-            alignItems="center"
-            gap={2}
-            _hover={{ bg: "bg.subtle.hover" }}
-            onClick={() => setIsPreviewOpen(!isPreviewOpen)}
-          >
-            {isPreviewOpen ? <LuChevronDown /> : <LuChevronRight />}
-            <Text fontSize="sm" fontWeight="medium">
-              {t("icu.previewLabel")}
-            </Text>
-          </Box>
-
-          <Collapsible.Root open={isPreviewOpen}>
-            <Collapsible.Content>
-              <Box p={3}>
-                <IcuPreview message={internalValue} locale={locale} />
-              </Box>
-            </Collapsible.Content>
-          </Collapsible.Root>
-        </Box>
-      )}
     </VStack>
   );
 }

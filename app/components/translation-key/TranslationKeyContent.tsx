@@ -34,6 +34,7 @@ import {
   DialogPositioner,
   Portal,
   Separator,
+  Flex,
 } from "@chakra-ui/react";
 import { Switch } from "@chakra-ui/react/switch";
 import { Link, type FetcherWithComponents } from "react-router";
@@ -59,6 +60,7 @@ import {
   isSuggestionsReturnType,
   type TranslateAction,
 } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
+import { TranslationPreview } from "./TranslationPreview";
 
 type TranslationKeyContentProps = {
   translationKey: TranslationKey;
@@ -294,7 +296,7 @@ function LanguageEditor({
 
   return (
     <Field.Root>
-      <Field.Label>
+      <Flex justify="space-between" wrap="wrap" gap={2} w="full">
         <HStack>
           <Text>{lang.locale.toUpperCase()}</Text>
           {isFuzzy && (
@@ -322,7 +324,24 @@ function LanguageEditor({
             </Badge>
           )}
         </HStack>
-      </Field.Label>
+
+        <Switch.Root
+          checked={isFuzzy}
+          onCheckedChange={(e: { checked: boolean }) =>
+            onFuzzyChange(e.checked)
+          }
+          disabled={disabled}
+          size="sm"
+        >
+          <Switch.HiddenInput />
+          <Switch.Label>
+            <Text fontSize="sm" color="fg.muted">
+              {t("translations.markAsFuzzy")}
+            </Text>
+          </Switch.Label>
+          <Switch.Control />
+        </Switch.Root>
+      </Flex>
       <IcuEditorClient
         name={`translation_${lang.locale}`}
         value={value}
@@ -334,24 +353,13 @@ function LanguageEditor({
         disabled={disabled}
         locale={lang.locale}
       />
-      <HStack mt={2}>
-        <Switch.Root
-          checked={isFuzzy}
-          onCheckedChange={(e: { checked: boolean }) =>
-            onFuzzyChange(e.checked)
-          }
-          disabled={disabled}
-          size="sm"
-        >
-          <Switch.HiddenInput />
-          <Switch.Control />
-          <Switch.Label>
-            <Text fontSize="sm" color="fg.muted">
-              {t("translations.markAsFuzzy")}
-            </Text>
-          </Switch.Label>
-        </Switch.Root>
-      </HStack>
+
+      {/* Preview panel */}
+      {value && (
+        <Box borderWidth={1} borderRadius="md" overflow="hidden" w="full">
+          <TranslationPreview value={value} locale={lang.locale} />
+        </Box>
+      )}
     </Field.Root>
   );
 }
