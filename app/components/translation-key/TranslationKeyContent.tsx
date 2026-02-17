@@ -178,36 +178,12 @@ export function TranslationKeyContent({
           </Heading>
 
           <SimpleGrid columns={compact ? 1 : { base: 1, md: 2 }} gap={6}>
-            {/* Default language first */}
-            {languages
-              .filter((lang) => lang.isDefault)
-              .map((lang) => (
-                <GridItem key={`lang-${lang.id}`}>
-                  <LanguageEditor
-                    lang={lang}
-                    isDefault
-                    value={translationValues[lang.locale] || ""}
-                    isFuzzy={fuzzyFlags[lang.locale] || false}
-                    onChange={(value) =>
-                      handleTranslationChange(lang.locale, value)
-                    }
-                    onBlur={() => handleTranslationBlur(lang.locale)}
-                    onFuzzyChange={(isFuzzy) =>
-                      handleFuzzyChange(lang.locale, isFuzzy)
-                    }
-                    onRequestAi={() => handleRequestAiTranslation(lang.locale)}
-                    hasAiProvider={hasAiProvider}
-                    disabled={isSaving}
-                  />
-                </GridItem>
-              ))}
-
             {/* Other languages */}
             {languages
-              .filter((lang) => !lang.isDefault)
-              .map((lang) => (
+              .sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
+              .map((lang, i) => (
                 <>
-                  {compact && (
+                  {compact && i > 0 && (
                     <GridItem key={`separator-${lang.id}`}>
                       <Separator />
                     </GridItem>
@@ -216,7 +192,7 @@ export function TranslationKeyContent({
                   <GridItem key={`lang-${lang.id}`}>
                     <LanguageEditor
                       lang={lang}
-                      isDefault={false}
+                      isDefault={!!lang.isDefault}
                       value={translationValues[lang.locale] || ""}
                       isFuzzy={fuzzyFlags[lang.locale] || false}
                       onChange={(value) =>
