@@ -333,7 +333,6 @@ function LanguageEditor({
         })}
         disabled={disabled}
         locale={lang.locale}
-        showPreview={true}
       />
       <HStack mt={2}>
         <Switch.Root

@@ -32,7 +32,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useColorMode } from "../ui/color-mode";
 
-type IcuEditorProps = {
+export type IcuEditorProps = {
   /** Initial value */
   value: string;
   /** Callback when value changes */
@@ -40,17 +40,13 @@ type IcuEditorProps = {
   /** Callback when editor loses focus */
   onBlur?: () => void;
   /** Placeholder text */
-  placeholder?: string;
+  placeholder: string;
   /** Whether the editor is disabled */
-  disabled?: boolean;
+  disabled: boolean;
   /** Locale for preview */
-  locale?: string;
-  /** Show preview panel */
-  showPreview?: boolean;
-  /** Minimum height */
-  minHeight?: string;
+  locale: string;
   /** Name attribute for form submission */
-  name?: string;
+  name: string;
 };
 
 export function IcuEditor({
@@ -60,8 +56,6 @@ export function IcuEditor({
   placeholder = "Entrez votre traduction ICU...",
   disabled = false,
   locale = "fr",
-  showPreview = true,
-  minHeight = "80px",
   name,
 }: IcuEditorProps) {
   const { t } = useTranslation();
@@ -194,7 +188,7 @@ export function IcuEditor({
       view.destroy();
       editorRef.current = null;
     };
-  }, [placeholder, disabled, minHeight, colorMode]);
+  }, [placeholder, disabled, colorMode]);
 
   const isValid = errors.length === 0;
 
@@ -251,7 +245,7 @@ export function IcuEditor({
       </HStack>
 
       {/* Preview panel */}
-      {showPreview && internalValue.trim() && (
+      {internalValue.trim() && (
         <Box borderWidth={1} borderRadius="md" overflow="hidden">
           <Box
             as="button"
