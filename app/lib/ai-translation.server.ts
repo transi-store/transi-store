@@ -1,6 +1,7 @@
 import { generateText, Output } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createFakeModel } from "./fake-ai-provider.server";
 import { AiProviderEnum } from "./ai-providers";
 import { z } from "zod";
 
@@ -142,6 +143,19 @@ async function translateWithGemini(
 }
 
 /**
+ * Traduit avec le provider fake (dev seulement)
+ */
+async function translateWithFake(
+  context: TranslationContext,
+): Promise<TranslationSuggestion[]> {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Fake AI provider is not available in production");
+  }
+
+  return callGenerateText({ context, model: createFakeModel() });
+}
+
+/**
  * Traduit un texte ICU avec le provider IA spécifié
  */
 export async function translateWithAI(
@@ -154,6 +168,8 @@ export async function translateWithAI(
       return translateWithOpenAI(context, apiKey);
     case AiProviderEnum.GEMINI:
       return translateWithGemini(context, apiKey);
+    case AiProviderEnum.FAKE:
+      return translateWithFake(context);
     default:
       throw new Error(`Provider IA non supporté: ${provider}`);
   }

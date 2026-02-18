@@ -6872,6 +6872,7 @@ __metadata:
   dependencies:
     "@ai-sdk/google": "npm:^3.0.16"
     "@ai-sdk/openai": "npm:^3.0.21"
+    "@ai-sdk/provider": "npm:3.0.5"
     "@chakra-ui/react": "npm:^3.3.1"
     "@codemirror/commands": "npm:^6.10.1"
     "@codemirror/lint": "npm:^6.9.2"
