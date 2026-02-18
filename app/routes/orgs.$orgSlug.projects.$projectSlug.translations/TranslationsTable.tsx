@@ -31,7 +31,10 @@ export function TranslationsTable({
           <Table.ColumnHeader>
             {t("translations.table.keyName")}
           </Table.ColumnHeader>
-          <Table.ColumnHeader w="300px">
+          <Table.ColumnHeader maxW="500px">
+            {t("translations.table.defaultTranslation")}
+          </Table.ColumnHeader>
+          <Table.ColumnHeader w="150px">
             {t("translations.table.translations")}
           </Table.ColumnHeader>
           <Table.ColumnHeader w="280px">

@@ -353,6 +353,7 @@
   "translations.sort": "{sortValue, select,\n  alphabetical {alphabétique}\n  createdAt {date de création}\n  relevance {pertinence}\n  other {translations.sort}\n}",
   "translations.sort.label": "Trier par",
   "translations.table.actions": "Actions",
+  "translations.table.defaultTranslation": "Traduction par défaut",
   "translations.table.keyName": "Nom de la clé",
   "translations.table.translations": "Traductions",
   "translations.title": "Clés de traduction",
