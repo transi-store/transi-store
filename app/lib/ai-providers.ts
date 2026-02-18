@@ -6,9 +6,8 @@
 export enum AiProviderEnum {
   OPENAI = "openai",
   GEMINI = "gemini",
+  FAKE = "fake",
 }
-
-export const AllAiProviders = Object.values(AiProviderEnum);
 
 export type AiProviderConfig = {
   value: AiProviderEnum;
@@ -31,6 +30,16 @@ export const AI_PROVIDERS: Array<AiProviderConfig> = [
     apiKeyPlaceholder: "AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   },
 ];
+
+// Dev-only fake provider — not shown in production
+if (process.env.NODE_ENV !== "production") {
+  AI_PROVIDERS.push({
+    value: AiProviderEnum.FAKE,
+    name: "Fake (dev only)",
+    configureUrl: "",
+    apiKeyPlaceholder: "any-value",
+  });
+}
 
 export function getAiProvider(provider: AiProviderEnum): AiProviderConfig {
   const config = AI_PROVIDERS.find((p) => p.value === provider);
