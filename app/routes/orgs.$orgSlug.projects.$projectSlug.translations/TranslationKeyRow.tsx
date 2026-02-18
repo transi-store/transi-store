@@ -121,35 +121,44 @@ export function TranslationKeyRow({
             )}
             {isSearchTranlation(key) && (
               <>
-                {key.matchType === "translation" && key.translationLocale && (
-                  <HStack gap={2} mt={1}>
-                    <Badge colorPalette="purple" size="sm">
-                      {t("translations.badgeTranslation")}
-                    </Badge>
-                    <Badge colorPalette="brand" size="sm">
-                      {key.translationLocale.toUpperCase()}
-                    </Badge>
-                  </HStack>
-                )}
                 {key.matchType === "key" && (
                   <Badge colorPalette="purple" size="sm" mt={1}>
                     {t("translations.badgeKey")}
                   </Badge>
                 )}
-                {key.matchType === "translation" && key.translationValue && (
-                  <Text fontSize="xs" color="fg.muted" mt={1}>
-                    <TextHighlight text={key.translationValue} query={search} />
-                  </Text>
-                )}
-                {key.matchType !== "translation" && key.defaultTranslation && (
-                  <Text fontSize="s" color="fg.muted">
-                    {key.defaultTranslation}
-                  </Text>
-                )}
               </>
             )}
           </VStack>
         </LinkBox>
+      </Table.Cell>
+      <Table.Cell>
+        <Text
+          fontSize="s"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="wrap"
+        >
+          {isSearchTranlation(key) &&
+          key.matchType === "translation" &&
+          key.translationValue ? (
+            <>
+              <TextHighlight text={key.translationValue} query={search} />
+
+              {key.matchType === "translation" && key.translationLocale && (
+                <HStack gap={2} mt={1}>
+                  <Badge colorPalette="purple" size="sm">
+                    {t("translations.badgeTranslation")}
+                  </Badge>
+                  <Badge colorPalette="brand" size="sm">
+                    {key.translationLocale.toUpperCase()}
+                  </Badge>
+                </HStack>
+              )}
+            </>
+          ) : (
+            key.defaultTranslation
+          )}
+        </Text>
       </Table.Cell>
       <Table.Cell>
         <TranslationProgress
