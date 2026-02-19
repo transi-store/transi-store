@@ -8,6 +8,7 @@ import {
   parseImportJSON,
   validateImportData,
   importTranslations,
+  type ImportStats,
 } from "~/lib/import/json.server";
 import { getInstance } from "~/middleware/i18next";
 import ImportSection from "./Import";
@@ -23,6 +24,10 @@ type ContextType = {
   project: Project;
   languages: Array<ProjectLanguage>;
 };
+
+type ActionData =
+  | { success: true; importStats: ImportStats }
+  | { success: false; error: string; details?: string };
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -40,7 +45,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return {};
 }
 
-export async function action({ request, params, context }: Route.ActionArgs) {
+export async function action({
+  request,
+  params,
+  context,
+}: Route.ActionArgs): Promise<ActionData> {
   const user = await requireUser(request);
   const i18next = getInstance(context);
 
@@ -63,12 +72,14 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const file = formData.get("file");
     if (!file || !(file instanceof File)) {
       return {
+        success: false,
         error: i18next.t("import.errors.fileRequired"),
       };
     }
 
     if (file.type !== "application/json" && !file.name.endsWith(".json")) {
       return {
+        success: false,
         error: i18next.t("import.errors.invalidFormat"),
       };
     }
@@ -77,6 +88,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const locale = formData.get("locale");
     if (!locale || typeof locale !== "string") {
       return {
+        success: false,
         error: i18next.t("import.errors.localeRequired"),
       };
     }
@@ -85,6 +97,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const strategy = formData.get("strategy");
     if (strategy !== "overwrite" && strategy !== "skip") {
       return {
+        success: false,
         error: i18next.t("import.errors.invalidStrategy"),
       };
     }
@@ -93,6 +106,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const languages = await getProjectLanguages(project.id);
     if (!languages.some((l) => l.locale === locale)) {
       return {
+        success: false,
         error: i18next.t("import.errors.localeNotInProject", { locale }),
       };
     }
@@ -103,6 +117,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       fileContent = await file.text();
     } catch (error) {
       return {
+        success: false,
         error: i18next.t("import.errors.unableToReadFile"),
       };
     }
@@ -111,7 +126,10 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const parseResult = parseImportJSON(fileContent);
     if (!parseResult.success) {
       return {
-        error: i18next.t("import.errors.parseError"),
+        success: false,
+        error: i18next.t("import.errors.parseError", {
+          error: parseResult.error,
+        }),
         details: parseResult.error,
       };
     }
@@ -120,6 +138,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const validationErrors = validateImportData(parseResult.data!);
     if (validationErrors.length > 0) {
       return {
+        success: false,
         error: i18next.t("import.errors.invalidData"),
         details: validationErrors.join(", "),
       };
@@ -135,6 +154,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     if (!result.success) {
       return {
+        success: false,
         error: i18next.t("import.errors.importFailed"),
         details: result.errors.join(", "),
       };
@@ -147,7 +167,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     };
   }
 
-  return { error: i18next.t("import.errors.unknownAction") };
+  return { success: false, error: i18next.t("import.errors.unknownAction") };
 }
 
 export default function ProjectImportExport() {

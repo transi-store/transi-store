@@ -21,7 +21,19 @@ import MembersList from "./Members";
 import Invitations from "./Invitations";
 import type { OrganizationMember, User } from "../../../drizzle/schema";
 
-export async function action({ request, params, context }: Route.ActionArgs) {
+type ActionData =
+  | {
+      success: true;
+      invitationCode: string;
+      action: "invite" | "create-org-invitation";
+    }
+  | { success: false; error: string; details?: string };
+
+export async function action({
+  request,
+  params,
+  context,
+}: Route.ActionArgs): Promise<ActionData | Response> {
   const i18next = getInstance(context);
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
