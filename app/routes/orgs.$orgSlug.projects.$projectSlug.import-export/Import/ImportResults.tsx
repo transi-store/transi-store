@@ -4,33 +4,10 @@ import type { ImportStats } from "~/lib/import/json.server";
 
 type ImportResultsProps = {
   importStats?: ImportStats;
-  error?: string;
-  details?: string;
 };
 
-export function ImportResults({
-  importStats,
-  error,
-  details,
-}: ImportResultsProps) {
+export function ImportResults({ importStats }: ImportResultsProps) {
   const { t } = useTranslation();
-
-  if (error) {
-    return (
-      <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md" mt={4}>
-        {error}
-
-        {details && (
-          <>
-            <br />
-            <Text fontSize="sm" color="red.fg" whiteSpace="pre-wrap">
-              {details}
-            </Text>
-          </>
-        )}
-      </Box>
-    );
-  }
 
   if (importStats) {
     return (

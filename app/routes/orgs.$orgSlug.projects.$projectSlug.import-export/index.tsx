@@ -111,8 +111,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const parseResult = parseImportJSON(fileContent);
     if (!parseResult.success) {
       return {
-        error: i18next.t("import.errors.parseError"),
-        details: parseResult.error,
+        error: i18next.t("import.errors.parseError", {
+          error: parseResult.error,
+        }),
       };
     }
 
@@ -120,8 +121,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const validationErrors = validateImportData(parseResult.data!);
     if (validationErrors.length > 0) {
       return {
-        error: i18next.t("import.errors.invalidData"),
-        details: validationErrors.join(", "),
+        error: i18next.t("import.errors.invalidData", {
+          details: validationErrors.join(", "),
+        }),
       };
     }
 
@@ -135,8 +137,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     if (!result.success) {
       return {
-        error: i18next.t("import.errors.importFailed"),
-        details: result.errors.join(", "),
+        error: i18next.t("import.errors.importFailed", {
+          error: result.errors.join(", "),
+        }),
       };
     }
 
@@ -163,8 +166,7 @@ export default function ProjectImportExport() {
         isSubmitting={isSubmitting}
         actionSuccess={actionData?.success}
         importStats={actionData?.success ? actionData.importStats : undefined}
-        error={actionData?.success === false ? actionData.error : undefined}
-        details={actionData?.success === false ? actionData.details : undefined}
+        error={actionData?.success ? undefined : actionData?.error}
       />
 
       <ExportSection

@@ -5,6 +5,7 @@ import { ImportForm } from "./ImportForm";
 import { ImportResults } from "./ImportResults";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
 import type { ImportStats } from "~/lib/import/json.server";
+import { toaster } from "~/components/ui/toaster";
 
 type ImportSectionProps = {
   languages: Array<ProjectLanguage>;
@@ -12,7 +13,6 @@ type ImportSectionProps = {
   actionSuccess?: boolean;
   importStats?: ImportStats;
   error?: string;
-  details?: string;
 };
 
 export default function ImportSection({
@@ -21,7 +21,6 @@ export default function ImportSection({
   actionSuccess,
   importStats,
   error,
-  details,
 }: ImportSectionProps) {
   const { t } = useTranslation();
   const importFormRef = useRef<HTMLFormElement>(null);
@@ -34,6 +33,16 @@ export default function ImportSection({
       setShouldOverwrite(false);
     }
   }, [actionSuccess]);
+
+  // Show toast on error
+  useEffect(() => {
+    if (error) {
+      toaster.create({
+        type: "error",
+        title: error,
+      });
+    }
+  }, [error]);
 
   return (
     <Box>
@@ -61,11 +70,7 @@ export default function ImportSection({
         </Card.Root>
       )}
 
-      <ImportResults
-        importStats={actionSuccess ? importStats : undefined}
-        error={error}
-        details={details}
-      />
+      <ImportResults importStats={actionSuccess ? importStats : undefined} />
     </Box>
   );
 }
