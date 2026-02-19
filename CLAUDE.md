@@ -8,7 +8,7 @@ This project maintains detailed technical documentation in the `docs/` folder:
 
 ### Essential Reading
 
-**Before making any changes**, please read:
+**Before making any changes**, please read any relevant documentation in the `docs/technical-notes/` folder. This contains critical information about the architecture, coding patterns, and specific implementation details that are essential for maintaining code quality and consistency:
 
 1. **[docs/technical-notes/](./docs/technical-notes/)** - Technical implementation details
    - [architecture.md](./docs/technical-notes/architecture.md) - Overall system architecture
@@ -19,6 +19,8 @@ This project maintains detailed technical documentation in the `docs/` folder:
    - [import-system.md](./docs/technical-notes/import-system.md) - Translation import system
    - [code-patterns.md](./docs/technical-notes/code-patterns.md) - Common coding patterns
    - [code-formatting.md](./docs/technical-notes/code-formatting.md) - Prettier formatting rules
+   - [traductions.md](./docs/technical-notes/traductions.md) - i18n translation management
+   - [dev-setup-and-testing.md](./docs/technical-notes/dev-setup-and-testing.md) - Local development and testing setup
 
 2. **[docs/decisions/](./docs/decisions/)** - Architecture Decision Records (ADRs)
    - Review relevant ADRs when making architectural changes
