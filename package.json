@@ -57,6 +57,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.5",
     "@react-router/dev": "^7.12.0",
     "@react-router/node": "^7.12.0",
     "@react-router/serve": "^7.12.0",
@@ -65,6 +67,7 @@
     "@types/pg": "^8.16.0",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
+    "babel-plugin-react-compiler": "^1.0.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "1.0.0-beta.12-a5629fb",
     "husky": "^9.1.7",
@@ -74,6 +77,7 @@
     "prettier": "^3.8.1",
     "typescript": "^5.7.3",
     "vite": "^6.0.7",
+    "vite-plugin-babel": "^1.5.1",
     "vitest": "^4.0.18"
   },
   "lint-staged": {
