@@ -14,7 +14,7 @@ const oauthStateCookie = createCookie("oauth_state", {
   maxAge: 600, // 10 minutes
 });
 
-export type OAuthState = {
+type OAuthState = {
   state: string;
   codeVerifier?: string;
   redirectTo?: string;
