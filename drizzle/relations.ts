@@ -17,6 +17,7 @@ export const relations = defineRelations(schema, (r) => ({
     invitations: r.many.organizationInvitations(),
     projects: r.many.projects(),
     apiKeys: r.many.apiKeys(),
+    githubInstallations: r.many.githubAppInstallations(),
   },
 
   // API Keys relations
@@ -67,6 +68,7 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     languages: r.many.projectLanguages(),
     translationKeys: r.many.translationKeys(),
+    githubConfig: r.one.projectGithubConfigs(),
   },
 
   // Project Languages relations
@@ -91,6 +93,27 @@ export const relations = defineRelations(schema, (r) => ({
     key: r.one.translationKeys({
       from: r.translations.keyId,
       to: r.translationKeys.id,
+    }),
+  },
+
+  // GitHub App Installations relations
+  githubAppInstallations: {
+    organization: r.one.organizations({
+      from: r.githubAppInstallations.organizationId,
+      to: r.organizations.id,
+    }),
+    projectConfigs: r.many.projectGithubConfigs(),
+  },
+
+  // Project GitHub Configs relations
+  projectGithubConfigs: {
+    project: r.one.projects({
+      from: r.projectGithubConfigs.projectId,
+      to: r.projects.id,
+    }),
+    installation: r.one.githubAppInstallations({
+      from: r.projectGithubConfigs.installationId,
+      to: r.githubAppInstallations.id,
     }),
   },
 }));
