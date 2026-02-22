@@ -49,7 +49,7 @@ function generateRandomString(length: number = 43): string {
   return crypto.randomBytes(length).toString("base64url").slice(0, length);
 }
 
-export type AuthorizationUrlResult = {
+type AuthorizationUrlResult = {
   url: string;
   codeVerifier?: string;
   state: string;
@@ -101,7 +101,7 @@ export async function generateGoogleAuthorizationUrl(): Promise<AuthorizationUrl
   return { url: url.toString(), state, codeVerifier };
 }
 
-export type GoogleTokens = {
+type GoogleTokens = {
   accessToken: string;
   refreshToken?: string;
   expiresIn: number;
@@ -136,7 +136,7 @@ export async function exchangeGoogleCode(
   };
 }
 
-export type GoogleUserInfo = {
+type GoogleUserInfo = {
   sub: string; // Google user ID
   email?: string;
   email_verified?: boolean;
@@ -219,7 +219,7 @@ export async function generateGithubAuthorizationUrl(): Promise<AuthorizationUrl
   return { url: url.toString(), state };
 }
 
-export type GitHubTokens = {
+type GitHubTokens = {
   accessToken: string;
 };
 
@@ -235,7 +235,7 @@ export async function exchangeGithubCode(code: string): Promise<GitHubTokens> {
   };
 }
 
-export type GitHubUserInfo = {
+type GitHubUserInfo = {
   id: number;
   login: string;
   email?: string | null;

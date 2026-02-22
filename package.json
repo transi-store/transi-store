@@ -69,7 +69,7 @@
     "drizzle-kit": "1.0.0-beta.12-a5629fb",
     "husky": "^9.1.7",
     "i18next-cli": "^1.42.6",
-    "knip": "^5.82.1",
+    "knip": "^5.85.0",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "typescript": "^5.7.3",

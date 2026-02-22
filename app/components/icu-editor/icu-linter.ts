@@ -9,7 +9,7 @@ import { parse, TYPE } from "@formatjs/icu-messageformat-parser";
 import type { MessageFormatElement } from "@formatjs/icu-messageformat-parser";
 import type { Extension } from "@codemirror/state";
 
-export type IcuError = {
+type IcuError = {
   message: string;
   location?: {
     start: { offset: number; line: number; column: number };

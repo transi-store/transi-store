@@ -16,7 +16,7 @@ const SuggestionSchema = z.object({
   ),
 });
 
-export type TranslationContext = {
+type TranslationContext = {
   sourceText: string;
   sourceLocale: string;
   targetLocale: string;
