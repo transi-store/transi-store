@@ -63,7 +63,7 @@ function createIcuDecorator() {
             const start = node.location.start.offset;
             const end = node.location.end.offset;
 
-            let bracesPositions: Array<number> = [];
+            const bracesPositions: Array<number> = [];
 
             if (node.type === TYPE.argument) {
               bracesPositions.push(start, end - 1);

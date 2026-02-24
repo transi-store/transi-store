@@ -66,7 +66,7 @@ export function parseImportJSON(fileContent: string): ParseResult {
       success: true,
       data: parsed as Record<string, string>,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       error: "Format JSON invalide",

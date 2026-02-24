@@ -34,7 +34,7 @@ export default function ApiKeys({
         description: t("settings.apiKeys.copied.description"),
         duration: 3000,
       });
-    } catch (error) {
+    } catch (_error) {
       toaster.error({
         title: t("settings.apiKeys.copyError.title"),
         description: t("settings.apiKeys.copyError.description"),

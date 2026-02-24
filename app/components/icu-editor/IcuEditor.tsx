@@ -47,7 +47,7 @@ export function IcuEditor({
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
   const onBlurRef = useRef(onBlur);
-  // Update ref during render (valid React pattern for callbacks)
+  // eslint-disable-next-line react-hooks/refs -- valid React pattern for stable callback refs
   onBlurRef.current = onBlur;
 
   const [internalValue, setInternalValue] = useState(value);

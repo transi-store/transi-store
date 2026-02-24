@@ -37,7 +37,7 @@ type CopyOptions = {
 };
 
 // TODO extract this "copy to clipboard" logic into a reusable hook
-function usehandleCopyText() {
+function useHandleCopyText() {
   const { t } = useTranslation();
 
   const handleCopy = async (text: string, options?: CopyOptions) => {
@@ -48,7 +48,7 @@ function usehandleCopyText() {
         description: options?.successDescription,
         duration: 3000,
       });
-    } catch (error) {
+    } catch (_error) {
       toaster.error({
         title: options?.errorTitle ?? t("copy.error.title"),
         description: options?.errorDescription,
@@ -70,7 +70,7 @@ export function TranslationKeyRow({
   onEditInDrawer,
 }: TranslationKeyRowProps) {
   const { t } = useTranslation();
-  const handleCopyText = usehandleCopyText();
+  const handleCopyText = useHandleCopyText();
 
   const [searchParams] = useSearchParams();
 
