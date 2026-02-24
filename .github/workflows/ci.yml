@@ -22,6 +22,19 @@ jobs:
       - name: Run lint:types
         run: yarn lint:types
 
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Init repository dependencies
+        uses: ./.github/actions/setup-project
+
+      - name: Run lint:eslint
+        run: yarn lint:eslint
+
   knip:
     name: Knip Validation
     runs-on: ubuntu-latest

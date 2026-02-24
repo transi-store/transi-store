@@ -24,8 +24,7 @@ export function useCopyInvitationLink(
         title: t("members.toasts.linkCopied.title"),
         description: t("members.toasts.linkCopied.description"),
       });
-    } catch (error) {
-      // En cas d'erreur (HTTP, permissions, etc.), afficher une modale avec le lien
+    } catch (_error) {
       setFallbackLink(link);
       setShowFallbackModal(true);
     }

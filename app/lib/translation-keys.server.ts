@@ -23,8 +23,8 @@ export async function getTranslationKeys(
       RegularDataRow | SearchDataRow,
       "translatedLocales" | "defaultTranslation"
     >
-  > = [];
-  let count = 0;
+  >;
+  let count: number;
 
   const defaultLocale = await db.query.projectLanguages.findFirst({
     where: {

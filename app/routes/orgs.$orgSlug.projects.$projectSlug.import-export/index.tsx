@@ -115,7 +115,7 @@ export async function action({
     let fileContent: string;
     try {
       fileContent = await file.text();
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         error: i18next.t("import.errors.unableToReadFile"),

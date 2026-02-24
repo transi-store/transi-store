@@ -3,7 +3,7 @@
  * Renders the formatted output of an ICU message with sample values
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   VStack,
@@ -57,7 +57,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
   });
 
   // Update values when variables change
-  useMemo(() => {
+  useEffect(() => {
     setValues((prev) => {
       const updated: Record<string, string | number> = {};
       for (const v of variables) {
