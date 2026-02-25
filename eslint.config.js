@@ -27,7 +27,7 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/set-state-in-effect": "error",
     },
   },
   {

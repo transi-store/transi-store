@@ -72,9 +72,6 @@ export function useTranslationKeyEditor({
     action?: string;
   }>();
 
-  // Track original values to detect changes
-  const originalValuesRef = useRef<Record<string, string>>({});
-
   // Create a map of translations by locale for easier lookup
   const translationMap = new Map(translations.map((t) => [t.locale, t.value]));
   const fuzzyMap = new Map(translations.map((t) => [t.locale, t.isFuzzy]));
@@ -99,34 +96,51 @@ export function useTranslationKeyEditor({
     return initial;
   });
 
-  // Reset translation values when key/translations change (e.g. drawer navigation)
-  useEffect(() => {
-    const newMap = new Map(translations.map((t) => [t.locale, t.value]));
-    const newFuzzyMap = new Map(translations.map((t) => [t.locale, t.isFuzzy]));
+  // Track original values to detect changes (initialized with initial translation values)
+  const originalValuesRef = useRef<Record<string, string>>({
+    ...translationValues,
+  });
+
+  // Reset translation values when key changes (adjusting state based on prop)
+  const [prevTranslationKeyId, setPrevTranslationKeyId] = useState(
+    translationKey.id,
+  );
+  if (prevTranslationKeyId !== translationKey.id) {
     const initial: Record<string, string> = {};
     const initialFuzzy: Record<string, boolean> = {};
     for (const lang of languages) {
-      initial[lang.locale] = newMap.get(lang.locale) || "";
-      initialFuzzy[lang.locale] = newFuzzyMap.get(lang.locale) || false;
+      initial[lang.locale] = translationMap.get(lang.locale) || "";
+      initialFuzzy[lang.locale] = fuzzyMap.get(lang.locale) || false;
     }
+    setPrevTranslationKeyId(translationKey.id);
     setTranslationValues(initial);
     setFuzzyFlags(initialFuzzy);
+  }
+
+  // Sync originalValuesRef when key/translations change (ref update only, no setState)
+  useEffect(() => {
+    const newMap = new Map(translations.map((t) => [t.locale, t.value]));
+    const initial: Record<string, string> = {};
+    for (const lang of languages) {
+      initial[lang.locale] = newMap.get(lang.locale) || "";
+    }
     originalValuesRef.current = initial;
   }, [translationKey.id, languages, translations]);
 
   // Edit key modal state
   const [isEditKeyModalOpen, setIsEditKeyModalOpen] = useState(false);
 
-  // Close modal after successful edit
-  useEffect(() => {
-    if (
-      editKeyFetcher.data?.success &&
-      editKeyFetcher.state === "idle" &&
-      isEditKeyModalOpen
-    ) {
+  // Close modal after successful edit (adjusting state based on fetcher result)
+  const editKeySuccess = !!(
+    editKeyFetcher.data?.success && editKeyFetcher.state === "idle"
+  );
+  const [prevEditKeySuccess, setPrevEditKeySuccess] = useState(editKeySuccess);
+  if (editKeySuccess !== prevEditKeySuccess) {
+    setPrevEditKeySuccess(editKeySuccess);
+    if (editKeySuccess && isEditKeyModalOpen) {
       setIsEditKeyModalOpen(false);
     }
-  }, [editKeyFetcher.data, editKeyFetcher.state, isEditKeyModalOpen]);
+  }
 
   // AI translation state
   const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);

@@ -8,7 +8,7 @@
  * The drawer waits for all pending save operations before closing,
  * ensuring data consistency.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DrawerRoot,
   DrawerBackdrop,
@@ -58,37 +58,35 @@ export function TranslationKeyDrawer({
   const [isClosing, setIsClosing] = useState(false);
 
   // Track active fetchers from TranslationKeyContent
-  const activeFetchersRef = useRef(0);
+  const [activeFetchers, setActiveFetchers] = useState(0);
 
-  // Internal open state to prevent premature closing
-  const [internalOpen, setInternalOpen] = useState(true);
-
+  // Derive whether the drawer should be open
   const keyUrl = getKeyUrl(organizationSlug, projectSlug, keyId);
+  const isDeleteSuccessful =
+    dataFetcher.state === "idle" &&
+    !!dataFetcher.data &&
+    dataFetcher.formMethod === "DELETE";
+  const internalOpen =
+    !isDeleteSuccessful && !(isClosing && activeFetchers === 0);
+
+  // Notify parent after successful deletion
+  useEffect(() => {
+    if (isDeleteSuccessful) {
+      onClosed();
+    }
+  }, [isDeleteSuccessful, onClosed]);
+
+  // Notify parent when user wants to close AND no pending operations
+  useEffect(() => {
+    if (isClosing && activeFetchers === 0) {
+      onClosed();
+    }
+  }, [isClosing, activeFetchers, onClosed]);
 
   // Load key data when component mounts or keyId changes
   useEffect(() => {
     dataFetcher.load(keyUrl);
   }, [keyUrl]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Close drawer after successful deletion
-  useEffect(() => {
-    if (
-      dataFetcher.state === "idle" &&
-      dataFetcher.data &&
-      dataFetcher.formMethod === "DELETE"
-    ) {
-      setInternalOpen(false);
-      onClosed();
-    }
-  }, [dataFetcher.state, dataFetcher.data, dataFetcher.formMethod, onClosed]);
-
-  // Actually close the drawer when user wants to close AND no pending operations
-  useEffect(() => {
-    if (isClosing && activeFetchersRef.current === 0) {
-      setInternalOpen(false);
-      onClosed();
-    }
-  }, [isClosing, onClosed]);
 
   const isLoading = dataFetcher.state === "loading";
   const data = dataFetcher.data;
@@ -103,8 +101,8 @@ export function TranslationKeyDrawer({
     setIsClosing(true);
   };
 
-  const handleFetcherStateChange = (activeFetchers: number) => {
-    activeFetchersRef.current = activeFetchers;
+  const handleFetcherStateChange = (count: number) => {
+    setActiveFetchers(count);
   };
 
   if (dataFetcher.state === "idle" && !data) {

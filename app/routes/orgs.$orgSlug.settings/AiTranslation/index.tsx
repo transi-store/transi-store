@@ -1,6 +1,6 @@
 import { Box, Heading, Text, HStack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LuSparkles } from "react-icons/lu";
 import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
 import { AiTranslationProvidersList } from "./AiTranslationProvidersList";
@@ -26,13 +26,15 @@ export default function AiTranslation({
     setIsDialogOpen(true);
   };
 
-  // Fermer la modale après sauvegarde réussie
-  useEffect(() => {
+  // Fermer la modale après sauvegarde réussie (adjusting state based on prop)
+  const [prevActionSuccess, setPrevActionSuccess] = useState(actionSuccess);
+  if (actionSuccess !== prevActionSuccess) {
+    setPrevActionSuccess(actionSuccess);
     if (actionSuccess) {
       setIsDialogOpen(false);
       setSelectedProvider(null);
     }
-  }, [actionSuccess]);
+  }
 
   const providerLabel = selectedProvider
     ? getAiProvider(selectedProvider).name
