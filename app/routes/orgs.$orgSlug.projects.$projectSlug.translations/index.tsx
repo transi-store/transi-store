@@ -201,14 +201,22 @@ export default function ProjectTranslations({
     highlight,
   });
 
-  // Close modal and navigate after successful creation
+  // Close modal when creation succeeds (adjusting state based on actionData)
+  const [prevActionData, setPrevActionData] = useState(actionData);
+  if (actionData !== prevActionData) {
+    setPrevActionData(actionData);
+    if (actionData?.success && actionData.action === "createKey") {
+      setIsCreateKeyModalOpen(false);
+    }
+  }
+
+  // Navigate to the newly created key after successful creation
   useEffect(() => {
     if (
       actionData?.success &&
       actionData.action === "createKey" &&
       navigation.state === "idle"
     ) {
-      setIsCreateKeyModalOpen(false);
       // Navigate to filter by the newly created key
       navigate(
         getTranslationsUrl(organization.slug, project.slug, {
@@ -219,7 +227,14 @@ export default function ProjectTranslations({
         }),
       );
     }
-  }, [actionData, navigation.state, organization.slug, project.slug, navigate]);
+  }, [
+    actionData,
+    navigation.state,
+    organization.slug,
+    project.slug,
+    navigate,
+    highlight,
+  ]);
 
   return (
     <VStack gap={6} align="stretch">

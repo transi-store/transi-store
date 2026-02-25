@@ -27,10 +27,15 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/set-state-in-effect": "error",
     },
   },
   {
-    ignores: ["build/", ".react-router/", "node_modules/"],
-  }
+    ignores: [
+      "build/",
+      "packages/cli/dist/",
+      ".react-router/",
+      "node_modules/",
+    ],
+  },
 );

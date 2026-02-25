@@ -1,6 +1,6 @@
 import { Box, Heading, Text, Button } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LuPlus } from "react-icons/lu";
 import { toaster } from "~/components/ui/toaster";
 import { NewApiKeyAlert } from "./NewApiKeyAlert";
@@ -43,12 +43,14 @@ export default function ApiKeys({
     }
   };
 
-  // Fermer la modale après création réussie
-  useEffect(() => {
+  // Fermer la modale après création réussie (adjusting state based on prop)
+  const [prevNewKeyValue, setPrevNewKeyValue] = useState(newKeyValue);
+  if (newKeyValue !== prevNewKeyValue) {
+    setPrevNewKeyValue(newKeyValue);
     if (newKeyValue) {
       setIsDialogOpen(false);
     }
-  }, [newKeyValue]);
+  }
 
   return (
     <Box>

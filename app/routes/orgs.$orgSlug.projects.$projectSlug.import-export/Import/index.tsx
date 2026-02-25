@@ -27,11 +27,10 @@ export default function ImportSection({
   const importFormRef = useRef<HTMLFormElement>(null);
   const [shouldOverwrite, setShouldOverwrite] = useState(false);
 
-  // Reset form after successful import
+  // Reset form after successful import (DOM manipulation only - no setState)
   useEffect(() => {
     if (actionSuccess && importFormRef.current) {
       importFormRef.current.reset();
-      setShouldOverwrite(false);
     }
   }, [actionSuccess]);
 
@@ -54,7 +53,7 @@ export default function ImportSection({
               languages={languages}
               isSubmitting={isSubmitting}
               formRef={importFormRef}
-              shouldOverwrite={shouldOverwrite}
+              shouldOverwrite={shouldOverwrite && !actionSuccess}
               onOverwriteChange={setShouldOverwrite}
             />
           </Card.Body>

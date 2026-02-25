@@ -1,6 +1,6 @@
 import { VStack, Heading, HStack, Box, Button } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LuPlus } from "react-icons/lu";
 import { useCopyInvitationLink } from "./useCopyInvitationLink";
 import { NewInvitationAlert } from "./NewInvitationAlert";
@@ -31,12 +31,15 @@ export default function Invitations({
   const { handleCopy, showFallbackModal, fallbackLink, closeFallbackModal } =
     useCopyInvitationLink(origin);
 
-  // Fermer la modale après création réussie
-  useEffect(() => {
+  // Fermer la modale après création réussie (adjusting state based on prop)
+  const [prevNewInvitationCode, setPrevNewInvitationCode] =
+    useState(newInvitationCode);
+  if (newInvitationCode !== prevNewInvitationCode) {
+    setPrevNewInvitationCode(newInvitationCode);
     if (newInvitationCode) {
       setIsInviteDialogOpen(false);
     }
-  }, [newInvitationCode]);
+  }
 
   return (
     <>

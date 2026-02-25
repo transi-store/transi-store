@@ -3,7 +3,7 @@
  * Renders the formatted output of an ICU message with sample values
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   VStack,
@@ -22,50 +22,45 @@ type IcuPreviewProps = {
   locale: string;
 };
 
+// Default values for common variable types
+const getDefaultValue = (varName: string): string | number => {
+  const lowerName = varName.toLowerCase();
+  if (
+    lowerName.includes("count") ||
+    lowerName.includes("number") ||
+    lowerName.includes("qty")
+  ) {
+    return 5;
+  }
+  if (lowerName.includes("name") || lowerName.includes("user")) {
+    return "Jean";
+  }
+  if (lowerName.includes("date")) {
+    return new Date().toISOString();
+  }
+  if (lowerName.includes("gender")) {
+    return "male";
+  }
+  return "exemple";
+};
+
 export function IcuPreview({ message, locale }: IcuPreviewProps) {
   const { t } = useTranslation();
   const variables = useMemo(() => extractVariables(message), [message]);
 
-  // Default values for common variable types
-  const getDefaultValue = (varName: string): string | number => {
-    const lowerName = varName.toLowerCase();
-    if (
-      lowerName.includes("count") ||
-      lowerName.includes("number") ||
-      lowerName.includes("qty")
-    ) {
-      return 5;
-    }
-    if (lowerName.includes("name") || lowerName.includes("user")) {
-      return "Jean";
-    }
-    if (lowerName.includes("date")) {
-      return new Date().toISOString();
-    }
-    if (lowerName.includes("gender")) {
-      return "male";
-    }
-    return "exemple";
-  };
+  // Keep track of user-edited values only; default values are derived
+  const [userValues, setUserValues] = useState<Record<string, string | number>>(
+    {},
+  );
 
-  const [values, setValues] = useState<Record<string, string | number>>(() => {
-    const initial: Record<string, string | number> = {};
+  // Derive the full values object: user edits take priority, otherwise defaults
+  const values = useMemo(() => {
+    const merged: Record<string, string | number> = {};
     for (const v of variables) {
-      initial[v] = getDefaultValue(v);
+      merged[v] = userValues[v] ?? getDefaultValue(v);
     }
-    return initial;
-  });
-
-  // Update values when variables change
-  useEffect(() => {
-    setValues((prev) => {
-      const updated: Record<string, string | number> = {};
-      for (const v of variables) {
-        updated[v] = prev[v] ?? getDefaultValue(v);
-      }
-      return updated;
-    });
-  }, [variables]);
+    return merged;
+  }, [variables, userValues]);
 
   const { formatted, error } = useMemo(() => {
     if (!message.trim()) {
@@ -90,7 +85,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
   const handleValueChange = (varName: string, value: string) => {
     // Try to parse as number if it looks like one
     const numValue = parseFloat(value);
-    setValues((prev) => ({
+    setUserValues((prev) => ({
       ...prev,
       [varName]: !isNaN(numValue) && value.trim() !== "" ? numValue : value,
     }));

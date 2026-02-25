@@ -61,6 +61,7 @@ import {
   type TranslateAction,
 } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
 import { TranslationPreview } from "./TranslationPreview";
+import { useCallback, type JSX } from "react";
 
 type TranslationKeyContentProps = {
   translationKey: TranslationKey;
@@ -189,26 +190,17 @@ export function TranslationKeyContent({
                     </GridItem>
                   )}
 
-                  <GridItem key={`lang-${lang.id}`}>
-                    <LanguageEditor
-                      lang={lang}
-                      isDefault={!!lang.isDefault}
-                      value={translationValues[lang.locale] || ""}
-                      isFuzzy={fuzzyFlags[lang.locale] || false}
-                      onChange={(value) =>
-                        handleTranslationChange(lang.locale, value)
-                      }
-                      onBlur={() => handleTranslationBlur(lang.locale)}
-                      onFuzzyChange={(isFuzzy) =>
-                        handleFuzzyChange(lang.locale, isFuzzy)
-                      }
-                      onRequestAi={() =>
-                        handleRequestAiTranslation(lang.locale)
-                      }
-                      hasAiProvider={hasAiProvider}
-                      disabled={isSaving}
-                    />
-                  </GridItem>
+                  <LanguageDetail
+                    lang={lang}
+                    handleTranslationChange={handleTranslationChange}
+                    value={translationValues[lang.locale] || ""}
+                    isFuzzy={fuzzyFlags[lang.locale] || false}
+                    handleTranslationBlur={handleTranslationBlur}
+                    handleFuzzyChange={handleFuzzyChange}
+                    handleRequestAiTranslation={handleRequestAiTranslation}
+                    hasAiProvider={hasAiProvider}
+                    isSaving={isSaving}
+                  />
                 </>
               ))}
           </SimpleGrid>
@@ -238,6 +230,54 @@ export function TranslationKeyContent({
         aiFetcher={aiFetcher}
       />
     </VStack>
+  );
+}
+
+type LanguageDetailProps = {
+  lang: ProjectLanguage;
+  handleTranslationChange: (locale: string, value: string) => void;
+  value: string;
+  isFuzzy: boolean;
+  handleTranslationBlur: (locale: string) => void;
+  handleFuzzyChange: (locale: string, isFuzzy: boolean) => void;
+  handleRequestAiTranslation: (locale: string) => void;
+  hasAiProvider: boolean;
+  isSaving: boolean;
+};
+
+function LanguageDetail({
+  lang,
+  handleTranslationChange,
+  value,
+  isFuzzy,
+  handleTranslationBlur,
+  handleFuzzyChange,
+  handleRequestAiTranslation,
+  hasAiProvider,
+  isSaving,
+}: LanguageDetailProps): JSX.Element {
+  const handleChange = useCallback(
+    (newValue: string): void => {
+      handleTranslationChange(lang.locale, newValue);
+    },
+    [handleTranslationChange, lang.locale],
+  );
+
+  return (
+    <GridItem key={`lang-${lang.id}`}>
+      <LanguageEditor
+        lang={lang}
+        isDefault={!!lang.isDefault}
+        value={value}
+        isFuzzy={isFuzzy}
+        onChange={handleChange}
+        onBlur={() => handleTranslationBlur(lang.locale)}
+        onFuzzyChange={(isFuzzy) => handleFuzzyChange(lang.locale, isFuzzy)}
+        onRequestAi={() => handleRequestAiTranslation(lang.locale)}
+        hasAiProvider={hasAiProvider}
+        disabled={isSaving}
+      />
+    </GridItem>
   );
 }
 
