@@ -33,7 +33,7 @@ export function TranslationsSearchBar({
 }: TranslationsSearchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  let submit = useSubmit();
+  const submit = useSubmit();
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

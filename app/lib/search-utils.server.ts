@@ -17,6 +17,7 @@ const SIMILARITY_THRESHOLD = 0.7;
  * @param query - La requête de recherche de l'utilisateur
  * @returns Expression SQL calculant le score de similarité maximal
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Drizzle column type is complex
 function maxSimilarity(field: any, query: string) {
   return sql<number>`GREATEST(
     similarity(${field}, ${query}),

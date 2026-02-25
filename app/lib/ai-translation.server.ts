@@ -99,8 +99,8 @@ async function callGenerateText({
   extraParameters,
 }: {
   context: TranslationContext;
-  model: any;
-  extraParameters?: Record<string, any>;
+  model: Parameters<typeof generateText>[0]["model"];
+  extraParameters?: Record<string, unknown>;
 }): Promise<TranslationSuggestion[]> {
   const { output } = await generateText({
     ...extraParameters,
