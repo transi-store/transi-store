@@ -227,7 +227,14 @@ export default function ProjectTranslations({
         }),
       );
     }
-  }, [actionData, navigation.state, organization.slug, project.slug, navigate]);
+  }, [
+    actionData,
+    navigation.state,
+    organization.slug,
+    project.slug,
+    navigate,
+    highlight,
+  ]);
 
   return (
     <VStack gap={6} align="stretch">

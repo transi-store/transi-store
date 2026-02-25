@@ -31,6 +31,11 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["build/", ".react-router/", "node_modules/"],
-  }
+    ignores: [
+      "build/",
+      "packages/cli/dist/",
+      ".react-router/",
+      "node_modules/",
+    ],
+  },
 );
