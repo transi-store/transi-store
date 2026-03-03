@@ -2,13 +2,26 @@ import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import path from "node:path";
 import "dotenv/config";
+import babel from "vite-plugin-babel";
 
 const allowedHosts =
   process.env.DOMAIN_ROOT &&
   new URL(process.env.DOMAIN_ROOT ?? "localhost").hostname;
 
+// See https://react.dev/learn/react-compiler/reference for available options
+const ReactCompilerConfig = {};
+
 export default defineConfig(({ isSsrBuild }) => ({
-  plugins: [reactRouter()],
+  plugins: [
+    reactRouter(),
+    babel({
+      filter: /\.[jt]sx?$/,
+      babelConfig: {
+        presets: ["@babel/preset-typescript"],
+        plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "./app"),
