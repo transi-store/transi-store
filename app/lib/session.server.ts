@@ -1,5 +1,7 @@
 import { createCookieSessionStorage } from "react-router";
 
+const SESSION_DURATION = 86400 * 100; // 100 days in seconds
+
 const SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
   throw new Error("SESSION_SECRET environment variable is not set");
@@ -41,7 +43,9 @@ export async function createUserSession(
     status: 302,
     headers: {
       Location: redirectTo,
-      "Set-Cookie": await sessionStorage.commitSession(session),
+      "Set-Cookie": await sessionStorage.commitSession(session, {
+        maxAge: SESSION_DURATION,
+      }),
     },
   });
 }
@@ -95,5 +99,5 @@ export async function updateSessionLastOrganization(
   const session = await getUserSession(request);
   session.set("lastOrganizationId", organizationId);
   session.set("lastOrganizationSlug", organizationSlug);
-  return sessionStorage.commitSession(session);
+  return sessionStorage.commitSession(session, { maxAge: SESSION_DURATION });
 }
