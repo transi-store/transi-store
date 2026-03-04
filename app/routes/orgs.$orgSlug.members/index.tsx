@@ -201,10 +201,11 @@ export default function OrganizationMembers() {
     <Container maxW="container.lg" py={8}>
       <VStack align="stretch" gap={6}>
         <Invitations
+          key={newInvitationCode}
+          newInvitationCode={newInvitationCode}
           organizationInvitation={organizationInvitation}
           pendingInvitations={pendingInvitations}
           origin={origin}
-          newInvitationCode={newInvitationCode}
           actionError={
             actionData?.success === false ? actionData.error : undefined
           }

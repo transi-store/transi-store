@@ -86,7 +86,7 @@ async function handleMapadoCallback(params: CallbackParams) {
       throw new Error("Missing sub claim in JWT");
     }
   } catch (error) {
-    throw new Error("Failed to decode JWT token");
+    throw new Error("Failed to decode JWT token", { cause: error });
   }
 
   // Mapado email is in the sub, but prefixed with "something_"

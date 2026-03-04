@@ -18,11 +18,13 @@ import { LuPlus } from "react-icons/lu";
 type ApiKeyCreationDialogProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  isSubmitting: boolean;
 };
 
 export function ApiKeyCreationDialog({
   isOpen,
   onOpenChange,
+  isSubmitting,
 }: ApiKeyCreationDialogProps) {
   const { t } = useTranslation();
 
@@ -59,7 +61,11 @@ export function ApiKeyCreationDialog({
                 <Button variant="outline" onClick={() => onOpenChange(false)}>
                   {t("settings.cancel")}
                 </Button>
-                <Button type="submit" colorPalette="brand">
+                <Button
+                  type="submit"
+                  colorPalette="brand"
+                  disabled={isSubmitting}
+                >
                   <LuPlus /> {t("settings.create")}
                 </Button>
               </DialogFooter>

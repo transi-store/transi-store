@@ -1,4 +1,5 @@
 import { Box, Text, VStack, Heading } from "@chakra-ui/react";
+import { type JSX } from "react";
 import { useTranslation } from "react-i18next";
 import type { ImportStats } from "~/lib/import/json.server";
 
@@ -12,7 +13,7 @@ export function ImportResults({
   importStats,
   error,
   details,
-}: ImportResultsProps) {
+}: ImportResultsProps): JSX.Element | null {
   const { t } = useTranslation();
 
   if (error) {

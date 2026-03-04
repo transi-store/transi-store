@@ -1,39 +1,27 @@
 import { Box, Text, Heading, Card } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useRef, useState, useEffect } from "react";
 import { ImportForm } from "./ImportForm";
 import { ImportResults } from "./ImportResults";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
-import type { ImportStats } from "~/lib/import/json.server";
+import type { ImportActionData } from "..";
 
 type ImportSectionProps = {
   languages: Array<ProjectLanguage>;
   isSubmitting: boolean;
-  actionSuccess?: boolean;
-  importStats?: ImportStats;
-  error?: string;
-  details?: string;
+  actionData?: ImportActionData;
 };
 
 export default function ImportSection({
   languages,
   isSubmitting,
-  actionSuccess,
-  importStats,
-  error,
-  details,
+  actionData,
 }: ImportSectionProps) {
   const { t } = useTranslation();
-  const importFormRef = useRef<HTMLFormElement>(null);
-  const [shouldOverwrite, setShouldOverwrite] = useState(false);
 
-  // Reset form after successful import
-  useEffect(() => {
-    if (actionSuccess && importFormRef.current) {
-      importFormRef.current.reset();
-      setShouldOverwrite(false);
-    }
-  }, [actionSuccess]);
+  const importStats = actionData?.success ? actionData.importStats : undefined;
+  const error = actionData?.success === false ? actionData.error : undefined;
+  const details =
+    actionData?.success === false ? actionData.details : undefined;
 
   return (
     <Box>
@@ -51,18 +39,18 @@ export default function ImportSection({
         <Card.Root>
           <Card.Body>
             <ImportForm
+              key={
+                actionData?.success ? actionData?.actionTimestamp : undefined
+              }
               languages={languages}
               isSubmitting={isSubmitting}
-              formRef={importFormRef}
-              shouldOverwrite={shouldOverwrite}
-              onOverwriteChange={setShouldOverwrite}
             />
           </Card.Body>
         </Card.Root>
       )}
 
       <ImportResults
-        importStats={actionSuccess ? importStats : undefined}
+        importStats={importStats}
         error={error}
         details={details}
       />

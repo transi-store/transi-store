@@ -2,7 +2,7 @@
  * ICU Editor Component
  * A CodeMirror-based editor with ICU syntax highlighting and validation
  */
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { Box, VStack, Text, Badge, HStack } from "@chakra-ui/react";
 import {
   EditorView,
@@ -47,43 +47,22 @@ export function IcuEditor({
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
   const onBlurRef = useRef(onBlur);
-  // Update ref during render (valid React pattern for callbacks)
   onBlurRef.current = onBlur;
-
-  const [internalValue, setInternalValue] = useState(value);
-  const [errors, setErrors] = useState<Array<string>>([]);
-  const [variables, setVariables] = useState<Array<string>>([]);
 
   // Update internal value when prop changes
   useEffect(() => {
-    if (value !== internalValue) {
-      setInternalValue(value);
-      if (editorRef.current) {
-        const currentContent = editorRef.current.state.doc.toString();
-        if (currentContent !== value) {
-          editorRef.current.dispatch({
-            changes: { from: 0, to: currentContent.length, insert: value },
-          });
-        }
+    if (editorRef.current) {
+      const currentContent = editorRef.current.state.doc.toString();
+      if (currentContent !== value) {
+        editorRef.current.dispatch({
+          changes: { from: 0, to: currentContent.length, insert: value },
+        });
       }
     }
   }, [value]);
 
-  // Validate and extract variables
-  useEffect(() => {
-    const validationErrors = validateIcuMessage(internalValue);
-    setErrors(validationErrors.map((e) => e.message));
-    setVariables(extractVariables(internalValue));
-  }, [internalValue]);
-
-  // Handle content changes
-  const handleChange = useCallback(
-    (newValue: string) => {
-      setInternalValue(newValue);
-      onChange(newValue);
-    },
-    [onChange],
-  );
+  const errors = validateIcuMessage(value).map((e) => e.message);
+  const variables = extractVariables(value);
 
   // Insert template at cursor position
   const handleInsertTemplate = useCallback((template: string) => {
@@ -125,7 +104,7 @@ export function IcuEditor({
       // Update listener
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
-          handleChange(update.state.doc.toString());
+          onChange(update.state.doc.toString());
         }
       }),
 
@@ -171,6 +150,7 @@ export function IcuEditor({
       view.destroy();
       editorRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- don't include "value" to avoid resetting editor state
   }, [placeholder, disabled, colorMode]);
 
   const isValid = errors.length === 0;
@@ -178,7 +158,7 @@ export function IcuEditor({
   return (
     <VStack align="stretch" gap={2} w="full">
       {/* Hidden input for form submission */}
-      {name && <input type="hidden" name={name} value={internalValue} />}
+      {name && <input type="hidden" name={name} value={value} />}
 
       {/* Template buttons */}
       <IcuTemplateButtons

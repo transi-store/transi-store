@@ -70,21 +70,10 @@ export function TranslationKeyDrawer({
     dataFetcher.load(keyUrl);
   }, [keyUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Close drawer after successful deletion
-  useEffect(() => {
-    if (
-      dataFetcher.state === "idle" &&
-      dataFetcher.data &&
-      dataFetcher.formMethod === "DELETE"
-    ) {
-      setInternalOpen(false);
-      onClosed();
-    }
-  }, [dataFetcher.state, dataFetcher.data, dataFetcher.formMethod, onClosed]);
-
   // Actually close the drawer when user wants to close AND no pending operations
   useEffect(() => {
     if (isClosing && activeFetchersRef.current === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInternalOpen(false);
       onClosed();
     }
@@ -95,8 +84,11 @@ export function TranslationKeyDrawer({
   const isDeleting =
     dataFetcher.state === "submitting" && dataFetcher.formMethod === "DELETE";
 
-  const handleDelete = () => {
-    dataFetcher.submit({}, { method: "delete", action: keyUrl });
+  const handleDelete = async () => {
+    await dataFetcher.submit({}, { method: "delete", action: keyUrl });
+
+    // Close drawer after successful deletion
+    onClosed();
   };
 
   const handleCloseRequest = () => {

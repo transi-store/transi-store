@@ -17,11 +17,13 @@ import { useTranslation } from "react-i18next";
 type InviteMemberDialogProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  isSubmitting: boolean;
 };
 
 export function InviteMemberDialog({
   isOpen,
   onOpenChange,
+  isSubmitting,
 }: InviteMemberDialogProps) {
   const { t } = useTranslation();
 
@@ -55,7 +57,12 @@ export function InviteMemberDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 {t("cancel")}
               </Button>
-              <Button type="submit" form="invite-form" colorPalette="brand">
+              <Button
+                type="submit"
+                form="invite-form"
+                colorPalette="brand"
+                disabled={isSubmitting}
+              >
                 {t("members.createInvitation")}
               </Button>
             </DialogFooter>

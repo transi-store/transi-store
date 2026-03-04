@@ -5,28 +5,20 @@ import { Switch } from "@chakra-ui/react/switch";
 import { Form } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuUpload } from "react-icons/lu";
-import type { RefObject } from "react";
+import { useState } from "react";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
 
 type ImportFormProps = {
   languages: Array<ProjectLanguage>;
   isSubmitting: boolean;
-  formRef: RefObject<HTMLFormElement | null>;
-  shouldOverwrite: boolean;
-  onOverwriteChange: (checked: boolean) => void;
 };
 
-export function ImportForm({
-  languages,
-  isSubmitting,
-  formRef,
-  shouldOverwrite,
-  onOverwriteChange,
-}: ImportFormProps) {
+export function ImportForm({ languages, isSubmitting }: ImportFormProps) {
   const { t } = useTranslation();
+  const [shouldOverwrite, setShouldOverwrite] = useState(false);
 
   return (
-    <Form method="post" encType="multipart/form-data" ref={formRef}>
+    <Form method="post" encType="multipart/form-data">
       <input type="hidden" name="_action" value="import" />
 
       <VStack gap={4} align="stretch">
@@ -78,7 +70,7 @@ export function ImportForm({
           />
           <Switch.Root
             checked={shouldOverwrite}
-            onCheckedChange={(e) => onOverwriteChange(e.checked)}
+            onCheckedChange={(e) => setShouldOverwrite(e.checked)}
             disabled={isSubmitting}
           >
             <Switch.HiddenInput />

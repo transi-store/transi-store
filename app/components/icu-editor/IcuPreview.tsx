@@ -17,6 +17,29 @@ import { useTranslation } from "react-i18next";
 import { IntlMessageFormat } from "intl-messageformat";
 import { extractVariables } from "./icu-linter";
 
+// Default values for common variable types
+function getDefaultValue(varName: string): string | number {
+  const lowerName = varName.toLowerCase();
+  if (
+    lowerName.includes("count") ||
+    lowerName.includes("number") ||
+    lowerName.includes("qty")
+  ) {
+    return 5;
+  }
+  if (lowerName.includes("name") || lowerName.includes("user")) {
+    // TODO translate
+    return "John";
+  }
+  if (lowerName.includes("date")) {
+    return new Date().toISOString();
+  }
+  if (lowerName.includes("gender")) {
+    return "male";
+  }
+  return "example";
+}
+
 type IcuPreviewProps = {
   message: string;
   locale: string;
@@ -26,46 +49,17 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
   const { t } = useTranslation();
   const variables = useMemo(() => extractVariables(message), [message]);
 
-  // Default values for common variable types
-  const getDefaultValue = (varName: string): string | number => {
-    const lowerName = varName.toLowerCase();
-    if (
-      lowerName.includes("count") ||
-      lowerName.includes("number") ||
-      lowerName.includes("qty")
-    ) {
-      return 5;
-    }
-    if (lowerName.includes("name") || lowerName.includes("user")) {
-      return "Jean";
-    }
-    if (lowerName.includes("date")) {
-      return new Date().toISOString();
-    }
-    if (lowerName.includes("gender")) {
-      return "male";
-    }
-    return "exemple";
-  };
+  const [localValues, setLocalValues] = useState<
+    Record<string, string | number>
+  >({});
 
-  const [values, setValues] = useState<Record<string, string | number>>(() => {
-    const initial: Record<string, string | number> = {};
+  const values = useMemo(() => {
+    const result: Record<string, string | number> = {};
     for (const v of variables) {
-      initial[v] = getDefaultValue(v);
+      result[v] = localValues[v] ?? getDefaultValue(v);
     }
-    return initial;
-  });
-
-  // Update values when variables change
-  useMemo(() => {
-    setValues((prev) => {
-      const updated: Record<string, string | number> = {};
-      for (const v of variables) {
-        updated[v] = prev[v] ?? getDefaultValue(v);
-      }
-      return updated;
-    });
-  }, [variables]);
+    return result;
+  }, [variables, localValues]);
 
   const { formatted, error } = useMemo(() => {
     if (!message.trim()) {
@@ -82,7 +76,8 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
     } catch (e) {
       return {
         formatted: "",
-        error: e instanceof Error ? e.message : "Erreur de formatage",
+        // TODO translate
+        error: e instanceof Error ? e.message : "Formatting error",
       };
     }
   }, [message, locale, values]);
@@ -90,7 +85,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
   const handleValueChange = (varName: string, value: string) => {
     // Try to parse as number if it looks like one
     const numValue = parseFloat(value);
-    setValues((prev) => ({
+    setLocalValues((prev) => ({
       ...prev,
       [varName]: !isNaN(numValue) && value.trim() !== "" ? numValue : value,
     }));
@@ -131,7 +126,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
                   <Input
                     size="sm"
                     width="120px"
-                    value={String(values[varName] ?? "")}
+                    value={values[varName] ?? ""}
                     onChange={(e) => handleValueChange(varName, e.target.value)}
                     placeholder={t("icu.valuePlaceholder", { varName })}
                   />
