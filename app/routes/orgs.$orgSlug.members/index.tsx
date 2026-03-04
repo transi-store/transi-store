@@ -1,5 +1,5 @@
 import { Container, VStack } from "@chakra-ui/react";
-import { useLoaderData, useActionData, useNavigation } from "react-router";
+import { useLoaderData, useActionData } from "react-router";
 import { eq, inArray } from "drizzle-orm";
 import { redirect } from "react-router";
 import type { Route } from "./+types/index";
