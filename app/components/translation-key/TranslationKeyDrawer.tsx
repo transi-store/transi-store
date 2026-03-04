@@ -73,6 +73,7 @@ export function TranslationKeyDrawer({
   // Actually close the drawer when user wants to close AND no pending operations
   useEffect(() => {
     if (isClosing && activeFetchersRef.current === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInternalOpen(false);
       onClosed();
     }

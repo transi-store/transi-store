@@ -28,6 +28,7 @@ function getDefaultValue(varName: string): string | number {
     return 5;
   }
   if (lowerName.includes("name") || lowerName.includes("user")) {
+    // TODO translate
     return "John";
   }
   if (lowerName.includes("date")) {
@@ -75,6 +76,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
     } catch (e) {
       return {
         formatted: "",
+        // TODO translate
         error: e instanceof Error ? e.message : "Formatting error",
       };
     }

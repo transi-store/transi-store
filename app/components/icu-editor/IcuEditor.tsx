@@ -47,7 +47,6 @@ export function IcuEditor({
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
   const onBlurRef = useRef(onBlur);
-  // eslint-disable-next-line react-hooks/refs -- valid React pattern for stable callback refs
   onBlurRef.current = onBlur;
 
   // Update internal value when prop changes
@@ -151,6 +150,7 @@ export function IcuEditor({
       view.destroy();
       editorRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- don't include "value" to avoid resetting editor state
   }, [placeholder, disabled, colorMode]);
 
   const isValid = errors.length === 0;
