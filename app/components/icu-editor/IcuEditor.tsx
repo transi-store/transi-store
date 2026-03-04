@@ -151,7 +151,7 @@ export function IcuEditor({
       view.destroy();
       editorRef.current = null;
     };
-  }, [placeholder, disabled, colorMode, value, onChange]);
+  }, [placeholder, disabled, colorMode]);
 
   const isValid = errors.length === 0;
 
