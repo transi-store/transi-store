@@ -44,6 +44,10 @@ export default [
         "import-export",
         "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
       ),
+      route(
+        "github",
+        "routes/orgs.$orgSlug.projects.$projectSlug.github/index.tsx",
+      ),
     ],
   ),
 
@@ -66,4 +70,11 @@ export default [
     "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
   ),
   route("api/locales/:lng/:ns", "routes/api.locales.$lng.$ns.ts"),
+
+  // GitHub App routes
+  route(
+    "auth/github-app/callback",
+    "routes/auth.github-app.callback.tsx",
+  ),
+  route("api/github/webhook", "routes/api.github.webhook.ts"),
 ] satisfies RouteConfig;

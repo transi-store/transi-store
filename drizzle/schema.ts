@@ -173,6 +173,12 @@ export const translations = pgTable(
     locale: varchar("locale", { length: 10 }).notNull(),
     value: text("value").notNull(),
     isFuzzy: boolean("is_fuzzy").default(false).notNull(),
+    // GitHub sync support (3-way merge)
+    // Dernière valeur qui venait de GitHub (la base commune pour détecter les conflits)
+    githubSyncedValue: text("github_synced_value"),
+    // En cas de conflit : valeur entrante depuis GitHub, à valider manuellement
+    conflictIncomingValue: text("conflict_incoming_value"),
+    hasConflict: boolean("has_conflict").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -181,6 +187,49 @@ export const translations = pgTable(
     // Index GIN pour la recherche floue sera créé via SQL (voir scripts/enable-fuzzy-search.sh)
   ],
 );
+
+// Installations de la GitHub App (une par compte GitHub lié à une organisation)
+export const githubAppInstallations = pgTable(
+  "github_app_installations",
+  {
+    id: serial("id").primaryKey(),
+    // L'ID d'installation fourni par GitHub
+    installationId: varchar("installation_id", { length: 50 })
+      .notNull()
+      .unique(),
+    organizationId: integer("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    // Nom du compte GitHub (org ou user) ayant installé l'App
+    accountLogin: varchar("account_login", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+);
+
+// Configuration GitHub par projet (lie un projet transi-store à un repo GitHub)
+export const projectGithubConfigs = pgTable("project_github_configs", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id")
+    .notNull()
+    .unique()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  installationId: integer("installation_id")
+    .notNull()
+    .references(() => githubAppInstallations.id, { onDelete: "cascade" }),
+  // Nom complet du repo, ex: "my-org/my-app"
+  repoFullName: varchar("repo_full_name", { length: 500 }).notNull(),
+  defaultBranch: varchar("default_branch", { length: 255 })
+    .notNull()
+    .default("main"),
+  // Locale source (celle gérée par les devs dans le repo)
+  sourceLocale: varchar("source_locale", { length: 10 }).notNull(),
+  // Pattern du chemin des fichiers JSON, avec {locale} comme placeholder
+  // Ex: "public/locales/{locale}.json" ou "locales/{locale}/translation.json"
+  localePathPattern: varchar("locale_path_pattern", { length: 500 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
 function ensureOneItem<T>(arr: T[]): [T, ...T[]] {
   if (arr.length === 0) {
@@ -246,3 +295,11 @@ export type OrganizationAiProvider =
   typeof organizationAiProviders.$inferSelect;
 export type NewOrganizationAiProvider =
   typeof organizationAiProviders.$inferInsert;
+
+export type GithubAppInstallation =
+  typeof githubAppInstallations.$inferSelect;
+export type NewGithubAppInstallation =
+  typeof githubAppInstallations.$inferInsert;
+
+export type ProjectGithubConfig = typeof projectGithubConfigs.$inferSelect;
+export type NewProjectGithubConfig = typeof projectGithubConfigs.$inferInsert;
