@@ -1,6 +1,6 @@
 import { Box, Heading, Text, Button } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LuPlus } from "react-icons/lu";
 import { toaster } from "~/components/ui/toaster";
 import { NewApiKeyAlert } from "./NewApiKeyAlert";
@@ -14,6 +14,7 @@ type ApiKeysProps = {
   newKeyValue?: string;
   organizationSlug: string;
   origin: string;
+  isSubmitting: boolean;
 };
 
 export default function ApiKeys({
@@ -21,6 +22,7 @@ export default function ApiKeys({
   newKeyValue,
   organizationSlug,
   origin,
+  isSubmitting,
 }: ApiKeysProps) {
   const { t } = useTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,13 +44,6 @@ export default function ApiKeys({
       });
     }
   };
-
-  // Fermer la modale après création réussie
-  useEffect(() => {
-    if (newKeyValue) {
-      setIsDialogOpen(false);
-    }
-  }, [newKeyValue]);
 
   return (
     <Box>
@@ -86,6 +81,7 @@ export default function ApiKeys({
       <ApiKeyCreationDialog
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
+        isSubmitting={isSubmitting}
       />
 
       {/* Documentation d'utilisation */}

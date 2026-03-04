@@ -217,7 +217,7 @@ export function TranslationKeyContent({
           description: translationKey.description || "",
         }}
         error={editKeyError}
-        isSubmitting={editKeyFetcher.state !== "idle"}
+        isSubmitting={editKeyFetcher.state === "submitting"}
         actionUrl={actionUrl}
         fetcher={editKeyFetcher}
       />

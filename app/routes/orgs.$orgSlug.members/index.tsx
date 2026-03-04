@@ -1,5 +1,5 @@
 import { Container, VStack } from "@chakra-ui/react";
-import { useLoaderData, useActionData } from "react-router";
+import { useLoaderData, useActionData, useNavigation } from "react-router";
 import { eq, inArray } from "drizzle-orm";
 import { redirect } from "react-router";
 import type { Route } from "./+types/index";
@@ -201,10 +201,11 @@ export default function OrganizationMembers() {
     <Container maxW="container.lg" py={8}>
       <VStack align="stretch" gap={6}>
         <Invitations
+          key={newInvitationCode}
+          newInvitationCode={newInvitationCode}
           organizationInvitation={organizationInvitation}
           pendingInvitations={pendingInvitations}
           origin={origin}
-          newInvitationCode={newInvitationCode}
           actionError={
             actionData?.success === false ? actionData.error : undefined
           }

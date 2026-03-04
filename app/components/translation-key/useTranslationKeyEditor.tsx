@@ -109,6 +109,7 @@ export function useTranslationKeyEditor({
       initial[lang.locale] = newMap.get(lang.locale) || "";
       initialFuzzy[lang.locale] = newFuzzyMap.get(lang.locale) || false;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTranslationValues(initial);
     setFuzzyFlags(initialFuzzy);
     originalValuesRef.current = initial;
@@ -124,6 +125,7 @@ export function useTranslationKeyEditor({
       editKeyFetcher.state === "idle" &&
       isEditKeyModalOpen
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsEditKeyModalOpen(false);
     }
   }, [editKeyFetcher.data, editKeyFetcher.state, isEditKeyModalOpen]);
@@ -196,7 +198,14 @@ export function useTranslationKeyEditor({
         });
       }
     },
-    [translationValues, fuzzyFlags, translationKey.keyName, actionUrl, saveFetcher, t],
+    [
+      translationValues,
+      fuzzyFlags,
+      translationKey.keyName,
+      actionUrl,
+      saveFetcher,
+      t,
+    ],
   );
 
   const handleFuzzyChange = useCallback(
@@ -259,7 +268,13 @@ export function useTranslationKeyEditor({
         );
       }
     },
-    [aiDialogLocale, handleTranslationChange, fuzzyFlags, actionUrl, saveFetcher],
+    [
+      aiDialogLocale,
+      handleTranslationChange,
+      fuzzyFlags,
+      actionUrl,
+      saveFetcher,
+    ],
   );
 
   return {

@@ -208,7 +208,9 @@ export default function ProjectTranslations({
       actionData.action === "createKey" &&
       navigation.state === "idle"
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCreateKeyModalOpen(false);
+
       // Navigate to filter by the newly created key
       navigate(
         getTranslationsUrl(organization.slug, project.slug, {

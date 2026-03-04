@@ -1,6 +1,6 @@
 import { Box, Heading, Text, HStack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LuSparkles } from "react-icons/lu";
 import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
 import { AiTranslationProvidersList } from "./AiTranslationProvidersList";
@@ -9,34 +9,26 @@ import type { OrganizationAiProvider } from "../../../../drizzle/schema";
 
 type AiTranslationProps = {
   aiProviders: Array<Pick<OrganizationAiProvider, "provider" | "isActive">>;
-  actionSuccess?: boolean;
 };
 
-export default function AiTranslation({
-  aiProviders,
-  actionSuccess,
-}: AiTranslationProps) {
+export default function AiTranslation({ aiProviders }: AiTranslationProps) {
   const { t } = useTranslation();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] =
     useState<AiProviderEnum | null>(null);
 
   const handleConfigure = (provider: AiProviderEnum) => {
     setSelectedProvider(provider);
-    setIsDialogOpen(true);
   };
 
-  // Fermer la modale après sauvegarde réussie
-  useEffect(() => {
-    if (actionSuccess) {
-      setIsDialogOpen(false);
-      setSelectedProvider(null);
-    }
-  }, [actionSuccess]);
+  const handleClose = () => {
+    setSelectedProvider(null);
+  };
+
+  const isDialogOpen = selectedProvider !== null;
 
   const providerLabel = selectedProvider
     ? getAiProvider(selectedProvider).name
-    : "IA";
+    : "AI"; // TODO translate
 
   return (
     <Box>
@@ -60,8 +52,7 @@ export default function AiTranslation({
       <AiTranslationConfigDialog
         isOpen={isDialogOpen}
         selectedProvider={selectedProvider}
-        onOpenChange={setIsDialogOpen}
-        onProviderChange={setSelectedProvider}
+        handleClose={handleClose}
         providerLabel={providerLabel}
       />
     </Box>

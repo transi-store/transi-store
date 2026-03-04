@@ -19,24 +19,17 @@ import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
 type AiTranslationConfigDialogProps = {
   isOpen: boolean;
   selectedProvider: AiProviderEnum | null;
-  onOpenChange: (open: boolean) => void;
-  onProviderChange: (provider: AiProviderEnum | null) => void;
+  handleClose: () => void;
   providerLabel: string;
 };
 
 export function AiTranslationConfigDialog({
   isOpen,
   selectedProvider,
-  onOpenChange,
-  onProviderChange,
+  handleClose,
   providerLabel,
 }: AiTranslationConfigDialogProps) {
   const { t } = useTranslation();
-
-  const handleClose = () => {
-    onOpenChange(false);
-    onProviderChange(null);
-  };
 
   const selectedProviderConfig = selectedProvider
     ? getAiProvider(selectedProvider)
@@ -47,8 +40,9 @@ export function AiTranslationConfigDialog({
       lazyMount
       open={isOpen}
       onOpenChange={(e) => {
-        onOpenChange(e.open);
-        if (!e.open) onProviderChange(null);
+        if (!e.open) {
+          handleClose();
+        }
       }}
     >
       <Portal>

@@ -25,8 +25,8 @@ type ContextType = {
   languages: Array<ProjectLanguage>;
 };
 
-type ActionData =
-  | { success: true; importStats: ImportStats }
+export type ImportActionData =
+  | { success: true; importStats: ImportStats; actionTimestamp: number }
   | { success: false; error: string; details?: string };
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -49,7 +49,7 @@ export async function action({
   request,
   params,
   context,
-}: Route.ActionArgs): Promise<ActionData> {
+}: Route.ActionArgs): Promise<ImportActionData> {
   const user = await requireUser(request);
   const i18next = getInstance(context);
 
@@ -164,6 +164,7 @@ export async function action({
     return {
       success: true,
       importStats: result.stats,
+      actionTimestamp: Date.now(),
     };
   }
 
@@ -181,10 +182,7 @@ export default function ProjectImportExport() {
       <ImportSection
         languages={languages}
         isSubmitting={isSubmitting}
-        actionSuccess={actionData?.success}
-        importStats={actionData?.success ? actionData.importStats : undefined}
-        error={actionData?.success === false ? actionData.error : undefined}
-        details={actionData?.success === false ? actionData.details : undefined}
+        actionData={actionData}
       />
 
       <ExportSection

@@ -1,6 +1,7 @@
 import { VStack, Heading, HStack, Box, Button } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigation } from "react-router";
 import { LuPlus } from "react-icons/lu";
 import { useCopyInvitationLink } from "./useCopyInvitationLink";
 import { NewInvitationAlert } from "./NewInvitationAlert";
@@ -31,12 +32,8 @@ export default function Invitations({
   const { handleCopy, showFallbackModal, fallbackLink, closeFallbackModal } =
     useCopyInvitationLink(origin);
 
-  // Fermer la modale après création réussie
-  useEffect(() => {
-    if (newInvitationCode) {
-      setIsInviteDialogOpen(false);
-    }
-  }, [newInvitationCode]);
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
 
   return (
     <>
@@ -91,6 +88,7 @@ export default function Invitations({
       <InviteMemberDialog
         isOpen={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
+        isSubmitting={isSubmitting}
       />
 
       {/* Modale de fallback pour copier le lien */}

@@ -1,5 +1,5 @@
 import { Heading, VStack, Box } from "@chakra-ui/react";
-import { useLoaderData, useActionData } from "react-router";
+import { useLoaderData, useActionData, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Route } from "./+types";
 import { requireUser } from "~/lib/session.server";
@@ -22,7 +22,16 @@ import { getInstance } from "~/middleware/i18next";
 import ApiKeys from "./ApiKeys";
 import AiTranslation from "./AiTranslation";
 
-export async function action({ request, params, context }: Route.ActionArgs) {
+type AiProviderActionData =
+  | { success: true; keyValue: string; action: "create" }
+  | { success: true; action: "save-ai-provider"; provider: AiProviderEnum }
+  | { success: false; error: string };
+
+export async function action({
+  request,
+  params,
+  context,
+}: Route.ActionArgs): Promise<AiProviderActionData | Response> {
   const i18next = getInstance(context);
   const user = await requireUser(request);
   const organization = await requireOrganizationMembership(
@@ -115,6 +124,12 @@ export default function OrganizationSettings() {
   const { organization, apiKeys, aiProviders, origin } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+
+  const newKeyValue =
+    actionData?.success && actionData?.action === "create"
+      ? actionData.keyValue
+      : undefined;
 
   return (
     <Box pt={6}>
@@ -125,21 +140,16 @@ export default function OrganizationSettings() {
       <VStack align="stretch" gap={6}>
         {/* Section Clés d'API */}
         <ApiKeys
+          key={newKeyValue}
           apiKeys={apiKeys}
-          newKeyValue={
-            actionData?.action === "create" ? actionData.keyValue : undefined
-          }
+          newKeyValue={newKeyValue}
           organizationSlug={organization.slug}
           origin={origin}
+          isSubmitting={navigation.state === "submitting"}
         />
 
         {/* Section Configuration IA */}
-        <AiTranslation
-          aiProviders={aiProviders}
-          actionSuccess={
-            actionData?.action === "save-ai-provider" && actionData.success
-          }
-        />
+        <AiTranslation aiProviders={aiProviders} />
       </VStack>
     </Box>
   );
