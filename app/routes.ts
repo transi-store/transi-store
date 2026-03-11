@@ -62,6 +62,10 @@ export default [
     "routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx",
   ),
   route(
+    "api/orgs/:orgSlug/projects/:projectSlug/import",
+    "routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx",
+  ),
+  route(
     "api/orgs/:orgSlug/projects/:projectSlug/translate",
     "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
   ),
