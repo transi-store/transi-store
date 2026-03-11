@@ -74,8 +74,6 @@ type TranslationKeyContentProps = {
   actionUrl?: string;
   /** Whether to show in compact layout (e.g. inside a drawer). */
   compact?: boolean;
-  /** Callback when the number of active fetchers changes. */
-  onFetcherStateChange?: (activeFetchers: number) => void;
 };
 
 export function TranslationKeyContent({
@@ -87,7 +85,6 @@ export function TranslationKeyContent({
   hasAiProvider,
   actionUrl,
   compact = false,
-  onFetcherStateChange,
 }: TranslationKeyContentProps) {
   const { t } = useTranslation();
 
@@ -113,7 +110,6 @@ export function TranslationKeyContent({
     organization,
     project,
     actionUrl,
-    onFetcherStateChange,
   });
 
   const editKeyError =

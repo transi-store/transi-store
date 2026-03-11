@@ -5,10 +5,8 @@
  * and renders <TranslationKeyContent /> for inline editing from the
  * translations list — without navigating to a separate page.
  *
- * The drawer waits for all pending save operations before closing,
- * ensuring data consistency.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import {
   DrawerRoot,
   DrawerBackdrop,
@@ -39,7 +37,7 @@ type TranslationKeyDrawerProps = {
   keyId: number;
   organizationSlug: string;
   projectSlug: string;
-  /** Called when the drawer is fully closed (after all pending saves). */
+  /** Called when the drawer is closed. */
   onClosed: () => void;
 };
 
@@ -54,30 +52,12 @@ export function TranslationKeyDrawer({
   // Fetcher for loading key data
   const dataFetcher = useFetcher<KeyLoaderData>();
 
-  // Track if user wants to close (wait for pending operations)
-  const [isClosing, setIsClosing] = useState(false);
-
-  // Track active fetchers from TranslationKeyContent
-  const activeFetchersRef = useRef(0);
-
-  // Internal open state to prevent premature closing
-  const [internalOpen, setInternalOpen] = useState(true);
-
   const keyUrl = getKeyUrl(organizationSlug, projectSlug, keyId);
 
   // Load key data when component mounts or keyId changes
   useEffect(() => {
     dataFetcher.load(keyUrl);
   }, [keyUrl]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Actually close the drawer when user wants to close AND no pending operations
-  useEffect(() => {
-    if (isClosing && activeFetchersRef.current === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setInternalOpen(false);
-      onClosed();
-    }
-  }, [isClosing, onClosed]);
 
   const isLoading = dataFetcher.state === "loading";
   const data = dataFetcher.data;
@@ -91,24 +71,20 @@ export function TranslationKeyDrawer({
     onClosed();
   };
 
-  const handleCloseRequest = () => {
-    setIsClosing(true);
-  };
-
-  const handleFetcherStateChange = (activeFetchers: number) => {
-    activeFetchersRef.current = activeFetchers;
-  };
-
   if (dataFetcher.state === "idle" && !data) {
     return null;
   }
 
   return (
     <DrawerRoot
-      open={internalOpen}
+      open
       onOpenChange={(e) => {
         if (!e.open) {
-          handleCloseRequest();
+          if (document.activeElement instanceof HTMLElement) {
+            // trigger blur on active element to save any unsaved changes in TranslationKeyContent before closing
+            document.activeElement.blur();
+          }
+          onClosed();
         }
       }}
       placement="end"
@@ -161,7 +137,6 @@ export function TranslationKeyDrawer({
                 project={data.project}
                 hasAiProvider={data.hasAiProvider}
                 actionUrl={keyUrl}
-                onFetcherStateChange={handleFetcherStateChange}
                 compact
               />
             ) : (

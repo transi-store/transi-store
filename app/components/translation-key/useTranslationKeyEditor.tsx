@@ -20,8 +20,6 @@ type UseTranslationKeyEditorParams = {
   project: Project;
   /** URL to POST actions to (save, editKey). Defaults to current route. */
   actionUrl?: string;
-  /** Callback when the number of active fetchers changes. */
-  onFetcherStateChange?: (activeFetchers: number) => void;
 };
 
 type ReturnType = {
@@ -58,7 +56,6 @@ export function useTranslationKeyEditor({
   organization,
   project,
   actionUrl,
-  onFetcherStateChange,
 }: UseTranslationKeyEditorParams): ReturnType {
   const { t } = useTranslation();
 
@@ -133,20 +130,6 @@ export function useTranslationKeyEditor({
   // AI translation state
   const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);
   const aiFetcher = useFetcher<TranslateAction>();
-
-  // Track active fetchers
-  useEffect(() => {
-    const count =
-      (saveFetcher.state !== "idle" ? 1 : 0) +
-      (editKeyFetcher.state !== "idle" ? 1 : 0) +
-      (aiFetcher.state !== "idle" ? 1 : 0);
-    onFetcherStateChange?.(count);
-  }, [
-    saveFetcher.state,
-    editKeyFetcher.state,
-    aiFetcher.state,
-    onFetcherStateChange,
-  ]);
 
   const handleTranslationChange = useCallback(
     (locale: string, value: string) => {
