@@ -293,6 +293,7 @@
   "settings.ai.edit": "Edit",
   "settings.ai.getApiKeyOn": "Get your key at",
   "settings.ai.howToUse": "How to use an API key?",
+  "settings.ai.modelLabel": "AI model",
   "settings.ai.notConfigured": "Not configured",
   "settings.ai.save": "Save",
   "settings.ai.title": "Automatic translation (AI)",

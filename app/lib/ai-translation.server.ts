@@ -2,7 +2,7 @@ import { generateText, Output } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createFakeModel } from "./fake-ai-provider.server";
-import { AiProviderEnum } from "./ai-providers";
+import { AiProviderEnum, getAiProvider } from "./ai-providers";
 import { z } from "zod";
 
 // 1. Définition du schéma Zod
@@ -120,10 +120,13 @@ async function callGenerateText({
 async function translateWithOpenAI(
   context: TranslationContext,
   apiKey: string,
+  model?: string | null,
 ): Promise<TranslationSuggestion[]> {
   const openai = createOpenAI({ apiKey });
+  const modelId =
+    model ?? getAiProvider(AiProviderEnum.OPENAI).models[0].value;
 
-  return callGenerateText({ context, model: openai("gpt-5-mini") });
+  return callGenerateText({ context, model: openai(modelId) });
 }
 
 /**
@@ -132,12 +135,15 @@ async function translateWithOpenAI(
 async function translateWithGemini(
   context: TranslationContext,
   apiKey: string,
+  model?: string | null,
 ): Promise<TranslationSuggestion[]> {
   const google = createGoogleGenerativeAI({ apiKey });
+  const modelId =
+    model ?? getAiProvider(AiProviderEnum.GEMINI).models[0].value;
 
   return callGenerateText({
     context,
-    model: google("gemini-3-flash-preview"),
+    model: google(modelId),
     extraParameters: { temperature: 0.7 },
   });
 }
@@ -162,12 +168,13 @@ export async function translateWithAI(
   context: TranslationContext,
   provider: AiProviderEnum,
   apiKey: string,
+  model?: string | null,
 ): Promise<TranslationSuggestion[]> {
   switch (provider) {
     case AiProviderEnum.OPENAI:
-      return translateWithOpenAI(context, apiKey);
+      return translateWithOpenAI(context, apiKey, model);
     case AiProviderEnum.GEMINI:
-      return translateWithGemini(context, apiKey);
+      return translateWithGemini(context, apiKey, model);
     case AiProviderEnum.FAKE:
       return translateWithFake(context);
     default:

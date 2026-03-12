@@ -9,11 +9,17 @@ export enum AiProviderEnum {
   FAKE = "fake",
 }
 
+export type AiModelOption = {
+  value: string;
+  label: string;
+};
+
 export type AiProviderConfig = {
   value: AiProviderEnum;
   name: string;
   configureUrl: string;
   apiKeyPlaceholder: string;
+  models: Array<AiModelOption>;
 };
 
 export const AI_PROVIDERS: Array<AiProviderConfig> = [
@@ -22,12 +28,22 @@ export const AI_PROVIDERS: Array<AiProviderConfig> = [
     name: "OpenAI (GPT)",
     configureUrl: "https://platform.openai.com/api-keys",
     apiKeyPlaceholder: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    models: [
+      { value: "gpt-4o", label: "GPT-4o" },
+      { value: "gpt-4o-mini", label: "GPT-4o mini" },
+      { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+    ],
   },
   {
     value: AiProviderEnum.GEMINI,
     name: "Google Gemini",
     configureUrl: "https://aistudio.google.com/apikey",
     apiKeyPlaceholder: "AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    models: [
+      { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
+      { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
+      { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
+    ],
   },
 ];
 
@@ -38,6 +54,7 @@ if (process.env.NODE_ENV !== "production") {
     name: "Fake (dev only)",
     configureUrl: "",
     apiKeyPlaceholder: "any-value",
+    models: [],
   });
 }
 

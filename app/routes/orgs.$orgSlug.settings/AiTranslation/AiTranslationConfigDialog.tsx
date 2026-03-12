@@ -11,6 +11,7 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { Box, Text, Input, Button, VStack, Alert } from "@chakra-ui/react";
+import { NativeSelect } from "@chakra-ui/react/native-select";
 import { Form } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuTriangleAlert } from "react-icons/lu";
@@ -21,6 +22,7 @@ type AiTranslationConfigDialogProps = {
   selectedProvider: AiProviderEnum | null;
   handleClose: () => void;
   providerLabel: string;
+  currentModel: string | null;
 };
 
 export function AiTranslationConfigDialog({
@@ -28,12 +30,15 @@ export function AiTranslationConfigDialog({
   selectedProvider,
   handleClose,
   providerLabel,
+  currentModel,
 }: AiTranslationConfigDialogProps) {
   const { t } = useTranslation();
 
   const selectedProviderConfig = selectedProvider
     ? getAiProvider(selectedProvider)
     : null;
+
+  const availableModels = selectedProviderConfig?.models ?? [];
 
   return (
     <DialogRoot
@@ -94,6 +99,27 @@ export function AiTranslationConfigDialog({
                       )}
                     </Text>
                   </Box>
+                  {availableModels.length > 0 && (
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" mb={2}>
+                        {t("settings.ai.modelLabel")}
+                      </Text>
+                      <NativeSelect.Root>
+                        <NativeSelect.Field
+                          name="model"
+                          defaultValue={
+                            currentModel ?? availableModels[0].value
+                          }
+                        >
+                          {availableModels.map((m) => (
+                            <option key={m.value} value={m.value}>
+                              {m.label}
+                            </option>
+                          ))}
+                        </NativeSelect.Field>
+                      </NativeSelect.Root>
+                    </Box>
+                  )}
                   <Alert.Root status="warning">
                     <Alert.Indicator>
                       <LuTriangleAlert />

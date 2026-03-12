@@ -132,6 +132,7 @@ export async function action({
       },
       activeProvider.provider,
       activeProvider.apiKey,
+      activeProvider.model,
     );
 
     return Response.json({ suggestions, provider: activeProvider.provider });

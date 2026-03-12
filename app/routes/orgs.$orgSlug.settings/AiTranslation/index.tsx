@@ -8,20 +8,26 @@ import { AiTranslationConfigDialog } from "./AiTranslationConfigDialog";
 import type { OrganizationAiProvider } from "../../../../drizzle/schema";
 
 type AiTranslationProps = {
-  aiProviders: Array<Pick<OrganizationAiProvider, "provider" | "isActive">>;
+  aiProviders: Array<Pick<OrganizationAiProvider, "provider" | "isActive" | "model">>;
 };
 
 export default function AiTranslation({ aiProviders }: AiTranslationProps) {
   const { t } = useTranslation();
   const [selectedProvider, setSelectedProvider] =
     useState<AiProviderEnum | null>(null);
+  const [selectedProviderModel, setSelectedProviderModel] = useState<
+    string | null
+  >(null);
 
   const handleConfigure = (provider: AiProviderEnum) => {
+    const existingConfig = aiProviders.find((p) => p.provider === provider);
     setSelectedProvider(provider);
+    setSelectedProviderModel(existingConfig?.model ?? null);
   };
 
   const handleClose = () => {
     setSelectedProvider(null);
+    setSelectedProviderModel(null);
   };
 
   const isDialogOpen = selectedProvider !== null;
@@ -54,6 +60,7 @@ export default function AiTranslation({ aiProviders }: AiTranslationProps) {
         selectedProvider={selectedProvider}
         handleClose={handleClose}
         providerLabel={providerLabel}
+        currentModel={selectedProviderModel}
       />
     </Box>
   );

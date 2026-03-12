@@ -67,6 +67,7 @@ export async function action({
     // TODO not really type safe
     const provider = formData.get("provider") as AiProviderEnum;
     const apiKey = formData.get("apiKey") as string;
+    const model = formData.get("model") as string | null;
 
     if (!provider || !apiKey) {
       return {
@@ -79,6 +80,7 @@ export async function action({
       organizationId: organization.id,
       provider,
       apiKey,
+      model: model || null,
     });
 
     return { success: true, action: "save-ai-provider", provider };

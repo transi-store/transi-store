@@ -8,6 +8,7 @@ type SaveAiProviderParams = {
   organizationId: number;
   provider: AiProviderEnum;
   apiKey: string;
+  model?: string | null;
   isActive?: boolean;
 };
 
@@ -40,6 +41,7 @@ export async function saveAiProvider(
       .update(schema.organizationAiProviders)
       .set({
         encryptedApiKey,
+        model: params.model !== undefined ? params.model : existing.model,
         isActive: params.isActive ?? existing.isActive,
         updatedAt: new Date(),
       })
@@ -55,6 +57,7 @@ export async function saveAiProvider(
         organizationId: params.organizationId,
         provider: params.provider,
         encryptedApiKey,
+        model: params.model ?? null,
         isActive: params.isActive ?? false,
       })
       .returning();
@@ -69,11 +72,12 @@ export async function saveAiProvider(
  */
 export async function getOrganizationAiProviders(
   organizationId: number,
-): Promise<Array<Pick<OrganizationAiProvider, "provider" | "isActive">>> {
+): Promise<Array<Pick<OrganizationAiProvider, "provider" | "isActive" | "model">>> {
   const providers = await db
     .select({
       provider: schema.organizationAiProviders.provider,
       isActive: schema.organizationAiProviders.isActive,
+      model: schema.organizationAiProviders.model,
     })
     .from(schema.organizationAiProviders)
     .where(eq(schema.organizationAiProviders.organizationId, organizationId));
@@ -86,11 +90,12 @@ export async function getOrganizationAiProviders(
  */
 export async function getActiveAiProvider(
   organizationId: number,
-): Promise<{ provider: AiProviderEnum; apiKey: string } | null> {
+): Promise<{ provider: AiProviderEnum; apiKey: string; model: string | null } | null> {
   const [result] = await db
     .select({
       provider: schema.organizationAiProviders.provider,
       encryptedApiKey: schema.organizationAiProviders.encryptedApiKey,
+      model: schema.organizationAiProviders.model,
     })
     .from(schema.organizationAiProviders)
     .where(
@@ -108,6 +113,7 @@ export async function getActiveAiProvider(
   return {
     provider: result.provider,
     apiKey: decrypt(result.encryptedApiKey),
+    model: result.model,
   };
 }
 
