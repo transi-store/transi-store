@@ -6,6 +6,11 @@ import {
   fetchTranslations,
   type Config,
 } from "./fetchTranslations.ts";
+import {
+  ImportStrategy,
+  uploadTranslations,
+  type UploadConfig,
+} from "./uploadTranslations.ts";
 
 const program = new Command();
 
@@ -32,6 +37,46 @@ program
   .option("-f, --format <format>", "Export format (json, csv, etc.)", "json")
   .action((options) => {
     fetchTranslations(options satisfies Config);
+  });
+
+program
+  .command("upload")
+  .description("Upload translations for a project")
+  .addOption(apiKeyOption)
+  .requiredOption(
+    "-d, --domain-root <domainRoot>",
+    "Root domain to upload translations to (default is https://transi-store.com)",
+    DEFAULT_DOMAIN_ROOT,
+  )
+  .requiredOption("-o, --org <org>", "Organization slug")
+  .requiredOption("-p, --project <project>", "Project slug")
+  .requiredOption("-l, --locale <locale>", "Target locale")
+  .requiredOption("-I, --input <input>", "Input file path (JSON or XLIFF)")
+  .option(
+    "-s, --strategy <strategy>",
+    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
+    ImportStrategy.SKIP,
+  )
+  .option(
+    "-f, --format <format>",
+    "File format (json or xliff). Auto-detected from extension if omitted",
+  )
+  .action((options) => {
+    const strategy = options.strategy;
+    if (
+      strategy !== ImportStrategy.OVERWRITE &&
+      strategy !== ImportStrategy.SKIP
+    ) {
+      console.error(
+        `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
+      );
+      process.exit(1);
+    }
+
+    uploadTranslations({
+      ...options,
+      strategy,
+    } satisfies UploadConfig);
   });
 
 program

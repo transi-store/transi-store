@@ -3,13 +3,9 @@ import { useActionData, useNavigation, useOutletContext } from "react-router";
 import type { Route } from "./+types/index";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import {
-  parseImportJSON,
-  validateImportData,
-  importTranslations,
-  type ImportStats,
-} from "~/lib/import/json.server";
+import { getProjectBySlug } from "~/lib/projects.server";
+import type { ImportStats } from "~/lib/import/json.server";
+import { processImport } from "~/lib/import/process-import.server";
 import { getInstance } from "~/middleware/i18next";
 import ImportSection from "./Import";
 import ExportSection from "./Export";
@@ -58,117 +54,32 @@ export async function action({
     params.orgSlug,
   );
 
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
+  const formData = await request.formData();
+  const formAction = formData.get("_action");
 
-  if (!project) {
-    throw new Response("Project not found", { status: 404 });
+  if (formAction !== "import") {
+    return { success: false, error: i18next.t("import.errors.unknownAction") };
   }
 
-  const formData = await request.formData();
-  const action = formData.get("_action");
+  const result = await processImport({
+    organizationId: organization.id,
+    projectSlug: params.projectSlug,
+    formData,
+  });
 
-  if (action === "import") {
-    // 1. Validate file input
-    const file = formData.get("file");
-    if (!file || !(file instanceof File)) {
-      return {
-        success: false,
-        error: i18next.t("import.errors.fileRequired"),
-      };
-    }
-
-    if (file.type !== "application/json" && !file.name.endsWith(".json")) {
-      return {
-        success: false,
-        error: i18next.t("import.errors.invalidFormat"),
-      };
-    }
-
-    // 2. Validate locale input
-    const locale = formData.get("locale");
-    if (!locale || typeof locale !== "string") {
-      return {
-        success: false,
-        error: i18next.t("import.errors.localeRequired"),
-      };
-    }
-
-    // 3. Validate strategy input
-    const strategy = formData.get("strategy");
-    if (strategy !== "overwrite" && strategy !== "skip") {
-      return {
-        success: false,
-        error: i18next.t("import.errors.invalidStrategy"),
-      };
-    }
-
-    // 4. Verify locale exists in project
-    const languages = await getProjectLanguages(project.id);
-    if (!languages.some((l) => l.locale === locale)) {
-      return {
-        success: false,
-        error: i18next.t("import.errors.localeNotInProject", { locale }),
-      };
-    }
-
-    // 5. Read file content
-    let fileContent: string;
-    try {
-      fileContent = await file.text();
-    } catch (_error) {
-      return {
-        success: false,
-        error: i18next.t("import.errors.unableToReadFile"),
-      };
-    }
-
-    // 6. Parse JSON
-    const parseResult = parseImportJSON(fileContent);
-    if (!parseResult.success) {
-      return {
-        success: false,
-        error: i18next.t("import.errors.parseError", {
-          error: parseResult.error,
-        }),
-        details: parseResult.error,
-      };
-    }
-
-    // 7. Validate data structure
-    const validationErrors = validateImportData(parseResult.data!);
-    if (validationErrors.length > 0) {
-      return {
-        success: false,
-        error: i18next.t("import.errors.invalidData"),
-        details: validationErrors.join(", "),
-      };
-    }
-
-    // 8. Import translations
-    const result = await importTranslations({
-      projectId: project.id,
-      locale,
-      data: parseResult.data!,
-      strategy: strategy as "overwrite" | "skip",
-    });
-
-    if (!result.success) {
-      return {
-        success: false,
-        error: i18next.t("import.errors.importFailed"),
-        details: result.errors.join(", "),
-      };
-    }
-
-    // 9. Return success with stats
+  if (!result.success) {
     return {
-      success: true,
-      importStats: result.stats,
-      actionTimestamp: Date.now(),
+      success: false,
+      error: result.error,
+      details: result.details,
     };
   }
 
-  return { success: false, error: i18next.t("import.errors.unknownAction") };
+  return {
+    success: true,
+    importStats: result.importStats,
+    actionTimestamp: Date.now(),
+  };
 }
 
 export default function ProjectImportExport() {

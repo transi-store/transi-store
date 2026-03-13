@@ -43,9 +43,13 @@ Route : `/orgs/:orgSlug/projects/:projectSlug/import-export`
   </SelectRoot>
 
   {/* Stratégie d'import */}
-  <RadioGroup name="strategy" defaultValue="overwrite">
-    <Radio value="overwrite">Écraser les traductions existantes</Radio>
-    <Radio value="skip">Conserver les traductions existantes</Radio>
+  <RadioGroup name="strategy" defaultValue={ImportStrategy.OVERWRITE}>
+    <Radio value={ImportStrategy.OVERWRITE}>
+      Écraser les traductions existantes
+    </Radio>
+    <Radio value={ImportStrategy.SKIP}>
+      Conserver les traductions existantes
+    </Radio>
   </RadioGroup>
 
   {/* Upload du fichier */}
