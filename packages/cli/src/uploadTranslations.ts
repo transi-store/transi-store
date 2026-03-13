@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
+export enum ImportStrategy {
+  OVERWRITE = "overwrite",
+  SKIP = "skip",
+}
+
 export type UploadConfig = {
   domainRoot: string;
   org: string;
@@ -8,7 +13,7 @@ export type UploadConfig = {
   apiKey: string;
   locale: string;
   input: string;
-  strategy: "overwrite" | "skip";
+  strategy: ImportStrategy;
   format?: string;
 };
 

@@ -4,12 +4,13 @@ import {
   createTranslationKey,
   upsertTranslation,
 } from "~/lib/translation-keys.server";
+import { ImportStrategy } from "./process-import.server";
 
 type ImportParams = {
   projectId: number;
   locale: string;
   data: Record<string, string>;
-  strategy: "overwrite" | "skip";
+  strategy: ImportStrategy;
 };
 
 export type ImportStats = {
@@ -173,7 +174,7 @@ export async function importTranslations(
 
           // 4. Apply strategy
           if (existingTranslation) {
-            if (strategy === "overwrite") {
+            if (strategy === ImportStrategy.OVERWRITE) {
               // Update existing translation
               await upsertTranslation({
                 keyId: translationKey.id,

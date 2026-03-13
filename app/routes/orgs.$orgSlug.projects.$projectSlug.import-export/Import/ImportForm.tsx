@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { LuUpload } from "react-icons/lu";
 import { useState } from "react";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
+import { ImportStrategy } from "~/lib/import/process-import.server";
 
 type ImportFormProps = {
   languages: Array<ProjectLanguage>;
@@ -66,7 +67,9 @@ export function ImportForm({ languages, isSubmitting }: ImportFormProps) {
           <input
             type="hidden"
             name="strategy"
-            value={shouldOverwrite ? "overwrite" : "skip"}
+            value={
+              shouldOverwrite ? ImportStrategy.OVERWRITE : ImportStrategy.SKIP
+            }
           />
           <Switch.Root
             checked={shouldOverwrite}

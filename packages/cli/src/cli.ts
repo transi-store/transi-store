@@ -6,7 +6,11 @@ import {
   fetchTranslations,
   type Config,
 } from "./fetchTranslations.ts";
-import { uploadTranslations, type UploadConfig } from "./uploadTranslations.ts";
+import {
+  ImportStrategy,
+  uploadTranslations,
+  type UploadConfig,
+} from "./uploadTranslations.ts";
 
 const program = new Command();
 
@@ -50,14 +54,22 @@ program
   .requiredOption("-I, --input <input>", "Input file path (JSON or XLIFF)")
   .option(
     "-s, --strategy <strategy>",
-    "Import strategy: 'overwrite' or 'skip' existing translations",
-    "overwrite",
+    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
+    ImportStrategy.SKIP,
   )
-  .option("-f, --format <format>", "File format (json or xliff). Auto-detected from extension if omitted")
+  .option(
+    "-f, --format <format>",
+    "File format (json or xliff). Auto-detected from extension if omitted",
+  )
   .action((options) => {
     const strategy = options.strategy;
-    if (strategy !== "overwrite" && strategy !== "skip") {
-      console.error("Invalid strategy. Use 'overwrite' or 'skip'.");
+    if (
+      strategy !== ImportStrategy.OVERWRITE &&
+      strategy !== ImportStrategy.SKIP
+    ) {
+      console.error(
+        `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
+      );
       process.exit(1);
     }
 

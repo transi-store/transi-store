@@ -17,6 +17,11 @@ type ProcessImportParams = {
   formData: FormData;
 };
 
+export enum ImportStrategy {
+  OVERWRITE = "overwrite",
+  SKIP = "skip",
+}
+
 /**
  * Shared import processing logic used by both the UI action and the API endpoint.
  * Handles all validation (file, locale, strategy, format) and import processing.
@@ -40,8 +45,14 @@ export async function processImport(
 
   // 3. Validate strategy input
   const strategy = formData.get("strategy");
-  if (strategy !== "overwrite" && strategy !== "skip") {
-    return { success: false, error: "Invalid 'strategy' field. Use 'overwrite' or 'skip'" };
+  if (
+    strategy !== ImportStrategy.OVERWRITE &&
+    strategy !== ImportStrategy.SKIP
+  ) {
+    return {
+      success: false,
+      error: `Invalid 'strategy' field. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'`,
+    };
   }
 
   // 4. Detect format from explicit parameter or file extension
@@ -55,13 +66,13 @@ export async function processImport(
     format = formatParam;
   } else if (file.name.endsWith(".xliff") || file.name.endsWith(".xlf")) {
     format = "xliff";
-  } else if (
-    file.name.endsWith(".json") ||
-    file.type === "application/json"
-  ) {
+  } else if (file.name.endsWith(".json") || file.type === "application/json") {
     format = "json";
   } else {
-    return { success: false, error: "Unsupported file format. Use JSON or XLIFF" };
+    return {
+      success: false,
+      error: "Unsupported file format. Use JSON or XLIFF",
+    };
   }
 
   // 5. Read file content
