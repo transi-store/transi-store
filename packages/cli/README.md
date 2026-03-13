@@ -6,7 +6,7 @@
 npm install -g @transi-store/cli
 ```
 
-## Usage
+## Download translations
 
 ### With configuration file
 
@@ -61,6 +61,25 @@ transi-store download --org <orgSlug> \
   --output <outputPath> \
   --format <format>
 ```
+
+## Upload translations
+
+To upload translations, you can use the following command:
+
+```bash
+transi-store upload --org <orgSlug> \
+  --project <projectSlug> \
+  --locale <locale> \
+  --input <inputPath> \
+  --format <format>
+```
+
+Optional parameters:
+
+- `--domain-root`: The root directory for the domain. This is used to determine the domain of the translations based on the input file path. Defaults to "https://transi-store.com".
+- `--strategy`: eiher "overwrite" (default) or "skip". Determines how to handle existing translations. "overwrite" will replace existing translations with the new ones, while "skip" will keep existing translations and only add new ones.
+
+You must also provide the `TRANSI_STORE_API_KEY` environment variable with your Transi-Store API key to authenticate the requests.
 
 ## Contributing
 
