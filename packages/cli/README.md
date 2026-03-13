@@ -88,7 +88,7 @@ You must also provide the `TRANSI_STORE_API_KEY` environment variable with your 
 To publish a new version of the CLI package, follow these steps:
 
 1. Update the version number in `packages/cli/package.json`.
-2. Commit the changes with a message like `chore(cli): publish version x.y.z
+2. Commit the changes with a message like `chore(cli): publish version x.y.z`
 3. Run the publish script from the root of the monorepo:
 
    ```bash
