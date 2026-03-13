@@ -4,7 +4,7 @@ import {
   createTranslationKey,
   upsertTranslation,
 } from "~/lib/translation-keys.server";
-import { ImportStrategy } from "./process-import.server";
+import { ImportStrategy } from "./import-strategy";
 
 type ImportParams = {
   projectId: number;

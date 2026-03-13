@@ -6,6 +6,7 @@ import {
 } from "./json.server";
 import { parseImportXLIFF } from "./xliff.server";
 import type { ImportStats } from "./json.server";
+import { ImportStrategy } from "./import-strategy";
 
 type ProcessImportResult =
   | { success: true; importStats: ImportStats }
@@ -16,11 +17,6 @@ type ProcessImportParams = {
   projectSlug: string;
   formData: FormData;
 };
-
-export enum ImportStrategy {
-  OVERWRITE = "overwrite",
-  SKIP = "skip",
-}
 
 /**
  * Shared import processing logic used by both the UI action and the API endpoint.

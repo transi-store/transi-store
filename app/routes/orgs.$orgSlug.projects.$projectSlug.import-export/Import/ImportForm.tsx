@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { LuUpload } from "react-icons/lu";
 import { useState } from "react";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
-import { ImportStrategy } from "~/lib/import/process-import.server";
+import { ImportStrategy } from "~/lib/import/import-strategy";
 
 type ImportFormProps = {
   languages: Array<ProjectLanguage>;
