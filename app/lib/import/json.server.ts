@@ -11,6 +11,7 @@ type ImportParams = {
   locale: string;
   data: Record<string, string>;
   strategy: ImportStrategy;
+  branchId?: number;
 };
 
 export type ImportStats = {
@@ -121,7 +122,7 @@ export function validateImportData(
 export async function importTranslations(
   params: ImportParams,
 ): Promise<ImportResult> {
-  const { projectId, locale, data, strategy } = params;
+  const { projectId, locale, data, strategy, branchId } = params;
 
   const stats = {
     total: 0,
@@ -153,6 +154,7 @@ export async function importTranslations(
               projectId: Number(projectId),
               keyName,
               description: undefined,
+              branchId,
             });
 
             // Reload the key to get full data

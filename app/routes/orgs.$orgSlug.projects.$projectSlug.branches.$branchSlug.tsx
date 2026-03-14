@@ -62,9 +62,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   }
 
   if (branch.status !== "open") {
-    throw redirect(
-      getBranchesUrl(params.orgSlug, params.projectSlug),
-    );
+    throw redirect(getBranchesUrl(params.orgSlug, params.projectSlug));
   }
 
   const languages = await getProjectLanguages(project.id);
@@ -153,9 +151,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   if (action === "closeBranch") {
     await deleteBranch(branch.id);
-    return redirect(
-      getBranchesUrl(params.orgSlug, params.projectSlug),
-    );
+    return redirect(getBranchesUrl(params.orgSlug, params.projectSlug));
   }
 
   throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });
@@ -190,11 +186,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
 
   const totalLanguages = languages.length;
 
-  const currentUrl = getBranchUrl(
-    organization.slug,
-    project.slug,
-    branch.slug,
-  );
+  const currentUrl = getBranchUrl(organization.slug, project.slug, branch.slug);
 
   useEffect(() => {
     if (
@@ -202,6 +194,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
       actionData.action === "createKey" &&
       navigation.state === "idle"
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCreateKeyModalOpen(false);
     }
   }, [actionData, navigation.state]);
@@ -215,7 +208,10 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
           projectSlug={project.slug}
           projectName={project.name}
           items={[
-            { label: t("branches.title"), to: `/orgs/${organization.slug}/projects/${project.slug}/branches` },
+            {
+              label: t("branches.title"),
+              to: `/orgs/${organization.slug}/projects/${project.slug}/branches`,
+            },
             { label: branch.name, to: currentUrl },
           ]}
         />
