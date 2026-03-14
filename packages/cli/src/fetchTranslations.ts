@@ -14,6 +14,7 @@ export type Config = {
   format: string;
   locale: string;
   output: string;
+  branch?: string;
 };
 
 export async function fetchTranslations({
@@ -24,8 +25,13 @@ export async function fetchTranslations({
   format,
   locale,
   output,
+  branch,
 }: Config) {
-  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/export?format=${format}&locale=${locale}`;
+  const params = new URLSearchParams({ format, locale });
+  if (branch) {
+    params.set("branch", branch);
+  }
+  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/export?${params.toString()}`;
 
   try {
     const content = await fetch(url, {

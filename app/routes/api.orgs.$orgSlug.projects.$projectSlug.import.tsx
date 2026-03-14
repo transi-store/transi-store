@@ -57,6 +57,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     organizationId: organization.id,
     projectSlug: params.projectSlug,
     formData,
+    branchSlug: formData.get("branch") as string | undefined,
   });
 
   if (!result.success) {

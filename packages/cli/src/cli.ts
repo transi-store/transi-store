@@ -35,6 +35,7 @@ program
   .requiredOption("-l, --locale <locale>", "Locale to export")
   .requiredOption("-O, --output <output>", "Output file path")
   .option("-f, --format <format>", "Export format (json, csv, etc.)", "json")
+  .option("-b, --branch <branch>", "Branch slug (exports main + branch keys)")
   .action((options) => {
     fetchTranslations(options satisfies Config);
   });
@@ -60,6 +61,10 @@ program
   .option(
     "-f, --format <format>",
     "File format (json or xliff). Auto-detected from extension if omitted",
+  )
+  .option(
+    "-b, --branch <branch>",
+    "Branch slug (new keys will be created on this branch)",
   )
   .action((options) => {
     const strategy = options.strategy;
