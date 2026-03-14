@@ -15,7 +15,8 @@ import type {
   LanguageModelV3Usage,
 } from "@ai-sdk/provider";
 
-const FAKE_DELAY_MS = 500;
+const FAKE_DELAY_FAST_MS = 50;
+const FAKE_DELAY_SLOW_MS = 500;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -89,7 +90,11 @@ class FakeLanguageModel implements LanguageModelV3 {
   }
 
   async doGenerate(options: LanguageModelV3CallOptions) {
-    await sleep(FAKE_DELAY_MS);
+    const delay =
+      this.modelId === "fake-model-fast"
+        ? FAKE_DELAY_FAST_MS
+        : FAKE_DELAY_SLOW_MS;
+    await sleep(delay);
 
     const targetLocale = extractTargetLocale(options);
     const text = buildFakeJsonResponse(targetLocale);
@@ -107,9 +112,16 @@ class FakeLanguageModel implements LanguageModelV3 {
     const text = buildFakeJsonResponse(targetLocale);
     const textId = "fake-text-0";
 
+    const modelId = this.modelId; // capture in closure for use in stream
+
     const stream = new ReadableStream<LanguageModelV3StreamPart>({
       async start(controller) {
-        await sleep(FAKE_DELAY_MS / 2);
+        const delay =
+          modelId === "fake-model-fast"
+            ? FAKE_DELAY_FAST_MS
+            : FAKE_DELAY_SLOW_MS;
+
+        await sleep(delay / 2);
 
         controller.enqueue({ type: "text-start", id: textId });
 
@@ -134,6 +146,6 @@ class FakeLanguageModel implements LanguageModelV3 {
   }
 }
 
-export function createFakeModel(modelId = "fake-model"): LanguageModelV3 {
+export function createFakeModel(modelId: string): LanguageModelV3 {
   return new FakeLanguageModel(modelId);
 }

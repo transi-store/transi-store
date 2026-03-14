@@ -7,7 +7,8 @@ import { AiProviderEnum } from "./ai-providers";
 type SaveAiProviderParams = {
   organizationId: number;
   provider: AiProviderEnum;
-  apiKey: string;
+  apiKey?: string | null; // Optional for updates: if omitted, existing key is preserved
+  model?: string | null;
   isActive?: boolean;
 };
 
@@ -18,8 +19,6 @@ type SaveAiProviderParams = {
 export async function saveAiProvider(
   params: SaveAiProviderParams,
 ): Promise<OrganizationAiProvider> {
-  const encryptedApiKey = encrypt(params.apiKey);
-
   const [existing] = await db
     .select()
     .from(schema.organizationAiProviders)
@@ -39,7 +38,8 @@ export async function saveAiProvider(
     const [updated] = await db
       .update(schema.organizationAiProviders)
       .set({
-        encryptedApiKey,
+        ...(params.apiKey ? { encryptedApiKey: encrypt(params.apiKey) } : {}),
+        model: params.model !== undefined ? params.model : existing.model,
         isActive: params.isActive ?? existing.isActive,
         updatedAt: new Date(),
       })
@@ -48,13 +48,17 @@ export async function saveAiProvider(
 
     return updated;
   } else {
-    // Création
+    // Création : apiKey obligatoire (validé par l'appelant)
+    if (!params.apiKey) {
+      throw new Error("apiKey is required when creating a new AI provider");
+    }
     const [created] = await db
       .insert(schema.organizationAiProviders)
       .values({
         organizationId: params.organizationId,
         provider: params.provider,
-        encryptedApiKey,
+        encryptedApiKey: encrypt(params.apiKey),
+        model: params.model ?? null,
         isActive: params.isActive ?? false,
       })
       .returning();
@@ -69,11 +73,14 @@ export async function saveAiProvider(
  */
 export async function getOrganizationAiProviders(
   organizationId: number,
-): Promise<Array<Pick<OrganizationAiProvider, "provider" | "isActive">>> {
+): Promise<
+  Array<Pick<OrganizationAiProvider, "provider" | "isActive" | "model">>
+> {
   const providers = await db
     .select({
       provider: schema.organizationAiProviders.provider,
       isActive: schema.organizationAiProviders.isActive,
+      model: schema.organizationAiProviders.model,
     })
     .from(schema.organizationAiProviders)
     .where(eq(schema.organizationAiProviders.organizationId, organizationId));
@@ -81,16 +88,41 @@ export async function getOrganizationAiProviders(
   return providers;
 }
 
+export async function isAiProviderConfiguredForOrganization(
+  organizationId: number,
+  providerName: AiProviderEnum,
+): Promise<boolean> {
+  const providers = await db
+    .select({
+      provider: schema.organizationAiProviders.provider,
+    })
+    .from(schema.organizationAiProviders)
+    .where(
+      and(
+        eq(schema.organizationAiProviders.organizationId, organizationId),
+        eq(schema.organizationAiProviders.provider, providerName),
+      ),
+    )
+    .limit(1);
+
+  return providers.length > 0;
+}
+
 /**
  * Récupère le provider actif pour une organisation.
  */
 export async function getActiveAiProvider(
   organizationId: number,
-): Promise<{ provider: AiProviderEnum; apiKey: string } | null> {
+): Promise<{
+  provider: AiProviderEnum;
+  apiKey: string;
+  model: string | null;
+} | null> {
   const [result] = await db
     .select({
       provider: schema.organizationAiProviders.provider,
       encryptedApiKey: schema.organizationAiProviders.encryptedApiKey,
+      model: schema.organizationAiProviders.model,
     })
     .from(schema.organizationAiProviders)
     .where(
@@ -108,7 +140,16 @@ export async function getActiveAiProvider(
   return {
     provider: result.provider,
     apiKey: decrypt(result.encryptedApiKey),
+    model: result.model,
   };
+}
+
+export async function hasActiveAiProvider(
+  organizationId: number,
+): Promise<boolean> {
+  const activeProvider = await getActiveAiProvider(organizationId);
+
+  return activeProvider !== null;
 }
 
 /**

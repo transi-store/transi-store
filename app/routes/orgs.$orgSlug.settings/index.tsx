@@ -14,6 +14,7 @@ import {
   saveAiProvider,
   setActiveAiProvider,
   deleteAiProvider,
+  isAiProviderConfiguredForOrganization,
 } from "~/lib/ai-providers.server";
 import type { AiProviderEnum } from "~/lib/ai-providers";
 import { redirect } from "react-router";
@@ -22,10 +23,23 @@ import { getInstance } from "~/middleware/i18next";
 import ApiKeys from "./ApiKeys";
 import AiTranslation from "./AiTranslation";
 
-type AiProviderActionData =
+type AiProviderActionError = {
+  success: false;
+  error: string;
+};
+
+export type AiProviderActionData =
   | { success: true; keyValue: string; action: "create" }
   | { success: true; action: "save-ai-provider"; provider: AiProviderEnum }
-  | { success: false; error: string };
+  | AiProviderActionError;
+
+export function isErrorReturnType(
+  data: AiProviderActionData | undefined,
+): data is AiProviderActionError {
+  return (
+    typeof data === "object" && "success" in data && data.success === false
+  );
+}
 
 export async function action({
   request,
@@ -66,19 +80,36 @@ export async function action({
   if (intent === "save-ai-provider") {
     // TODO not really type safe
     const provider = formData.get("provider") as AiProviderEnum;
-    const apiKey = formData.get("apiKey") as string;
+    const apiKey = formData.get("apiKey") as string | null;
+    const model = formData.get("model") as string | null;
 
-    if (!provider || !apiKey) {
+    if (!provider) {
       return {
         success: false,
         error: i18next.t("settings.errors.providerApiRequired"),
       };
     }
 
+    // apiKey is required only when the provider is not yet configured
+    if (!apiKey) {
+      const isAlreadyConfigured = await isAiProviderConfiguredForOrganization(
+        organization.id,
+        provider,
+      );
+
+      if (!isAlreadyConfigured) {
+        return {
+          success: false,
+          error: i18next.t("settings.errors.providerApiRequired"),
+        };
+      }
+    }
+
     await saveAiProvider({
       organizationId: organization.id,
       provider,
       apiKey,
+      model,
     });
 
     return { success: true, action: "save-ai-provider", provider };

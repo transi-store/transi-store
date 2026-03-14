@@ -203,6 +203,7 @@ export const organizationAiProviders = pgTable(
       enum: ensureOneItem(AI_PROVIDERS.map((p) => p.value)),
     }).notNull(),
     encryptedApiKey: text("encrypted_api_key").notNull(), // Chiffré AES-256-GCM
+    model: varchar("model", { length: 100 }),
     isActive: boolean("is_active").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

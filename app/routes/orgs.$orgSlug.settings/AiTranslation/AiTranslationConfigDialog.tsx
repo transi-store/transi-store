@@ -11,16 +11,20 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { Box, Text, Input, Button, VStack, Alert } from "@chakra-ui/react";
-import { Form } from "react-router";
+import { NativeSelect } from "@chakra-ui/react/native-select";
+import { Form, useActionData } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuTriangleAlert } from "react-icons/lu";
 import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
+import { isErrorReturnType, type AiProviderActionData } from "..";
 
 type AiTranslationConfigDialogProps = {
   isOpen: boolean;
   selectedProvider: AiProviderEnum | null;
   handleClose: () => void;
   providerLabel: string;
+  currentModel: string | null;
+  isAlreadyConfigured: boolean;
 };
 
 export function AiTranslationConfigDialog({
@@ -28,12 +32,21 @@ export function AiTranslationConfigDialog({
   selectedProvider,
   handleClose,
   providerLabel,
+  currentModel,
+  isAlreadyConfigured,
 }: AiTranslationConfigDialogProps) {
   const { t } = useTranslation();
+
+  const actionData = useActionData<AiProviderActionData>();
+
+  const aiProviderError =
+    actionData && isErrorReturnType(actionData) ? actionData.error : undefined;
 
   const selectedProviderConfig = selectedProvider
     ? getAiProvider(selectedProvider)
     : null;
+
+  const availableModels = selectedProviderConfig?.models ?? [];
 
   return (
     <DialogRoot
@@ -74,9 +87,11 @@ export function AiTranslationConfigDialog({
                       name="apiKey"
                       type="password"
                       placeholder={
-                        selectedProviderConfig?.apiKeyPlaceholder || ""
+                        isAlreadyConfigured
+                          ? t("settings.ai.apiKeyExistingPlaceholder")
+                          : selectedProviderConfig?.apiKeyPlaceholder || ""
                       }
-                      required
+                      required={!isAlreadyConfigured}
                     />
                     <Text fontSize="xs" color="fg.muted" mt={1}>
                       {selectedProviderConfig && (
@@ -94,6 +109,27 @@ export function AiTranslationConfigDialog({
                       )}
                     </Text>
                   </Box>
+                  {availableModels.length > 0 && (
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" mb={2}>
+                        {t("settings.ai.modelLabel")}
+                      </Text>
+                      <NativeSelect.Root>
+                        <NativeSelect.Field
+                          name="model"
+                          defaultValue={
+                            currentModel ?? availableModels[0].value
+                          }
+                        >
+                          {availableModels.map((m) => (
+                            <option key={m.value} value={m.value}>
+                              {m.label}
+                            </option>
+                          ))}
+                        </NativeSelect.Field>
+                      </NativeSelect.Root>
+                    </Box>
+                  )}
                   <Alert.Root status="warning">
                     <Alert.Indicator>
                       <LuTriangleAlert />
@@ -104,6 +140,15 @@ export function AiTranslationConfigDialog({
                       </Alert.Description>
                     </Alert.Content>
                   </Alert.Root>
+
+                  {aiProviderError && (
+                    <Alert.Root status="error">
+                      <Alert.Indicator />
+                      <Alert.Content>
+                        <Alert.Description>{aiProviderError}</Alert.Description>
+                      </Alert.Content>
+                    </Alert.Root>
+                  )}
                 </VStack>
               </DialogBody>
               <DialogFooter gap={3}>

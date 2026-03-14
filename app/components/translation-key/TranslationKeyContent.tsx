@@ -425,7 +425,11 @@ function AiSuggestionsDialog({
                 </VStack>
               ) : isErrorReturnType(aiFetcher.data) ? (
                 <Box p={4} bg="red.subtle" borderRadius="md">
-                  <Text color="red.fg">{aiFetcher.data.error}</Text>
+                  <Text color="red.fg">
+                    {aiFetcher.data.error}
+                    <br />
+                    {aiFetcher.data.originalError}
+                  </Text>
                 </Box>
               ) : isSuggestionsReturnType(aiFetcher.data) ? (
                 <VStack align="stretch" gap={3}>
@@ -433,6 +437,7 @@ function AiSuggestionsDialog({
                     <Text fontSize="xs" color="fg.subtle">
                       {t("keys.translateWithAI.generatedBy", {
                         provider: getAiProvider(aiFetcher.data.provider).name,
+                        model: aiFetcher.data.providerModel,
                       })}
                     </Text>
                   )}
