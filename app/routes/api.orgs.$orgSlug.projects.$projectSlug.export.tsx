@@ -2,6 +2,7 @@ import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
+import { getBranchBySlug } from "~/lib/branches.server";
 import {
   exportToJSON,
   exportAllLanguagesToJSON,
@@ -69,6 +70,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const sourceLocale = url.searchParams.get("source");
   const targetLocale = url.searchParams.get("target");
   const exportAll = url.searchParams.has("all");
+  const branchParam = url.searchParams.get("branch");
 
   // Récupérer les langues du projet
   const languages = await getProjectLanguages(project.id);
@@ -83,8 +85,26 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     );
   }
 
-  // Récupérer toutes les traductions du projet
-  const projectTranslations = await getProjectTranslations(project.id);
+  // Resolve optional branch
+  let branchId: number | undefined;
+  if (branchParam) {
+    const branch = await getBranchBySlug(project.id, branchParam);
+    if (!branch) {
+      return new Response(
+        JSON.stringify({ error: `Branch '${branchParam}' not found` }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+    branchId = branch.id;
+  }
+
+  // Récupérer toutes les traductions du projet (main + branche si spécifiée)
+  const projectTranslations = await getProjectTranslations(project.id, {
+    branchId,
+  });
 
   if (format === "json") {
     let content: string;

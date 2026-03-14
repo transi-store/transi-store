@@ -1,4 +1,4 @@
-import { eq, sql, and, or, inArray, desc } from "drizzle-orm";
+import { eq, sql, and, or, inArray, desc, isNull } from "drizzle-orm";
 import { db, schema } from "./db.server";
 import { TranslationKeysSort } from "./sort/keySort";
 
@@ -42,6 +42,8 @@ export async function searchTranslationKeys(
     offset?: number;
     locale?: string;
     sort?: TranslationKeysSort;
+    branchId?: number;
+    branchOnly?: boolean;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit ?? 50;
@@ -53,6 +55,21 @@ export async function searchTranslationKeys(
       : sort === TranslationKeysSort.ALPHABETICAL
         ? schema.translationKeys.keyName
         : desc(sql`similarity`);
+
+  // Branch filter
+  let branchCondition;
+  if (options?.branchId !== undefined) {
+    if (options?.branchOnly) {
+      branchCondition = eq(schema.translationKeys.branchId, options.branchId);
+    } else {
+      branchCondition = or(
+        isNull(schema.translationKeys.branchId),
+        eq(schema.translationKeys.branchId, options.branchId),
+      )!;
+    }
+  } else {
+    branchCondition = isNull(schema.translationKeys.branchId);
+  }
 
   // Matches sur keyName et description
   const keyResults = await db
@@ -67,6 +84,7 @@ export async function searchTranslationKeys(
     .where(
       and(
         inArray(schema.translationKeys.projectId, projectIds),
+        branchCondition,
         or(
           sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
           sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
@@ -80,6 +98,7 @@ export async function searchTranslationKeys(
   // Matches sur les traductions
   const translationWhere = [
     inArray(schema.translationKeys.projectId, projectIds),
+    branchCondition,
     sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
   ];
   if (options?.locale) {

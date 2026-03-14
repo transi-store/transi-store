@@ -57,6 +57,27 @@ export function getKeyUrl(
   return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
 }
 
+export function getBranchesUrl(
+  orgSlug: string,
+  projectSlug: string,
+): string {
+  return generatePath(
+    `/orgs/:orgSlug/projects/:projectSlug/branches`,
+    { orgSlug, projectSlug },
+  );
+}
+
+export function getBranchUrl(
+  orgSlug: string,
+  projectSlug: string,
+  branchSlug: string,
+): string {
+  return generatePath(
+    `/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug`,
+    { orgSlug, projectSlug, branchSlug },
+  );
+}
+
 export function getRedirectUrlFromRequest(
   request: Request,
   defaultOrgSlug: string,
