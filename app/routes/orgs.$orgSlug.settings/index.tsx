@@ -110,7 +110,7 @@ export async function action({
       organizationId: organization.id,
       provider,
       apiKey,
-      model: model || null,
+      model,
     });
 
     return { success: true, action: "save-ai-provider", provider };

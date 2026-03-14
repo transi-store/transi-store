@@ -120,11 +120,9 @@ export async function getOrganizationAiProvider(
 /**
  * Récupère le provider actif pour une organisation.
  */
-export async function getActiveAiProvider(organizationId: number): Promise<{
-  provider: AiProviderEnum;
-  apiKey: string;
-  model: string | null;
-} | null> {
+export async function getActiveAiProvider(
+  organizationId: number,
+): Promise<{ provider: string; apiKey: string; model: string | null } | null> {
   const [result] = await db
     .select({
       provider: schema.organizationAiProviders.provider,
@@ -149,6 +147,14 @@ export async function getActiveAiProvider(organizationId: number): Promise<{
     apiKey: decrypt(result.encryptedApiKey),
     model: result.model,
   };
+}
+
+export async function hasActiveAiProvider(
+  organizationId: number,
+): Promise<boolean> {
+  const activeProvider = await getActiveAiProvider(organizationId);
+
+  return activeProvider !== null;
 }
 
 /**

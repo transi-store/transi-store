@@ -168,11 +168,11 @@ async function translateWithFake(
  */
 export async function translateWithAI(
   context: TranslationContext,
-  provider: AiProviderEnum,
-  apiKey: string,
-  model?: string | null,
+  provider: { provider: AiProviderEnum; apiKey: string; model?: string | null },
 ): Promise<TranslationSuggestion[]> {
-  switch (provider) {
+  const { provider: providerName, apiKey, model } = provider;
+
+  switch (providerName) {
     case AiProviderEnum.OPENAI:
       return translateWithOpenAI(context, apiKey, model);
     case AiProviderEnum.GEMINI:

@@ -15,7 +15,7 @@ import {
   deleteTranslation,
   getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
-import { getActiveAiProvider } from "~/lib/ai-providers.server";
+import { hasActiveAiProvider } from "~/lib/ai-providers.server";
 import {
   getRedirectUrlFromRequest,
   getRedirectUrlFromFormData,
@@ -65,9 +65,8 @@ export async function loader({
   const languages = await getProjectLanguages(project.id);
   const translations = await getTranslationsForKey(key.id);
 
-  // Vérifier si un provider IA est configuré
-  const activeAiProvider = await getActiveAiProvider(organization.id);
-  const hasAiProvider = activeAiProvider !== null;
+  // Check if there's an active AI provider for the organization
+  const hasAiProvider = await hasActiveAiProvider(organization.id);
 
   const redirectUrl = getRedirectUrlFromRequest(
     request,

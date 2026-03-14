@@ -132,9 +132,7 @@ export async function action({
           .map((t) => ({ locale: t.locale, value: t.value })),
         keyDescription: key.description ?? undefined,
       },
-      activeProvider.provider,
-      activeProvider.apiKey,
-      activeProvider.model,
+      activeProvider,
     );
 
     return Response.json({
