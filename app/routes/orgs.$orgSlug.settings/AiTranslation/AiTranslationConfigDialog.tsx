@@ -37,7 +37,6 @@ export function AiTranslationConfigDialog({
 }: AiTranslationConfigDialogProps) {
   const { t } = useTranslation();
 
-  // TODO better types
   const actionData = useActionData<AiProviderActionData>();
 
   const aiProviderError =

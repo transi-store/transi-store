@@ -14,7 +14,7 @@ import {
   saveAiProvider,
   setActiveAiProvider,
   deleteAiProvider,
-  getOrganizationAiProvider,
+  isAiProviderConfiguredForOrganization,
 } from "~/lib/ai-providers.server";
 import type { AiProviderEnum } from "~/lib/ai-providers";
 import { redirect } from "react-router";
@@ -80,7 +80,7 @@ export async function action({
   if (intent === "save-ai-provider") {
     // TODO not really type safe
     const provider = formData.get("provider") as AiProviderEnum;
-    const apiKey = (formData.get("apiKey") as string) || undefined;
+    const apiKey = formData.get("apiKey") as string | null;
     const model = formData.get("model") as string | null;
 
     if (!provider) {
@@ -92,11 +92,10 @@ export async function action({
 
     // apiKey is required only when the provider is not yet configured
     if (!apiKey) {
-      const existingProvider = await getOrganizationAiProvider(
+      const isAlreadyConfigured = await isAiProviderConfiguredForOrganization(
         organization.id,
         provider,
       );
-      const isAlreadyConfigured = !!existingProvider;
 
       if (!isAlreadyConfigured) {
         return {

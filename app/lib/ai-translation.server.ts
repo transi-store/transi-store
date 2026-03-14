@@ -168,7 +168,11 @@ async function translateWithFake(
  */
 export async function translateWithAI(
   context: TranslationContext,
-  provider: { provider: AiProviderEnum; apiKey: string; model?: string | null },
+  provider: {
+    provider: AiProviderEnum;
+    apiKey: string;
+    model: string | null | undefined;
+  },
 ): Promise<TranslationSuggestion[]> {
   const { provider: providerName, apiKey, model } = provider;
 

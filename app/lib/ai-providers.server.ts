@@ -7,7 +7,7 @@ import { AiProviderEnum } from "./ai-providers";
 type SaveAiProviderParams = {
   organizationId: number;
   provider: AiProviderEnum;
-  apiKey?: string; // Optional for updates: if omitted, existing key is preserved
+  apiKey?: string | null; // Optional for updates: if omitted, existing key is preserved
   model?: string | null;
   isActive?: boolean;
 };
@@ -88,22 +88,13 @@ export async function getOrganizationAiProviders(
   return providers;
 }
 
-/**
- * Récupère tous les providers IA configurés pour une organisation.
- * Les clés API ne sont PAS déchiffrées (retourne juste l'existence).
- */
-export async function getOrganizationAiProvider(
+export async function isAiProviderConfiguredForOrganization(
   organizationId: number,
   providerName: AiProviderEnum,
-): Promise<Pick<
-  OrganizationAiProvider,
-  "provider" | "isActive" | "model"
-> | null> {
+): Promise<boolean> {
   const providers = await db
     .select({
       provider: schema.organizationAiProviders.provider,
-      isActive: schema.organizationAiProviders.isActive,
-      model: schema.organizationAiProviders.model,
     })
     .from(schema.organizationAiProviders)
     .where(
@@ -114,7 +105,7 @@ export async function getOrganizationAiProvider(
     )
     .limit(1);
 
-  return providers[0] ?? null;
+  return providers.length > 0;
 }
 
 /**
@@ -122,7 +113,11 @@ export async function getOrganizationAiProvider(
  */
 export async function getActiveAiProvider(
   organizationId: number,
-): Promise<{ provider: string; apiKey: string; model: string | null } | null> {
+): Promise<{
+  provider: AiProviderEnum;
+  apiKey: string;
+  model: string | null;
+} | null> {
   const [result] = await db
     .select({
       provider: schema.organizationAiProviders.provider,
