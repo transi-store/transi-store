@@ -12,6 +12,7 @@ type TranslationsPaginationProps = {
   sort: TranslationKeysSort;
   organizationSlug: string;
   projectSlug: string;
+  baseUrl?: string;
 };
 
 export function TranslationsPagination({
@@ -22,8 +23,16 @@ export function TranslationsPagination({
   sort,
   organizationSlug,
   projectSlug,
+  baseUrl,
 }: TranslationsPaginationProps) {
   const buildUrl = (page: number) => {
+    if (baseUrl) {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      params.set("page", String(page));
+      if (sort) params.set("sort", sort);
+      return `${baseUrl}?${params.toString()}`;
+    }
     return getTranslationsUrl(organizationSlug, projectSlug, {
       search,
       page: String(page),

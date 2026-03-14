@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or, type SQL } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
 import { TranslationKeysSort } from "./sort/keySort";
@@ -9,6 +9,25 @@ type TranslationKeysReturnType = {
   data: Array<RegularDataRow | SearchDataRow>;
 };
 
+/**
+ * Build the WHERE condition for filtering translation keys by branch.
+ * - branchId = undefined → main only (branch_id IS NULL)
+ * - branchId = number, branchOnly = false → main + that branch (for export)
+ * - branchId = number, branchOnly = true → only that branch (for UI)
+ */
+function branchFilter(branchId?: number, branchOnly?: boolean): SQL {
+  if (branchId !== undefined) {
+    if (branchOnly) {
+      return eq(schema.translationKeys.branchId, branchId);
+    }
+    return or(
+      isNull(schema.translationKeys.branchId),
+      eq(schema.translationKeys.branchId, branchId),
+    )!;
+  }
+  return isNull(schema.translationKeys.branchId);
+}
+
 export async function getTranslationKeys(
   projectId: number,
   options?: {
@@ -16,6 +35,8 @@ export async function getTranslationKeys(
     limit?: number;
     offset?: number;
     sort?: TranslationKeysSort;
+    branchId?: number;
+    branchOnly?: boolean;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -33,6 +54,8 @@ export async function getTranslationKeys(
     },
   });
 
+  const branchCondition = branchFilter(options?.branchId, options?.branchOnly);
+
   if (options?.search) {
     const searchQuery = options.search.trim();
     const keysWithSimilarity = await searchTranslationKeys(
@@ -42,6 +65,8 @@ export async function getTranslationKeys(
         limit: options?.limit ?? 50,
         offset: options?.offset ?? 0,
         sort: options?.sort ?? TranslationKeysSort.RELEVANCE,
+        branchId: options?.branchId,
+        branchOnly: options?.branchOnly,
       },
     );
     keys = keysWithSimilarity.map(
@@ -60,7 +85,12 @@ export async function getTranslationKeys(
     keys = await db
       .select()
       .from(schema.translationKeys)
-      .where(eq(schema.translationKeys.projectId, projectId))
+      .where(
+        and(
+          eq(schema.translationKeys.projectId, projectId),
+          branchCondition,
+        ),
+      )
       .limit(options?.limit ?? 50)
       .offset(options?.offset ?? 0)
       .orderBy(
@@ -71,7 +101,10 @@ export async function getTranslationKeys(
 
     count = await db.$count(
       schema.translationKeys,
-      eq(schema.translationKeys.projectId, projectId),
+      and(
+        eq(schema.translationKeys.projectId, projectId),
+        branchCondition,
+      ),
     );
   }
 
@@ -135,6 +168,7 @@ type CreateTranslationKeyParams = {
   projectId: number;
   keyName: string;
   description?: string | null;
+  branchId?: number | null;
 };
 
 export async function createTranslationKey(params: CreateTranslationKeyParams) {
@@ -144,6 +178,7 @@ export async function createTranslationKey(params: CreateTranslationKeyParams) {
       projectId: params.projectId,
       keyName: params.keyName,
       description: params.description,
+      branchId: params.branchId ?? null,
     })
     .returning();
 
@@ -289,12 +324,21 @@ export async function upsertTranslation(params: UpsertTranslationParams) {
 }
 
 // Get all translations for a project grouped by key
-export async function getProjectTranslations(projectId: number) {
+export async function getProjectTranslations(
+  projectId: number,
+  options?: { branchId?: number },
+) {
   // Get all keys for this project, sorted alphabetically by keyName
-  const keys = await db.query.translationKeys.findMany({
-    where: { projectId },
-    orderBy: { keyName: "asc" },
-  });
+  const condition = and(
+    eq(schema.translationKeys.projectId, projectId),
+    branchFilter(options?.branchId),
+  );
+
+  const keys = await db
+    .select()
+    .from(schema.translationKeys)
+    .where(condition)
+    .orderBy(schema.translationKeys.keyName);
 
   if (keys.length === 0) {
     return [];

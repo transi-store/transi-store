@@ -142,6 +142,37 @@ export const projectLanguages = pgTable(
   ],
 );
 
+// Branches de traduction
+export const branches = pgTable(
+  "branches",
+  {
+    id: serial("id").primaryKey(),
+    projectId: integer("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 255 }).notNull(),
+    description: text("description"),
+    status: varchar("status", {
+      length: 20,
+      enum: ["open", "merged", "closed"],
+    })
+      .default("open")
+      .notNull(),
+    createdBy: integer("created_by").references(() => users.id),
+    mergedBy: integer("merged_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    mergedAt: timestamp("merged_at"),
+  },
+  (table) => [
+    uniqueIndex("unique_project_branch_slug").on(
+      table.projectId,
+      table.slug,
+    ),
+  ],
+);
+
 // Cles de traduction
 export const translationKeys = pgTable(
   "translation_keys",
@@ -150,6 +181,9 @@ export const translationKeys = pgTable(
     projectId: integer("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
+    branchId: integer("branch_id").references(() => branches.id, {
+      onDelete: "cascade",
+    }),
     keyName: varchar("key_name", { length: 500 }).notNull(),
     description: text("description"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -236,6 +270,9 @@ export type NewProject = typeof projects.$inferInsert;
 
 export type ProjectLanguage = typeof projectLanguages.$inferSelect;
 export type NewProjectLanguage = typeof projectLanguages.$inferInsert;
+
+export type Branch = typeof branches.$inferSelect;
+export type NewBranch = typeof branches.$inferInsert;
 
 export type TranslationKey = typeof translationKeys.$inferSelect;
 export type NewTranslationKey = typeof translationKeys.$inferInsert;

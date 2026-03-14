@@ -1,7 +1,5 @@
 import {
-  Breadcrumb,
   Container,
-  Heading,
   VStack,
   Button,
   Box,
@@ -9,19 +7,19 @@ import {
   Text,
   Stack,
 } from "@chakra-ui/react";
-import {
-  Link,
-  NavLink,
-  Outlet,
-  useLoaderData,
-  useLocation,
-} from "react-router";
+import { Link, Outlet, useLoaderData, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
+import { ProjectBreadcrumb } from "~/components/ProjectBreadcrumb";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import { LuImport, LuLanguages, LuSettings } from "react-icons/lu";
+import {
+  LuImport,
+  LuLanguages,
+  LuSettings,
+  LuGitBranch,
+} from "react-icons/lu";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -51,6 +49,11 @@ export default function ProjectLayout() {
       label: t("translations.title"),
       icon: <LuLanguages />,
     },
+    {
+      path: "branches",
+      label: t("branches.title"),
+      icon: <LuGitBranch />,
+    },
     { path: "settings", label: t("orgs.tab.settings"), icon: <LuSettings /> },
     { path: "import-export", label: t("import.title"), icon: <LuImport /> },
   ];
@@ -69,31 +72,12 @@ export default function ProjectLayout() {
           align={{ base: "stretch", md: "center" }}
         >
           <Box flex={{ base: "1", md: "auto" }} overflow="hidden">
-            <Breadcrumb.Root>
-              <Breadcrumb.List>
-                <Breadcrumb.Item>
-                  <Breadcrumb.Link asChild>
-                    <NavLink to="/orgs">{t("header.myOrganizations")}</NavLink>
-                  </Breadcrumb.Link>
-                </Breadcrumb.Item>
-                <Breadcrumb.Separator />
-                <Breadcrumb.Item hideBelow="sm">
-                  <Breadcrumb.Link asChild>
-                    <NavLink to={`/orgs/${organization.slug}`}>
-                      {organization.name}
-                    </NavLink>
-                  </Breadcrumb.Link>
-                </Breadcrumb.Item>
-                <Breadcrumb.Separator hideBelow="sm" />
-                <Breadcrumb.Item>
-                  <Breadcrumb.CurrentLink>
-                    <Heading as="span" size="sm">
-                      {project.name}
-                    </Heading>
-                  </Breadcrumb.CurrentLink>
-                </Breadcrumb.Item>
-              </Breadcrumb.List>
-            </Breadcrumb.Root>
+            <ProjectBreadcrumb
+              organizationSlug={organization.slug}
+              organizationName={organization.name}
+              projectSlug={project.slug}
+              projectName={project.name}
+            />
           </Box>
 
           <HStack
