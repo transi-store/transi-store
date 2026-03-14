@@ -25,9 +25,9 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@ai-sdk/google": "^3.0.16",
-    "@ai-sdk/openai": "^3.0.21",
-    "@ai-sdk/provider": "3.0.5",
+    "@ai-sdk/google": "^3.0.51",
+    "@ai-sdk/openai": "^3.0.45",
+    "@ai-sdk/provider": "^3.0.8",
     "@chakra-ui/react": "^3.3.1",
     "@codemirror/commands": "^6.10.1",
     "@codemirror/lint": "^6.9.2",
@@ -36,7 +36,7 @@
     "@codemirror/view": "^6.39.11",
     "@emotion/react": "^11.14.0",
     "@formatjs/icu-messageformat-parser": "^3.5.1",
-    "ai": "^6.0.59",
+    "ai": "^6.0.127",
     "arctic": "^3.7.0",
     "drizzle-orm": "1.0.0-beta.12-a5629fb",
     "i18next": "^25.8.0",

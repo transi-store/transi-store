@@ -12,10 +12,11 @@ import {
 } from "@chakra-ui/react";
 import { Box, Text, Input, Button, VStack, Alert } from "@chakra-ui/react";
 import { NativeSelect } from "@chakra-ui/react/native-select";
-import { Form } from "react-router";
+import { Form, useActionData } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuTriangleAlert } from "react-icons/lu";
 import { AiProviderEnum, getAiProvider } from "~/lib/ai-providers";
+import { isErrorReturnType, type AiProviderActionData } from "..";
 
 type AiTranslationConfigDialogProps = {
   isOpen: boolean;
@@ -23,6 +24,7 @@ type AiTranslationConfigDialogProps = {
   handleClose: () => void;
   providerLabel: string;
   currentModel: string | null;
+  isAlreadyConfigured: boolean;
 };
 
 export function AiTranslationConfigDialog({
@@ -31,8 +33,15 @@ export function AiTranslationConfigDialog({
   handleClose,
   providerLabel,
   currentModel,
+  isAlreadyConfigured,
 }: AiTranslationConfigDialogProps) {
   const { t } = useTranslation();
+
+  // TODO better types
+  const actionData = useActionData<AiProviderActionData>();
+
+  const aiProviderError =
+    actionData && isErrorReturnType(actionData) ? actionData.error : undefined;
 
   const selectedProviderConfig = selectedProvider
     ? getAiProvider(selectedProvider)
@@ -79,9 +88,11 @@ export function AiTranslationConfigDialog({
                       name="apiKey"
                       type="password"
                       placeholder={
-                        selectedProviderConfig?.apiKeyPlaceholder || ""
+                        isAlreadyConfigured
+                          ? t("settings.ai.apiKeyExistingPlaceholder")
+                          : selectedProviderConfig?.apiKeyPlaceholder || ""
                       }
-                      required
+                      required={!isAlreadyConfigured}
                     />
                     <Text fontSize="xs" color="fg.muted" mt={1}>
                       {selectedProviderConfig && (
@@ -130,6 +141,15 @@ export function AiTranslationConfigDialog({
                       </Alert.Description>
                     </Alert.Content>
                   </Alert.Root>
+
+                  {aiProviderError && (
+                    <Alert.Root status="error">
+                      <Alert.Indicator />
+                      <Alert.Content>
+                        <Alert.Description>{aiProviderError}</Alert.Description>
+                      </Alert.Content>
+                    </Alert.Root>
+                  )}
                 </VStack>
               </DialogBody>
               <DialogFooter gap={3}>

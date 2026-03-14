@@ -123,8 +123,7 @@ async function translateWithOpenAI(
   model?: string | null,
 ): Promise<TranslationSuggestion[]> {
   const openai = createOpenAI({ apiKey });
-  const modelId =
-    model ?? getAiProvider(AiProviderEnum.OPENAI).models[0].value;
+  const modelId = model ?? getAiProvider(AiProviderEnum.OPENAI).models[0].value;
 
   return callGenerateText({ context, model: openai(modelId) });
 }
@@ -138,8 +137,7 @@ async function translateWithGemini(
   model?: string | null,
 ): Promise<TranslationSuggestion[]> {
   const google = createGoogleGenerativeAI({ apiKey });
-  const modelId =
-    model ?? getAiProvider(AiProviderEnum.GEMINI).models[0].value;
+  const modelId = model ?? getAiProvider(AiProviderEnum.GEMINI).models[0].value;
 
   return callGenerateText({
     context,
@@ -153,12 +151,16 @@ async function translateWithGemini(
  */
 async function translateWithFake(
   context: TranslationContext,
+  _apiKey: string,
+  model?: string | null,
 ): Promise<TranslationSuggestion[]> {
   if (process.env.NODE_ENV === "production") {
     throw new Error("Fake AI provider is not available in production");
   }
 
-  return callGenerateText({ context, model: createFakeModel() });
+  const modelId = model ?? getAiProvider(AiProviderEnum.FAKE).models[0].value;
+
+  return callGenerateText({ context, model: createFakeModel(modelId) });
 }
 
 /**
@@ -176,7 +178,7 @@ export async function translateWithAI(
     case AiProviderEnum.GEMINI:
       return translateWithGemini(context, apiKey, model);
     case AiProviderEnum.FAKE:
-      return translateWithFake(context);
+      return translateWithFake(context, apiKey, model);
     default:
       throw new Error(`Provider IA non supporté: ${provider}`);
   }

@@ -17,10 +17,12 @@ import type { AiProviderEnum } from "~/lib/ai-providers";
 type SuggestionsReturnType = {
   suggestions?: Array<TranslationSuggestion>;
   provider?: AiProviderEnum;
+  providerModel?: string;
 };
 
 type ErrorReturnType = {
   error: string;
+  originalError: string | undefined;
 };
 
 export function isSuggestionsReturnType(
@@ -135,12 +137,17 @@ export async function action({
       activeProvider.model,
     );
 
-    return Response.json({ suggestions, provider: activeProvider.provider });
+    return Response.json({
+      suggestions,
+      provider: activeProvider.provider,
+      providerModel: activeProvider.model,
+    });
   } catch (error) {
     console.error("Erreur lors de la traduction IA:", error);
     return Response.json(
       {
         error: i18next.t("api.translate.translateError"),
+        originalError: error instanceof Error ? error.message : undefined,
       },
       { status: 500 },
     );

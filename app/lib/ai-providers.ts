@@ -29,9 +29,11 @@ export const AI_PROVIDERS: Array<AiProviderConfig> = [
     configureUrl: "https://platform.openai.com/api-keys",
     apiKeyPlaceholder: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     models: [
-      { value: "gpt-4o", label: "GPT-4o" },
-      { value: "gpt-4o-mini", label: "GPT-4o mini" },
-      { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+      // TODO translate labels
+      { value: "gpt-5-mini", label: "GPT-5 Mini (cheap)" },
+      { value: "gpt-5-nano", label: "GPT-5 Nano (ultra-cheap)" },
+      { value: "gpt-5.1", label: "GPT-5.1 (correct, medium price)" },
+      { value: "gpt-5.4", label: "GPT-5.4 (high accuracy, expensive)" },
     ],
   },
   {
@@ -40,9 +42,18 @@ export const AI_PROVIDERS: Array<AiProviderConfig> = [
     configureUrl: "https://aistudio.google.com/apikey",
     apiKeyPlaceholder: "AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     models: [
-      { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
-      { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
-      { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
+      {
+        value: "gemini-3-flash-preview",
+        label: "Gemini 3 Flash (fast, medium accuracy, medium cost)",
+      },
+      {
+        value: "gemini-3.1-flash-lite-preview",
+        label: "Gemini 3.1 Flash Lite (fast, low accuracy, low cost)",
+      },
+      {
+        value: "gemini-3.1-pro-preview",
+        label: "Gemini 3.1 Pro (high accuracy, slower, expensive)",
+      },
     ],
   },
 ];
@@ -54,7 +65,16 @@ if (process.env.NODE_ENV !== "production") {
     name: "Fake (dev only)",
     configureUrl: "",
     apiKeyPlaceholder: "any-value",
-    models: [],
+    models: [
+      {
+        value: "fake-model-fast",
+        label: "Fake Model fast",
+      },
+      {
+        value: "fake-model-slow",
+        label: "Fake Model slow",
+      },
+    ],
   });
 }
 
