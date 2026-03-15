@@ -47,6 +47,24 @@ export default [
     ],
   ),
 
+  // Branches routes
+  route(
+    "orgs/:orgSlug/projects/:projectSlug/branches",
+    "routes/orgs.$orgSlug.projects.$projectSlug.branches._index.tsx",
+  ),
+  route(
+    "orgs/:orgSlug/projects/:projectSlug/branches/new",
+    "routes/orgs.$orgSlug.projects.$projectSlug.branches.new.tsx",
+  ),
+  route(
+    "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug",
+    "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.tsx",
+  ),
+  route(
+    "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge",
+    "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx",
+  ),
+
   // Translation keys routes
   route(
     "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",

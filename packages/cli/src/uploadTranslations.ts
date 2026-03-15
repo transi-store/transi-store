@@ -15,6 +15,7 @@ export type UploadConfig = {
   input: string;
   strategy: ImportStrategy;
   format?: string;
+  branch?: string;
 };
 
 export async function uploadTranslations({
@@ -26,6 +27,7 @@ export async function uploadTranslations({
   input,
   strategy,
   format,
+  branch,
 }: UploadConfig) {
   const url = `${domainRoot}/api/orgs/${org}/projects/${project}/import`;
 
@@ -46,6 +48,10 @@ export async function uploadTranslations({
 
   if (format) {
     formData.append("format", format);
+  }
+
+  if (branch) {
+    formData.append("branch", branch);
   }
 
   try {

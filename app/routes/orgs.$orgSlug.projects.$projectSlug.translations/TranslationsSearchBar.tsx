@@ -12,6 +12,7 @@ import {
 import { Form, useNavigate, useSubmit } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
+  getBranchUrl,
   getTranslationsUrl,
   removeUndefinedValues,
 } from "~/lib/routes-helpers";
@@ -23,6 +24,7 @@ type TranslationsSearchBarProps = {
   sort: TranslationKeysSort;
   organizationSlug: string;
   projectSlug: string;
+  branchSlug?: string;
 };
 
 export function TranslationsSearchBar({
@@ -30,10 +32,27 @@ export function TranslationsSearchBar({
   sort,
   organizationSlug,
   projectSlug,
+  branchSlug,
 }: TranslationsSearchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const submit = useSubmit();
+
+  const buildUrl = (queryParams?: {
+    search?: string | null;
+    sort?: string | null;
+  }) => {
+    if (branchSlug) {
+      return getBranchUrl(
+        organizationSlug,
+        projectSlug,
+        branchSlug,
+        queryParams,
+      );
+    }
+
+    return getTranslationsUrl(organizationSlug, projectSlug, queryParams);
+  };
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,7 +62,7 @@ export function TranslationsSearchBar({
     const sortValue = formData.get("sort") as string | null;
 
     navigate(
-      getTranslationsUrl(organizationSlug, projectSlug, {
+      buildUrl({
         search: searchValue,
         // If search is filled, reset sort to RELEVANCE (or undefined)
         sort: searchValue ? TranslationKeysSort.RELEVANCE : sortValue,
@@ -73,11 +92,8 @@ export function TranslationsSearchBar({
                 <CloseButton
                   size="xs"
                   onClick={() => {
-                    // setValue("");
-                    // inputRef.current?.focus();
-
                     navigate(
-                      getTranslationsUrl(organizationSlug, projectSlug, {
+                      buildUrl({
                         sort:
                           sort === TranslationKeysSort.RELEVANCE
                             ? undefined
@@ -112,7 +128,9 @@ export function TranslationsSearchBar({
                 }),
                 {
                   method: "get",
-                  action: getTranslationsUrl(organizationSlug, projectSlug),
+                  action: branchSlug
+                    ? getBranchUrl(organizationSlug, projectSlug, branchSlug)
+                    : getTranslationsUrl(organizationSlug, projectSlug),
                 },
               );
             }}

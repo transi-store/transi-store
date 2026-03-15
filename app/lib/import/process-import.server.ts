@@ -1,4 +1,5 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
+import { getBranchBySlug } from "~/lib/branches.server";
 import {
   parseImportJSON,
   validateImportData,
@@ -7,6 +8,7 @@ import {
 import { parseImportXLIFF } from "./xliff.server";
 import type { ImportStats } from "./json.server";
 import { ImportStrategy } from "./import-strategy";
+import { BRANCH_STATUS } from "../branches";
 
 type ProcessImportResult =
   | { success: true; importStats: ImportStats }
@@ -16,6 +18,7 @@ type ProcessImportParams = {
   organizationId: number;
   projectSlug: string;
   formData: FormData;
+  branchSlug?: string;
 };
 
 /**
@@ -25,7 +28,7 @@ type ProcessImportParams = {
 export async function processImport(
   params: ProcessImportParams,
 ): Promise<ProcessImportResult> {
-  const { organizationId, projectSlug, formData } = params;
+  const { organizationId, projectSlug, formData, branchSlug } = params;
 
   // 1. Validate file input
   const file = formData.get("file");
@@ -85,6 +88,25 @@ export async function processImport(
     return { success: false, error: "Project not found" };
   }
 
+  // 6b. Resolve optional branch
+  let branchId: number | undefined;
+  if (branchSlug) {
+    const branch = await getBranchBySlug(project.id, branchSlug);
+    if (!branch) {
+      return {
+        success: false,
+        error: `Branch '${branchSlug}' not found`,
+      };
+    }
+    if (branch.status !== BRANCH_STATUS.OPEN) {
+      return {
+        success: false,
+        error: `Branch '${branchSlug}' is not open`,
+      };
+    }
+    branchId = branch.id;
+  }
+
   // 7. Verify locale exists in project
   const languages = await getProjectLanguages(project.id);
   if (!languages.some((l) => l.locale === locale)) {
@@ -124,6 +146,7 @@ export async function processImport(
     locale,
     data: parseResult.data!,
     strategy,
+    branchId,
   });
 
   if (!result.success) {

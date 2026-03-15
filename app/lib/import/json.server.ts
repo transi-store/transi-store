@@ -11,6 +11,7 @@ type ImportParams = {
   locale: string;
   data: Record<string, string>;
   strategy: ImportStrategy;
+  branchId?: number;
 };
 
 export type ImportStats = {
@@ -118,11 +119,13 @@ export function validateImportData(
  * Import translations from parsed JSON data
  * Processes all keys in a transaction (all or nothing)
  */
-export async function importTranslations(
-  params: ImportParams,
-): Promise<ImportResult> {
-  const { projectId, locale, data, strategy } = params;
-
+export async function importTranslations({
+  projectId,
+  locale,
+  data,
+  strategy,
+  branchId,
+}: ImportParams): Promise<ImportResult> {
   const stats = {
     total: 0,
     keysCreated: 0,
@@ -153,6 +156,7 @@ export async function importTranslations(
               projectId: Number(projectId),
               keyName,
               description: undefined,
+              branchId,
             });
 
             // Reload the key to get full data
