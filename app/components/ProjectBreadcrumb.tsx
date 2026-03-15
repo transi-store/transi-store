@@ -1,5 +1,5 @@
-import { Fragment } from "react";
 import { Breadcrumb, Heading } from "@chakra-ui/react";
+import { Fragment } from "react";
 import { NavLink } from "react-router";
 import { useTranslation } from "react-i18next";
 type BreadcrumbItem = {
@@ -27,11 +27,6 @@ export function ProjectBreadcrumb({
   current,
 }: ProjectBreadcrumbProps) {
   const { t } = useTranslation();
-
-  // All navigable items after the project
-  const navigableItems = items?.slice(0, -1) ?? [];
-  // The last item (if any) becomes the current page
-  const lastItem = items && items.length > 0 ? items[items.length - 1] : null;
 
   return (
     <Breadcrumb.Root>
@@ -76,23 +71,17 @@ export function ProjectBreadcrumb({
         )}
 
         {/* Intermediate navigable items */}
-        {navigableItems.map((item) => (
+        {items?.map((item, i) => (
           <Fragment key={item.to}>
             <Breadcrumb.Item>
               <Breadcrumb.Link asChild>
                 <NavLink to={item.to}>{item.label}</NavLink>
               </Breadcrumb.Link>
             </Breadcrumb.Item>
-            <Breadcrumb.Separator />
+            {i < items.length - 1 && <Breadcrumb.Separator />}{" "}
+            {/* Separator except after the last item, which is the current page */}
           </Fragment>
         ))}
-
-        {/* Last item = current page */}
-        {lastItem && (
-          <Breadcrumb.Item>
-            <Breadcrumb.CurrentLink>{lastItem.label}</Breadcrumb.CurrentLink>
-          </Breadcrumb.Item>
-        )}
       </Breadcrumb.List>
     </Breadcrumb.Root>
   );

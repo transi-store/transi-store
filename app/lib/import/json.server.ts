@@ -119,11 +119,13 @@ export function validateImportData(
  * Import translations from parsed JSON data
  * Processes all keys in a transaction (all or nothing)
  */
-export async function importTranslations(
-  params: ImportParams,
-): Promise<ImportResult> {
-  const { projectId, locale, data, strategy, branchId } = params;
-
+export async function importTranslations({
+  projectId,
+  locale,
+  data,
+  strategy,
+  branchId,
+}: ImportParams): Promise<ImportResult> {
   const stats = {
     total: 0,
     keysCreated: 0,

@@ -56,6 +56,7 @@ branches:
 ### Table modifiee : `translation_keys`
 
 Ajouter une colonne :
+
 ```
 branch_id INT FK(branches) ON DELETE CASCADE  -- nullable, NULL = main
 ```
@@ -113,7 +114,7 @@ createTranslationKey({
   keyName,
   description,
   branchId, // NEW: si defini, la cle est creee sur cette branche
-})
+});
 ```
 
 Si `keyName` existe deja (sur main ou une autre branche) → erreur (contrainte unique).
@@ -196,23 +197,24 @@ Quand on est sur une branche, on reutilise les composants existants avec le filt
 
 ## Fichiers a modifier
 
-| Fichier | Modification |
-|---------|-------------|
-| `drizzle/schema.ts` | Ajouter table `branches` + colonne `branchId` sur `translation_keys` |
-| `drizzle/relations.ts` | Ajouter relations pour `branches` |
-| `app/routes.ts` | Ajouter les routes branches |
-| `app/lib/branches.server.ts` | **NOUVEAU** - CRUD branches + merge |
-| `app/lib/translation-keys.server.ts` | Ajouter `branchId` aux fonctions `create` et `getTranslationKeys` |
-| `app/lib/import/process-import.server.ts` | Ajouter support `branchId` |
-| `app/lib/import/json.server.ts` | Passer `branchId` a `importTranslations` |
-| `app/routes/api.*.export.tsx` | Ajouter parametre `branch` |
-| Routes de traduction existantes | Ajouter filtre `branch_id IS NULL` pour les vues main-only |
+| Fichier                                   | Modification                                                         |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `drizzle/schema.ts`                       | Ajouter table `branches` + colonne `branchId` sur `translation_keys` |
+| `drizzle/relations.ts`                    | Ajouter relations pour `branches`                                    |
+| `app/routes.ts`                           | Ajouter les routes branches                                          |
+| `app/lib/branches.server.ts`              | **NOUVEAU** - CRUD branches + merge                                  |
+| `app/lib/translation-keys.server.ts`      | Ajouter `branchId` aux fonctions `create` et `getTranslationKeys`    |
+| `app/lib/import/process-import.server.ts` | Ajouter support `branchId`                                           |
+| `app/lib/import/json.server.ts`           | Passer `branchId` a `importTranslations`                             |
+| `app/routes/api.*.export.tsx`             | Ajouter parametre `branch`                                           |
+| Routes de traduction existantes           | Ajouter filtre `branch_id IS NULL` pour les vues main-only           |
 
 ---
 
 ## Phasage
 
 ### Phase 1 : Modele de donnees + CRUD branches
+
 - Table `branches` dans schema.ts + colonne `branchId` sur `translation_keys`
 - Relations dans relations.ts
 - `branches.server.ts` : create, list, get, delete
@@ -220,23 +222,27 @@ Quand on est sur une branche, on reutilise les composants existants avec le filt
 - `db:push` pour appliquer le schema
 
 ### Phase 2 : Vue branche + creation de cles
+
 - Modifier `getTranslationKeys` pour accepter un `branchId` optionnel
 - Route de vue branche (reutilise composants existants)
 - Creation de cle avec `branchId`
 - Distinction visuelle cles main vs cles branche
 
 ### Phase 3 : Merge
+
 - Logique de merge dans `branches.server.ts`
 - Route de preview merge (liste des cles qui seront deplacees)
 - Execution du merge
 - Suppression de branche (fermeture)
 
 ### Phase 4 : Import/Export sur branches
+
 - `processImport` avec `branchId`
 - Export avec parametre `branch`
 - UI : selecteur de branche dans import/export
 
 ### Phase 5 : Branch depuis une branche
+
 - Copie des cles + traductions de la branche source
 - UI : selecteur de branche source a la creation
 
@@ -252,3 +258,4 @@ Quand on est sur une branche, on reutilise les composants existants avec le filt
 - Tenter de creer une cle avec un nom deja pris → verifier l'erreur
 - Import sur une branche → nouvelles cles sur la branche, cles main ignorees
 - Export depuis une branche → contient main + branche
+  g

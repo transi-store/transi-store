@@ -29,6 +29,7 @@ import {
   mergeBranch,
 } from "~/lib/branches.server";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
+import { BRANCH_STATUS } from "~/lib/branches";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -47,7 +48,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     throw new Response("Branch not found", { status: 404 });
   }
 
-  if (branch.status !== "open") {
+  if (branch.status !== BRANCH_STATUS.OPEN) {
     throw redirect(getBranchesUrl(params.orgSlug, params.projectSlug));
   }
 
@@ -94,13 +95,7 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
     <Container maxW="container.md" py={10}>
       <VStack gap={6} align="stretch">
         <Button asChild variant="ghost" size="sm" alignSelf="flex-start">
-          <Link
-            to={getBranchUrl(
-              organization.slug,
-              project.slug,
-              branch.slug,
-            )}
-          >
+          <Link to={getBranchUrl(organization.slug, project.slug, branch.slug)}>
             <LuArrowLeft /> {t("project.back")}
           </Link>
         </Button>
@@ -172,9 +167,7 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
                       loading={isSubmitting}
                       width="full"
                     >
-                      <LuGitMerge />{" "}
-                      {t("branches.merge")}{" "}
-                      ({branchKeys.length}{" "}
+                      <LuGitMerge /> {t("branches.merge")} ({branchKeys.length}{" "}
                       {t("branches.keysBadge", {
                         count: branchKeys.length,
                       })}

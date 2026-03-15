@@ -1,3 +1,5 @@
+import type { Branch, TranslationKey } from "../../drizzle/schema";
+import { BRANCH_STATUS } from "./branches";
 import { db, schema } from "./db.server";
 import { eq } from "drizzle-orm";
 
@@ -38,7 +40,9 @@ type CreateBranchParams = {
   createdBy: number;
 };
 
-export async function createBranch(params: CreateBranchParams) {
+export async function createBranch(
+  params: CreateBranchParams,
+): Promise<Branch> {
   const [branch] = await db
     .insert(schema.branches)
     .values({
@@ -53,12 +57,14 @@ export async function createBranch(params: CreateBranchParams) {
   return branch;
 }
 
-export async function deleteBranch(branchId: number) {
+export async function deleteBranch(branchId: number): Promise<void> {
   // CASCADE will delete associated translation_keys and their translations
   await db.delete(schema.branches).where(eq(schema.branches.id, branchId));
 }
 
-export async function getBranchKeys(branchId: number) {
+export async function getBranchKeys(
+  branchId: number,
+): Promise<Array<TranslationKey>> {
   return await db.query.translationKeys.findMany({
     where: { branchId },
     orderBy: { keyName: "asc" },
@@ -85,7 +91,7 @@ export async function mergeBranch(
     return { success: false, error: "Branch not found" };
   }
 
-  if (branch.status !== "open") {
+  if (branch.status !== BRANCH_STATUS.OPEN) {
     return { success: false, error: "Branch is not open" };
   }
 
@@ -94,33 +100,25 @@ export async function mergeBranch(
     where: { branchId },
   });
 
-  if (branchKeys.length === 0) {
-    // No keys to merge, just mark as merged
-    await db
-      .update(schema.branches)
-      .set({ status: "merged", mergedBy, mergedAt: new Date() })
-      .where(eq(schema.branches.id, branchId));
-
-    return { success: true, keysMoved: 0 };
-  }
-
   // Move keys from branch to main (set branchId = NULL)
   // The unique constraint (project_id, key_name) ensures no collision
   try {
     let keysMoved = 0;
 
     await db.transaction(async (tx) => {
-      const [result] = await tx
-        .update(schema.translationKeys)
-        .set({ branchId: null })
-        .where(eq(schema.translationKeys.branchId, branchId))
-        .returning({ id: schema.translationKeys.id });
+      if (branchKeys.length > 0) {
+        const [result] = await tx
+          .update(schema.translationKeys)
+          .set({ branchId: null })
+          .where(eq(schema.translationKeys.branchId, branchId))
+          .returning({ id: schema.translationKeys.id });
 
-      keysMoved = result ? branchKeys.length : 0;
+        keysMoved = result ? branchKeys.length : 0;
+      }
 
       await tx
         .update(schema.branches)
-        .set({ status: "merged", mergedBy, mergedAt: new Date() })
+        .set({ status: BRANCH_STATUS.MERGED, mergedBy, mergedAt: new Date() })
         .where(eq(schema.branches.id, branchId));
     });
 

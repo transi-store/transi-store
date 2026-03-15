@@ -40,7 +40,12 @@ import { TranslationsPagination } from "~/routes/orgs.$orgSlug.projects.$project
 import { TranslationsSearchBar } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsSearchBar";
 import { resolveSort } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/index";
 import { getInstance } from "~/middleware/i18next";
-import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
+import {
+  getBranchesUrl,
+  getBranchMergeUrl,
+  getBranchUrl,
+} from "~/lib/routes-helpers";
+import { BRANCH_STATUS } from "~/lib/branches";
 
 const LIMIT = 50;
 
@@ -61,7 +66,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     throw new Response("Branch not found", { status: 404 });
   }
 
-  if (branch.status !== "open") {
+  if (branch.status !== BRANCH_STATUS.OPEN) {
     throw redirect(getBranchesUrl(params.orgSlug, params.projectSlug));
   }
 
@@ -210,7 +215,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
           items={[
             {
               label: t("branches.title"),
-              to: `/orgs/${organization.slug}/projects/${project.slug}/branches`,
+              to: getBranchesUrl(organization.slug, project.slug),
             },
             { label: branch.name, to: currentUrl },
           ]}
@@ -254,7 +259,11 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
             )}
             <Button asChild size="sm" colorPalette="purple" variant="outline">
               <Link
-                to={`/orgs/${organization.slug}/projects/${project.slug}/branches/${branch.slug}/merge`}
+                to={getBranchMergeUrl(
+                  organization.slug,
+                  project.slug,
+                  branch.slug,
+                )}
               >
                 <LuGitMerge /> {t("branches.merge")}
               </Link>
@@ -284,7 +293,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
           sort={sort}
           organizationSlug={organization.slug}
           projectSlug={project.slug}
-          baseUrl={currentUrl}
+          branchSlug={branch.slug}
         />
 
         {languages.length === 0 ? (
@@ -321,7 +330,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
               sort={sort}
               organizationSlug={organization.slug}
               projectSlug={project.slug}
-              baseUrl={currentUrl}
+              branchSlug={branch.slug}
             />
           </>
         )}

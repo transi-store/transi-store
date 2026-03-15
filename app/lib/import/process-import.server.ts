@@ -8,6 +8,7 @@ import {
 import { parseImportXLIFF } from "./xliff.server";
 import type { ImportStats } from "./json.server";
 import { ImportStrategy } from "./import-strategy";
+import { BRANCH_STATUS } from "../branches";
 
 type ProcessImportResult =
   | { success: true; importStats: ImportStats }
@@ -97,7 +98,7 @@ export async function processImport(
         error: `Branch '${branchSlug}' not found`,
       };
     }
-    if (branch.status !== "open") {
+    if (branch.status !== BRANCH_STATUS.OPEN) {
       return {
         success: false,
         error: `Branch '${branchSlug}' is not open`,

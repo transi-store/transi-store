@@ -22,13 +22,10 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branche
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
-import {
-  createBranch,
-  isBranchSlugAvailable,
-} from "~/lib/branches.server";
+import { createBranch, isBranchSlugAvailable } from "~/lib/branches.server";
 import { generateSlug } from "~/lib/slug";
 import { getInstance } from "~/middleware/i18next";
-import { getBranchUrl } from "~/lib/routes-helpers";
+import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -160,9 +157,7 @@ export default function NewBranch({ loaderData }: Route.ComponentProps) {
                 <LuPlus /> {t("branches.create")}
               </Button>
               <Button asChild variant="outline" disabled={isSubmitting}>
-                <Link
-                  to={`/orgs/${organization.slug}/projects/${project.slug}/branches`}
-                >
+                <Link to={getBranchesUrl(organization.slug, project.slug)}>
                   {t("cancel")}
                 </Link>
               </Button>

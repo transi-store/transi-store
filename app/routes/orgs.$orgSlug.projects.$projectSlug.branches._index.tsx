@@ -18,11 +18,13 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branche
 import { requireUser } from "~/lib/session.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
+import { getBranchesByProject, getBranchKeyCount } from "~/lib/branches.server";
 import {
-  getBranchesByProject,
-  getBranchKeyCount,
-} from "~/lib/branches.server";
-import { getBranchUrl } from "~/lib/routes-helpers";
+  createNewBranchUrl,
+  getBranchesUrl,
+  getBranchUrl,
+} from "~/lib/routes-helpers";
+import { BRANCH_STATUS } from "~/lib/branches";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -43,7 +45,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     branches.map(async (branch) => ({
       ...branch,
       keyCount:
-        branch.status === "open" ? await getBranchKeyCount(branch.id) : 0,
+        branch.status === BRANCH_STATUS.OPEN
+          ? await getBranchKeyCount(branch.id)
+          : 0,
     })),
   );
 
@@ -51,9 +55,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 const STATUS_COLOR_MAP = {
-  open: "green",
-  merged: "purple",
-  closed: "gray",
+  [BRANCH_STATUS.OPEN]: "green",
+  [BRANCH_STATUS.MERGED]: "purple",
 } as const;
 
 export default function BranchesList({ loaderData }: Route.ComponentProps) {
@@ -69,7 +72,10 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
           projectSlug={project.slug}
           projectName={project.name}
           items={[
-            { label: t("branches.title"), to: `/orgs/${organization.slug}/projects/${project.slug}/branches` },
+            {
+              label: t("branches.title"),
+              to: getBranchesUrl(organization.slug, project.slug),
+            },
           ]}
         />
 
@@ -95,9 +101,7 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
             colorPalette="accent"
             width={{ base: "full", sm: "auto" }}
           >
-            <Link
-              to={`/orgs/${organization.slug}/projects/${project.slug}/branches/new`}
-            >
+            <Link to={createNewBranchUrl(organization.slug, project.slug)}>
               <LuPlus /> {t("branches.create")}
             </Link>
           </Button>
@@ -116,7 +120,7 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
                     <VStack align="start" gap={1}>
                       <HStack>
                         <LuGitBranch />
-                        {branch.status === "open" ? (
+                        {branch.status === BRANCH_STATUS.OPEN ? (
                           <Link
                             to={getBranchUrl(
                               organization.slug,
@@ -145,7 +149,7 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
                       )}
                     </VStack>
                     <HStack gap={3}>
-                      {branch.status === "open" && (
+                      {branch.status === BRANCH_STATUS.OPEN && (
                         <>
                           <Badge variant="outline" size="sm">
                             {t("branches.keysBadge", {

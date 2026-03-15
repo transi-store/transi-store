@@ -10,6 +10,15 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 import { AI_PROVIDERS } from "~/lib/ai-providers";
+import { BRANCH_STATUS } from "~/lib/branches";
+
+function ensureOneItem<T>(arr: T[]): [T, ...T[]] {
+  if (arr.length === 0) {
+    throw new Error("Array must contain at least one item");
+  }
+
+  return arr as [T, ...T[]];
+}
 
 // Utilisateurs (lies a OAuth)
 export const users = pgTable(
@@ -155,9 +164,9 @@ export const branches = pgTable(
     description: text("description"),
     status: varchar("status", {
       length: 20,
-      enum: ["open", "merged", "closed"],
+      enum: ensureOneItem(Object.values(BRANCH_STATUS)),
     })
-      .default("open")
+      .default(BRANCH_STATUS.OPEN)
       .notNull(),
     createdBy: integer("created_by").references(() => users.id),
     mergedBy: integer("merged_by").references(() => users.id),
@@ -166,10 +175,7 @@ export const branches = pgTable(
     mergedAt: timestamp("merged_at"),
   },
   (table) => [
-    uniqueIndex("unique_project_branch_slug").on(
-      table.projectId,
-      table.slug,
-    ),
+    uniqueIndex("unique_project_branch_slug").on(table.projectId, table.slug),
   ],
 );
 
@@ -215,14 +221,6 @@ export const translations = pgTable(
     // Index GIN pour la recherche floue sera créé via SQL (voir scripts/enable-fuzzy-search.sh)
   ],
 );
-
-function ensureOneItem<T>(arr: T[]): [T, ...T[]] {
-  if (arr.length === 0) {
-    throw new Error("Array must contain at least one item");
-  }
-
-  return arr as [T, ...T[]];
-}
 
 // Providers IA pour la traduction automatique (par organisation)
 export const organizationAiProviders = pgTable(

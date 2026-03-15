@@ -12,6 +12,7 @@ import {
 import { Form, useNavigate, useSubmit } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
+  getBranchUrl,
   getTranslationsUrl,
   removeUndefinedValues,
 } from "~/lib/routes-helpers";
@@ -23,7 +24,7 @@ type TranslationsSearchBarProps = {
   sort: TranslationKeysSort;
   organizationSlug: string;
   projectSlug: string;
-  baseUrl?: string;
+  branchSlug?: string;
 };
 
 export function TranslationsSearchBar({
@@ -31,7 +32,7 @@ export function TranslationsSearchBar({
   sort,
   organizationSlug,
   projectSlug,
-  baseUrl,
+  branchSlug,
 }: TranslationsSearchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -41,12 +42,15 @@ export function TranslationsSearchBar({
     search?: string | null;
     sort?: string | null;
   }) => {
-    if (baseUrl) {
-      const params = new URLSearchParams();
-      if (queryParams?.search) params.set("search", queryParams.search);
-      if (queryParams?.sort) params.set("sort", queryParams.sort);
-      return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
+    if (branchSlug) {
+      return getBranchUrl(
+        organizationSlug,
+        projectSlug,
+        branchSlug,
+        queryParams,
+      );
     }
+
     return getTranslationsUrl(organizationSlug, projectSlug, queryParams);
   };
 
@@ -124,7 +128,9 @@ export function TranslationsSearchBar({
                 }),
                 {
                   method: "get",
-                  action: baseUrl ?? getTranslationsUrl(organizationSlug, projectSlug),
+                  action: branchSlug
+                    ? getBranchUrl(organizationSlug, projectSlug, branchSlug)
+                    : getTranslationsUrl(organizationSlug, projectSlug),
                 },
               );
             }}

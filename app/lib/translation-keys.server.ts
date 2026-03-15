@@ -3,6 +3,7 @@ import { and, desc, eq, inArray, isNull, or, type SQL } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
 import { TranslationKeysSort } from "./sort/keySort";
+import type { TranslationKey } from "../../drizzle/schema";
 
 type TranslationKeysReturnType = {
   count: number;
@@ -86,10 +87,7 @@ export async function getTranslationKeys(
       .select()
       .from(schema.translationKeys)
       .where(
-        and(
-          eq(schema.translationKeys.projectId, projectId),
-          branchCondition,
-        ),
+        and(eq(schema.translationKeys.projectId, projectId), branchCondition),
       )
       .limit(options?.limit ?? 50)
       .offset(options?.offset ?? 0)
@@ -101,10 +99,7 @@ export async function getTranslationKeys(
 
     count = await db.$count(
       schema.translationKeys,
-      and(
-        eq(schema.translationKeys.projectId, projectId),
-        branchCondition,
-      ),
+      and(eq(schema.translationKeys.projectId, projectId), branchCondition),
     );
   }
 
@@ -158,7 +153,7 @@ export async function getTranslationKeyById(keyId: number) {
 export async function getTranslationKeyByName(
   projectId: number,
   keyName: string,
-) {
+): Promise<TranslationKey | undefined> {
   return await db.query.translationKeys.findFirst({
     where: { projectId, keyName },
   });
@@ -171,14 +166,19 @@ type CreateTranslationKeyParams = {
   branchId?: number | null;
 };
 
-export async function createTranslationKey(params: CreateTranslationKeyParams) {
+export async function createTranslationKey({
+  projectId,
+  keyName,
+  description,
+  branchId = null,
+}: CreateTranslationKeyParams): Promise<number> {
   const [key] = await db
     .insert(schema.translationKeys)
     .values({
-      projectId: params.projectId,
-      keyName: params.keyName,
-      description: params.description,
-      branchId: params.branchId ?? null,
+      projectId,
+      keyName,
+      description,
+      branchId,
     })
     .returning();
 
@@ -191,7 +191,9 @@ type UpdateTranslationKeyParams = {
   description?: string;
 };
 
-export async function updateTranslationKey(params: UpdateTranslationKeyParams) {
+export async function updateTranslationKey(
+  params: UpdateTranslationKeyParams,
+): Promise<void> {
   const updates: Partial<typeof schema.translationKeys.$inferInsert> = {};
 
   if (params.keyName !== undefined) {

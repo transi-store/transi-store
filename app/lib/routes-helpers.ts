@@ -57,23 +57,51 @@ export function getKeyUrl(
   return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
 }
 
-export function getBranchesUrl(
+export function getBranchesUrl(orgSlug: string, projectSlug: string): string {
+  return generatePath(`/orgs/:orgSlug/projects/:projectSlug/branches`, {
+    orgSlug,
+    projectSlug,
+  });
+}
+
+export function createNewBranchUrl(
   orgSlug: string,
   projectSlug: string,
 ): string {
-  return generatePath(
-    `/orgs/:orgSlug/projects/:projectSlug/branches`,
-    { orgSlug, projectSlug },
-  );
+  return generatePath(`/orgs/:orgSlug/projects/:projectSlug/branches/new`, {
+    orgSlug,
+    projectSlug,
+  });
 }
 
 export function getBranchUrl(
   orgSlug: string,
   projectSlug: string,
   branchSlug: string,
+  queryParams?: {
+    search?: string | null;
+    page?: string | null;
+    sort?: string | null;
+    highlight?: string | null;
+  },
+): string {
+  const params = new URLSearchParams(removeUndefinedValues(queryParams));
+
+  const baseUrl = generatePath(
+    `/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug`,
+    { orgSlug, projectSlug, branchSlug },
+  );
+
+  return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
+}
+
+export function getBranchMergeUrl(
+  orgSlug: string,
+  projectSlug: string,
+  branchSlug: string,
 ): string {
   return generatePath(
-    `/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug`,
+    `/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge`,
     { orgSlug, projectSlug, branchSlug },
   );
 }
