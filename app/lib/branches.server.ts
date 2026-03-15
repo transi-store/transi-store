@@ -37,7 +37,7 @@ type CreateBranchParams = {
   name: string;
   slug: string;
   description?: string;
-  createdBy: number;
+  createdBy?: number;
 };
 
 export async function createBranch(

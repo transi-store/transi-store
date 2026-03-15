@@ -1,5 +1,5 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import { getBranchBySlug } from "~/lib/branches.server";
+import { getBranchBySlug, createBranch } from "~/lib/branches.server";
 import {
   parseImportJSON,
   validateImportData,
@@ -88,15 +88,23 @@ export async function processImport(
     return { success: false, error: "Project not found" };
   }
 
-  // 6b. Resolve optional branch
+  // 6b. Resolve optional branch (create if it doesn't exist)
   let branchId: number | undefined;
   if (branchSlug) {
-    const branch = await getBranchBySlug(project.id, branchSlug);
+    let branch = await getBranchBySlug(project.id, branchSlug);
     if (!branch) {
-      return {
-        success: false,
-        error: `Branch '${branchSlug}' not found`,
-      };
+      try {
+        branch = await createBranch({
+          projectId: project.id,
+          name: branchSlug,
+          slug: branchSlug,
+        });
+      } catch (_error) {
+        return {
+          success: false,
+          error: `Branch '${branchSlug}' not found and could not be created`,
+        };
+      }
     }
     if (branch.status !== BRANCH_STATUS.OPEN) {
       return {
