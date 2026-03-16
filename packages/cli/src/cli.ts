@@ -85,16 +85,17 @@ program
   });
 
 program
-  .command("config", { isDefault: true })
+  .command("download:config", { isDefault: true })
   .description("Use configuration from config file")
   .option(
     "-c, --config <config>",
     "Path to config file",
     "transi-store.config.json",
   )
+  .option("-b, --branch <branch>", "Branch slug (exports main + branch keys)")
   .addOption(apiKeyOption)
   .action((options) => {
-    fetchForConfig(options.config, options.apiKey);
+    fetchForConfig(options.config, options.apiKey, options.branch);
   });
 
 program.parse();

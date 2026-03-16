@@ -14,7 +14,7 @@ export type Config = {
   format: string;
   locale: string;
   output: string;
-  branch?: string;
+  branch?: string | undefined;
 };
 
 export async function fetchTranslations({
@@ -78,6 +78,7 @@ export async function fetchTranslations({
 export async function fetchForConfig(
   configPath: string,
   apiKey: string,
+  branch?: string,
 ): Promise<void> {
   const cwd = process.cwd();
 
@@ -88,7 +89,9 @@ export async function fetchForConfig(
     process.exit(1);
   }
 
-  const config = (await import(pathToFileURL(fullPath).href, { with: { type: "json" } })).default;
+  const config = (
+    await import(pathToFileURL(fullPath).href, { with: { type: "json" } })
+  ).default;
   const result = schema.safeParse(config);
 
   if (!result.success) {
@@ -116,6 +119,7 @@ export async function fetchForConfig(
           .replace("<lang>", locale)
           .replace("<project>", configItem.project)
           .replace("<format>", configItem.format),
+        branch,
       } satisfies Config;
 
       fetchTranslations(options);

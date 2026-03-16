@@ -23,6 +23,7 @@ transi-store --help
 #### Options
 
 - `--config <path>`: Path to the configuration file (default: `transi-store.config.json`).
+- `--branch`: The branch to upload the translations to. Defaults to "main".
 
 #### Configuration file example
 
