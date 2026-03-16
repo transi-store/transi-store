@@ -1,5 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+import z from "zod";
+import schema from "./schema.ts";
+import { DEFAULT_DOMAIN_ROOT } from "./fetchTranslations.ts";
 
 export enum ImportStrategy {
   OVERWRITE = "overwrite",
@@ -14,8 +18,8 @@ export type UploadConfig = {
   locale: string;
   input: string;
   strategy: ImportStrategy;
-  format?: string;
-  branch?: string;
+  format?: string | undefined;
+  branch?: string | undefined;
 };
 
 export async function uploadTranslations({
@@ -85,5 +89,66 @@ export async function uploadTranslations({
   } catch (error) {
     console.error("Error importing translations:", error);
     process.exit(1);
+  }
+}
+
+export async function uploadForConfig(
+  configPath: string,
+  apiKey: string,
+  strategy: ImportStrategy,
+  branch?: string,
+): Promise<void> {
+  const cwd = process.cwd();
+
+  const fullPath = path.resolve(cwd, configPath);
+
+  if (!fs.existsSync(fullPath)) {
+    console.error(`Config file not found: ${configPath}`);
+    process.exit(1);
+  }
+
+  const config = (
+    await import(pathToFileURL(fullPath).href, { with: { type: "json" } })
+  ).default;
+  const result = schema.safeParse(config);
+
+  if (!result.success) {
+    const pretty = z.prettifyError(result.error);
+    console.error("Config validation error:", pretty);
+    process.exit(1);
+  }
+
+  const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
+
+  console.log(
+    `Uploading translations to domain "${domainRoot}" for org "${result.data.org}"...`,
+  );
+
+  for (const configItem of result.data.projects) {
+    for (const locale of configItem.langs) {
+      const input = configItem.output
+        .replace("<lang>", locale)
+        .replace("<project>", configItem.project)
+        .replace("<format>", configItem.format);
+
+      if (!fs.existsSync(path.resolve(cwd, input))) {
+        console.log(
+          `Skipping project "${configItem.project}" locale "${locale}": file not found "${input}"`,
+        );
+        continue;
+      }
+
+      await uploadTranslations({
+        domainRoot,
+        apiKey,
+        org: result.data.org,
+        project: configItem.project,
+        format: configItem.format,
+        locale,
+        input,
+        strategy,
+        branch,
+      });
+    }
   }
 }

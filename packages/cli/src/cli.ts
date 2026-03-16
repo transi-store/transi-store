@@ -8,6 +8,7 @@ import {
 } from "./fetchTranslations.ts";
 import {
   ImportStrategy,
+  uploadForConfig,
   uploadTranslations,
   type UploadConfig,
 } from "./uploadTranslations.ts";
@@ -96,6 +97,39 @@ program
   .addOption(apiKeyOption)
   .action((options) => {
     fetchForConfig(options.config, options.apiKey, options.branch);
+  });
+
+program
+  .command("upload:config")
+  .description("Upload translations using configuration from config file")
+  .option(
+    "-c, --config <config>",
+    "Path to config file",
+    "transi-store.config.json",
+  )
+  .option(
+    "-b, --branch <branch>",
+    "Branch slug (new keys will be created on this branch)",
+  )
+  .option(
+    "-s, --strategy <strategy>",
+    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
+    ImportStrategy.SKIP,
+  )
+  .addOption(apiKeyOption)
+  .action((options) => {
+    const strategy = options.strategy;
+    if (
+      strategy !== ImportStrategy.OVERWRITE &&
+      strategy !== ImportStrategy.SKIP
+    ) {
+      console.error(
+        `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
+      );
+      process.exit(1);
+    }
+
+    uploadForConfig(options.config, options.apiKey, strategy, options.branch);
   });
 
 program.parse();

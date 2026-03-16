@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added `upload:config` command to CLI to upload translations based on a config file.
 - Added `--branch` option to CLI in "download:config" mode.
 
 ## 1.2.0
