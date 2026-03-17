@@ -8,6 +8,9 @@ const allowedHosts =
   new URL(process.env.DOMAIN_ROOT ?? "localhost").hostname;
 
 export default defineConfig(({ isSsrBuild }) => ({
+  test: {
+    setupFiles: ["./tests/setup-db.ts"],
+  },
   plugins: [reactRouter()],
   resolve: {
     alias: {
