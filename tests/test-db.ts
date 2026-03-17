@@ -56,6 +56,37 @@ export async function createOrganization(
   return org;
 }
 
+export async function createApiKey(
+  db: TestDb,
+  organizationId: number,
+  overrides: Partial<schema.NewApiKey> = {},
+) {
+  const [user] = await db
+    .insert(schema.users)
+    .values({
+      email: `user${Math.random()}@example.com`,
+      name: "Test User",
+      oauthProvider: "test",
+      oauthSubject: `user-${Math.random()}`,
+    })
+    .returning();
+
+  const userId = user.id;
+
+  const [apiKey] = await db
+    .insert(schema.apiKeys)
+    .values({
+      organizationId,
+      keyValue: `test-api-key-${Math.random()}`,
+      name: "Test API Key",
+      createdBy: userId,
+      ...overrides,
+    })
+    .returning();
+
+  return apiKey;
+}
+
 let projectCounter = 0;
 export async function createProject(
   db: TestDb,
@@ -73,6 +104,24 @@ export async function createProject(
     })
     .returning();
   return project;
+}
+
+export async function createProjectLanguage(
+  db: TestDb,
+  projectId: number,
+  overrides: Partial<schema.NewProjectLanguage> = {},
+) {
+  const [language] = await db
+    .insert(schema.projectLanguages)
+    .values({
+      projectId,
+      locale: "en",
+      isDefault: true,
+      ...overrides,
+    })
+    .returning();
+
+  return language;
 }
 
 export async function createBranch(

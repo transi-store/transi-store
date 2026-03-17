@@ -73,3 +73,5 @@ jobs:
 
       - name: Run i18next
         run: yarn test
+        env:
+          SESSION_SECRET: test-session-secret
