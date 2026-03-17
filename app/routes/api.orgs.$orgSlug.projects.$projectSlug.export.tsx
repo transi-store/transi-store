@@ -89,16 +89,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   let branchId: number | undefined;
   if (branchParam) {
     const branch = await getBranchBySlug(project.id, branchParam);
-    if (!branch) {
-      return new Response(
-        JSON.stringify({ error: `Branch '${branchParam}' not found` }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+
+    if (branch) {
+      branchId = branch.id;
     }
-    branchId = branch.id;
   }
 
   // Récupérer toutes les traductions du projet (main + branche si spécifiée)

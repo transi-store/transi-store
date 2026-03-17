@@ -119,6 +119,17 @@ describe("getProjectTranslations", () => {
     expect(result.map((r) => r.keyName)).toEqual(["branch.key", "main.key"]);
   });
 
+  it("returns only main key when branchId is unknown", async () => {
+    await createTranslationKey(db, projectId, "main.key");
+
+    const result = await getProjectTranslations(projectId, {
+      branchId: 9999,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].keyName).toBe("main.key");
+  });
+
   it("does not return keys from other projects", async () => {
     const otherProject = await createProject(db, orgId);
     await createTranslationKey(db, projectId, "my.key");
