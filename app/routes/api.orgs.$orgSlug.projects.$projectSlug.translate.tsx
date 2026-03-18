@@ -1,6 +1,4 @@
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.translate";
-import { requireUser } from "~/lib/session.server";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import {
   getTranslationKeyById,
@@ -12,6 +10,7 @@ import {
   type TranslationSuggestion,
 } from "~/lib/ai-translation.server";
 import { getInstance } from "~/middleware/i18next";
+import { orgContext } from "~/middleware/api-auth";
 import type { AiProviderEnum } from "~/lib/ai-providers";
 
 type SuggestionsReturnType = {
@@ -45,19 +44,9 @@ export async function action({
   context,
 }: Route.ActionArgs): Promise<TranslateAction | Response> {
   const i18next = getInstance(context);
-  const { orgSlug, projectSlug } = params;
+  const { projectSlug } = params;
 
-  if (!orgSlug || !projectSlug) {
-    return Response.json(
-      {
-        error: i18next.t("api.translate.paramsMissing"),
-      },
-      { status: 400 },
-    );
-  }
-
-  const user = await requireUser(request);
-  const organization = await requireOrganizationMembership(user, orgSlug);
+  const organization = context.get(orgContext);
 
   const project = await getProjectBySlug(organization.id, projectSlug);
 

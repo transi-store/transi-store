@@ -76,10 +76,14 @@ Si l'utilisateur n'a pas de `name` après l'upsert :
 
 **Fonctions** :
 
-- `getUser(request)` : Récupère l'utilisateur depuis le cookie
-- `requireUser(request)` : Lance une 401 redirect si pas connecté
+- `getUserFromSession(request)` : Récupère l'utilisateur depuis le cookie (retourne `null` si non connecté)
 
-**Fichier** : `app/lib/session.server.ts`
+**Middleware (voir ADR-015)** :
+
+- `sessionAuthMiddleware` : Middleware pour les routes app, redirige vers `/auth/login` si pas connecté. Place le user dans `userContext`.
+- `apiAuthMiddleware` : Middleware pour les routes API, accepte Bearer API key ou session cookie. Place le résultat dans `apiAuthContext`.
+
+**Fichiers** : `app/lib/session.server.ts`, `app/middleware/auth.ts`, `app/middleware/api-auth.ts`
 
 ## Sécurité
 

@@ -11,12 +11,12 @@ import {
 import { Link, useLoaderData } from "react-router";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs._index";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { getUserOrganizations } from "~/lib/organizations.server";
 import { useTranslation } from "react-i18next";
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organizations = await getUserOrganizations(user.userId);
 
   return { organizations };

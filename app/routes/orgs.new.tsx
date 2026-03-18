@@ -16,7 +16,7 @@ import {
 } from "react-router";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.new";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import {
   createOrganization,
   isSlugAvailable,
@@ -25,8 +25,8 @@ import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export async function action({ request }: Route.ActionArgs) {
-  const user = await requireUser(request);
+export async function action({ request, context }: Route.ActionArgs) {
+  const user = context.get(userContext);
   const formData = await request.formData();
 
   const name = formData.get("name");

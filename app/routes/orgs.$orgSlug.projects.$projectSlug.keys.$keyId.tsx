@@ -3,7 +3,7 @@ import { Form, useNavigation, redirect, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import {
@@ -43,8 +43,9 @@ export type KeyLoaderData = {
 export async function loader({
   request,
   params,
+  context,
 }: Route.LoaderArgs): Promise<KeyLoaderData> {
-  const user = await requireUser(request);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -87,7 +88,7 @@ export async function loader({
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = await requireUser(request);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

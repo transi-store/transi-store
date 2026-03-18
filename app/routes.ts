@@ -1,10 +1,16 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import {
+  type RouteConfig,
+  index,
+  layout,
+  route,
+} from "@react-router/dev/routes";
 
 export default [
+  // Public routes (no auth required)
   index("routes/_index.tsx"),
   route("pricing", "routes/pricing.tsx"),
 
-  // Authentication routes
+  // Authentication routes (no auth required)
   route("auth/login", "routes/auth.login.tsx"),
   route("auth/google/login", "routes/auth.google.login.tsx"),
   route("auth/google/callback", "routes/auth.google.callback.tsx"),
@@ -13,79 +19,94 @@ export default [
   route("auth/mapado/login", "routes/auth.mapado.login.tsx"),
   route("auth/mapado/callback", "routes/auth.mapado.callback.tsx"),
   route("auth/logout", "routes/auth.logout.tsx"),
-  route("auth/complete-profile", "routes/auth.complete-profile.tsx"),
 
-  // Organizations routes
-  route("orgs", "routes/orgs._index.tsx"),
-  route("orgs/new", "routes/orgs.new.tsx"),
+  // Invitation route (custom auth handling: shows login prompt if not authenticated)
   route("orgs/invite/:code", "routes/orgs.invite.$code.tsx"),
-  route("orgs/:orgSlug", "routes/orgs.$orgSlug.tsx", [
-    index("routes/orgs.$orgSlug._index.tsx"),
-    route("members", "routes/orgs.$orgSlug.members/index.tsx"),
-    route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
+
+  // Public API routes (no auth required)
+  route("api/locales/:lng/:ns", "routes/api.locales.$lng.$ns.ts"),
+
+  // Authenticated app routes (session auth via middleware)
+  layout("routes/app-layout.tsx", [
+    route("auth/complete-profile", "routes/auth.complete-profile.tsx"),
+
+    // Organizations routes
+    route("orgs", "routes/orgs._index.tsx"),
+    route("orgs/new", "routes/orgs.new.tsx"),
+    route("orgs/:orgSlug", "routes/orgs.$orgSlug.tsx", [
+      index("routes/orgs.$orgSlug._index.tsx"),
+      route("members", "routes/orgs.$orgSlug.members/index.tsx"),
+      route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
+    ]),
+
+    // Projects routes
+    route(
+      "orgs/:orgSlug/projects/new",
+      "routes/orgs.$orgSlug.projects.new.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug",
+      "routes/orgs.$orgSlug.projects.$projectSlug.tsx",
+      [
+        index("routes/orgs.$orgSlug.projects.$projectSlug._index.tsx"),
+        route(
+          "translations",
+          "routes/orgs.$orgSlug.projects.$projectSlug.translations/index.tsx",
+        ),
+        route(
+          "settings",
+          "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
+        ),
+        route(
+          "import-export",
+          "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
+        ),
+      ],
+    ),
+
+    // Branches routes
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches._index.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches/new",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches.new.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx",
+    ),
+
+    // Translation keys routes
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
+      "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
+    ),
+
+    // Search
+    route("search", "routes/search.tsx"),
   ]),
 
-  // Projects routes
-  route("orgs/:orgSlug/projects/new", "routes/orgs.$orgSlug.projects.new.tsx"),
-  route(
-    "orgs/:orgSlug/projects/:projectSlug",
-    "routes/orgs.$orgSlug.projects.$projectSlug.tsx",
-    [
-      index("routes/orgs.$orgSlug.projects.$projectSlug._index.tsx"),
+  // Authenticated API routes (dual auth: API key or session via middleware)
+  layout("routes/api-layout.tsx", [
+    route("api/orgs/:orgSlug", "routes/api-org-layout.tsx", [
       route(
-        "translations",
-        "routes/orgs.$orgSlug.projects.$projectSlug.translations/index.tsx",
+        "projects/:projectSlug/export",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx",
       ),
       route(
-        "settings",
-        "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
+        "projects/:projectSlug/import",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx",
       ),
       route(
-        "import-export",
-        "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
+        "projects/:projectSlug/translate",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
       ),
-    ],
-  ),
-
-  // Branches routes
-  route(
-    "orgs/:orgSlug/projects/:projectSlug/branches",
-    "routes/orgs.$orgSlug.projects.$projectSlug.branches._index.tsx",
-  ),
-  route(
-    "orgs/:orgSlug/projects/:projectSlug/branches/new",
-    "routes/orgs.$orgSlug.projects.$projectSlug.branches.new.tsx",
-  ),
-  route(
-    "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug",
-    "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.tsx",
-  ),
-  route(
-    "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge",
-    "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx",
-  ),
-
-  // Translation keys routes
-  route(
-    "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
-    "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
-  ),
-
-  // Search
-  route("search", "routes/search.tsx"),
-
-  // API routes
-  route(
-    "api/orgs/:orgSlug/projects/:projectSlug/export",
-    "routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx",
-  ),
-  route(
-    "api/orgs/:orgSlug/projects/:projectSlug/import",
-    "routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx",
-  ),
-  route(
-    "api/orgs/:orgSlug/projects/:projectSlug/translate",
-    "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
-  ),
-  route("api/locales/:lng/:ns", "routes/api.locales.$lng.$ns.ts"),
+    ]),
+  ]),
 ] satisfies RouteConfig;

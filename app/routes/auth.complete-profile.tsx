@@ -18,13 +18,13 @@ import {
 } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/auth.complete-profile";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { updateUserName, getUserById } from "~/lib/auth.server";
 import { createUserSession } from "~/lib/session.server";
 import { getInstance } from "~/middleware/i18next";
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const sessionUser = await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const sessionUser = context.get(userContext);
   const dbUser = await getUserById(sessionUser.userId);
 
   if (!dbUser) {
@@ -44,7 +44,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
 
-  const sessionUser = await requireUser(request);
+  const sessionUser = context.get(userContext);
   const formData = await request.formData();
 
   const name = formData.get("name");

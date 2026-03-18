@@ -1,7 +1,7 @@
 import { VStack } from "@chakra-ui/react";
 import { useActionData, useNavigation, useOutletContext } from "react-router";
 import type { Route } from "./+types/index";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
 import type { ImportStats } from "~/lib/import/json.server";
@@ -25,8 +25,8 @@ export type ImportActionData =
   | { success: true; importStats: ImportStats; actionTimestamp: number }
   | { success: false; error: string; details?: string };
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -46,7 +46,7 @@ export async function action({
   params,
   context,
 }: Route.ActionArgs): Promise<ImportActionData> {
-  const user = await requireUser(request);
+  const user = context.get(userContext);
   const i18next = getInstance(context);
 
   const organization = await requireOrganizationMembership(

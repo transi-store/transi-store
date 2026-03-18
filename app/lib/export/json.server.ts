@@ -1,6 +1,4 @@
-import type { getProjectTranslations } from "../translation-keys.server";
-
-type ProjectTranslations = Awaited<ReturnType<typeof getProjectTranslations>>;
+import type { ProjectTranslations } from "../translation-keys.server";
 
 export function exportToJSON(
   projectTranslations: ProjectTranslations,

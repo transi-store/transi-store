@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { LuGitBranch, LuPlus, LuGitMerge, LuTrash2 } from "react-icons/lu";
 import { useState, useEffect, useCallback } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getBranchBySlug, deleteBranch } from "~/lib/branches.server";
@@ -49,8 +49,8 @@ import { BRANCH_STATUS } from "~/lib/branches";
 
 const LIMIT = 50;
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -103,7 +103,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = await requireUser(request);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
