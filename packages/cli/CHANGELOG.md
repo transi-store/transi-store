@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.4.0
+
+### Added
+
+- Skip unchanged files in `upload:config` when running on a git feature branch (compares to main branch).
+
 ## 1.3.0
 
 ### Added
