@@ -1,9 +1,5 @@
-import { db } from "~/lib/db.server";
-import {
-  getTranslationKeyByName,
-  createTranslationKey,
-  upsertTranslation,
-} from "~/lib/translation-keys.server";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { db, schema } from "~/lib/db.server";
 import { ImportStrategy } from "./import-strategy";
 
 type ImportParams = {
@@ -115,9 +111,13 @@ export function validateImportData(
   return errors;
 }
 
+/** PostgreSQL has a limit on the number of parameters in a single query */
+const BATCH_SIZE = 500;
+
 /**
- * Import translations from parsed JSON data
- * Processes all keys in a transaction (all or nothing)
+ * Import translations from parsed JSON data using batch operations.
+ * Uses INSERT ... ON CONFLICT for efficient bulk processing (~5 queries
+ * instead of ~4-6 per entry).
  */
 export async function importTranslations({
   projectId,
@@ -126,7 +126,7 @@ export async function importTranslations({
   strategy,
   branchId,
 }: ImportParams): Promise<ImportResult> {
-  const stats = {
+  const stats: ImportStats = {
     total: 0,
     keysCreated: 0,
     translationsCreated: 0,
@@ -134,78 +134,144 @@ export async function importTranslations({
     translationsSkipped: 0,
   };
 
-  const errors: Array<string> = [];
-
   try {
     const entries = Object.entries(data);
     stats.total = entries.length;
 
-    // Process all imports in a transaction
-    await db.transaction(async () => {
-      for (const [keyName, value] of entries) {
-        try {
-          // 1. Check if translation key exists
-          let translationKey = await getTranslationKeyByName(
-            Number(projectId),
-            keyName,
-          );
+    if (entries.length === 0) {
+      return { success: true, stats, errors: [] };
+    }
 
-          // 2. Create key if it doesn't exist
-          if (!translationKey) {
-            const keyId = await createTranslationKey({
-              projectId: Number(projectId),
-              keyName,
-              description: undefined,
-              branchId,
-            });
+    await db.transaction(async (tx) => {
+      const keyNames = entries.map(([keyName]) => keyName);
 
-            // Reload the key to get full data
-            translationKey = await db.query.translationKeys.findFirst({
-              where: { id: keyId },
-            });
+      // 1. Fetch all existing keys for this project in one query
+      const existingKeys = await tx
+        .select({ id: schema.translationKeys.id, keyName: schema.translationKeys.keyName })
+        .from(schema.translationKeys)
+        .where(
+          and(
+            eq(schema.translationKeys.projectId, projectId),
+            inArray(schema.translationKeys.keyName, keyNames),
+          ),
+        );
 
-            if (!translationKey) {
-              throw new Error(`Échec de la création de la clé "${keyName}"`);
-            }
+      const existingKeyMap = new Map(existingKeys.map((k) => [k.keyName, k.id]));
 
-            stats.keysCreated++;
+      // 2. Batch insert new keys (ON CONFLICT DO NOTHING)
+      const newKeyNames = keyNames.filter((name) => !existingKeyMap.has(name));
+
+      if (newKeyNames.length > 0) {
+        for (let i = 0; i < newKeyNames.length; i += BATCH_SIZE) {
+          const batch = newKeyNames.slice(i, i + BATCH_SIZE);
+          const insertedKeys = await tx
+            .insert(schema.translationKeys)
+            .values(
+              batch.map((keyName) => ({
+                projectId,
+                keyName,
+                branchId: branchId ?? null,
+              })),
+            )
+            .onConflictDoNothing({
+              target: [schema.translationKeys.projectId, schema.translationKeys.keyName],
+            })
+            .returning({ id: schema.translationKeys.id, keyName: schema.translationKeys.keyName });
+
+          for (const key of insertedKeys) {
+            existingKeyMap.set(key.keyName, key.id);
           }
+        }
 
-          // 3. Check if translation already exists
-          const existingTranslation = await db.query.translations.findFirst({
-            where: { keyId: translationKey.id, locale },
-          });
+        stats.keysCreated = newKeyNames.length;
+      }
 
-          // 4. Apply strategy
-          if (existingTranslation) {
-            if (strategy === ImportStrategy.OVERWRITE) {
-              // Update existing translation
-              await upsertTranslation({
-                keyId: translationKey.id,
-                locale,
-                value,
-              });
-              stats.translationsUpdated++;
-            } else {
-              // Skip existing translation
-              stats.translationsSkipped++;
-            }
-          } else {
-            // Create new translation
-            await upsertTranslation({
-              keyId: translationKey.id,
-              locale,
-              value,
+      // 3. Build the keyName → keyId map (all keys should now exist)
+      // If some keys were skipped by ON CONFLICT DO NOTHING (race condition),
+      // re-fetch them
+      const missingKeys = keyNames.filter((name) => !existingKeyMap.has(name));
+      if (missingKeys.length > 0) {
+        const refetchedKeys = await tx
+          .select({ id: schema.translationKeys.id, keyName: schema.translationKeys.keyName })
+          .from(schema.translationKeys)
+          .where(
+            and(
+              eq(schema.translationKeys.projectId, projectId),
+              inArray(schema.translationKeys.keyName, missingKeys),
+            ),
+          );
+        for (const key of refetchedKeys) {
+          existingKeyMap.set(key.keyName, key.id);
+        }
+      }
+
+      // 4. Fetch existing translations for these keys + locale in one query
+      const allKeyIds = [...existingKeyMap.values()];
+      const existingTranslations = await tx
+        .select({ keyId: schema.translations.keyId })
+        .from(schema.translations)
+        .where(
+          and(
+            inArray(schema.translations.keyId, allKeyIds),
+            eq(schema.translations.locale, locale),
+          ),
+        );
+
+      const existingTranslationKeyIds = new Set(existingTranslations.map((t) => t.keyId));
+
+      // 5. Batch upsert translations based on strategy
+      const translationValues = entries.map(([keyName, value]) => ({
+        keyId: existingKeyMap.get(keyName)!,
+        locale,
+        value,
+        isFuzzy: false,
+      }));
+
+      if (strategy === ImportStrategy.OVERWRITE) {
+        // INSERT ... ON CONFLICT DO UPDATE for all entries
+        for (let i = 0; i < translationValues.length; i += BATCH_SIZE) {
+          const batch = translationValues.slice(i, i + BATCH_SIZE);
+          await tx
+            .insert(schema.translations)
+            .values(batch)
+            .onConflictDoUpdate({
+              target: [schema.translations.keyId, schema.translations.locale],
+              set: {
+                value: sql`excluded.value`,
+                updatedAt: sql`now()`,
+              },
             });
+        }
+
+        // Count stats based on what existed before
+        for (const [keyName] of entries) {
+          const keyId = existingKeyMap.get(keyName)!;
+          if (existingTranslationKeyIds.has(keyId)) {
+            stats.translationsUpdated++;
+          } else {
             stats.translationsCreated++;
           }
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : "Erreur inconnue";
-          errors.push(`Erreur pour la clé "${keyName}": ${message}`);
-          // Re-throw to rollback transaction
-          throw error;
         }
+      } else {
+        // SKIP strategy: INSERT ... ON CONFLICT DO NOTHING (only create new)
+        const newTranslations = translationValues.filter(
+          (t) => !existingTranslationKeyIds.has(t.keyId),
+        );
+
+        if (newTranslations.length > 0) {
+          for (let i = 0; i < newTranslations.length; i += BATCH_SIZE) {
+            const batch = newTranslations.slice(i, i + BATCH_SIZE);
+            await tx
+              .insert(schema.translations)
+              .values(batch)
+              .onConflictDoNothing({
+                target: [schema.translations.keyId, schema.translations.locale],
+              });
+          }
+        }
+
+        stats.translationsCreated = newTranslations.length;
+        stats.translationsSkipped = entries.length - newTranslations.length;
       }
     });
 
@@ -215,18 +281,12 @@ export async function importTranslations({
       errors: [],
     };
   } catch (error) {
-    // Transaction failed, return error
     return {
       success: false,
       stats,
-      errors:
-        errors.length > 0
-          ? errors
-          : [
-              error instanceof Error
-                ? error.message
-                : "Erreur lors de l'import",
-            ],
+      errors: [
+        error instanceof Error ? error.message : "Erreur lors de l'import",
+      ],
     };
   }
 }
