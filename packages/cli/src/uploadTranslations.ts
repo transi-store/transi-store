@@ -2,8 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import z from "zod";
-import schema from "./schema.ts";
 import { DEFAULT_DOMAIN_ROOT } from "./fetchTranslations.ts";
+import {
+  getCurrentBranch,
+  getDefaultBranch,
+  getModifiedFiles,
+  isGitRepository,
+} from "./git.ts";
+import schema from "./schema.ts";
 
 export enum ImportStrategy {
   OVERWRITE = "overwrite",
@@ -124,6 +130,25 @@ export async function uploadForConfig(
     `Uploading translations to domain "${domainRoot}" for org "${result.data.org}"...`,
   );
 
+  // Determine if we can use git to skip unchanged files
+  let modifiedFiles: Set<string> | null = null;
+
+  if (await isGitRepository()) {
+    const defaultBranch = await getDefaultBranch();
+    const currentBranch = await getCurrentBranch();
+
+    if (
+      defaultBranch &&
+      currentBranch &&
+      currentBranch !== defaultBranch.replace(/^origin\//, "")
+    ) {
+      modifiedFiles = await getModifiedFiles(defaultBranch);
+      console.log(
+        `Git optimization enabled: only uploading files modified compared to "${defaultBranch}"`,
+      );
+    }
+  }
+
   for (const configItem of result.data.projects) {
     for (const locale of configItem.langs) {
       const input = configItem.output
@@ -131,9 +156,18 @@ export async function uploadForConfig(
         .replace("<project>", configItem.project)
         .replace("<format>", configItem.format);
 
-      if (!fs.existsSync(path.resolve(cwd, input))) {
+      const resolvedInput = path.resolve(cwd, input);
+
+      if (!fs.existsSync(resolvedInput)) {
         console.log(
           `Skipping project "${configItem.project}" locale "${locale}": file not found "${input}"`,
+        );
+        continue;
+      }
+
+      if (modifiedFiles && !modifiedFiles.has(resolvedInput)) {
+        console.log(
+          `Skipping project "${configItem.project}" locale "${locale}": file not modified`,
         );
         continue;
       }
