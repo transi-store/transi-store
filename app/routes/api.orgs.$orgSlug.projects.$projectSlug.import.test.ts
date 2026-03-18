@@ -1,0 +1,326 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { RouterContextProvider } from "react-router";
+import * as schema from "../../drizzle/schema";
+import { action } from "./api.orgs.$orgSlug.projects.$projectSlug.import";
+import {
+  cleanupDb,
+  createApiKey,
+  createOrganization,
+  createProject,
+  createProjectLanguage,
+  createTranslationKey,
+  createTranslation,
+  getTestDb,
+} from "../../tests/test-db";
+import { withQueryCounter, getQueryCount } from "~/lib/query-counter.server";
+
+vi.mock("~/lib/db.server", () => ({
+  get db() {
+    return getTestDb();
+  },
+  schema,
+}));
+
+function buildImportRequest(
+  orgSlug: string,
+  projectSlug: string,
+  apiKey: string,
+  data: Record<string, string>,
+  options: { locale?: string; strategy?: string; format?: string } = {},
+) {
+  const { locale = "en", strategy = "overwrite", format = "json" } = options;
+  const formData = new FormData();
+  formData.append("locale", locale);
+  formData.append("strategy", strategy);
+  formData.append("format", format);
+  formData.append(
+    "file",
+    new File([JSON.stringify(data)], "translations.json", {
+      type: "application/json",
+    }),
+  );
+
+  return new Request(
+    `https://example.com/api/orgs/${orgSlug}/projects/${projectSlug}/import`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: formData,
+    },
+  );
+}
+
+function callAction(request: Request, orgSlug: string, projectSlug: string) {
+  return action({
+    request,
+    params: { orgSlug, projectSlug },
+    unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/import",
+    context: new RouterContextProvider(),
+  });
+}
+
+describe("Import API", () => {
+  let apiKey: string;
+
+  beforeEach(async () => {
+    const org = await createOrganization(getTestDb(), {
+      slug: "test-org",
+    });
+    await createProject(getTestDb(), org.id, {
+      name: "Test Project",
+      slug: "test-project",
+    });
+    await createProjectLanguage(getTestDb(), 1, { locale: "en" });
+    await createProjectLanguage(getTestDb(), 1, {
+      locale: "fr",
+      isDefault: false,
+    });
+
+    const key = await createApiKey(getTestDb(), org.id, {
+      keyValue: "test-api-key",
+    });
+
+    apiKey = key.keyValue;
+  });
+
+  afterEach(async () => {
+    await cleanupDb();
+  });
+
+  describe("key creation", () => {
+    it("should create new translation keys", async () => {
+      const request = buildImportRequest("test-org", "test-project", apiKey, {
+        "home.title": "Home",
+        "home.subtitle": "Welcome",
+        "nav.about": "About",
+      });
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.stats.keysCreated).toBe(3);
+      expect(data.stats.translationsCreated).toBe(3);
+
+      // Verify keys exist in database
+      const db = getTestDb();
+      const keys = await db.query.translationKeys.findMany({
+        where: { projectId: 1 },
+        orderBy: { keyName: "asc" },
+      });
+
+      expect(keys).toHaveLength(3);
+      expect(keys.map((k) => k.keyName)).toEqual([
+        "home.subtitle",
+        "home.title",
+        "nav.about",
+      ]);
+    });
+
+    it("should not duplicate existing keys", async () => {
+      const db = getTestDb();
+      await createTranslationKey(db, 1, "home.title");
+
+      const request = buildImportRequest("test-org", "test-project", apiKey, {
+        "home.title": "Home",
+        "home.subtitle": "Welcome",
+      });
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.stats.keysCreated).toBe(1); // Only home.subtitle is new
+      expect(data.stats.translationsCreated).toBe(2); // home.title translation should still be created
+
+      const keys = await db.query.translationKeys.findMany({
+        where: { projectId: 1 },
+      });
+
+      expect(keys).toHaveLength(2);
+    });
+  });
+
+  describe("overwrite strategy", () => {
+    it("should update existing translations", async () => {
+      const db = getTestDb();
+      const key = await createTranslationKey(db, 1, "home.title");
+      await createTranslation(db, key.id, "en", "Old Home");
+
+      const request = buildImportRequest("test-org", "test-project", apiKey, {
+        "home.title": "New Home",
+      });
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.stats.translationsUpdated).toBe(1);
+      expect(data.stats.translationsCreated).toBe(0);
+
+      // Verify value was updated
+      const translations = await db.query.translations.findFirst({
+        where: { keyId: key.id, locale: "en" },
+      });
+
+      expect(translations).not.toBeNull();
+      expect(translations!.value).toBe("New Home");
+    });
+
+    it("should create new translations for existing keys", async () => {
+      const db = getTestDb();
+      await createTranslationKey(db, 1, "home.title");
+
+      const request = buildImportRequest("test-org", "test-project", apiKey, {
+        "home.title": "Home",
+      });
+
+      const response = await callAction(request, "test-org", "test-project");
+      const data = await response.json();
+      expect(data.stats.translationsCreated).toBe(1);
+      expect(data.stats.translationsUpdated).toBe(0);
+    });
+
+    it("should not touch translations of other locales", async () => {
+      const db = getTestDb();
+      const key = await createTranslationKey(db, 1, "home.title");
+      await createTranslation(db, key.id, "fr", "Accueil");
+
+      const request = buildImportRequest("test-org", "test-project", apiKey, {
+        "home.title": "Home",
+      });
+
+      const response = await callAction(request, "test-org", "test-project");
+
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.stats.keysCreated).toBe(0);
+      expect(data.stats.translationsCreated).toBe(1);
+      expect(data.stats.translationsUpdated).toBe(0);
+
+      // French translation should be untouched
+      const frTranslation = await db.query.translations.findFirst({
+        where: { keyId: key.id, locale: "fr" },
+      });
+
+      expect(frTranslation).toBeDefined();
+      expect(frTranslation?.value).toBe("Accueil");
+    });
+  });
+
+  describe("skip strategy", () => {
+    it("should skip existing translations", async () => {
+      const db = getTestDb();
+      const key = await createTranslationKey(db, 1, "home.title");
+      await createTranslation(db, key.id, "en", "Old Home");
+
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        apiKey,
+        { "home.title": "New Home" },
+        { strategy: "skip" },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      const data = await response.json();
+      expect(data.stats.translationsSkipped).toBe(1);
+      expect(data.stats.translationsUpdated).toBe(0);
+
+      // Verify value was NOT updated
+      const translations = await db.query.translations.findFirst({
+        where: { keyId: key.id, locale: "en" },
+      });
+
+      expect(translations).not.toBeNull();
+      expect(translations?.value).toBe("Old Home");
+    });
+
+    it("should still create new translations", async () => {
+      const db = getTestDb();
+      const existingKey = await createTranslationKey(db, 1, "home.title");
+      await createTranslation(db, existingKey.id, "en", "Old Home");
+
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        apiKey,
+        {
+          "home.title": "New Home",
+          "home.subtitle": "Welcome",
+        },
+        { strategy: "skip" },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      const data = await response.json();
+      expect(data.stats.translationsSkipped).toBe(1);
+      expect(data.stats.translationsCreated).toBe(1);
+      expect(data.stats.keysCreated).toBe(1);
+    });
+  });
+
+  describe("query count", () => {
+    it("should use a bounded number of queries regardless of import size", async () => {
+      const smallData: Record<string, string> = {};
+      for (let i = 0; i < 10; i++) {
+        smallData[`key.small.${i}`] = `value ${i}`;
+      }
+
+      const largeData: Record<string, string> = {};
+      for (let i = 0; i < 100; i++) {
+        largeData[`key.large.${i}`] = `value ${i}`;
+      }
+
+      let smallQueryCount: number;
+      let largeQueryCount: number;
+
+      // Measure queries for small import
+      await withQueryCounter(async () => {
+        const request = buildImportRequest(
+          "test-org",
+          "test-project",
+          apiKey,
+          smallData,
+        );
+        await callAction(request, "test-org", "test-project");
+        smallQueryCount = getQueryCount();
+      });
+
+      await cleanupDb();
+
+      // Re-seed
+      const org = await createOrganization(getTestDb(), {
+        slug: "test-org",
+      });
+      await createProject(getTestDb(), org.id, {
+        name: "Test Project",
+        slug: "test-project",
+      });
+      await createProjectLanguage(getTestDb(), 1, { locale: "en" });
+      const key = await createApiKey(getTestDb(), org.id, {
+        keyValue: "test-api-key",
+      });
+
+      // Measure queries for large import
+      await withQueryCounter(async () => {
+        const request = buildImportRequest(
+          "test-org",
+          "test-project",
+          key.keyValue,
+          largeData,
+        );
+        await callAction(request, "test-org", "test-project");
+        largeQueryCount = getQueryCount();
+      });
+
+      // The query count should NOT scale linearly with import size.
+      // With batch operations, both should use roughly the same number of queries.
+      // Allow some margin for auth queries + the import itself.
+      expect(smallQueryCount!).toBe(8);
+      expect(largeQueryCount!).toBe(8);
+    });
+  });
+});

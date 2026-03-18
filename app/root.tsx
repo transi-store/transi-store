@@ -16,6 +16,7 @@ import {
   i18nextMiddleware,
   localeCookie,
 } from "~/middleware/i18next";
+import { queryCounterMiddleware } from "~/middleware/query-counter";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
@@ -23,7 +24,7 @@ import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
 import { ColorModeProvider } from "./components/ui/color-mode";
 
-export const middleware = [i18nextMiddleware];
+export const middleware = [queryCounterMiddleware, i18nextMiddleware];
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
