@@ -202,13 +202,27 @@ Retour :
 - Preview des changements avant confirmation
 - Support CSV
 
-## Exemple d'utilisation (cURL)
+## Exemple d'utilisation
+
+### Via l'API (cURL)
 
 ```bash
 curl -X POST \
+  -H "Authorization: Bearer <api-key>" \
   -F "locale=fr" \
   -F "strategy=overwrite" \
   -F "file=@translations.json" \
-  -b "session=<cookie>" \
-  "http://localhost:5173/orgs/my-org/projects/app/import-export"
+  "http://localhost:5173/api/orgs/my-org/projects/app/import"
+```
+
+### Via le package CLI
+
+```bash
+npx @transi-store/cli upload \
+  -k <api-key> \
+  -o my-org \
+  -p app \
+  -l fr \
+  -I translations.json \
+  -s overwrite
 ```
