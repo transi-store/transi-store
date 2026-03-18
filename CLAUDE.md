@@ -66,16 +66,30 @@ docker compose up -d         # Start PostgreSQL
 2. **Server-only code**: Use `.server.ts` suffix for code that must never reach the client
    - Database queries, auth logic, secrets
 
-3. **Authentication flow**:
+3. **Authentication flow**: Handled by middleware, not per-loader calls.
+   - App routes (under `app-layout.tsx`): session auth middleware redirects to login if unauthenticated
+   - API routes (under `api-layout.tsx` → `api-org-layout.tsx`): dual auth (Bearer API key or session), returns 403 JSON on failure
+   - In loaders/actions, read auth data from context:
 
    ```typescript
-   const user = await requireUser(request);
+   // App routes — get the authenticated user
+   import { userContext } from "~/middleware/auth";
+   const user = context.get(userContext);
    const org = await requireOrganizationMembership(user, params.orgSlug);
+
+   // API routes — org is already resolved by middleware
+   import { orgContext } from "~/middleware/api-auth";
+   const organization = context.get(orgContext);
    ```
 
-4. **Database schema changes**: Use `yarn db:push` (no migrations for now)
+4. **Route hierarchy** for new routes:
+   - Authenticated app pages → add inside `layout("routes/app-layout.tsx", [...])` in `routes.ts`
+   - Authenticated API routes under `api/orgs/:orgSlug/...` → add inside the `route("api/orgs/:orgSlug", "routes/api-org-layout.tsx", [...])` block
+   - Public routes → add outside any layout
 
-5. **Multi-tenant**: All data isolated by organization via membership checks
+5. **Database schema changes**: Use `yarn db:push` (no migrations for now)
+
+6. **Multi-tenant**: All data isolated by organization via membership checks
 
 ## Environment Variables
 

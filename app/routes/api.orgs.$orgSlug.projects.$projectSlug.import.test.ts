@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RouterContextProvider } from "react-router";
 import * as schema from "../../drizzle/schema";
 import { action } from "./api.orgs.$orgSlug.projects.$projectSlug.import";
+import { orgContext } from "~/middleware/api-auth";
 import {
   cleanupDb,
   createApiKey,
@@ -24,7 +25,6 @@ vi.mock("~/lib/db.server", () => ({
 function buildImportRequest(
   orgSlug: string,
   projectSlug: string,
-  apiKey: string,
   data: Record<string, string>,
   options: { locale?: string; strategy?: string; format?: string } = {},
 ) {
@@ -44,26 +44,16 @@ function buildImportRequest(
     `https://example.com/api/orgs/${orgSlug}/projects/${projectSlug}/import`,
     {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}` },
       body: formData,
     },
   );
 }
 
-function callAction(request: Request, orgSlug: string, projectSlug: string) {
-  return action({
-    request,
-    params: { orgSlug, projectSlug },
-    unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/import",
-    context: new RouterContextProvider(),
-  });
-}
-
 describe("Import API", () => {
-  let apiKey: string;
+  let org: schema.Organization;
 
   beforeEach(async () => {
-    const org = await createOrganization(getTestDb(), {
+    org = await createOrganization(getTestDb(), {
       slug: "test-org",
     });
     await createProject(getTestDb(), org.id, {
@@ -76,20 +66,33 @@ describe("Import API", () => {
       isDefault: false,
     });
 
-    const key = await createApiKey(getTestDb(), org.id, {
+    await createApiKey(getTestDb(), org.id, {
       keyValue: "test-api-key",
     });
-
-    apiKey = key.keyValue;
   });
 
   afterEach(async () => {
     await cleanupDb();
   });
 
+  function createOrgContext() {
+    const ctx = new RouterContextProvider();
+    ctx.set(orgContext, org);
+    return ctx;
+  }
+
+  function callAction(request: Request, orgSlug: string, projectSlug: string) {
+    return action({
+      request,
+      params: { orgSlug, projectSlug },
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/import",
+      context: createOrgContext(),
+    });
+  }
+
   describe("key creation", () => {
     it("should create new translation keys", async () => {
-      const request = buildImportRequest("test-org", "test-project", apiKey, {
+      const request = buildImportRequest("test-org", "test-project", {
         "home.title": "Home",
         "home.subtitle": "Welcome",
         "nav.about": "About",
@@ -122,7 +125,7 @@ describe("Import API", () => {
       const db = getTestDb();
       await createTranslationKey(db, 1, "home.title");
 
-      const request = buildImportRequest("test-org", "test-project", apiKey, {
+      const request = buildImportRequest("test-org", "test-project", {
         "home.title": "Home",
         "home.subtitle": "Welcome",
       });
@@ -148,7 +151,7 @@ describe("Import API", () => {
       const key = await createTranslationKey(db, 1, "home.title");
       await createTranslation(db, key.id, "en", "Old Home");
 
-      const request = buildImportRequest("test-org", "test-project", apiKey, {
+      const request = buildImportRequest("test-org", "test-project", {
         "home.title": "New Home",
       });
 
@@ -172,7 +175,7 @@ describe("Import API", () => {
       const db = getTestDb();
       await createTranslationKey(db, 1, "home.title");
 
-      const request = buildImportRequest("test-org", "test-project", apiKey, {
+      const request = buildImportRequest("test-org", "test-project", {
         "home.title": "Home",
       });
 
@@ -187,7 +190,7 @@ describe("Import API", () => {
       const key = await createTranslationKey(db, 1, "home.title");
       await createTranslation(db, key.id, "fr", "Accueil");
 
-      const request = buildImportRequest("test-org", "test-project", apiKey, {
+      const request = buildImportRequest("test-org", "test-project", {
         "home.title": "Home",
       });
 
@@ -219,7 +222,6 @@ describe("Import API", () => {
       const request = buildImportRequest(
         "test-org",
         "test-project",
-        apiKey,
         { "home.title": "New Home" },
         { strategy: "skip" },
       );
@@ -246,7 +248,6 @@ describe("Import API", () => {
       const request = buildImportRequest(
         "test-org",
         "test-project",
-        apiKey,
         {
           "home.title": "New Home",
           "home.subtitle": "Welcome",
@@ -282,7 +283,6 @@ describe("Import API", () => {
         const request = buildImportRequest(
           "test-org",
           "test-project",
-          apiKey,
           smallData,
         );
         await callAction(request, "test-org", "test-project");
@@ -292,7 +292,7 @@ describe("Import API", () => {
       await cleanupDb();
 
       // Re-seed
-      const org = await createOrganization(getTestDb(), {
+      org = await createOrganization(getTestDb(), {
         slug: "test-org",
       });
       await createProject(getTestDb(), org.id, {
@@ -300,16 +300,12 @@ describe("Import API", () => {
         slug: "test-project",
       });
       await createProjectLanguage(getTestDb(), 1, { locale: "en" });
-      const key = await createApiKey(getTestDb(), org.id, {
-        keyValue: "test-api-key",
-      });
 
       // Measure queries for large import
       await withQueryCounter(async () => {
         const request = buildImportRequest(
           "test-org",
           "test-project",
-          key.keyValue,
           largeData,
         );
         await callAction(request, "test-org", "test-project");
@@ -318,9 +314,9 @@ describe("Import API", () => {
 
       // The query count should NOT scale linearly with import size.
       // With batch operations, both should use roughly the same number of queries.
-      // Allow some margin for auth queries + the import itself.
-      expect(smallQueryCount!).toBe(8);
-      expect(largeQueryCount!).toBe(8);
+      // Auth queries are handled by middleware (not counted here).
+      expect(smallQueryCount!).toBe(6);
+      expect(largeQueryCount!).toBe(6);
     });
   });
 });

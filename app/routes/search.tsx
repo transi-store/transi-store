@@ -17,14 +17,14 @@ import {
 import { Link, Form, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/search";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { getUserOrganizations } from "~/lib/organizations.server";
 import { TextHighlight } from "../lib/highlight";
 import { globalSearch, type SearchResult } from "~/lib/search.server";
 import { getKeyUrl } from "~/lib/routes-helpers";
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const url = new URL(request.url);
 
   const searchParams = url.searchParams;

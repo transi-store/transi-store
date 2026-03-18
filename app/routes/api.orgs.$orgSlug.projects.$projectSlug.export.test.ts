@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as schema from "../../drizzle/schema";
 import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug.export";
 import { RouterContextProvider } from "react-router";
+import { orgContext } from "~/middleware/api-auth";
 import {
   cleanupDb,
-  createApiKey,
   createOrganization,
   createProject,
   createProjectLanguage,
@@ -21,26 +21,16 @@ vi.mock("~/lib/db.server", () => ({
 }));
 
 describe("Export Project Loader", () => {
+  let org: schema.Organization;
+
   beforeEach(async () => {
-    const org1 = await createOrganization(getTestDb(), {
+    org = await createOrganization(getTestDb(), {
       slug: "test-org",
     });
 
-    await createApiKey(getTestDb(), org1.id, {
-      keyValue: "valid-api-key-1",
-    });
-
-    await createProject(getTestDb(), org1.id, {
+    await createProject(getTestDb(), org.id, {
       name: "Test Project 1",
       slug: "test-project",
-    });
-
-    const org2 = await createOrganization(getTestDb(), {
-      slug: "test-org-2",
-    });
-
-    await createApiKey(getTestDb(), org2.id, {
-      keyValue: "valid-api-key-2",
     });
   });
 
@@ -48,67 +38,23 @@ describe("Export Project Loader", () => {
     await cleanupDb();
   });
 
-  it("should return 401 for invalid API key", async () => {
-    const request = new Request(
-      "https://example.com/api/orgs/test-org/projects/test-project/export",
-      {
-        headers: {
-          Authorization: "Bearer invalid-api-key",
-        },
-      },
-    );
+  function createOrgContext() {
+    const ctx = new RouterContextProvider();
+    ctx.set(orgContext, org);
 
-    const response = await loader({
-      request,
-      params: { orgSlug: "test-org", projectSlug: "test-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
-      context: new RouterContextProvider(),
-    });
-
-    expect(response.status).toBe(401);
-    const data = await response.json();
-
-    expect(data.error).toBe("Invalid API key");
-  });
-
-  it("should return 403 if API key does not match organization", async () => {
-    const request = new Request(
-      "https://example.com/api/orgs/test-org/projects/test-project/export",
-      {
-        headers: {
-          Authorization: "Bearer valid-api-key-2",
-        },
-      },
-    );
-
-    const response = await loader({
-      request,
-      params: { orgSlug: "test-org", projectSlug: "test-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
-      context: new RouterContextProvider(),
-    });
-
-    expect(response.status).toBe(403);
-    const data = await response.json();
-
-    expect(data.error).toBe("API key does not match organization");
-  });
+    return ctx;
+  }
 
   it("should return 404 if project does not exist", async () => {
     const request = new Request(
       "https://example.com/api/orgs/test-org/projects/non-existent-project/export",
-      {
-        headers: {
-          Authorization: "Bearer valid-api-key-1",
-        },
-      },
     );
 
     const response = await loader({
       request,
       params: { orgSlug: "test-org", projectSlug: "non-existent-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
-      context: new RouterContextProvider(),
+      context: createOrgContext(),
     });
 
     expect(response.status).toBe(404);
@@ -120,18 +66,13 @@ describe("Export Project Loader", () => {
   it("should return 400 error when missing required parameters", async () => {
     const request = new Request(
       "https://example.com/api/orgs/test-org/projects/test-project/export",
-      {
-        headers: {
-          Authorization: "Bearer valid-api-key-1",
-        },
-      },
     );
 
     const response = await loader({
       request,
-      params: { orgSlug: "test-org", projectSlug: "test-project" }, // projectSlug manquant
+      params: { orgSlug: "test-org", projectSlug: "test-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
-      context: new RouterContextProvider(),
+      context: createOrgContext(),
     });
 
     expect(response.status).toBe(400);
@@ -142,9 +83,9 @@ describe("Export Project Loader", () => {
 
     const response2 = await loader({
       request,
-      params: { orgSlug: "test-org", projectSlug: "test-project" }, // projectSlug manquant
+      params: { orgSlug: "test-org", projectSlug: "test-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
-      context: new RouterContextProvider(),
+      context: createOrgContext(),
     });
 
     expect(response2.status).toBe(400);
@@ -156,15 +97,10 @@ describe("Export Project Loader", () => {
     const response3 = await loader({
       request: new Request(
         "https://example.com/api/orgs/test-org/projects/test-project/export?locale=dk",
-        {
-          headers: {
-            Authorization: "Bearer valid-api-key-1",
-          },
-        },
       ),
-      params: { orgSlug: "test-org", projectSlug: "test-project" }, // projectSlug manquant
+      params: { orgSlug: "test-org", projectSlug: "test-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
-      context: new RouterContextProvider(),
+      context: createOrgContext(),
     });
 
     expect(response3.status).toBe(400);
@@ -179,25 +115,19 @@ describe("Export Project Loader", () => {
 
     const request = new Request(
       "https://example.com/api/orgs/test-org/projects/test-project/export?locale=en",
-      {
-        headers: {
-          Authorization: "Bearer valid-api-key-1",
-        },
-      },
     );
 
     const response = await loader({
       request,
       params: { orgSlug: "test-org", projectSlug: "test-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
-      context: new RouterContextProvider(),
+      context: createOrgContext(),
     });
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("application/json");
     const data = await response.json();
 
-    // Vérifier que les données du projet sont présentes dans la réponse
     expect(data).toEqual({
       "test.key": "Test Value",
     });

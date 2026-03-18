@@ -39,7 +39,7 @@ export function getTestDb(): TestDb {
   return _db;
 }
 
-export async function cleanupDb() {
+export async function cleanupDb(): Promise<void> {
   const db = getTestDb();
   const tables = Object.values(schema).filter((table) => is(table, PgTable));
   const tableNames = tables.map(getTableName).join(", ");
@@ -52,7 +52,7 @@ let orgCounter = 0;
 export async function createOrganization(
   db: TestDb,
   overrides: Partial<schema.NewOrganization> = {},
-) {
+): Promise<schema.Organization> {
   orgCounter++;
   const [org] = await db
     .insert(schema.organizations)
@@ -69,7 +69,7 @@ export async function createApiKey(
   db: TestDb,
   organizationId: number,
   overrides: Partial<schema.NewApiKey> = {},
-) {
+): Promise<schema.ApiKey> {
   const [user] = await db
     .insert(schema.users)
     .values({
@@ -101,7 +101,7 @@ export async function createProject(
   db: TestDb,
   organizationId: number,
   overrides: Partial<schema.NewProject> = {},
-) {
+): Promise<schema.Project> {
   projectCounter++;
   const [project] = await db
     .insert(schema.projects)
@@ -119,7 +119,7 @@ export async function createProjectLanguage(
   db: TestDb,
   projectId: number,
   overrides: Partial<schema.NewProjectLanguage> = {},
-) {
+): Promise<schema.ProjectLanguage> {
   const [language] = await db
     .insert(schema.projectLanguages)
     .values({
@@ -137,7 +137,7 @@ export async function createBranch(
   db: TestDb,
   projectId: number,
   overrides: Partial<schema.NewBranch> = {},
-) {
+): Promise<schema.Branch> {
   const [branch] = await db
     .insert(schema.branches)
     .values({
@@ -155,7 +155,7 @@ export async function createTranslationKey(
   projectId: number,
   keyName: string,
   overrides: Partial<schema.NewTranslationKey> = {},
-) {
+): Promise<schema.TranslationKey> {
   const [key] = await db
     .insert(schema.translationKeys)
     .values({
@@ -173,7 +173,7 @@ export async function createTranslation(
   locale: string,
   value: string,
   overrides: Partial<schema.NewTranslation> = {},
-) {
+): Promise<schema.Translation> {
   const [translation] = await db
     .insert(schema.translations)
     .values({

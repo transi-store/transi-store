@@ -72,14 +72,6 @@ export async function getUserFromSession(
   return { userId, email, name, lastOrganizationId, lastOrganizationSlug };
 }
 
-export async function requireUser(request: Request): Promise<SessionData> {
-  const user = await getUserFromSession(request);
-  if (!user) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-  return user;
-}
-
 export async function logout(request: Request) {
   const session = await getUserSession(request);
   return new Response(null, {

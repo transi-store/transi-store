@@ -2,7 +2,7 @@ import { Heading, VStack, Box } from "@chakra-ui/react";
 import { useLoaderData, useActionData, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Route } from "./+types";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import {
   getOrganizationApiKeys,
@@ -47,7 +47,7 @@ export async function action({
   context,
 }: Route.ActionArgs): Promise<AiProviderActionData | Response> {
   const i18next = getInstance(context);
-  const user = await requireUser(request);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -134,8 +134,8 @@ export async function action({
   return { success: false, error: "Invalid intent" };
 }
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

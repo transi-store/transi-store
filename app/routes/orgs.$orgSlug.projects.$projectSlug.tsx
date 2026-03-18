@@ -11,7 +11,7 @@ import { Link, Outlet, useLoaderData, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ProjectBreadcrumb } from "~/components/ProjectBreadcrumb";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import {
@@ -21,8 +21,8 @@ import {
   LuGitBranch,
 } from "react-icons/lu";
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

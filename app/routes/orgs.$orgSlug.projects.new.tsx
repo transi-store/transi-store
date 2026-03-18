@@ -18,15 +18,15 @@ import {
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.new";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { createProject, isProjectSlugAvailable } from "~/lib/projects.server";
 import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
 import { getInstance } from "~/middleware/i18next";
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -38,7 +38,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
 
-  const user = await requireUser(request);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

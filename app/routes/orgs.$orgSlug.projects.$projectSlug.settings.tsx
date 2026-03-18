@@ -19,7 +19,7 @@ import {
 } from "react-router";
 import { LuPlus, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.settings";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import {
   getProjectBySlug,
@@ -40,8 +40,8 @@ type ContextType = {
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
 };
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -55,8 +55,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return {};
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const user = await requireUser(request);
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

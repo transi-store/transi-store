@@ -325,11 +325,17 @@ export async function upsertTranslation(params: UpsertTranslationParams) {
   }
 }
 
+type ProjectTranslation = schema.TranslationKey & {
+  translations: Array<typeof schema.translations.$inferSelect>;
+};
+
+export type ProjectTranslations = Array<ProjectTranslation>;
+
 // Get all translations for a project grouped by key
 export async function getProjectTranslations(
   projectId: number,
   options?: { branchId?: number },
-) {
+): Promise<ProjectTranslations> {
   // Get all keys for this project, sorted alphabetically by keyName
   const condition = and(
     eq(schema.translationKeys.projectId, projectId),

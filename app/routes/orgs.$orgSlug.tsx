@@ -14,7 +14,9 @@ import { Link, NavLink, Outlet, useLoaderData, data } from "react-router";
 import { LuFolderOpen, LuUsers, LuSettings } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug";
 import {
-  requireUser,
+  userContext,
+} from "~/middleware/auth";
+import {
   updateSessionLastOrganization,
 } from "~/lib/session.server";
 import {
@@ -24,8 +26,8 @@ import {
 import { db } from "~/lib/db.server";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

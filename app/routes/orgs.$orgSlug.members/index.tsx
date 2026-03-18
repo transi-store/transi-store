@@ -3,7 +3,7 @@ import { useLoaderData, useActionData } from "react-router";
 import { eq, inArray } from "drizzle-orm";
 import { redirect } from "react-router";
 import type { Route } from "./+types/index";
-import { requireUser } from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import {
   createInvitation,
@@ -35,7 +35,7 @@ export async function action({
   context,
 }: Route.ActionArgs): Promise<ActionData | Response> {
   const i18next = getInstance(context);
-  const user = await requireUser(request);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -137,8 +137,8 @@ export async function action({
   return { success: false, error: i18next.t("members.errors.invalidAction") };
 }
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
