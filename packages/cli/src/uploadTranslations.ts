@@ -6,7 +6,7 @@ import { DEFAULT_DOMAIN_ROOT } from "./fetchTranslations.ts";
 import {
   getCurrentBranch,
   getDefaultBranch,
-  isFileModifiedComparedTo,
+  getModifiedFiles,
   isGitRepository,
 } from "./git.ts";
 import schema from "./schema.ts";
@@ -131,11 +131,10 @@ export async function uploadForConfig(
   );
 
   // Determine if we can use git to skip unchanged files
-  let useGitOptimization = false;
-  let defaultBranch: string | null = null;
+  let modifiedFiles: Set<string> | null = null;
 
   if (await isGitRepository()) {
-    defaultBranch = await getDefaultBranch();
+    const defaultBranch = await getDefaultBranch();
     const currentBranch = await getCurrentBranch();
 
     if (
@@ -143,7 +142,7 @@ export async function uploadForConfig(
       currentBranch &&
       currentBranch !== defaultBranch.replace(/^origin\//, "")
     ) {
-      useGitOptimization = true;
+      modifiedFiles = await getModifiedFiles(defaultBranch);
       console.log(
         `Git optimization enabled: only uploading files modified compared to "${defaultBranch}"`,
       );
@@ -166,10 +165,7 @@ export async function uploadForConfig(
         continue;
       }
 
-      if (
-        useGitOptimization &&
-        !(await isFileModifiedComparedTo(resolvedInput, defaultBranch!))
-      ) {
+      if (modifiedFiles && !modifiedFiles.has(resolvedInput)) {
         console.log(
           `Skipping project "${configItem.project}" locale "${locale}": file not modified`,
         );

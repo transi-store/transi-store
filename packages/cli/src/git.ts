@@ -24,33 +24,22 @@ export async function isGitRepository(): Promise<boolean> {
 export async function getDefaultBranch(): Promise<string | null> {
   const git = getGit();
 
-  // Try symbolic ref from origin
+  // Check remote branches
   try {
-    const ref = await git.raw("symbolic-ref", "refs/remotes/origin/HEAD");
-    // refs/remotes/origin/main → origin/main
-    return ref.trim().replace("refs/remotes/", "");
+    const branches = await git.branch(["-r"]);
+    if (branches.all.includes("origin/main")) return "origin/main";
+    if (branches.all.includes("origin/master")) return "origin/master";
   } catch {
     // ignore
   }
 
-  // Try common remote branch names
-  for (const branch of ["origin/main", "origin/master"]) {
-    try {
-      await git.raw("rev-parse", "--verify", branch);
-      return branch;
-    } catch {
-      continue;
-    }
-  }
-
-  // Try local branch names
-  for (const branch of ["main", "master"]) {
-    try {
-      await git.raw("rev-parse", "--verify", branch);
-      return branch;
-    } catch {
-      continue;
-    }
+  // Fallback to local branches
+  try {
+    const branches = await git.branchLocal();
+    if (branches.all.includes("main")) return "main";
+    if (branches.all.includes("master")) return "master";
+  } catch {
+    // ignore
   }
 
   return null;
@@ -58,37 +47,35 @@ export async function getDefaultBranch(): Promise<string | null> {
 
 export async function getCurrentBranch(): Promise<string | null> {
   try {
-    const branch = await getGit().revparse(["--abbrev-ref", "HEAD"]);
-    return branch.trim() || null;
+    const { current } = await getGit().branchLocal();
+    return current || null;
   } catch {
     return null;
   }
 }
 
 /**
- * Check if a file has been modified compared to a base branch.
- * Untracked files are considered modified (should be uploaded).
+ * Returns the set of absolute paths of files that have been modified
+ * compared to the given base branch, including untracked files.
  */
-export async function isFileModifiedComparedTo(
-  filePath: string,
+export async function getModifiedFiles(
   baseBranch: string,
-): Promise<boolean> {
+): Promise<Set<string>> {
   const git = getGit();
 
-  try {
-    // Check if file is tracked by git
-    const lsOutput = await git.raw("ls-files", "--", filePath);
+  const repoRoot = (await git.revparse(["--show-toplevel"])).trim();
 
-    if (!lsOutput.trim()) {
-      // File is untracked → should be uploaded
-      return true;
-    }
+  // Files that differ from base branch (committed + staged + unstaged changes)
+  const diff = await git.diff(["--name-only", baseBranch]);
+  const diffFiles = diff.trim().split("\n").filter(Boolean);
 
-    // Check if file differs from base branch
-    const diff = await git.diff(["--name-only", baseBranch, "--", filePath]);
-    return diff.trim().length > 0;
-  } catch {
-    // If anything fails, upload to be safe
-    return true;
+  // Untracked files (not in git at all)
+  const status = await git.status();
+
+  const modified = new Set<string>();
+  for (const f of [...diffFiles, ...status.not_added]) {
+    modified.add(`${repoRoot}/${f}`);
   }
+
+  return modified;
 }
