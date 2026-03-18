@@ -5,6 +5,7 @@ import { getTableName, is, sql } from "drizzle-orm";
 import { PgTable } from "drizzle-orm/pg-core";
 import * as schema from "../drizzle/schema";
 import { relations } from "../drizzle/relations";
+import { incrementQueryCount } from "../app/lib/query-counter.server";
 
 export type TestDb = Awaited<ReturnType<typeof initTestDb>>;
 
@@ -12,7 +13,15 @@ let _db: TestDb | null = null;
 
 export async function initTestDb() {
   const client = new PGlite();
-  const db = drizzle({ client, relations });
+  const db = drizzle({
+    client,
+    relations,
+    logger: {
+      logQuery() {
+        incrementQueryCount();
+      },
+    },
+  });
 
   const { apply } = await pushSchema(schema, db);
   await apply();
