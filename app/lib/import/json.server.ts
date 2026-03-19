@@ -40,6 +40,7 @@ export function parseImportJSON(fileContent: string): ParseResult {
   if (fileContent.length > MAX_FILE_SIZE) {
     return {
       success: false,
+      // TODO translate
       error: "Le fichier est trop volumineux (maximum 5 MB)",
     };
   }
@@ -56,6 +57,7 @@ export function parseImportJSON(fileContent: string): ParseResult {
       return {
         success: false,
         error:
+          // TODO translate
           "Le fichier doit contenir un objet JSON avec des paires clé/valeur",
       };
     }
@@ -67,6 +69,7 @@ export function parseImportJSON(fileContent: string): ParseResult {
   } catch (_error) {
     return {
       success: false,
+      // TODO translate
       error: "Format JSON invalide",
     };
   }
@@ -83,12 +86,14 @@ export function validateImportData(
   const entries = Object.entries(data);
 
   if (entries.length === 0) {
+    // TODO translate
     return ["Le fichier ne contient aucune traduction"];
   }
 
   for (const [key, value] of entries) {
     // Check key is non-empty
     if (!key || key.trim() === "") {
+      // TODO translate
       errors.push("Une clé vide a été trouvée dans le fichier");
       continue;
     }
@@ -96,6 +101,7 @@ export function validateImportData(
     // Check key length (database limit is 500)
     if (key.length > 500) {
       errors.push(
+        // TODO translate
         `La clé "${key.substring(0, 50)}..." est trop longue (maximum 500 caractères)`,
       );
     }
@@ -103,6 +109,7 @@ export function validateImportData(
     // Check value is a string
     if (typeof value !== "string") {
       errors.push(
+        // TODO translate
         `La valeur pour la clé "${key}" doit être une chaîne de caractères`,
       );
     }
