@@ -13,8 +13,8 @@ import {
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus, LuGitBranch } from "react-icons/lu";
-import { ProjectBreadcrumb } from "~/components/ProjectBreadcrumb";
-import { ProjectNav } from "~/components/ProjectNav";
+import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
+import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches._index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";

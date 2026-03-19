@@ -26,7 +26,7 @@ import {
 } from "~/lib/organizations.server";
 import { db } from "~/lib/db.server";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
-import { OrgBreadcrumb } from "~/components/OrgBreadcrumb";
+import { OrgBreadcrumb } from "~/components/navigation/OrgBreadcrumb";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);

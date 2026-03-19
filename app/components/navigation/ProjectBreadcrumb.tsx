@@ -1,7 +1,7 @@
 import {
   AppBreadcrumb,
   type AppBreadcrumbItem,
-} from "~/components/AppBreadcrumb";
+} from "~/components/navigation/AppBreadcrumb";
 import { getProjectUrl } from "~/lib/routes-helpers";
 
 type BreadcrumbItem = {

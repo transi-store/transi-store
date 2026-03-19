@@ -1,7 +1,7 @@
 import { Container, VStack, Box, Stack, Text } from "@chakra-ui/react";
 import { Outlet, useLoaderData } from "react-router";
-import { ProjectBreadcrumb } from "~/components/ProjectBreadcrumb";
-import { ProjectNav } from "~/components/ProjectNav";
+import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
+import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";

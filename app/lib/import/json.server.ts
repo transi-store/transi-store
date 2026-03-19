@@ -147,7 +147,10 @@ export async function importTranslations({
 
       // 1. Fetch all existing keys for this project in one query
       const existingKeys = await tx
-        .select({ id: schema.translationKeys.id, keyName: schema.translationKeys.keyName })
+        .select({
+          id: schema.translationKeys.id,
+          keyName: schema.translationKeys.keyName,
+        })
         .from(schema.translationKeys)
         .where(
           and(
@@ -156,7 +159,9 @@ export async function importTranslations({
           ),
         );
 
-      const existingKeyMap = new Map(existingKeys.map((k) => [k.keyName, k.id]));
+      const existingKeyMap = new Map(
+        existingKeys.map((k) => [k.keyName, k.id]),
+      );
 
       // 2. Batch insert new keys (ON CONFLICT DO NOTHING)
       const newKeyNames = keyNames.filter((name) => !existingKeyMap.has(name));
@@ -174,9 +179,15 @@ export async function importTranslations({
               })),
             )
             .onConflictDoNothing({
-              target: [schema.translationKeys.projectId, schema.translationKeys.keyName],
+              target: [
+                schema.translationKeys.projectId,
+                schema.translationKeys.keyName,
+              ],
             })
-            .returning({ id: schema.translationKeys.id, keyName: schema.translationKeys.keyName });
+            .returning({
+              id: schema.translationKeys.id,
+              keyName: schema.translationKeys.keyName,
+            });
 
           for (const key of insertedKeys) {
             existingKeyMap.set(key.keyName, key.id);
@@ -192,7 +203,10 @@ export async function importTranslations({
       const missingKeys = keyNames.filter((name) => !existingKeyMap.has(name));
       if (missingKeys.length > 0) {
         const refetchedKeys = await tx
-          .select({ id: schema.translationKeys.id, keyName: schema.translationKeys.keyName })
+          .select({
+            id: schema.translationKeys.id,
+            keyName: schema.translationKeys.keyName,
+          })
           .from(schema.translationKeys)
           .where(
             and(
@@ -217,7 +231,9 @@ export async function importTranslations({
           ),
         );
 
-      const existingTranslationKeyIds = new Set(existingTranslations.map((t) => t.keyId));
+      const existingTranslationKeyIds = new Set(
+        existingTranslations.map((t) => t.keyId),
+      );
 
       // 5. Batch upsert translations based on strategy
       const translationValues = entries.map(([keyName, value]) => ({
@@ -285,6 +301,7 @@ export async function importTranslations({
       success: false,
       stats,
       errors: [
+        // TODO translate
         error instanceof Error ? error.message : "Erreur lors de l'import",
       ],
     };
