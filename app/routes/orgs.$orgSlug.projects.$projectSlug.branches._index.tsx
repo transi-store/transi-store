@@ -13,7 +13,8 @@ import {
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus, LuGitBranch } from "react-icons/lu";
-import { ProjectBreadcrumb } from "~/components/ProjectBreadcrumb";
+import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
+import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches._index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -66,18 +67,33 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
   return (
     <Container maxW="container.xl" py={5}>
       <VStack gap={6} align="stretch">
-        <ProjectBreadcrumb
-          organizationSlug={organization.slug}
-          organizationName={organization.name}
-          projectSlug={project.slug}
-          projectName={project.name}
-          items={[
-            {
-              label: t("branches.title"),
-              to: getBranchesUrl(organization.slug, project.slug),
-            },
-          ]}
-        />
+        <Stack
+          direction={{ base: "column", md: "row" }}
+          gap={2}
+          borderBottomWidth={1}
+          pb={2}
+          align={{ base: "stretch", md: "center" }}
+        >
+          <Box flex={{ base: "1", md: "auto" }} overflow="hidden">
+            <ProjectBreadcrumb
+              organizationSlug={organization.slug}
+              organizationName={organization.name}
+              projectSlug={project.slug}
+              projectName={project.name}
+              items={[
+                {
+                  label: t("branches.title"),
+                  to: getBranchesUrl(organization.slug, project.slug),
+                },
+              ]}
+            />
+          </Box>
+
+          <ProjectNav
+            organizationSlug={organization.slug}
+            projectSlug={project.slug}
+          />
+        </Stack>
 
         <Stack
           direction={{ base: "column", sm: "row" }}

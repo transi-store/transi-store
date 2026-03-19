@@ -16,7 +16,7 @@ import {
   redirect,
   Form,
 } from "react-router";
-import { ProjectBreadcrumb } from "~/components/ProjectBreadcrumb";
+import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { useTranslation } from "react-i18next";
 import { LuGitBranch, LuPlus, LuGitMerge, LuTrash2 } from "react-icons/lu";
 import { useState, useEffect, useCallback } from "react";

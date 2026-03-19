@@ -24,6 +24,7 @@ import { createProject, isProjectSlugAvailable } from "~/lib/projects.server";
 import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
 import { getInstance } from "~/middleware/i18next";
+import { getProjectUrl } from "~/lib/routes-helpers";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -76,7 +77,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     createdBy: user.userId,
   });
 
-  return redirect(`/orgs/${params.orgSlug}/projects/${slug}`);
+  return redirect(getProjectUrl(params.orgSlug, slug));
 }
 
 export default function NewProject({ loaderData }: Route.ComponentProps) {

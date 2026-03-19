@@ -14,6 +14,13 @@ export function removeUndefinedValues<
   ) as Record<string, string>;
 }
 
+export function getProjectUrl(orgSlug: string, projectSlug: string): string {
+  return generatePath(`/orgs/:orgSlug/projects/:projectSlug`, {
+    orgSlug,
+    projectSlug,
+  });
+}
+
 export function getTranslationsUrl(
   orgSlug: string,
   projectSlug: string,
