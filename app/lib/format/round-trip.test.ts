@@ -1,13 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { parseImportJSON } from "./import/json.server";
-import { parseImportXLIFF } from "./import/xliff.server";
-import { exportToJSON } from "./export/json.server";
-import { exportToXLIFF } from "./export/xliff.server";
-import type { ProjectTranslations } from "./translation-keys.server";
+import { JsonTranslationFormat } from "./json-format.server";
+import { XliffTranslationFormat } from "./xliff-format.server";
+import type { ProjectTranslations } from "./types";
 
 /**
  * Round-trip tests: verify that data survives import→export and export→import
- * without loss or corruption, using the current function implementations.
+ * without loss or corruption.
  */
 
 function buildProjectTranslations(
@@ -74,6 +72,8 @@ function buildProjectTranslationsWithSource(
 }
 
 describe("Round-trip: JSON", () => {
+  const json = new JsonTranslationFormat();
+
   it("export then import should produce the same data", () => {
     const originalData = {
       "home.title": "Accueil",
@@ -82,8 +82,8 @@ describe("Round-trip: JSON", () => {
     };
 
     const translations = buildProjectTranslations(originalData, "fr");
-    const exported = exportToJSON(translations, "fr");
-    const imported = parseImportJSON(exported);
+    const exported = json.exportSingleLocale(translations, { locale: "fr" });
+    const imported = json.parseImport(exported);
 
     expect(imported.success).toBe(true);
     expect(imported.data).toEqual(originalData);
@@ -99,11 +99,11 @@ describe("Round-trip: JSON", () => {
       2,
     );
 
-    const imported = parseImportJSON(originalJson);
+    const imported = json.parseImport(originalJson);
     expect(imported.success).toBe(true);
 
     const translations = buildProjectTranslations(imported.data!, "fr");
-    const exported = exportToJSON(translations, "fr");
+    const exported = json.exportSingleLocale(translations, { locale: "fr" });
 
     expect(exported).toBe(originalJson);
   });
@@ -116,8 +116,8 @@ describe("Round-trip: JSON", () => {
     };
 
     const translations = buildProjectTranslations(originalData, "en");
-    const exported = exportToJSON(translations, "en");
-    const imported = parseImportJSON(exported);
+    const exported = json.exportSingleLocale(translations, { locale: "en" });
+    const imported = json.parseImport(exported);
 
     expect(imported.success).toBe(true);
     expect(imported.data).toEqual(originalData);
@@ -125,6 +125,8 @@ describe("Round-trip: JSON", () => {
 });
 
 describe("Round-trip: XLIFF", () => {
+  const xliff = new XliffTranslationFormat();
+
   it("export then import should produce the same target data", () => {
     const originalData = {
       "home.title": "Accueil",
@@ -144,8 +146,12 @@ describe("Round-trip: XLIFF", () => {
       "en",
     );
 
-    const exported = exportToXLIFF(translations, "en", "fr", "test-project");
-    const imported = parseImportXLIFF(exported);
+    const exported = xliff.exportSingleLocale(translations, {
+      locale: "fr",
+      sourceLocale: "en",
+      projectName: "test-project",
+    });
+    const imported = xliff.parseImport(exported);
 
     expect(imported.success).toBe(true);
     expect(imported.data).toEqual(originalData);
@@ -170,11 +176,9 @@ describe("Round-trip: XLIFF", () => {
   </file>
 </xliff>`;
 
-    // 1. Import from XLIFF
-    const imported = parseImportXLIFF(originalXliff);
+    const imported = xliff.parseImport(originalXliff);
     expect(imported.success).toBe(true);
 
-    // 2. Build ProjectTranslations and re-export
     const sourceData: Record<string, string> = {
       "home.title": "Home",
       "nav.about": "About",
@@ -185,10 +189,13 @@ describe("Round-trip: XLIFF", () => {
       sourceData,
       "en",
     );
-    const reExported = exportToXLIFF(translations, "en", "fr", "test-project");
+    const reExported = xliff.exportSingleLocale(translations, {
+      locale: "fr",
+      sourceLocale: "en",
+      projectName: "test-project",
+    });
 
-    // 3. Re-import and verify data is identical
-    const reimported = parseImportXLIFF(reExported);
+    const reimported = xliff.parseImport(reExported);
     expect(reimported.success).toBe(true);
     expect(reimported.data).toEqual(imported.data);
   });
@@ -208,8 +215,12 @@ describe("Round-trip: XLIFF", () => {
       "en",
     );
 
-    const exported = exportToXLIFF(translations, "en", "fr", "test");
-    const imported = parseImportXLIFF(exported);
+    const exported = xliff.exportSingleLocale(translations, {
+      locale: "fr",
+      sourceLocale: "en",
+      projectName: "test",
+    });
+    const imported = xliff.parseImport(exported);
 
     expect(imported.success).toBe(true);
     expect(imported.data).toEqual(originalData);
@@ -217,17 +228,18 @@ describe("Round-trip: XLIFF", () => {
 });
 
 describe("Cross-format round-trip", () => {
+  const json = new JsonTranslationFormat();
+  const xliff = new XliffTranslationFormat();
+
   it("JSON import → XLIFF export → XLIFF import should preserve data", () => {
     const originalJson = JSON.stringify({
       "home.title": "Accueil",
       "nav.about": "À propos",
     });
 
-    // 1. Import from JSON
-    const jsonImported = parseImportJSON(originalJson);
+    const jsonImported = json.parseImport(originalJson);
     expect(jsonImported.success).toBe(true);
 
-    // 2. Build ProjectTranslations and export to XLIFF
     const sourceData = Object.fromEntries(
       Object.keys(jsonImported.data!).map((k) => [k, `source_${k}`]),
     );
@@ -237,10 +249,13 @@ describe("Cross-format round-trip", () => {
       sourceData,
       "en",
     );
-    const xliffExported = exportToXLIFF(translations, "en", "fr", "test");
+    const xliffExported = xliff.exportSingleLocale(translations, {
+      locale: "fr",
+      sourceLocale: "en",
+      projectName: "test",
+    });
 
-    // 3. Import from XLIFF
-    const xliffImported = parseImportXLIFF(xliffExported);
+    const xliffImported = xliff.parseImport(xliffExported);
     expect(xliffImported.success).toBe(true);
     expect(xliffImported.data).toEqual(jsonImported.data);
   });
@@ -264,16 +279,13 @@ describe("Cross-format round-trip", () => {
   </file>
 </xliff>`;
 
-    // 1. Import from XLIFF
-    const xliffImported = parseImportXLIFF(originalXliff);
+    const xliffImported = xliff.parseImport(originalXliff);
     expect(xliffImported.success).toBe(true);
 
-    // 2. Build ProjectTranslations and export to JSON
     const translations = buildProjectTranslations(xliffImported.data!, "fr");
-    const jsonExported = exportToJSON(translations, "fr");
+    const jsonExported = json.exportSingleLocale(translations, { locale: "fr" });
 
-    // 3. Import from JSON
-    const jsonImported = parseImportJSON(jsonExported);
+    const jsonImported = json.parseImport(jsonExported);
     expect(jsonImported.success).toBe(true);
     expect(jsonImported.data).toEqual(xliffImported.data);
   });

@@ -1,12 +1,12 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getBranchBySlug, createBranch } from "~/lib/branches.server";
+import { validateImportData } from "./validate-import-data.server";
+import { importTranslations } from "./import-translations.server";
+import type { ImportStats } from "./import-translations.server";
 import {
-  parseImportJSON,
-  validateImportData,
-  importTranslations,
-} from "./json.server";
-import { parseImportXLIFF } from "./xliff.server";
-import type { ImportStats } from "./json.server";
+  createTranslationFormat,
+  type SupportedFormat,
+} from "~/lib/format/format-factory.server";
 import { ImportStrategy } from "./import-strategy";
 import { BRANCH_STATUS } from "../branches";
 
@@ -56,7 +56,7 @@ export async function processImport(
 
   // 4. Detect format from explicit parameter or file extension
   const formatParam = formData.get("format");
-  let format: "json" | "xliff";
+  let format: SupportedFormat;
 
   if (
     typeof formatParam === "string" &&
@@ -125,10 +125,8 @@ export async function processImport(
   }
 
   // 8. Parse file based on format
-  const parseResult =
-    format === "xliff"
-      ? parseImportXLIFF(fileContent)
-      : parseImportJSON(fileContent);
+  const translator = createTranslationFormat(format);
+  const parseResult = translator.parseImport(fileContent);
 
   if (!parseResult.success) {
     return {

@@ -1,7 +1,7 @@
 import { Box, Text, VStack, Heading } from "@chakra-ui/react";
 import { type JSX } from "react";
 import { useTranslation } from "react-i18next";
-import type { ImportStats } from "~/lib/import/json.server";
+import type { ImportStats } from "~/lib/import/import-translations.server";
 
 type ImportResultsProps = {
   importStats?: ImportStats;
