@@ -2,7 +2,6 @@ import {
   Container,
   Heading,
   VStack,
-  Button,
   Box,
   Text,
   SimpleGrid,
@@ -10,21 +9,24 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { Link, NavLink, Outlet, useLoaderData, data } from "react-router";
+import {
+  NavLink,
+  Outlet,
+  useLoaderData,
+  useLocation,
+  data,
+} from "react-router";
 import { LuFolderOpen, LuUsers, LuSettings } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug";
-import {
-  userContext,
-} from "~/middleware/auth";
-import {
-  updateSessionLastOrganization,
-} from "~/lib/session.server";
+import { userContext } from "~/middleware/auth";
+import { updateSessionLastOrganization } from "~/lib/session.server";
 import {
   requireOrganizationMembership,
   updateUserLastOrganization,
 } from "~/lib/organizations.server";
 import { db } from "~/lib/db.server";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
+import { OrgBreadcrumb } from "~/components/OrgBreadcrumb";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -72,20 +74,27 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 export default function OrganizationLayout() {
   const { t } = useTranslation();
   const { organization, stats } = useLoaderData<typeof loader>();
+  const location = useLocation();
+
+  const breadcrumbCurrent = (() => {
+    if (location.pathname.endsWith("/members")) return t("orgs.tab.members");
+    if (location.pathname.endsWith("/settings")) return t("orgs.tab.settings");
+    return undefined;
+  })();
 
   return (
     <Container maxW="container.xl" py={10}>
       <VStack gap={8} align="stretch">
         {/* Header */}
         <Box>
-          <HStack justify="space-between" mb={2}>
-            <Heading as="h1" size="2xl">
-              {organization.name}
-            </Heading>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/orgs">{t("orgs.return")}</Link>
-            </Button>
-          </HStack>
+          <OrgBreadcrumb
+            organizationSlug={organization.slug}
+            organizationName={organization.name}
+            current={breadcrumbCurrent}
+          />
+          <Heading as="h1" size="2xl" mt={2}>
+            {organization.name}
+          </Heading>
         </Box>
 
         {/* Statistiques */}

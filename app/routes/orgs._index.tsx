@@ -14,6 +14,7 @@ import type { Route } from "./+types/orgs._index";
 import { userContext } from "~/middleware/auth";
 import { getUserOrganizations } from "~/lib/organizations.server";
 import { useTranslation } from "react-i18next";
+import { AppBreadcrumb } from "~/components/AppBreadcrumb";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -29,6 +30,7 @@ export default function OrganizationsIndex() {
   return (
     <Container maxW="container.xl" py={10}>
       <VStack gap={6} align="stretch">
+        <AppBreadcrumb />
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Heading as="h1" size="2xl">
             {t("orgs.title")}

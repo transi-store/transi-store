@@ -1,25 +1,11 @@
-import {
-  Container,
-  VStack,
-  Button,
-  Box,
-  HStack,
-  Text,
-  Stack,
-} from "@chakra-ui/react";
-import { Link, Outlet, useLoaderData, useLocation } from "react-router";
-import { useTranslation } from "react-i18next";
+import { Container, VStack, Box, Stack, Text } from "@chakra-ui/react";
+import { Outlet, useLoaderData } from "react-router";
 import { ProjectBreadcrumb } from "~/components/ProjectBreadcrumb";
+import { ProjectNav } from "~/components/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import {
-  LuImport,
-  LuLanguages,
-  LuSettings,
-  LuGitBranch,
-} from "react-icons/lu";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -40,23 +26,6 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
 export default function ProjectLayout() {
   const { organization, project, languages } = useLoaderData<typeof loader>();
-  const location = useLocation();
-  const { t } = useTranslation();
-
-  const navItems = [
-    {
-      path: "translations",
-      label: t("translations.title"),
-      icon: <LuLanguages />,
-    },
-    {
-      path: "branches",
-      label: t("branches.title"),
-      icon: <LuGitBranch />,
-    },
-    { path: "settings", label: t("orgs.tab.settings"), icon: <LuSettings /> },
-    { path: "import-export", label: t("import.title"), icon: <LuImport /> },
-  ];
 
   return (
     <Container maxW="container.xl" py={5}>
@@ -80,31 +49,10 @@ export default function ProjectLayout() {
             />
           </Box>
 
-          <HStack
-            gap={2}
-            flexWrap="wrap"
-            justify={{ base: "flex-start", md: "flex-end" }}
-            flex={{ base: "1", md: "auto" }}
-          >
-            {navItems.map((item) => {
-              const fullPath = `/orgs/${organization.slug}/projects/${project.slug}/${item.path}`;
-              const isActive = location.pathname === fullPath;
-
-              return (
-                <Button
-                  key={item.path}
-                  asChild
-                  variant={isActive ? "solid" : "ghost"}
-                  colorPalette={isActive ? "brand" : "gray"}
-                  size="sm"
-                >
-                  <Link to={fullPath}>
-                    {item.icon} {item.label}
-                  </Link>
-                </Button>
-              );
-            })}
-          </HStack>
+          <ProjectNav
+            organizationSlug={organization.slug}
+            projectSlug={project.slug}
+          />
         </Stack>
 
         {project.description && (

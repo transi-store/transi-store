@@ -14,6 +14,7 @@ import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { db } from "~/lib/db.server";
 import { useTranslation } from "react-i18next";
+import { getProjectUrl } from "~/lib/routes-helpers";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -62,7 +63,7 @@ export default function OrganizationProjects() {
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
           {projects.map((project) => (
             <Card.Root key={project.id} asChild>
-              <Link to={`/orgs/${organization.slug}/projects/${project.slug}`}>
+              <Link to={getProjectUrl(organization.slug, project.slug)}>
                 <Card.Body>
                   <Heading as="h3" size="md" mb={2}>
                     {project.name}

@@ -1,7 +1,9 @@
-import { Breadcrumb, Heading } from "@chakra-ui/react";
-import { Fragment } from "react";
-import { NavLink } from "react-router";
-import { useTranslation } from "react-i18next";
+import {
+  AppBreadcrumb,
+  type AppBreadcrumbItem,
+} from "~/components/AppBreadcrumb";
+import { getProjectUrl } from "~/lib/routes-helpers";
+
 type BreadcrumbItem = {
   label: string;
   to: string;
@@ -26,63 +28,24 @@ export function ProjectBreadcrumb({
   items,
   current,
 }: ProjectBreadcrumbProps) {
-  const { t } = useTranslation();
+  const hasExtraItems = items && items.length > 0;
 
-  return (
-    <Breadcrumb.Root>
-      <Breadcrumb.List>
-        <Breadcrumb.Item>
-          <Breadcrumb.Link asChild>
-            <NavLink to="/orgs">{t("header.myOrganizations")}</NavLink>
-          </Breadcrumb.Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Separator />
-        <Breadcrumb.Item hideBelow="sm">
-          <Breadcrumb.Link asChild>
-            <NavLink to={`/orgs/${organizationSlug}`}>
-              {organizationName}
-            </NavLink>
-          </Breadcrumb.Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Separator hideBelow="sm" />
+  const allItems: Array<AppBreadcrumbItem> = [
+    {
+      label: organizationName,
+      to: `/orgs/${organizationSlug}`,
+      hideBelow: "sm",
+    },
+    ...(hasExtraItems
+      ? [
+          {
+            label: projectName,
+            to: getProjectUrl(organizationSlug, projectSlug),
+          },
+          ...items.map((item) => ({ label: item.label, to: item.to })),
+        ]
+      : [{ label: current ?? projectName }]),
+  ];
 
-        {/* Project: link if there are extra items, otherwise current */}
-        {items && items.length > 0 ? (
-          <>
-            <Breadcrumb.Item>
-              <Breadcrumb.Link asChild>
-                <NavLink
-                  to={`/orgs/${organizationSlug}/projects/${projectSlug}`}
-                >
-                  {projectName}
-                </NavLink>
-              </Breadcrumb.Link>
-            </Breadcrumb.Item>
-            <Breadcrumb.Separator />
-          </>
-        ) : (
-          <Breadcrumb.Item>
-            <Breadcrumb.CurrentLink>
-              <Heading as="span" size="sm">
-                {current ?? projectName}
-              </Heading>
-            </Breadcrumb.CurrentLink>
-          </Breadcrumb.Item>
-        )}
-
-        {/* Intermediate navigable items */}
-        {items?.map((item, i) => (
-          <Fragment key={item.to}>
-            <Breadcrumb.Item>
-              <Breadcrumb.Link asChild>
-                <NavLink to={item.to}>{item.label}</NavLink>
-              </Breadcrumb.Link>
-            </Breadcrumb.Item>
-            {i < items.length - 1 && <Breadcrumb.Separator />}{" "}
-            {/* Separator except after the last item, which is the current page */}
-          </Fragment>
-        ))}
-      </Breadcrumb.List>
-    </Breadcrumb.Root>
-  );
+  return <AppBreadcrumb items={allItems} />;
 }
