@@ -4,7 +4,8 @@ import { getBranchBySlug } from "~/lib/branches.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { orgContext } from "~/middleware/api-auth";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.export";
-import { isSupportedFormat, SupportedFormat } from "~/lib/format/types";
+import { isSupportedFormat } from "~/lib/format/types";
+import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const organization = context.get(orgContext);
@@ -19,7 +20,27 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url);
-  const formatName = url.searchParams.get("format") || SupportedFormat.JSON;
+  const queryParseResult = exportQuerySchema.safeParse({
+    format: url.searchParams.get("format") ?? undefined,
+    locale: url.searchParams.get("locale") ?? undefined,
+    branch: url.searchParams.get("branch") ?? undefined,
+  });
+
+  if (!queryParseResult.success) {
+    return new Response(
+      JSON.stringify({
+        error: queryParseResult.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; "),
+      }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+
+  const { format: formatName, locale, branch: branchParam } = queryParseResult.data;
 
   if (!isSupportedFormat(formatName)) {
     return new Response(
@@ -47,7 +68,6 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   // Resolve optional branch
-  const branchParam = url.searchParams.get("branch");
   let branchId: number | undefined;
   if (branchParam) {
     const branch = await getBranchBySlug(project.id, branchParam);
@@ -77,7 +97,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     });
   }
 
-  const filename = `${project.slug}-${url.searchParams.get("locale")}.${result.fileExtension}`;
+  const filename = `${project.slug}-${locale}.${result.fileExtension}`;
 
   return new Response(result.content, {
     headers: {

@@ -64,6 +64,7 @@ describe("Export Project Loader", () => {
   });
 
   it("should return 400 error when missing required parameters", async () => {
+    // Missing locale → Zod validation error
     const request = new Request(
       "https://example.com/api/orgs/test-org/projects/test-project/export",
     );
@@ -77,12 +78,15 @@ describe("Export Project Loader", () => {
 
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toBe("No languages configured for this project");
+    expect(data.error).toEqual(
+      "locale: Invalid input: expected string, received undefined",
+    );
 
-    await createProjectLanguage(getTestDb(), 1);
-
+    // Locale provided but no languages configured
     const response2 = await loader({
-      request,
+      request: new Request(
+        "https://example.com/api/orgs/test-org/projects/test-project/export?locale=fr",
+      ),
       params: { orgSlug: "test-org", projectSlug: "test-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
       context: createOrgContext(),
@@ -90,10 +94,11 @@ describe("Export Project Loader", () => {
 
     expect(response2.status).toBe(400);
     const data2 = await response2.json();
-    expect(data2.error).toBe(
-      "Missing 'locale' parameter. Use ?format=json&locale=fr",
-    );
+    expect(data2.error).toBe("No languages configured for this project");
 
+    await createProjectLanguage(getTestDb(), 1);
+
+    // Locale provided but language not found in project
     const response3 = await loader({
       request: new Request(
         "https://example.com/api/orgs/test-org/projects/test-project/export?locale=dk",
