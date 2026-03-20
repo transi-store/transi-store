@@ -1,4 +1,4 @@
-# ADR-017: Auto-generated OpenAPI documentation with Redoc
+# ADR-017: Auto-generated OpenAPI documentation with Scalar
 
 **Date**: 2026-03-20
 
@@ -53,14 +53,19 @@ const result = exportQuerySchema.safeParse({ ... });
 
 ### 3. Public routes
 
-Two new public routes (no authentication required):
+Three new public routes (no authentication required):
 
-- `GET /api/doc` — HTML page with Redoc
+- `GET /api/doc` — HTML page with site header + Scalar iframe
+- `GET /api/doc/viewer` — Standalone HTML page serving Scalar via CDN (iframe target)
 - `GET /api/doc.json` — Raw OpenAPI 3.1 specification
 
-### 4. Rendering with Redoc
+### 4. Rendering with Scalar
 
-[Redoc](https://github.com/Redocly/redoc) is loaded via **client-side lazy-loading** to avoid SSR issues. The page inherits the root layout and therefore displays the site header.
+[Scalar](https://scalar.com/) is loaded via its **CDN** in a **standalone HTML page** (`/api/doc/viewer`). This page is embedded as an `<iframe>` in `/api/doc`, which keeps the root layout and site header.
+
+The iframe approach is necessary because Scalar injects global CSS resets and variables that conflict with Chakra UI when rendered directly inside the React tree. Full CSS isolation via iframe resolves this cleanly.
+
+The color mode (light/dark) is passed to the iframe as a `?theme=` query parameter, so Scalar stays in sync with the site's theme. No additional npm packages are needed for Scalar (CDN-only).
 
 An "API" link is added to the header for unauthenticated users.
 
@@ -68,9 +73,10 @@ An "API" link is added to the header for unauthenticated users.
 
 1. **Single source of truth**: Zod validates and documents simultaneously — out-of-sync documentation is impossible by design
 2. **No duplication**: Schemas are defined once and reused everywhere
-3. **Redoc**: High-quality interactive rendering, well-suited for OpenAPI 3.1
-4. **OpenAPI 3.1**: Industry standard, compatible with many tools (clients, mocks, tests)
-5. **Public accessibility**: Documentation is accessible without authentication, making integration easier
+3. **Scalar**: Modern interactive rendering with "Try it out" built-in, lighter than Redoc (~350 KB vs ~1.1 MB), no npm dependency (CDN)
+4. **CSS isolation**: Iframe approach avoids CSS conflicts between Scalar and Chakra UI
+5. **OpenAPI 3.1**: Industry standard, compatible with many tools (clients, mocks, tests)
+6. **Public accessibility**: Documentation is accessible without authentication, making integration easier
 
 ## Alternatives considered
 
@@ -88,7 +94,9 @@ An "API" link is added to the header for unauthenticated users.
 
 ### 4. Scalar instead of Redoc
 
-**Considered**: Scalar is a more recent alternative to Redoc. Redoc was chosen because it is more mature, better documented, and has a stable React component (`RedocStandalone`). Scalar could be considered in the future.
+**Chosen**: Scalar is a more modern alternative to Redoc. It was preferred over Redoc for its lighter bundle size (~350 KB vs ~1.1 MB), built-in "Try it out" feature (free, no paid plan required), and modern UI. Redoc was initially considered but Scalar was selected after comparison.
+
+The main challenge was CSS isolation: Scalar's global styles conflict with Chakra UI. This was solved with the iframe approach (see decision §4 above).
 
 ## Consequences
 
@@ -96,14 +104,15 @@ An "API" link is added to the header for unauthenticated users.
 
 - Documentation always synchronized with validation code
 - Interactive interface publicly accessible at `/api/doc`
+- Built-in "Try it out" functionality via Scalar (no additional cost)
 - Explicit reference to the `@transi-store/cli` CLI in the docs
 - Replicable pattern for any new API endpoint
 - Indirect improvement of handlers (more explicit and consistent validation via Zod)
 
 ### Negative
 
-- Additional dependencies: `@asteasolutions/zod-to-openapi`, `redoc` (+ `mobx`, `styled-components`, `core-js`)
-- Redoc (~1.1 MB minified) increases the client bundle, mitigated by lazy-loading
+- Additional dependency: `@asteasolutions/zod-to-openapi`
+- Scalar loaded via CDN (requires internet access in production — acceptable for a documentation page)
 - `File` fields (FormData) remain manually documented in the OpenAPI registry (technical limitation of Zod)
 
 ## Files created/modified
@@ -114,7 +123,8 @@ An "API" link is added to the header for unauthenticated users.
 - `app/lib/api-doc/schemas/import.ts` — Zod schemas for the import endpoint
 - `app/lib/api-doc/openapi.server.ts` — OpenAPI registry + document generation
 - `app/routes/api.doc.json.tsx` — Route serving the JSON spec
-- `app/routes/api.doc.tsx` — Route serving the Redoc page
+- `app/routes/api.doc.tsx` — Route serving the Scalar page (with site header + iframe)
+- `app/routes/api.doc.viewer.tsx` — Standalone HTML page with Scalar CDN (iframe target)
 - `docs/technical-notes/openapi-documentation.md` — Technical documentation
 
 ### Modified
@@ -128,7 +138,7 @@ An "API" link is added to the header for unauthenticated users.
 ## References
 
 - [`@asteasolutions/zod-to-openapi`](https://github.com/asteasolutions/zod-to-openapi)
-- [Redoc](https://github.com/Redocly/redoc)
+- [Scalar](https://scalar.com/)
 - [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0)
 - [ADR-006](./ADR-006-cles-api-export.md) — API keys for export
 - [ADR-014](./ADR-014-import-api-endpoint.md) — Import API endpoint

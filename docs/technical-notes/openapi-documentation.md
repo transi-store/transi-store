@@ -4,10 +4,11 @@ REST API documentation is automatically generated from **shared Zod schemas** vi
 
 ## Public URLs
 
-| URL            | Description                                       |
-| -------------- | ------------------------------------------------- |
-| `/api/doc`     | HTML page with Redoc rendering + site header      |
-| `/api/doc.json`| OpenAPI 3.1 specification (raw JSON)              |
+| URL               | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| `/api/doc`        | HTML page with Scalar rendering + site header            |
+| `/api/doc/viewer` | Standalone HTML page with Scalar CDN (iframe target)     |
+| `/api/doc.json`   | OpenAPI 3.1 specification (raw JSON)                     |
 
 These routes are public (no authentication required).
 
@@ -22,7 +23,8 @@ app/lib/api-doc/
 
 app/routes/
 ├── api.doc.json.tsx        # Route serving the JSON spec
-└── api.doc.tsx             # Route serving the Redoc page
+├── api.doc.tsx             # Route serving the Scalar page (with site header)
+└── api.doc.viewer.tsx      # Standalone HTML page with Scalar CDN (iframe target)
 ```
 
 ## Single Source of Truth
@@ -63,13 +65,18 @@ export const exportQuerySchema = z.object({
 // 3. OpenAPI registry already uses this schema → documentation is automatic
 ```
 
-## Redoc (Front-end)
+## Scalar (Front-end)
 
-HTML rendering uses [Redoc](https://github.com/Redocly/redoc), loaded via **client-side lazy-loading** to avoid SSR issues. The page inherits the root layout and displays the site header.
+HTML rendering uses [Scalar](https://scalar.com/), loaded via its **CDN** (`cdn.jsdelivr.net/npm/@scalar/api-reference`) in a **standalone HTML page** (`/api/doc/viewer`). This page is embedded in an `<iframe>` inside `/api/doc`, which keeps the site header from the root layout.
+
+### Why the iframe approach?
+
+Scalar injects global CSS resets and variables that conflict with Chakra UI when rendered directly inside the React root. The iframe provides full CSS isolation while preserving the site header.
+
+The color mode (light/dark) is passed as a `?theme=` query parameter from the parent page to the iframe, so Scalar stays in sync with the site's color mode.
 
 ### Dependencies
 
-- `redoc`: React component for rendering
-- `mobx`, `styled-components`, `core-js`: Redoc peer dependencies
 - `@asteasolutions/zod-to-openapi`: Spec generation from Zod
+- No npm dependency for Scalar itself: loaded via CDN
 
