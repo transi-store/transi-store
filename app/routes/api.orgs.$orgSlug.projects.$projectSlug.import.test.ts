@@ -14,6 +14,8 @@ import {
   getTestDb,
 } from "../../tests/test-db";
 import { withQueryCounter, getQueryCount } from "~/lib/query-counter.server";
+import { SupportedFormat } from "~/lib/format/types";
+import { ImportStrategy } from "~/lib/import/import-strategy";
 
 vi.mock("~/lib/db.server", () => ({
   get db() {
@@ -26,9 +28,17 @@ function buildImportRequest(
   orgSlug: string,
   projectSlug: string,
   data: Record<string, string>,
-  options: { locale?: string; strategy?: string; format?: string } = {},
+  options: {
+    locale?: string;
+    strategy?: ImportStrategy;
+    format?: SupportedFormat;
+  } = {},
 ) {
-  const { locale = "en", strategy = "overwrite", format = "json" } = options;
+  const {
+    locale = "en",
+    strategy = ImportStrategy.OVERWRITE,
+    format = SupportedFormat.JSON,
+  } = options;
   const formData = new FormData();
   formData.append("locale", locale);
   formData.append("strategy", strategy);
@@ -223,7 +233,7 @@ describe("Import API", () => {
         "test-org",
         "test-project",
         { "home.title": "New Home" },
-        { strategy: "skip" },
+        { strategy: ImportStrategy.SKIP },
       );
 
       const response = await callAction(request, "test-org", "test-project");
@@ -252,7 +262,7 @@ describe("Import API", () => {
           "home.title": "New Home",
           "home.subtitle": "Welcome",
         },
-        { strategy: "skip" },
+        { strategy: ImportStrategy.SKIP },
       );
 
       const response = await callAction(request, "test-org", "test-project");

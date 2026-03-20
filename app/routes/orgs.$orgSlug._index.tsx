@@ -12,9 +12,9 @@ import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug._index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { db } from "~/lib/db.server";
 import { useTranslation } from "react-i18next";
 import { getProjectUrl } from "~/lib/routes-helpers";
+import { getProjectsForOrganization } from "~/lib/projects.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -23,10 +23,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     params.orgSlug,
   );
 
-  // Récupérer les projets de l'organisation
-  const projects = await db.query.projects.findMany({
-    where: { organizationId: organization.id },
-  });
+  // Get projects for the organization
+  const projects = await getProjectsForOrganization(organization.id);
 
   return { organization, projects };
 }

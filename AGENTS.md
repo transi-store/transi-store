@@ -17,6 +17,7 @@ This project maintains detailed technical documentation in the `docs/` folder:
    - [database-schema.md](./docs/technical-notes/database-schema.md) - PostgreSQL schema and relationships
    - [export-api.md](./docs/technical-notes/export-api.md) - Translation export API (JSON/XLIFF)
    - [import-system.md](./docs/technical-notes/import-system.md) - Translation import system
+   - [openapi-documentation.md](./docs/technical-notes/openapi-documentation.md) - OpenAPI spec generation and Redoc UI
    - [code-patterns.md](./docs/technical-notes/code-patterns.md) - Common coding patterns
    - [code-formatting.md](./docs/technical-notes/code-formatting.md) - Prettier formatting rules
    - [traductions.md](./docs/technical-notes/traductions.md) - i18n translation management
@@ -90,6 +91,12 @@ docker compose up -d         # Start PostgreSQL
 5. **Database schema changes**: Use `yarn db:push` (no migrations for now)
 
 6. **Multi-tenant**: All data isolated by organization via membership checks
+
+7. **API documentation (OpenAPI)**: The API spec is auto-generated from **shared Zod schemas** in `app/lib/api-doc/schemas/`. When adding or modifying an API endpoint:
+   - Update the Zod schema in the corresponding schema file
+   - Use the schema in the handler for validation (`safeParse()`)
+   - Register the path in `app/lib/api-doc/openapi.server.ts`
+   - See [openapi-documentation.md](./docs/technical-notes/openapi-documentation.md) for details
 
 ## Environment Variables
 

@@ -4,9 +4,9 @@ import { validateImportData } from "./validate-import-data.server";
 import { importTranslations } from "./import-translations.server";
 import type { ImportStats } from "./import-translations.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
-import { ImportStrategy } from "./import-strategy";
 import { BRANCH_STATUS } from "../branches";
 import { SupportedFormat } from "../format/types";
+import { importFieldsSchema } from "../api-doc/schemas/import";
 
 type ProcessImportResult =
   | { success: true; importStats: ImportStats }
@@ -23,44 +23,45 @@ type ProcessImportParams = {
  * Shared import processing logic used by both the UI action and the API endpoint.
  * Handles all validation (file, locale, strategy, format) and import processing.
  */
-export async function processImport(
-  params: ProcessImportParams,
-): Promise<ProcessImportResult> {
-  const { organizationId, projectSlug, formData, branchSlug } = params;
-
+export async function processImport({
+  organizationId,
+  projectSlug,
+  formData,
+}: ProcessImportParams): Promise<ProcessImportResult> {
   // 1. Validate file input
   const file = formData.get("file");
   if (!file || !(file instanceof File)) {
     return { success: false, error: "Missing 'file' field" };
   }
 
-  // 2. Validate locale input
-  const locale = formData.get("locale");
-  if (!locale || typeof locale !== "string") {
-    return { success: false, error: "Missing 'locale' field" };
-  }
+  // 2. Validate text fields with shared Zod schema
+  const fieldsResult = importFieldsSchema().safeParse({
+    locale: formData.get("locale"),
+    strategy: formData.get("strategy") || undefined,
+    format: formData.get("format") || undefined,
+    branch: formData.get("branch") || undefined,
+  });
 
-  // 3. Validate strategy input
-  const strategy = formData.get("strategy");
-  if (
-    strategy !== ImportStrategy.OVERWRITE &&
-    strategy !== ImportStrategy.SKIP
-  ) {
+  if (!fieldsResult.success) {
     return {
       success: false,
-      error: `Invalid 'strategy' field. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'`,
+      error: fieldsResult.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; "),
     };
   }
 
+  const {
+    locale,
+    strategy,
+    format: formatParam,
+    branch: branchSlug,
+  } = fieldsResult.data;
+
   // 4. Detect format from explicit parameter or file extension
-  const formatParam = formData.get("format");
   let format: SupportedFormat;
 
-  if (
-    typeof formatParam === "string" &&
-    (formatParam === SupportedFormat.JSON ||
-      formatParam === SupportedFormat.XLIFF)
-  ) {
+  if (formatParam) {
     format = formatParam;
   } else if (file.name.endsWith(".xliff") || file.name.endsWith(".xlf")) {
     format = SupportedFormat.XLIFF;

@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { eq, and } from "drizzle-orm";
+import { count, eq, and } from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
@@ -39,6 +39,37 @@ export async function isProjectSlugAvailable(
   });
 
   return !existing;
+}
+
+export async function getProjectsForOrganization(organizationId: number) {
+  return await db.query.projects.findMany({
+    where: { organizationId },
+    orderBy: (projects, { asc }) => [asc(projects.createdAt)],
+  });
+}
+
+export async function countProjectsForOrganization(organizationId: number) {
+  const result = await db
+    .select({
+      count: count(),
+    })
+    .from(schema.projects)
+    .where(eq(schema.projects.organizationId, organizationId))
+    .execute();
+
+  return Number(result[0].count);
+}
+
+export async function countMembersForOrganization(organizationId: number) {
+  const result = await db
+    .select({
+      count: count(),
+    })
+    .from(schema.organizationMembers)
+    .where(eq(schema.organizationMembers.organizationId, organizationId))
+    .execute();
+
+  return Number(result[0].count);
 }
 
 export async function getProjectLanguages(projectId: number) {

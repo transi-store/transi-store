@@ -16,6 +16,7 @@ Documentation technique détaillée de l'implémentation de transi-store.
 | [code-formatting.md](./code-formatting.md)             | Règles de formatage Prettier                                             |
 | [traductions.md](./traductions.md)                     | Gestion des traductions du site (i18next, i18n)                          |
 | [dev-setup-and-testing.md](./dev-setup-and-testing.md) | Setup développement local et tests                                       |
+| [openapi-documentation.md](./openapi-documentation.md) | Documentation OpenAPI auto-générée depuis Zod, rendu Redoc               |
 
 ## Ordre de lecture recommandé
 
@@ -36,6 +37,7 @@ Documentation technique détaillée de l'implémentation de transi-store.
 
 1. **export-api.md** - Documentation complète de l'endpoint d'export
 2. **import-system.md** - Comment importer des traductions
+3. **openapi-documentation.md** - Documentation OpenAPI auto-générée
 
 ## Voir aussi
 

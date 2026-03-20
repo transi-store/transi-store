@@ -24,9 +24,12 @@ import {
   requireOrganizationMembership,
   updateUserLastOrganization,
 } from "~/lib/organizations.server";
-import { db } from "~/lib/db.server";
-import { getOrganizationApiKeys } from "~/lib/api-keys.server";
+import { countOrganizationApiKeys } from "~/lib/api-keys.server";
 import { OrgBreadcrumb } from "~/components/navigation/OrgBreadcrumb";
+import {
+  countMembersForOrganization,
+  countProjectsForOrganization,
+} from "~/lib/projects.server";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -47,24 +50,20 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     headers["Set-Cookie"] = setCookie;
   }
 
-  // Récupérer les statistiques pour l'en-tête
-  const projects = await db.query.projects.findMany({
-    where: { organizationId: organization.id },
-  });
+  // get projects for the organization
+  const projectsCount = await countProjectsForOrganization(organization.id);
 
-  const memberships = await db.query.organizationMembers.findMany({
-    where: { organizationId: organization.id },
-  });
+  const membersCount = await countMembersForOrganization(organization.id);
 
-  const apiKeys = await getOrganizationApiKeys(organization.id);
+  const apiKeysCount = await countOrganizationApiKeys(organization.id);
 
   return data(
     {
       organization,
       stats: {
-        projectsCount: projects.length,
-        membersCount: memberships.length,
-        apiKeysCount: apiKeys.length,
+        projectsCount,
+        membersCount,
+        apiKeysCount,
       },
     },
     { headers },

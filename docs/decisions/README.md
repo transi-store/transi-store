@@ -112,6 +112,7 @@ Utilisez le template suivant :
 | [ADR-014](./ADR-014-import-api-endpoint.md)                         | Endpoint API d'import de traductions et commande CLI upload           | 2026-03-13 | Accepté ✅ |
 | [ADR-015](./ADR-015-middleware-authentification-layout.md)          | Middleware d'authentification avec routes layout                      | 2026-03-18 | Accepté ✅ |
 | [ADR-016](./ADR-016-elimination-loaders-redondants.md)              | Élimination des loaders redondants via middleware de contexte         | 2026-03-18 | Proposé 🔄 |
+| [ADR-017](./ADR-017-openapi-documentation.md)                       | Auto-generated OpenAPI documentation with Scalar                      | 2026-03-20 | Accepté ✅ |
 
 ## Références
 
