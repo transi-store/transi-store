@@ -5,28 +5,29 @@ import { ImportStrategy } from "~/lib/import/import-strategy";
 
 extendZodWithOpenApi(z);
 
-export const importFieldsSchema = z.object({
-  locale: z.string().openapi({
-    description:
-      "Language code to import into (must match one of the project's configured languages).",
-    example: "fr",
-  }),
-  strategy: z.enum(ImportStrategy).openapi({
-    description:
-      "Import strategy. 'overwrite' updates existing translations. 'skip' only creates missing translations and leaves existing ones untouched.",
-    example: ImportStrategy.OVERWRITE,
-  }),
-  format: z.enum(SupportedFormat).optional().openapi({
-    description:
-      "File format. Auto-detected from file extension if omitted (.json → json, .xliff/.xlf → xliff).",
-    example: SupportedFormat.JSON,
-  }),
-  branch: z.string().optional().openapi({
-    description:
-      "Target branch slug. If the branch does not exist and has an open status, it will be created automatically. Omit to import into the main branch.",
-    example: "feature-xyz",
-  }),
-});
+export const importFieldsSchema = (localeExample = "fr") =>
+  z.object({
+    locale: z.string().openapi({
+      description:
+        "Language code to import into (must match one of the project's configured languages).",
+      example: localeExample,
+    }),
+    strategy: z.enum(ImportStrategy).openapi({
+      description:
+        "Import strategy. 'overwrite' updates existing translations. 'skip' only creates missing translations and leaves existing ones untouched.",
+      example: ImportStrategy.OVERWRITE,
+    }),
+    format: z.enum(SupportedFormat).optional().openapi({
+      description:
+        "File format. Auto-detected from file extension if omitted (.json → json, .xliff/.xlf → xliff).",
+      example: SupportedFormat.JSON,
+    }),
+    branch: z.string().optional().openapi({
+      description:
+        "Target branch slug. If the branch does not exist and has an open status, it will be created automatically. Omit to import into the main branch.",
+      example: "feature-xyz",
+    }),
+  });
 
 export const importSuccessResponseSchema = z
   .object({

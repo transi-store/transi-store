@@ -20,7 +20,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url);
-  const queryParseResult = exportQuerySchema.safeParse({
+  const queryParseResult = exportQuerySchema().safeParse({
     format: url.searchParams.get("format") ?? undefined,
     locale: url.searchParams.get("locale") ?? undefined,
     branch: url.searchParams.get("branch") ?? undefined,
@@ -40,7 +40,11 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     );
   }
 
-  const { format: formatName, locale, branch: branchParam } = queryParseResult.data;
+  const {
+    format: formatName,
+    locale,
+    branch: branchParam,
+  } = queryParseResult.data;
 
   if (!isSupportedFormat(formatName)) {
     return new Response(

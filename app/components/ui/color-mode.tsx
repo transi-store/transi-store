@@ -26,6 +26,16 @@ export function useColorMode(): UseColorModeReturn {
   const colorMode = forcedTheme || resolvedTheme;
   const toggleColorMode = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
+
+    // if we are on the API doc page, we need to toggle the body class to update the favicon
+    // to override scalar's built-in dark mode handling, which relies on body classes.
+    if (
+      document.body.classList.contains("dark-mode") ||
+      document.body.classList.contains("light-mode")
+    ) {
+      document.body.classList.toggle("dark-mode", colorMode === "light");
+      document.body.classList.toggle("light-mode", colorMode === "dark");
+    }
   };
   return {
     colorMode: colorMode as ColorMode,

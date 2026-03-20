@@ -35,7 +35,7 @@ export async function processImport({
   }
 
   // 2. Validate text fields with shared Zod schema
-  const fieldsResult = importFieldsSchema.safeParse({
+  const fieldsResult = importFieldsSchema().safeParse({
     locale: formData.get("locale"),
     strategy: formData.get("strategy") || undefined,
     format: formData.get("format") || undefined,

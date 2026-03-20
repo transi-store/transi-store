@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { db, schema } from "./db.server";
-import { eq, and } from "drizzle-orm";
+import { count, eq, and } from "drizzle-orm";
 import type { ApiKey } from "../../drizzle/schema";
 
 /**
@@ -45,13 +45,24 @@ export async function createApiKey(
 export async function getOrganizationApiKeys(
   organizationId: number,
 ): Promise<Array<ApiKey>> {
-  const keys = await db
-    .select()
-    .from(schema.apiKeys)
-    .where(eq(schema.apiKeys.organizationId, organizationId))
-    .orderBy(schema.apiKeys.createdAt);
+  const keys = await db.query.apiKeys.findMany({
+    where: { organizationId },
+    orderBy: (apiKeys, { asc }) => [asc(apiKeys.createdAt)],
+  });
 
   return keys;
+}
+
+export async function countOrganizationApiKeys(
+  organizationId: number,
+): Promise<number> {
+  const result = await db
+    .select({ count: count() })
+    .from(schema.apiKeys)
+    .where(eq(schema.apiKeys.organizationId, organizationId))
+    .execute();
+
+  return Number(result[0].count);
 }
 
 /**
