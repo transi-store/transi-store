@@ -33,3 +33,6 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+.env.*
+test-*.json
