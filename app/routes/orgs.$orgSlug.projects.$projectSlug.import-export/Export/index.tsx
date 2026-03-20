@@ -1,8 +1,29 @@
-import { Box, Text, Heading, VStack, Separator } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  Heading,
+  VStack,
+  Separator,
+  Button,
+  SimpleGrid,
+  Field,
+  Select,
+  Portal,
+  createListCollection,
+} from "@chakra-ui/react";
+import { Link } from "react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ExportJsonSection } from "./ExportJsonSection";
-import { ExportXliffSection } from "./ExportXliffSection";
+import { LuDownload } from "react-icons/lu";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
+import { SupportedFormat } from "~/lib/format/types";
+
+const formatCollection = createListCollection({
+  items: [
+    { label: "JSON", value: SupportedFormat.JSON },
+    { label: "XLIFF", value: SupportedFormat.XLIFF },
+  ],
+});
 
 type ExportSectionProps = {
   languages: Array<ProjectLanguage>;
@@ -16,10 +37,13 @@ export default function ExportSection({
   projectSlug,
 }: ExportSectionProps) {
   const { t } = useTranslation();
+  const [format, setFormat] = useState<string[]>([SupportedFormat.JSON]);
 
   if (languages.length === 0) {
     return null;
   }
+
+  const selectedFormat = format[0] ?? SupportedFormat.JSON;
 
   return (
     <>
@@ -33,16 +57,51 @@ export default function ExportSection({
         </Text>
 
         <VStack gap={4} align="stretch">
-          <ExportJsonSection
-            languages={languages}
-            organizationSlug={organizationSlug}
-            projectSlug={projectSlug}
-          />
-          <ExportXliffSection
-            languages={languages}
-            organizationSlug={organizationSlug}
-            projectSlug={projectSlug}
-          />
+          <Field.Root>
+            <Field.Label>{t("export.formatLabel")}</Field.Label>
+            <Select.Root
+              collection={formatCollection}
+              value={format}
+              onValueChange={(details) => setFormat(details.value)}
+              maxW="300px"
+            >
+              <Select.HiddenSelect />
+              <Select.Control>
+                <Select.Trigger>
+                  <Select.ValueText />
+                </Select.Trigger>
+                <Select.IndicatorGroup>
+                  <Select.Indicator />
+                </Select.IndicatorGroup>
+              </Select.Control>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content>
+                    {formatCollection.items.map((item) => (
+                      <Select.Item item={item} key={item.value}>
+                        {item.label}
+                        <Select.ItemIndicator />
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
+            </Select.Root>
+          </Field.Root>
+
+          <SimpleGrid columns={{ base: 2, md: 4 }} gap={2}>
+            {languages.map((lang) => (
+              <Button key={lang.id} asChild size="sm" variant="outline">
+                <Link
+                  reloadDocument
+                  to={`/api/orgs/${organizationSlug}/projects/${projectSlug}/export?format=${selectedFormat}&locale=${lang.locale}`}
+                >
+                  <LuDownload />
+                  {lang.locale.toUpperCase()}
+                </Link>
+              </Button>
+            ))}
+          </SimpleGrid>
         </VStack>
       </Box>
     </>

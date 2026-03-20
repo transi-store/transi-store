@@ -1,12 +1,12 @@
-# Système d'import
+# Import system
 
-## Vue d'ensemble
+## Overview
 
-Le système d'import permet de charger en masse des traductions depuis des fichiers JSON. Il supporte deux stratégies : écraser les traductions existantes ou les conserver.
+The import system lets you bulk-load translations from JSON or XLIFF 2.0 files. It supports two strategies: overwrite existing translations or preserve them.
 
-## Format supporté
+## Supported formats
 
-### JSON plat (clé-valeur)
+### Flat JSON (key-value)
 
 ```json
 {
@@ -17,194 +17,192 @@ Le système d'import permet de charger en masse des traductions depuis des fichi
 }
 ```
 
-**Contraintes** :
+Constraints:
 
-- Objet plat (pas de nesting)
-- Clés : chaînes de caractères (max 500 chars)
-- Valeurs : chaînes de caractères
-- Taille max du fichier : **5 MB**
+- Flat object (no nesting)
+- Keys: strings (max 500 chars)
+- Values: strings
+- Max file size: **5 MB**
 
-## Interface utilisateur
+### XLIFF 2.0
 
-Route : `/orgs/:orgSlug/projects/:projectSlug/import-export`
+The `<source>` element is treated as the **key name** (used to match translation keys), not as a translation value. The `<target>` element contains the translation.
 
-```tsx
-<Form method="post" encType="multipart/form-data">
-  {/* Sélection de la langue */}
-  <SelectRoot name="locale" required>
-    <SelectTrigger>
-      <SelectValueText placeholder="Choisir une langue" />
-    </SelectTrigger>
-    <SelectContent>
-      {languages.map((lang) => (
-        <SelectItem value={lang.locale}>{lang.locale}</SelectItem>
-      ))}
-    </SelectContent>
-  </SelectRoot>
-
-  {/* Stratégie d'import */}
-  <RadioGroup name="strategy" defaultValue={ImportStrategy.OVERWRITE}>
-    <Radio value={ImportStrategy.OVERWRITE}>
-      Écraser les traductions existantes
-    </Radio>
-    <Radio value={ImportStrategy.SKIP}>
-      Conserver les traductions existantes
-    </Radio>
-  </RadioGroup>
-
-  {/* Upload du fichier */}
-  <FileUploadRoot name="file" required accept=".json">
-    <FileUploadTrigger>Choisir un fichier JSON</FileUploadTrigger>
-  </FileUploadRoot>
-
-  <Button type="submit">Importer</Button>
-</Form>
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" trgLang="fr">
+  <file id="my-project">
+    <unit id="home.title">
+      <segment>
+        <source>home.title</source>
+        <target>Accueil</target>
+      </segment>
+    </unit>
+  </file>
+</xliff>
 ```
 
-## Stratégies d'import
+## User interface
 
-### 1. Overwrite (Écraser)
+Route: `/orgs/:orgSlug/projects/:projectSlug/import-export`
 
-- Crée les nouvelles clés
-- Met à jour les traductions existantes
-- Conserve les traductions non présentes dans le fichier
+The import form accepts a file (JSON or XLIFF, detected automatically from extension), a target locale, and an import strategy.
 
-**Exemple** :
+## Import strategies
+
+### 1. Overwrite
+
+- Creates new keys
+- Updates existing translations
+- Preserves translations not present in the file
+
+**Example**:
 
 ```
-Base de données avant :
+Before:
   home.title (fr) = "Accueil"
   home.title (en) = "Home"
   navbar.about (fr) = "À propos"
 
-Fichier importé (fr) :
+Imported file (fr):
   home.title = "Page d'accueil"
   contact.email = "Email"
 
-Résultat :
-  home.title (fr) = "Page d'accueil" ← Écrasé
-  home.title (en) = "Home"           ← Conservé (autre langue)
-  navbar.about (fr) = "À propos"     ← Conservé (absent du fichier)
-  contact.email (fr) = "Email"       ← Créé
+After:
+  home.title (fr) = "Page d'accueil"  ← overwritten
+  home.title (en) = "Home"            ← untouched (other locale)
+  navbar.about (fr) = "À propos"      ← untouched (not in file)
+  contact.email (fr) = "Email"        ← created
 ```
 
-### 2. Skip (Conserver)
+### 2. Skip
 
-- Crée les nouvelles clés
-- **Ignore** les traductions existantes (ne met pas à jour)
+- Creates new keys
+- **Ignores** existing translations (does not update them)
 
-**Exemple** :
+**Example**:
 
 ```
-Base de données avant :
+Before:
   home.title (fr) = "Accueil"
-  navbar.about (fr) = "À propos"
 
-Fichier importé (fr) :
+Imported file (fr):
   home.title = "Page d'accueil"
   contact.email = "Email"
 
-Résultat :
-  home.title (fr) = "Accueil"        ← Conservé (skip)
-  navbar.about (fr) = "À propos"     ← Conservé
-  contact.email (fr) = "Email"       ← Créé
+After:
+  home.title (fr) = "Accueil"     ← preserved (skip)
+  contact.email (fr) = "Email"    ← created
 ```
 
-## Flow d'import
+## Import flow
 
 ### 1. Validation
 
-- Taille du fichier : max 5 MB
-- Parse JSON
-- Structure : objet plat uniquement (pas de nesting)
-- Clés : strings non vides, max 500 chars
-- Valeurs : strings uniquement
+- File size: max 5 MB
+- Format detection: explicit `format` param, or inferred from file extension (`.json`, `.xliff`, `.xlf`)
+- Parse file content
+- Structure: flat object only (JSON), or valid XLIFF 2.0
+- Keys: non-empty strings, max 500 chars
+- Values: strings only
 
-### 2. Transaction PostgreSQL
+### 2. PostgreSQL transaction
 
-Toutes les opérations dans une transaction pour garantir l'atomicité :
+All operations run in a single transaction:
 
-1. Pour chaque paire clé-valeur :
-   - Upsert `translation_keys` (crée ou met à jour `updatedAt`)
-   - Insert ou update `translations` selon la stratégie :
-     - **overwrite** : `onConflictDoUpdate` (écrase)
-     - **skip** : `onConflictDoNothing` (ignore)
+1. For each key-value pair:
+   - Upsert `translation_keys` (create or update `updatedAt`)
+   - Insert or update `translations` based on strategy:
+     - **overwrite**: `onConflictDoUpdate`
+     - **skip**: `onConflictDoNothing`
 
-**Avantage** : En cas d'erreur, tout est annulé (pas de données partielles)
-
-### 3. Statistiques
-
-Retour :
+### 3. Statistics
 
 ```json
 {
   "success": true,
-  "imported": 42, // Nouvelles traductions
-  "updated": 15, // Traductions écrasées
-  "skipped": 0 // Traductions ignorées
+  "imported": 42,
+  "updated": 15,
+  "skipped": 0
 }
 ```
 
-## Implémentation
+## Implementation
 
-### Fichiers sources
+### Source files
 
-- **Route** : `app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx`
-- **Logique** : `app/lib/import/json.server.ts`
+- **Route**: `app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx`
+- **Import orchestrator**: `app/lib/import/process-import.server.ts`
+- **Validation**: `app/lib/import/validate-import-data.server.ts`
+- **DB import logic**: `app/lib/import/import-translations.server.ts`
+- **Format classes**: `app/lib/format/json-format.server.ts`, `app/lib/format/xliff-format.server.ts`
+- **Factory**: `app/lib/format/format-factory.server.ts`
 
-## Gestion des erreurs
+### Architecture
 
-### Erreurs de validation
+Format detection and parsing is delegated to the `TranslationFormat` interface via the factory:
 
-```json
-{
-  "error": "Validation Error",
-  "message": "File too large (max 5 MB)"
+```typescript
+const translator = createTranslationFormat(format); // SupportedFormat enum
+const parseResult = translator.parseImport(fileContent);
+```
+
+The validation and DB import steps are format-agnostic and live in their own files. See [`TranslationFormat` interface](#translationformat-interface) below.
+
+### `TranslationFormat` interface
+
+Defined in `app/lib/format/types.ts`:
+
+```typescript
+export enum SupportedFormat {
+  JSON = "json",
+  XLIFF = "xliff",
+}
+
+export interface TranslationFormat {
+  /** Parse file content into flat key→value pairs. */
+  parseImport(fileContent: string): ParseResult;
+
+  /** Export project translations for a single locale. */
+  exportSingleLocale(
+    projectTranslations: ProjectTranslations,
+    options: ExportOptions,
+  ): string;
+
+  /**
+   * Handle a full export request: validate URL params, export content,
+   * and build the response filename and content-type.
+   */
+  handleExportRequest(params: ExportRequestParams): ExportRequestResult;
 }
 ```
 
-**Causes** :
+To add a new format, implement this interface, register it in the factory (`format-factory.server.ts`), and add the value to the `SupportedFormat` enum.
 
-- Fichier > 5 MB
-- JSON invalide
-- Structure non plate
-- Clés ou valeurs invalides
+## Error handling
 
-### Erreurs de base de données
-
-```json
-{
-  "error": "Database Error",
-  "message": "Transaction failed"
-}
-```
-
-**Causes** :
-
-- Erreur lors de l'insertion
-- Violation de contrainte
-- Timeout de transaction
+| Cause                        | Error message                                              |
+| ---------------------------- | ---------------------------------------------------------- |
+| Missing file field           | `"Missing 'file' field"`                                   |
+| Missing locale field         | `"Missing 'locale' field"`                                 |
+| Invalid strategy             | `"Invalid 'strategy' field. Use 'overwrite' or 'skip'"`    |
+| Unknown file format          | `"Unsupported file format. Use JSON or XLIFF"`             |
+| Parse error                  | Format-specific parse error message                        |
+| Invalid data structure       | `"Invalid data"` + validation details                      |
+| Locale not in project        | `"Language '{locale}' not found in this project"`          |
+| DB error                     | `"Import failed"` + error details                          |
 
 ## Limitations
 
-1. **Taille du fichier** : 5 MB maximum
-2. **Format** : JSON plat uniquement (pas de nesting)
-3. **Types** : Clés et valeurs doivent être des chaînes
-4. **Longueur des clés** : 500 caractères maximum
-5. **Locale unique** : Import d'une seule langue à la fois
+1. **File size**: 5 MB maximum
+2. **JSON format**: flat objects only (no nesting)
+3. **Types**: keys and values must be strings
+4. **Key length**: 500 characters maximum
+5. **Single locale**: one language per import
 
-## Extensions futures possibles
+## Usage examples
 
-- Support XLIFF pour l'import
-- Import multi-langues (un fichier avec toutes les langues)
-- Import incrémental avec diff
-- Validation ICU MessageFormat avant import
-- Preview des changements avant confirmation
-- Support CSV
-
-## Exemple d'utilisation
-
-### Via l'API (cURL)
+### Via the API (cURL)
 
 ```bash
 curl -X POST \
@@ -215,7 +213,7 @@ curl -X POST \
   "http://localhost:5173/api/orgs/my-org/projects/app/import"
 ```
 
-### Via le package CLI
+### Via the CLI package
 
 ```bash
 npx @transi-store/cli upload \

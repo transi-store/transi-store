@@ -1,14 +1,12 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getBranchBySlug, createBranch } from "~/lib/branches.server";
-import {
-  parseImportJSON,
-  validateImportData,
-  importTranslations,
-} from "./json.server";
-import { parseImportXLIFF } from "./xliff.server";
-import type { ImportStats } from "./json.server";
+import { validateImportData } from "./validate-import-data.server";
+import { importTranslations } from "./import-translations.server";
+import type { ImportStats } from "./import-translations.server";
+import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { ImportStrategy } from "./import-strategy";
 import { BRANCH_STATUS } from "../branches";
+import { SupportedFormat } from "../format/types";
 
 type ProcessImportResult =
   | { success: true; importStats: ImportStats }
@@ -56,17 +54,18 @@ export async function processImport(
 
   // 4. Detect format from explicit parameter or file extension
   const formatParam = formData.get("format");
-  let format: "json" | "xliff";
+  let format: SupportedFormat;
 
   if (
     typeof formatParam === "string" &&
-    (formatParam === "json" || formatParam === "xliff")
+    (formatParam === SupportedFormat.JSON ||
+      formatParam === SupportedFormat.XLIFF)
   ) {
     format = formatParam;
   } else if (file.name.endsWith(".xliff") || file.name.endsWith(".xlf")) {
-    format = "xliff";
+    format = SupportedFormat.XLIFF;
   } else if (file.name.endsWith(".json") || file.type === "application/json") {
-    format = "json";
+    format = SupportedFormat.JSON;
   } else {
     return {
       success: false,
@@ -125,10 +124,8 @@ export async function processImport(
   }
 
   // 8. Parse file based on format
-  const parseResult =
-    format === "xliff"
-      ? parseImportXLIFF(fileContent)
-      : parseImportJSON(fileContent);
+  const translator = createTranslationFormat(format);
+  const parseResult = translator.parseImport(fileContent);
 
   if (!parseResult.success) {
     return {
