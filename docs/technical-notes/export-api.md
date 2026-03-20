@@ -143,11 +143,14 @@ Content-Disposition: attachment; filename="project-slug-fr.xliff"
 ### Source files
 
 - **Route**: `app/routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx`
+- **Zod schema** (validation + OpenAPI): `app/lib/api-doc/schemas/export.ts`
 - **Format classes**: `app/lib/format/json-format.server.ts`, `app/lib/format/xliff-format.server.ts`
 - **Factory**: `app/lib/format/format-factory.server.ts`
 - **Types/interface**: `app/lib/format/types.ts`
 
 ### Architecture
+
+Query parameters are validated via the shared `exportQuerySchema` Zod schema (defined in `app/lib/api-doc/schemas/export.ts`), which is also used to generate the OpenAPI documentation. This ensures validation and documentation are always in sync.
 
 The export route is format-agnostic. It delegates entirely to the `TranslationFormat` interface via the factory:
 
@@ -196,3 +199,5 @@ async function downloadTranslations(locale) {
 
 - [XLIFF 2.0 Specification](http://docs.oasis-open.org/xliff/xliff-core/v2.0/xliff-core-v2.0.html)
 - [RFC 6750 - Bearer Token](https://datatracker.ietf.org/doc/html/rfc6750)
+- [OpenAPI documentation](./openapi-documentation.md) — How the API spec is generated from the Zod schemas
+- [ADR-017](../decisions/ADR-017-openapi-documentation.md) — Decision record for the OpenAPI approach

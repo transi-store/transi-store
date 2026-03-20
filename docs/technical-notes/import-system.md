@@ -121,9 +121,13 @@ All operations run in a single transaction:
 ```json
 {
   "success": true,
-  "imported": 42,
-  "updated": 15,
-  "skipped": 0
+  "stats": {
+    "total": 42,
+    "keysCreated": 5,
+    "translationsCreated": 8,
+    "translationsUpdated": 3,
+    "translationsSkipped": 0
+  }
 }
 ```
 
@@ -131,7 +135,9 @@ All operations run in a single transaction:
 
 ### Source files
 
-- **Route**: `app/routes/orgs.$orgSlug.projects.$projectSlug.import-export.tsx`
+- **API route**: `app/routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx`
+- **UI route**: `app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx`
+- **Zod schema** (validation + OpenAPI): `app/lib/api-doc/schemas/import.ts`
 - **Import orchestrator**: `app/lib/import/process-import.server.ts`
 - **Validation**: `app/lib/import/validate-import-data.server.ts`
 - **DB import logic**: `app/lib/import/import-translations.server.ts`
@@ -139,6 +145,8 @@ All operations run in a single transaction:
 - **Factory**: `app/lib/format/format-factory.server.ts`
 
 ### Architecture
+
+Text fields from `FormData` (locale, strategy, format, branch) are validated via the shared `importFieldsSchema` Zod schema (defined in `app/lib/api-doc/schemas/import.ts`), which is also used to generate the OpenAPI documentation. The `file` field is validated manually (presence, `File` type check).
 
 Format detection and parsing is delegated to the `TranslationFormat` interface via the factory:
 
@@ -224,3 +232,10 @@ npx @transi-store/cli upload \
   -I translations.json \
   -s overwrite
 ```
+
+## References
+
+- [OpenAPI documentation](./openapi-documentation.md) — How the API spec is generated from the Zod schemas
+- [ADR-014](../decisions/ADR-014-import-api-endpoint.md) — Decision record for the import API endpoint
+- [ADR-017](../decisions/ADR-017-openapi-documentation.md) — Decision record for the OpenAPI approach
+- [XLIFF 2.0 Specification](https://docs.oasis-open.org/xliff/xliff-core/v2.0/xliff-core-v2.0.html)
