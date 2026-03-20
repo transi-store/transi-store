@@ -4,7 +4,7 @@ import type { Route } from "./+types/index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
-import type { ImportStats } from "~/lib/import/json.server";
+import type { ImportStats } from "~/lib/import/import-translations.server";
 import { processImport } from "~/lib/import/process-import.server";
 import { getInstance } from "~/middleware/i18next";
 import ImportSection from "./Import";

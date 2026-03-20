@@ -1,8 +1,8 @@
-# API d'export
+# Export API
 
-## Vue d'ensemble
+## Overview
 
-L'API d'export permet de télécharger les traductions d'un projet en JSON ou XLIFF 2.0. Elle supporte deux méthodes d'authentification : session utilisateur ou clé d'API.
+The export API lets you download project translations in JSON or XLIFF 2.0. It supports two authentication methods: user session or API key.
 
 ## Endpoint
 
@@ -10,66 +10,59 @@ L'API d'export permet de télécharger les traductions d'un projet en JSON ou XL
 GET /api/orgs/:orgSlug/projects/:projectSlug/export
 ```
 
-**Exemple** :
+**Example**:
 
 ```
 GET /api/orgs/mapado/projects/website/export?format=json&locale=fr
 ```
 
-## Authentification
+## Authentication
 
-### 1. Session utilisateur (cookie)
+### 1. User session (cookie)
 
-Authentification standard via le cookie de session :
+Standard session-cookie authentication:
 
 ```bash
 curl -b cookies.txt \
   "http://localhost:5173/api/orgs/my-org/projects/app/export?format=json&locale=fr"
 ```
 
-Le cookie `session` doit être présent et valide.
+The `session` cookie must be present and valid.
 
-### 2. Clé d'API (Bearer token)
+### 2. API key (Bearer token)
 
-Authentification programmatique via header `Authorization` :
+Programmatic authentication via the `Authorization` header:
 
 ```bash
 curl -H "Authorization: Bearer <api-key>" \
   "http://localhost:5173/api/orgs/my-org/projects/app/export?format=json&locale=fr"
 ```
 
-**Avantages** :
+Benefits:
 
-- Idéal pour CI/CD
-- Pas besoin de maintenir une session
-- Traçabilité via `last_used_at`
+- Ideal for CI/CD pipelines
+- No need to maintain a session
+- Usage tracking via `last_used_at`
 
-**Création d'une clé** :
+Creating a key: via the web UI at `/orgs/:orgSlug/settings` (API Keys section). Generated as `base64url(crypto.randomBytes(24))` → 32 characters.
 
-- Via l'interface web : `/orgs/:orgSlug/settings` (section API Keys)
-- Génération : `base64url(crypto.randomBytes(24))` → 32 caractères
+## Query parameters
 
-## Paramètres de requête
+| Parameter | Values       | Required | Description                     |
+| --------- | ------------ | -------- | ------------------------------- |
+| `format`  | json, xliff  | Yes      | Output format                   |
+| `locale`  | string       | Yes      | Language code (e.g. `fr`, `en`) |
+| `branch`  | string       | No       | Branch slug (defaults to main)  |
 
-### Format
+## JSON format
 
-| Paramètre | Valeurs     | Requis | Description      |
-| --------- | ----------- | ------ | ---------------- |
-| `format`  | json, xliff | Oui    | Format de sortie |
-
-### JSON - Locale unique
-
-| Paramètre | Type   | Requis | Description                   |
-| --------- | ------ | ------ | ----------------------------- |
-| `locale`  | string | Oui    | Code de langue (fr, en, etc.) |
-
-**Exemple** :
+**Example**:
 
 ```bash
 GET /api/orgs/my-org/projects/app/export?format=json&locale=fr
 ```
 
-**Réponse** :
+**Response**:
 
 ```json
 {
@@ -80,68 +73,32 @@ GET /api/orgs/my-org/projects/app/export?format=json&locale=fr
 }
 ```
 
-### JSON - Toutes les locales
+## XLIFF 2.0 format
 
-| Paramètre | Type | Requis | Description                 |
-| --------- | ---- | ------ | --------------------------- |
-| `all`     | flag | Oui    | Exporter toutes les langues |
-
-**Exemple** :
+**Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/export?format=json&all
+GET /api/orgs/my-org/projects/app/export?format=xliff&locale=fr
 ```
 
-**Réponse** :
-
-```json
-{
-  "fr": {
-    "home.title": "Accueil",
-    "navbar.about": "À propos"
-  },
-  "en": {
-    "home.title": "Home",
-    "navbar.about": "About"
-  },
-  "de": {
-    "home.title": "Startseite",
-    "navbar.about": "Über uns"
-  }
-}
-```
-
-### XLIFF 2.0
-
-| Paramètre | Type   | Requis | Description   |
-| --------- | ------ | ------ | ------------- |
-| `source`  | string | Oui    | Langue source |
-| `target`  | string | Oui    | Langue cible  |
-
-**Exemple** :
-
-```bash
-GET /api/orgs/my-org/projects/app/export?format=xliff&source=en&target=fr
-```
-
-**Réponse** :
+**Response**:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en" trgLang="fr">
-  <file id="f1">
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" trgLang="fr">
+  <file id="my-project">
     <unit id="home.title">
       <notes>
         <note>Welcome message on homepage</note>
       </notes>
       <segment>
-        <source>Home</source>
+        <source>home.title</source>
         <target>Accueil</target>
       </segment>
     </unit>
     <unit id="navbar.about">
       <segment>
-        <source>About</source>
+        <source>navbar.about</source>
         <target>À propos</target>
       </segment>
     </unit>
@@ -149,12 +106,14 @@ GET /api/orgs/my-org/projects/app/export?format=xliff&source=en&target=fr
 </xliff>
 ```
 
-**Notes** :
+Notes:
 
-- Les descriptions des clés sont exportées dans `<notes>`
-- Escaping XML automatique pour les caractères spéciaux
+- `<source>` contains the **key name** (not a translation in a source language)
+- Key descriptions are exported as `<notes>`
+- XML special characters are automatically escaped
+- The `<xliff>` root only has `trgLang` (no `srcLang`)
 
-## Headers de réponse
+## Response headers
 
 ### JSON
 
@@ -167,103 +126,48 @@ Content-Disposition: attachment; filename="project-slug-fr.json"
 
 ```http
 Content-Type: application/xml; charset=utf-8
-Content-Disposition: attachment; filename="project-slug-en-fr.xliff"
+Content-Disposition: attachment; filename="project-slug-fr.xliff"
 ```
 
-## Gestion des erreurs
+## Error handling
 
-### 401 Unauthorized
+| Status | Cause                                                    |
+| ------ | -------------------------------------------------------- |
+| 400    | Missing/invalid parameters, unsupported format, unknown locale |
+| 401    | No valid session or API key                              |
+| 403    | User is not a member of the organization                 |
+| 404    | Project not found                                        |
 
-```json
-{
-  "error": "Unauthorized",
-  "message": "No valid session or API key provided"
-}
+## Implementation
+
+### Source files
+
+- **Route**: `app/routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx`
+- **Format classes**: `app/lib/format/json-format.server.ts`, `app/lib/format/xliff-format.server.ts`
+- **Factory**: `app/lib/format/format-factory.server.ts`
+- **Types/interface**: `app/lib/format/types.ts`
+
+### Architecture
+
+The export route is format-agnostic. It delegates entirely to the `TranslationFormat` interface via the factory:
+
+```typescript
+const format = createTranslationFormat(formatName); // SupportedFormat enum
+const result = format.handleExportRequest({
+  searchParams,
+  projectTranslations,
+  projectName,
+  availableLocales,
+});
 ```
 
-**Causes** :
+Each format class (`JsonTranslationFormat`, `XliffTranslationFormat`) handles its own parameter validation, content generation, filename, and content-type. See [import-system.md](./import-system.md) for the full interface description.
 
-- Aucune session ni clé d'API
-- Session expirée
-- Clé d'API invalide
+### API key tracking
 
-### 403 Forbidden
+The `last_used_at` field is updated on every call (asynchronous, non-blocking).
 
-```json
-{
-  "error": "Forbidden",
-  "message": "You are not a member of this organization"
-}
-```
-
-**Causes** :
-
-- L'utilisateur n'est pas membre de l'organisation
-- La clé d'API n'appartient pas à l'organisation
-
-### 404 Not Found
-
-```json
-{
-  "error": "Not Found",
-  "message": "Project not found"
-}
-```
-
-**Causes** :
-
-- Organisation inexistante
-- Projet inexistant dans l'organisation
-
-### 400 Bad Request
-
-```json
-{
-  "error": "Bad Request",
-  "message": "Missing required parameter: locale"
-}
-```
-
-**Causes** :
-
-- Paramètres manquants ou invalides
-- Format non supporté
-- Langue inexistante dans le projet
-
-### 500 Internal Server Error
-
-```json
-{
-  "error": "Internal Server Error",
-  "message": "An error occurred while exporting translations"
-}
-```
-
-## Implémentation
-
-### Fichiers sources
-
-- **Route** : `app/routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx`
-- **Formateurs** :
-  - `app/lib/export/json.server.ts`
-  - `app/lib/export/xliff.server.ts`
-
-### Flow d'authentification
-
-1. Vérifie le header `Authorization: Bearer <key>`
-   - Si valide : continue + met à jour `last_used_at` (async)
-2. Sinon, vérifie la session utilisateur
-   - `requireUser()` + `requireOrganizationMembership()`
-3. Charge les traductions du projet
-4. Formate selon le paramètre `format`
-5. Retourne avec headers `Content-Type` et `Content-Disposition`
-
-### Tracking des clés d'API
-
-- Le champ `last_used_at` est mis à jour à chaque appel (opération asynchrone, non-bloquante)
-- Permet de suivre l'utilisation des clés
-
-## Exemples d'intégration
+## Integration examples
 
 ### CI/CD (GitHub Actions)
 
@@ -275,30 +179,20 @@ Content-Disposition: attachment; filename="project-slug-en-fr.xliff"
       "https://transi-store.com/api/orgs/my-org/projects/app/export?format=json&locale=fr"
 ```
 
-### Script Node.js
+### Node.js script
 
 ```javascript
-const fetch = require("node-fetch");
-
 async function downloadTranslations(locale) {
   const response = await fetch(
     `https://transi-store.com/api/orgs/my-org/projects/app/export?format=json&locale=${locale}`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.API_KEY}`,
-      },
-    },
+    { headers: { Authorization: `Bearer ${process.env.API_KEY}` } },
   );
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-  }
-
-  return await response.json();
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
 }
 ```
 
-## Références
+## References
 
 - [XLIFF 2.0 Specification](http://docs.oasis-open.org/xliff/xliff-core/v2.0/xliff-core-v2.0.html)
 - [RFC 6750 - Bearer Token](https://datatracker.ietf.org/doc/html/rfc6750)

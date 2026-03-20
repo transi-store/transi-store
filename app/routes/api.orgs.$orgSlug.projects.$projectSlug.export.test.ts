@@ -91,7 +91,7 @@ describe("Export Project Loader", () => {
     expect(response2.status).toBe(400);
     const data2 = await response2.json();
     expect(data2.error).toBe(
-      "Missing 'locale' parameter. Use ?format=json&locale=fr or ?format=json&all",
+      "Missing 'locale' parameter. Use ?format=json&locale=fr",
     );
 
     const response3 = await loader({

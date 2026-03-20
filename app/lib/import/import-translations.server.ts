@@ -24,98 +24,11 @@ type ImportResult = {
   errors: Array<string>;
 };
 
-type ParseResult = {
-  success: boolean;
-  data?: Record<string, string>;
-  error?: string;
-};
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-/**
- * Parse and validate JSON file content
- */
-export function parseImportJSON(fileContent: string): ParseResult {
-  // Check file size (approximate, based on string length)
-  if (fileContent.length > MAX_FILE_SIZE) {
-    return {
-      success: false,
-      error: "Le fichier est trop volumineux (maximum 5 MB)",
-    };
-  }
-
-  try {
-    const parsed = JSON.parse(fileContent);
-
-    // Validate structure: must be an object
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      Array.isArray(parsed)
-    ) {
-      return {
-        success: false,
-        error:
-          "Le fichier doit contenir un objet JSON avec des paires clé/valeur",
-      };
-    }
-
-    return {
-      success: true,
-      data: parsed as Record<string, string>,
-    };
-  } catch (_error) {
-    return {
-      success: false,
-      error: "Format JSON invalide",
-    };
-  }
-}
-
-/**
- * Validate import data structure
- */
-export function validateImportData(
-  data: Record<string, string>,
-): Array<string> {
-  const errors: Array<string> = [];
-
-  const entries = Object.entries(data);
-
-  if (entries.length === 0) {
-    return ["Le fichier ne contient aucune traduction"];
-  }
-
-  for (const [key, value] of entries) {
-    // Check key is non-empty
-    if (!key || key.trim() === "") {
-      errors.push("Une clé vide a été trouvée dans le fichier");
-      continue;
-    }
-
-    // Check key length (database limit is 500)
-    if (key.length > 500) {
-      errors.push(
-        `La clé "${key.substring(0, 50)}..." est trop longue (maximum 500 caractères)`,
-      );
-    }
-
-    // Check value is a string
-    if (typeof value !== "string") {
-      errors.push(
-        `La valeur pour la clé "${key}" doit être une chaîne de caractères`,
-      );
-    }
-  }
-
-  return errors;
-}
-
 /** PostgreSQL has a limit on the number of parameters in a single query */
 const BATCH_SIZE = 500;
 
 /**
- * Import translations from parsed JSON data using batch operations.
+ * Import translations from parsed data using batch operations (format-agnostic).
  * Uses INSERT ... ON CONFLICT for efficient bulk processing (~5 queries
  * instead of ~4-6 per entry).
  */
