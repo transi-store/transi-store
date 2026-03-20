@@ -3,12 +3,10 @@ import { getBranchBySlug, createBranch } from "~/lib/branches.server";
 import { validateImportData } from "./validate-import-data.server";
 import { importTranslations } from "./import-translations.server";
 import type { ImportStats } from "./import-translations.server";
-import {
-  createTranslationFormat,
-  type SupportedFormat,
-} from "~/lib/format/format-factory.server";
+import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { ImportStrategy } from "./import-strategy";
 import { BRANCH_STATUS } from "../branches";
+import { SupportedFormat } from "../format/types";
 
 type ProcessImportResult =
   | { success: true; importStats: ImportStats }
@@ -60,13 +58,14 @@ export async function processImport(
 
   if (
     typeof formatParam === "string" &&
-    (formatParam === "json" || formatParam === "xliff")
+    (formatParam === SupportedFormat.JSON ||
+      formatParam === SupportedFormat.XLIFF)
   ) {
     format = formatParam;
   } else if (file.name.endsWith(".xliff") || file.name.endsWith(".xlf")) {
-    format = "xliff";
+    format = SupportedFormat.XLIFF;
   } else if (file.name.endsWith(".json") || file.type === "application/json") {
-    format = "json";
+    format = SupportedFormat.JSON;
   } else {
     return {
       success: false,

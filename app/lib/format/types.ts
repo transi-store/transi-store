@@ -2,6 +2,11 @@ import type { ProjectTranslations } from "~/lib/translation-keys.server";
 
 export type { ProjectTranslations };
 
+export enum SupportedFormat {
+  JSON = "json",
+  XLIFF = "xliff",
+}
+
 export type ParseResult = {
   success: boolean;
   data?: Record<string, string>;
@@ -30,6 +35,10 @@ export type ExportRequestResult =
       contentType: string;
     }
   | { success: false; error: string };
+
+export function isSupportedFormat(format: string): format is SupportedFormat {
+  return Object.values(SupportedFormat).includes(format as SupportedFormat);
+}
 
 export interface TranslationFormat {
   /**

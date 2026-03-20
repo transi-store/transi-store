@@ -1,12 +1,10 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
-import {
-  createTranslationFormat,
-  isSupportedFormat,
-} from "~/lib/format/format-factory.server";
+import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { orgContext } from "~/middleware/api-auth";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.export";
+import { isSupportedFormat, SupportedFormat } from "~/lib/format/types";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const organization = context.get(orgContext);
@@ -21,7 +19,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url);
-  const formatName = url.searchParams.get("format") || "json";
+  const formatName = url.searchParams.get("format") || SupportedFormat.JSON;
 
   if (!isSupportedFormat(formatName)) {
     return new Response(

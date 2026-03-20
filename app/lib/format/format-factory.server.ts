@@ -1,26 +1,14 @@
-import type { TranslationFormat } from "./types";
+import { type TranslationFormat, SupportedFormat } from "./types";
 import { JsonTranslationFormat } from "./json-format.server";
 import { XliffTranslationFormat } from "./xliff-format.server";
-
-// TODO make it an enum
-export type SupportedFormat = "json" | "xliff";
-
-const SUPPORTED_FORMATS: ReadonlySet<string> = new Set<SupportedFormat>([
-  "json",
-  "xliff",
-]);
-
-export function isSupportedFormat(format: string): format is SupportedFormat {
-  return SUPPORTED_FORMATS.has(format);
-}
 
 export function createTranslationFormat(
   format: SupportedFormat,
 ): TranslationFormat {
   switch (format) {
-    case "json":
+    case SupportedFormat.JSON:
       return new JsonTranslationFormat();
-    case "xliff":
+    case SupportedFormat.XLIFF:
       return new XliffTranslationFormat();
   }
 }
