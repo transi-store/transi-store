@@ -2,10 +2,9 @@ import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
 import {
-  exportToJSON,
-  exportAllLanguagesToJSON,
-} from "~/lib/export/json.server";
-import { exportToXLIFF } from "~/lib/export/xliff.server";
+  createTranslationFormat,
+  isSupportedFormat,
+} from "~/lib/format/format-factory.server";
 import { orgContext } from "~/middleware/api-auth";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.export";
 
@@ -22,12 +21,19 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url);
-  const format = url.searchParams.get("format") || "json";
-  const locale = url.searchParams.get("locale");
-  const sourceLocale = url.searchParams.get("source");
-  const targetLocale = url.searchParams.get("target");
-  const exportAll = url.searchParams.has("all");
-  const branchParam = url.searchParams.get("branch");
+  const formatName = url.searchParams.get("format") || "json";
+
+  if (!isSupportedFormat(formatName)) {
+    return new Response(
+      JSON.stringify({
+        error: "Invalid format. Use 'json' or 'xliff'",
+      }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
 
   // Récupérer les langues du projet
   const languages = await getProjectLanguages(project.id);
@@ -43,6 +49,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   // Resolve optional branch
+  const branchParam = url.searchParams.get("branch");
   let branchId: number | undefined;
   if (branchParam) {
     const branch = await getBranchBySlug(project.id, branchParam);
@@ -57,118 +64,27 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     branchId,
   });
 
-  if (format === "json") {
-    let content: string;
-    let filename: string;
+  const format = createTranslationFormat(formatName);
+  const result = format.handleExportRequest({
+    searchParams: url.searchParams,
+    projectTranslations,
+    projectName: project.name,
+    availableLocales: languages.map((l) => l.locale),
+  });
 
-    if (exportAll) {
-      // Exporter toutes les langues
-      const locales = languages.map((l) => l.locale);
-      content = exportAllLanguagesToJSON(projectTranslations, locales);
-      filename = `${project.slug}-all.json`;
-    } else {
-      // Exporter une seule langue
-      if (!locale) {
-        return new Response(
-          JSON.stringify({
-            error:
-              "Missing 'locale' parameter. Use ?format=json&locale=fr or ?format=json&all",
-          }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      // Vérifier que la langue existe dans le projet
-      if (!languages.some((l) => l.locale === locale)) {
-        return new Response(
-          JSON.stringify({
-            error: `Language '${locale}' not found in this project`,
-          }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      content = exportToJSON(projectTranslations, locale);
-      filename = `${project.slug}-${locale}.json`;
-    }
-
-    return new Response(content, {
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-      },
-    });
-  }
-
-  if (format === "xliff") {
-    if (!sourceLocale || !targetLocale) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "Missing 'source' and 'target' parameters. Use ?format=xliff&source=en&target=fr",
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    // Vérifier que les langues existent dans le projet
-    if (!languages.some((l) => l.locale === sourceLocale)) {
-      return new Response(
-        JSON.stringify({
-          error: `Source language '${sourceLocale}' not found in this project`,
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    if (!languages.some((l) => l.locale === targetLocale)) {
-      return new Response(
-        JSON.stringify({
-          error: `Target language '${targetLocale}' not found in this project`,
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    const content = exportToXLIFF(
-      projectTranslations,
-      sourceLocale,
-      targetLocale,
-      project.name,
-    );
-
-    const filename = `${project.slug}-${sourceLocale}-${targetLocale}.xliff`;
-
-    return new Response(content, {
-      headers: {
-        "Content-Type": "application/x-xliff+xml",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-      },
-    });
-  }
-
-  return new Response(
-    JSON.stringify({
-      error: "Invalid format. Use 'json' or 'xliff'",
-    }),
-    {
+  if (!result.success) {
+    return new Response(JSON.stringify({ error: result.error }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const filename = `${project.slug}-${url.searchParams.get("locale")}.${result.fileExtension}`;
+
+  return new Response(result.content, {
+    headers: {
+      "Content-Type": result.contentType,
+      "Content-Disposition": `attachment; filename="${filename}"`,
     },
-  );
+  });
 }

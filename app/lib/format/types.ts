@@ -9,13 +9,27 @@ export type ParseResult = {
 };
 
 export type ExportOptions = {
-  /** For JSON: the locale to export. For XLIFF: the target locale. */
+  /** The locale to export */
   locale: string;
-  /** XLIFF only: the source locale */
-  sourceLocale?: string;
   /** XLIFF only: project name used as XLIFF file id */
   projectName?: string;
 };
+
+export type ExportRequestParams = {
+  searchParams: URLSearchParams;
+  projectTranslations: ProjectTranslations;
+  projectName: string;
+  availableLocales: Array<string>;
+};
+
+export type ExportRequestResult =
+  | {
+      success: true;
+      content: string;
+      fileExtension: string;
+      contentType: string;
+    }
+  | { success: false; error: string };
 
 export interface TranslationFormat {
   /**
@@ -25,10 +39,15 @@ export interface TranslationFormat {
 
   /**
    * Export project translations for a single locale.
-   * For XLIFF, `sourceLocale` and `projectName` must be provided in options.
    */
   exportSingleLocale(
     projectTranslations: ProjectTranslations,
     options: ExportOptions,
   ): string;
+
+  /**
+   * Handle a full export request: validate URL params, export content,
+   * and build the response filename and content-type.
+   */
+  handleExportRequest(params: ExportRequestParams): ExportRequestResult;
 }

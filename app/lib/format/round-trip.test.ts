@@ -34,43 +34,6 @@ function buildProjectTranslations(
   }));
 }
 
-function buildProjectTranslationsWithSource(
-  data: Record<string, string>,
-  targetLocale: string,
-  sourceData: Record<string, string>,
-  sourceLocale: string,
-): ProjectTranslations {
-  return Object.entries(data).map(([keyName, value], index) => ({
-    id: index + 1,
-    projectId: 1,
-    keyName,
-    description: null,
-    branchId: null,
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
-    translations: [
-      {
-        id: index * 2 + 1,
-        keyId: index + 1,
-        locale: sourceLocale,
-        value: sourceData[keyName],
-        isFuzzy: false,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
-      },
-      {
-        id: index * 2 + 2,
-        keyId: index + 1,
-        locale: targetLocale,
-        value,
-        isFuzzy: false,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
-      },
-    ],
-  }));
-}
-
 describe("Round-trip: JSON", () => {
   const json = new JsonTranslationFormat();
 
@@ -133,22 +96,11 @@ describe("Round-trip: XLIFF", () => {
       "home.subtitle": "Bienvenue sur notre site",
       "nav.about": "À propos",
     };
-    const sourceData = {
-      "home.title": "Home",
-      "home.subtitle": "Welcome to our site",
-      "nav.about": "About",
-    };
 
-    const translations = buildProjectTranslationsWithSource(
-      originalData,
-      "fr",
-      sourceData,
-      "en",
-    );
+    const translations = buildProjectTranslations(originalData, "fr");
 
     const exported = xliff.exportSingleLocale(translations, {
       locale: "fr",
-      sourceLocale: "en",
       projectName: "test-project",
     });
     const imported = xliff.parseImport(exported);
@@ -159,17 +111,17 @@ describe("Round-trip: XLIFF", () => {
 
   it("import then re-export then re-import should preserve data", () => {
     const originalXliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test-project">
     <unit id="home.title">
       <segment>
-        <source>Home</source>
+        <source>home.title</source>
         <target>Accueil</target>
       </segment>
     </unit>
     <unit id="nav.about">
       <segment>
-        <source>About</source>
+        <source>nav.about</source>
         <target>À propos</target>
       </segment>
     </unit>
@@ -179,19 +131,9 @@ describe("Round-trip: XLIFF", () => {
     const imported = xliff.parseImport(originalXliff);
     expect(imported.success).toBe(true);
 
-    const sourceData: Record<string, string> = {
-      "home.title": "Home",
-      "nav.about": "About",
-    };
-    const translations = buildProjectTranslationsWithSource(
-      imported.data!,
-      "fr",
-      sourceData,
-      "en",
-    );
+    const translations = buildProjectTranslations(imported.data!, "fr");
     const reExported = xliff.exportSingleLocale(translations, {
       locale: "fr",
-      sourceLocale: "en",
       projectName: "test-project",
     });
 
@@ -204,20 +146,11 @@ describe("Round-trip: XLIFF", () => {
     const originalData = {
       "key.with.&special": 'Value with <html> & "quotes"',
     };
-    const sourceData = {
-      "key.with.&special": "Source value",
-    };
 
-    const translations = buildProjectTranslationsWithSource(
-      originalData,
-      "fr",
-      sourceData,
-      "en",
-    );
+    const translations = buildProjectTranslations(originalData, "fr");
 
     const exported = xliff.exportSingleLocale(translations, {
       locale: "fr",
-      sourceLocale: "en",
       projectName: "test",
     });
     const imported = xliff.parseImport(exported);
@@ -240,18 +173,9 @@ describe("Cross-format round-trip", () => {
     const jsonImported = json.parseImport(originalJson);
     expect(jsonImported.success).toBe(true);
 
-    const sourceData = Object.fromEntries(
-      Object.keys(jsonImported.data!).map((k) => [k, `source_${k}`]),
-    );
-    const translations = buildProjectTranslationsWithSource(
-      jsonImported.data!,
-      "fr",
-      sourceData,
-      "en",
-    );
+    const translations = buildProjectTranslations(jsonImported.data!, "fr");
     const xliffExported = xliff.exportSingleLocale(translations, {
       locale: "fr",
-      sourceLocale: "en",
       projectName: "test",
     });
 
@@ -262,17 +186,17 @@ describe("Cross-format round-trip", () => {
 
   it("XLIFF import → JSON export → JSON import should preserve data", () => {
     const originalXliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="home.title">
       <segment>
-        <source>Home</source>
+        <source>home.title</source>
         <target>Accueil</target>
       </segment>
     </unit>
     <unit id="nav.about">
       <segment>
-        <source>About</source>
+        <source>nav.about</source>
         <target>À propos</target>
       </segment>
     </unit>
@@ -283,7 +207,9 @@ describe("Cross-format round-trip", () => {
     expect(xliffImported.success).toBe(true);
 
     const translations = buildProjectTranslations(xliffImported.data!, "fr");
-    const jsonExported = json.exportSingleLocale(translations, { locale: "fr" });
+    const jsonExported = json.exportSingleLocale(translations, {
+      locale: "fr",
+    });
 
     const jsonImported = json.parseImport(jsonExported);
     expect(jsonImported.success).toBe(true);

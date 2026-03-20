@@ -2,50 +2,31 @@ import { describe, it, expect } from "vitest";
 import { XliffTranslationFormat } from "./xliff-format.server";
 import type { ProjectTranslations } from "./types";
 
-function buildProjectTranslationsWithSource(
+function buildProjectTranslations(
   data: Record<string, string>,
-  targetLocale: string,
-  sourceData: Record<string, string>,
-  sourceLocale: string,
+  locale: string,
   descriptions?: Record<string, string>,
 ): ProjectTranslations {
-  return Object.entries(data).map(([keyName, value], index) => {
-    const translations = [];
-
-    const sourceValue = sourceData[keyName];
-    if (sourceValue !== undefined) {
-      translations.push({
-        id: index * 2 + 1,
+  return Object.entries(data).map(([keyName, value], index) => ({
+    id: index + 1,
+    projectId: 1,
+    keyName,
+    description: descriptions?.[keyName] ?? null,
+    branchId: null,
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
+    translations: [
+      {
+        id: index + 1,
         keyId: index + 1,
-        locale: sourceLocale,
-        value: sourceValue,
+        locale,
+        value,
         isFuzzy: false,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-01"),
-      });
-    }
-
-    translations.push({
-      id: index * 2 + 2,
-      keyId: index + 1,
-      locale: targetLocale,
-      value,
-      isFuzzy: false,
-      createdAt: new Date("2024-01-01"),
-      updatedAt: new Date("2024-01-01"),
-    });
-
-    return {
-      id: index + 1,
-      projectId: 1,
-      keyName,
-      description: descriptions?.[keyName] ?? null,
-      branchId: null,
-      createdAt: new Date("2024-01-01"),
-      updatedAt: new Date("2024-01-01"),
-      translations,
-    };
-  });
+      },
+    ],
+  }));
 }
 
 describe("XliffTranslationFormat", () => {
@@ -54,17 +35,17 @@ describe("XliffTranslationFormat", () => {
   describe("parseImport", () => {
     it("should parse a valid XLIFF 2.0 file with target translations", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="my-project">
     <unit id="home.title">
       <segment>
-        <source>Home</source>
+        <source>home.title</source>
         <target>Accueil</target>
       </segment>
     </unit>
     <unit id="home.subtitle">
       <segment>
-        <source>Welcome</source>
+        <source>home.subtitle</source>
         <target>Bienvenue</target>
       </segment>
     </unit>
@@ -82,17 +63,17 @@ describe("XliffTranslationFormat", () => {
 
     it("should skip units without a <target> element", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="my-project">
     <unit id="home.title">
       <segment>
-        <source>Home</source>
+        <source>home.title</source>
         <target>Accueil</target>
       </segment>
     </unit>
     <unit id="home.untranslated">
       <segment>
-        <source>Not yet translated</source>
+        <source>home.untranslated</source>
       </segment>
     </unit>
   </file>
@@ -108,11 +89,11 @@ describe("XliffTranslationFormat", () => {
 
     it("should unescape XML entities in keys and values", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="key.with.&amp;special">
       <segment>
-        <source>Source</source>
+        <source>key.with.&amp;special</source>
         <target>Value with &lt;html&gt; &amp; &quot;quotes&quot;</target>
       </segment>
     </unit>
@@ -129,14 +110,14 @@ describe("XliffTranslationFormat", () => {
 
     it("should handle units with notes", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="greeting">
       <notes>
         <note>Used on the homepage</note>
       </notes>
       <segment>
-        <source>Hello</source>
+        <source>greeting</source>
         <target>Bonjour</target>
       </segment>
     </unit>
@@ -151,11 +132,11 @@ describe("XliffTranslationFormat", () => {
 
     it("should return error when no target translations are found", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="home.title">
       <segment>
-        <source>Home</source>
+        <source>home.title</source>
       </segment>
     </unit>
   </file>
@@ -183,32 +164,29 @@ describe("XliffTranslationFormat", () => {
   });
 
   describe("exportSingleLocale", () => {
-    it("should export valid XLIFF 2.0 with source and target", () => {
-      const translations = buildProjectTranslationsWithSource(
+    it("should export valid XLIFF 2.0 with key as source", () => {
+      const translations = buildProjectTranslations(
         { "home.title": "Accueil", "home.subtitle": "Bienvenue" },
         "fr",
-        { "home.title": "Home", "home.subtitle": "Welcome" },
-        "en",
       );
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        sourceLocale: "en",
         projectName: "my-project",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="my-project">
     <unit id="home.title">
       <segment>
-        <source>Home</source>
+        <source>home.title</source>
         <target>Accueil</target>
       </segment>
     </unit>
     <unit id="home.subtitle">
       <segment>
-        <source>Welcome</source>
+        <source>home.subtitle</source>
         <target>Bienvenue</target>
       </segment>
     </unit>
@@ -217,25 +195,22 @@ describe("XliffTranslationFormat", () => {
     });
 
     it("should escape XML entities in keys and values", () => {
-      const translations = buildProjectTranslationsWithSource(
+      const translations = buildProjectTranslations(
         { "key.with.&special": 'Value with <html> & "quotes"' },
         "fr",
-        { "key.with.&special": "Source" },
-        "en",
       );
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        sourceLocale: "en",
         projectName: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="key.with.&amp;special">
       <segment>
-        <source>Source</source>
+        <source>key.with.&amp;special</source>
         <target>Value with &lt;html&gt; &amp; &quot;quotes&quot;</target>
       </segment>
     </unit>
@@ -244,29 +219,26 @@ describe("XliffTranslationFormat", () => {
     });
 
     it("should include key descriptions as XLIFF notes", () => {
-      const translations = buildProjectTranslationsWithSource(
+      const translations = buildProjectTranslations(
         { greeting: "Bonjour" },
         "fr",
-        { greeting: "Hello" },
-        "en",
         { greeting: "Used on the homepage" },
       );
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        sourceLocale: "en",
         projectName: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="greeting">
       <notes>
         <note>Used on the homepage</note>
       </notes>
       <segment>
-        <source>Hello</source>
+        <source>greeting</source>
         <target>Bonjour</target>
       </segment>
     </unit>
@@ -275,25 +247,22 @@ describe("XliffTranslationFormat", () => {
     });
 
     it("should not include notes when description is null", () => {
-      const translations = buildProjectTranslationsWithSource(
+      const translations = buildProjectTranslations(
         { greeting: "Bonjour" },
         "fr",
-        { greeting: "Hello" },
-        "en",
       );
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        sourceLocale: "en",
         projectName: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="greeting">
       <segment>
-        <source>Hello</source>
+        <source>greeting</source>
         <target>Bonjour</target>
       </segment>
     </unit>
@@ -301,147 +270,20 @@ describe("XliffTranslationFormat", () => {
 </xliff>`);
     });
 
-    it("should use empty <source> when source translation is missing", () => {
-      const translations: ProjectTranslations = [
-        {
-          id: 1,
-          projectId: 1,
-          keyName: "key",
-          description: null,
-          branchId: null,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2024-01-01"),
-          translations: [
-            {
-              id: 1,
-              keyId: 1,
-              locale: "fr",
-              value: "Valeur",
-              isFuzzy: false,
-              createdAt: new Date("2024-01-01"),
-              updatedAt: new Date("2024-01-01"),
-            },
-          ],
-        },
-      ];
+    it("should omit <target> when translation is missing for locale", () => {
+      const translations = buildProjectTranslations({ key: "Value" }, "en");
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        sourceLocale: "en",
         projectName: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
     <unit id="key">
       <segment>
-        <source></source>
-        <target>Valeur</target>
-      </segment>
-    </unit>
-  </file>
-</xliff>`);
-    });
-
-    it("should omit <target> when target translation is missing", () => {
-      const translations: ProjectTranslations = [
-        {
-          id: 1,
-          projectId: 1,
-          keyName: "key",
-          description: null,
-          branchId: null,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2024-01-01"),
-          translations: [
-            {
-              id: 1,
-              keyId: 1,
-              locale: "en",
-              value: "Value",
-              isFuzzy: false,
-              createdAt: new Date("2024-01-01"),
-              updatedAt: new Date("2024-01-01"),
-            },
-          ],
-        },
-      ];
-
-      const result = format.exportSingleLocale(translations, {
-        locale: "fr",
-        sourceLocale: "en",
-        projectName: "test",
-      });
-
-      expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test">
-    <unit id="key">
-      <segment>
-        <source>Value</source>
-      </segment>
-    </unit>
-  </file>
-</xliff>`);
-    });
-
-    it("should skip keys with neither source nor target", () => {
-      const translations: ProjectTranslations = [
-        {
-          id: 1,
-          projectId: 1,
-          keyName: "key-with-translations",
-          description: null,
-          branchId: null,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2024-01-01"),
-          translations: [
-            {
-              id: 1,
-              keyId: 1,
-              locale: "en",
-              value: "Value",
-              isFuzzy: false,
-              createdAt: new Date("2024-01-01"),
-              updatedAt: new Date("2024-01-01"),
-            },
-          ],
-        },
-        {
-          id: 2,
-          projectId: 1,
-          keyName: "key-only-other-locale",
-          description: null,
-          branchId: null,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2024-01-01"),
-          translations: [
-            {
-              id: 2,
-              keyId: 2,
-              locale: "de",
-              value: "Wert",
-              isFuzzy: false,
-              createdAt: new Date("2024-01-01"),
-              updatedAt: new Date("2024-01-01"),
-            },
-          ],
-        },
-      ];
-
-      const result = format.exportSingleLocale(translations, {
-        locale: "fr",
-        sourceLocale: "en",
-        projectName: "test",
-      });
-
-      expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test">
-    <unit id="key-with-translations">
-      <segment>
-        <source>Value</source>
+        <source>key</source>
       </segment>
     </unit>
   </file>
@@ -451,42 +293,98 @@ describe("XliffTranslationFormat", () => {
     it("should handle empty translations list", () => {
       const result = format.exportSingleLocale([], {
         locale: "fr",
-        sourceLocale: "en",
         projectName: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="test">
   </file>
 </xliff>`);
     });
 
     it("should escape XML entities in project name", () => {
-      const translations = buildProjectTranslationsWithSource(
-        { key: "value" },
-        "fr",
-        { key: "source" },
-        "en",
-      );
+      const translations = buildProjectTranslations({ key: "value" }, "fr");
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        sourceLocale: "en",
         projectName: 'Project "Special" & <test>',
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
   <file id="Project &quot;Special&quot; &amp; &lt;test&gt;">
     <unit id="key">
       <segment>
-        <source>source</source>
+        <source>key</source>
         <target>value</target>
       </segment>
     </unit>
   </file>
 </xliff>`);
+    });
+  });
+
+  describe("handleExportRequest", () => {
+    const translations = buildProjectTranslations(
+      { "home.title": "Accueil" },
+      "fr",
+    );
+
+    it("should return error when locale is missing", () => {
+      const result = format.handleExportRequest({
+        searchParams: new URLSearchParams(),
+        projectTranslations: translations,
+        projectName: "My Project",
+        availableLocales: ["en", "fr"],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe(
+          "Missing 'locale' parameter. Use ?format=xliff&locale=fr",
+        );
+      }
+    });
+
+    it("should return error when locale not in project", () => {
+      const result = format.handleExportRequest({
+        searchParams: new URLSearchParams("locale=de"),
+        projectTranslations: translations,
+        projectName: "My Project",
+        availableLocales: ["en", "fr"],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe("Language 'de' not found in this project");
+      }
+    });
+
+    it("should return XLIFF content with correct content-type", () => {
+      const result = format.handleExportRequest({
+        searchParams: new URLSearchParams("locale=fr"),
+        projectTranslations: translations,
+        projectName: "My Project",
+        availableLocales: ["en", "fr"],
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.contentType).toBe("application/x-xliff+xml");
+        expect(result.fileExtension).toBe("xliff");
+        expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
+  <file id="My Project">
+    <unit id="home.title">
+      <segment>
+        <source>home.title</source>
+        <target>Accueil</target>
+      </segment>
+    </unit>
+  </file>
+</xliff>`);
+      }
     });
   });
 });

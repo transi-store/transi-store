@@ -2,6 +2,8 @@ import type {
   TranslationFormat,
   ParseResult,
   ExportOptions,
+  ExportRequestParams,
+  ExportRequestResult,
   ProjectTranslations,
 } from "./types";
 
@@ -72,64 +74,77 @@ export class XliffTranslationFormat implements TranslationFormat {
     projectTranslations: ProjectTranslations,
     options: ExportOptions,
   ): string {
-    const { locale: targetLocale, sourceLocale, projectName } = options;
+    const { locale, projectName } = options;
     const xml: Array<string> = [];
 
     xml.push('<?xml version="1.0" encoding="UTF-8"?>');
     xml.push(
-      '<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="' +
-        escapeXml(sourceLocale!) +
-        '" trgLang="' +
-        escapeXml(targetLocale) +
+      '<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="' +
+        escapeXml(locale) +
         '">',
     );
     xml.push('  <file id="' + escapeXml(projectName!) + '">');
 
     for (const key of projectTranslations) {
-      const sourceTranslation = key.translations.find(
-        (t) => t.locale === sourceLocale,
-      );
-      const targetTranslation = key.translations.find(
-        (t) => t.locale === targetLocale,
-      );
+      const translation = key.translations.find((t) => t.locale === locale);
 
-      if (sourceTranslation || targetTranslation) {
-        xml.push('    <unit id="' + escapeXml(key.keyName) + '">');
+      xml.push('    <unit id="' + escapeXml(key.keyName) + '">');
 
-        if (key.description) {
-          xml.push("      <notes>");
-          xml.push("        <note>" + escapeXml(key.description) + "</note>");
-          xml.push("      </notes>");
-        }
-
-        xml.push("      <segment>");
-
-        if (sourceTranslation) {
-          xml.push(
-            "        <source>" +
-              escapeXml(sourceTranslation.value) +
-              "</source>",
-          );
-        } else {
-          xml.push("        <source></source>");
-        }
-
-        if (targetTranslation) {
-          xml.push(
-            "        <target>" +
-              escapeXml(targetTranslation.value) +
-              "</target>",
-          );
-        }
-
-        xml.push("      </segment>");
-        xml.push("    </unit>");
+      if (key.description) {
+        xml.push("      <notes>");
+        xml.push("        <note>" + escapeXml(key.description) + "</note>");
+        xml.push("      </notes>");
       }
+
+      xml.push("      <segment>");
+      xml.push("        <source>" + escapeXml(key.keyName) + "</source>");
+
+      if (translation) {
+        xml.push(
+          "        <target>" + escapeXml(translation.value) + "</target>",
+        );
+      }
+
+      xml.push("      </segment>");
+      xml.push("    </unit>");
     }
 
     xml.push("  </file>");
     xml.push("</xliff>");
 
     return xml.join("\n");
+  }
+
+  handleExportRequest(params: ExportRequestParams): ExportRequestResult {
+    const { searchParams, projectTranslations, projectName, availableLocales } =
+      params;
+
+    const locale = searchParams.get("locale");
+
+    if (!locale) {
+      return {
+        success: false,
+        error: "Missing 'locale' parameter. Use ?format=xliff&locale=fr",
+      };
+    }
+
+    if (!availableLocales.includes(locale)) {
+      return {
+        success: false,
+        error: `Language '${locale}' not found in this project`,
+      };
+    }
+
+    const content = this.exportSingleLocale(projectTranslations, {
+      locale,
+      projectName,
+    });
+
+    return {
+      success: true,
+      content,
+      fileExtension: "xliff",
+      contentType: "application/x-xliff+xml",
+    };
   }
 }

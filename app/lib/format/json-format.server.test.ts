@@ -30,42 +30,6 @@ function buildProjectTranslations(
   );
 }
 
-function buildMultiLocaleProjectTranslations(
-  data: Record<string, Record<string, string>>,
-): ProjectTranslations {
-  const allKeys = new Set<string>();
-  for (const localeData of Object.values(data)) {
-    for (const key of Object.keys(localeData)) {
-      allKeys.add(key);
-    }
-  }
-
-  const locales = Object.keys(data);
-
-  return [...allKeys]
-    .sort()
-    .map((keyName, index): ProjectTranslations[number] => ({
-      id: index + 1,
-      projectId: 1,
-      keyName,
-      description: null,
-      branchId: null,
-      createdAt: new Date("2024-01-01"),
-      updatedAt: new Date("2024-01-01"),
-      translations: locales
-        .filter((locale) => data[locale][keyName] !== undefined)
-        .map((locale, tIndex) => ({
-          id: index * locales.length + tIndex + 1,
-          keyId: index + 1,
-          locale,
-          value: data[locale][keyName],
-          isFuzzy: false,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2024-01-01"),
-        })),
-    }));
-}
-
 describe("JsonTranslationFormat", () => {
   const format = new JsonTranslationFormat();
 
@@ -193,51 +157,56 @@ describe("JsonTranslationFormat", () => {
     });
   });
 
-  describe("exportAllLocales", () => {
-    it("should export all locales as nested object", () => {
-      const data = {
-        en: { "home.title": "Home", "home.subtitle": "Welcome" },
-        fr: { "home.title": "Accueil", "home.subtitle": "Bienvenue" },
-      };
+  describe("handleExportRequest", () => {
+    const translations = buildProjectTranslations(
+      { "home.title": "Accueil" },
+      "fr",
+    );
 
-      const translations = buildMultiLocaleProjectTranslations(data);
+    it("should return error when locale is missing", () => {
+      const result = format.handleExportRequest({
+        searchParams: new URLSearchParams(),
+        projectTranslations: translations,
+        projectName: "My Project",
+        availableLocales: ["en", "fr"],
+      });
 
-      const result = format.exportAllLocales(translations, ["en", "fr"]);
-      const parsed = JSON.parse(result);
-
-      expect(parsed).toEqual(data);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain("Missing 'locale' parameter");
+      }
     });
 
-    it("should handle missing translations for some locales", () => {
-      const data = {
-        en: { "home.title": "Home", "home.subtitle": "Welcome" },
-        fr: { "home.title": "Accueil" },
-      };
-      const translations = buildMultiLocaleProjectTranslations(data);
+    it("should return error when locale not in project", () => {
+      const result = format.handleExportRequest({
+        searchParams: new URLSearchParams("locale=de"),
+        projectTranslations: translations,
+        projectName: "My Project",
+        availableLocales: ["en", "fr"],
+      });
 
-      const result = format.exportAllLocales(translations, ["en", "fr"]);
-      const parsed = JSON.parse(result);
-
-      expect(parsed).toEqual(data);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe("Language 'de' not found in this project");
+      }
     });
 
-    it("should return empty objects for locales with no translations", () => {
-      const data = { "home.title": "Home" };
+    it("should return JSON content with correct content-type", () => {
+      const result = format.handleExportRequest({
+        searchParams: new URLSearchParams("locale=fr"),
+        projectTranslations: translations,
+        projectName: "My Project",
+        availableLocales: ["en", "fr"],
+      });
 
-      const translations = buildProjectTranslations(data, "en");
-
-      const result = format.exportAllLocales(translations, ["en", "de"]);
-      const parsed = JSON.parse(result);
-
-      expect(parsed.en).toEqual(data);
-      expect(parsed.de).toEqual({});
-    });
-
-    it("should handle empty translations list", () => {
-      const result = format.exportAllLocales([], ["en", "fr"]);
-      const parsed = JSON.parse(result);
-
-      expect(parsed).toEqual({ en: {}, fr: {} });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.contentType).toBe("application/json");
+        expect(result.fileExtension).toBe("json");
+        expect(JSON.parse(result.content)).toEqual({
+          "home.title": "Accueil",
+        });
+      }
     });
   });
 });

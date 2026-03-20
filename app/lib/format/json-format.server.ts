@@ -2,6 +2,8 @@ import type {
   TranslationFormat,
   ParseResult,
   ExportOptions,
+  ExportRequestParams,
+  ExportRequestResult,
   ProjectTranslations,
 } from "./types";
 
@@ -62,26 +64,32 @@ export class JsonTranslationFormat implements TranslationFormat {
     return JSON.stringify(result, null, 2);
   }
 
-  exportAllLocales(
-    projectTranslations: ProjectTranslations,
-    locales: Array<string>,
-  ): string {
-    const result: Record<string, Record<string, string>> = {};
+  handleExportRequest(params: ExportRequestParams): ExportRequestResult {
+    const { searchParams, projectTranslations, availableLocales } = params;
 
-    for (const locale of locales) {
-      result[locale] = {};
+    const locale = searchParams.get("locale");
 
-      for (const key of projectTranslations) {
-        const translation = key.translations.find(
-          (t) => t.locale === locale,
-        );
-
-        if (translation) {
-          result[locale][key.keyName] = translation.value;
-        }
-      }
+    if (!locale) {
+      return {
+        success: false,
+        error: "Missing 'locale' parameter. Use ?format=json&locale=fr",
+      };
     }
 
-    return JSON.stringify(result, null, 2);
+    if (!availableLocales.includes(locale)) {
+      return {
+        success: false,
+        error: `Language '${locale}' not found in this project`,
+      };
+    }
+
+    const content = this.exportSingleLocale(projectTranslations, { locale });
+
+    return {
+      success: true,
+      content,
+      fileExtension: "json",
+      contentType: "application/json",
+    };
   }
 }
