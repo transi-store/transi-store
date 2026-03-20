@@ -26,6 +26,7 @@ export default [
   // Public API routes (no auth required)
   route("api/locales/:lng/:ns", "routes/api.locales.$lng.$ns.ts"),
   route("api/doc.json", "routes/api.doc.json.tsx"),
+  route("api/doc/viewer", "routes/api.doc.viewer.tsx"),
   route("api/doc", "routes/api.doc.tsx"),
 
   // Authenticated app routes (session auth via middleware)

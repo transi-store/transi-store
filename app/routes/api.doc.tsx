@@ -1,29 +1,18 @@
-import { lazy, Suspense } from "react";
-import { Spinner, Box } from "@chakra-ui/react";
-
-const RedocStandalone = lazy(() =>
-  import("redoc").then((m) => ({ default: m.RedocStandalone })),
-);
+import { useColorMode } from "~/components/ui/color-mode";
 
 export default function ApiDocPage() {
+  const { colorMode } = useColorMode();
+
   return (
-    <Box minH="80vh">
-      <Suspense
-        fallback={
-          <Box display="flex" justifyContent="center" py="20">
-            <Spinner size="xl" />
-          </Box>
-        }
-      >
-        <RedocStandalone
-          specUrl="/api/doc.json"
-          options={{
-            scrollYOffset: 0,
-            hideDownloadButton: false,
-            nativeScrollbars: true,
-          }}
-        />
-      </Suspense>
-    </Box>
+    <iframe
+      src={`/api/doc/viewer?theme=${colorMode}`}
+      style={{
+        width: "100%",
+        height: "calc(100vh - 73px)",
+        border: "none",
+        display: "block",
+      }}
+      title="Transi-Store API Reference"
+    />
   );
 }
