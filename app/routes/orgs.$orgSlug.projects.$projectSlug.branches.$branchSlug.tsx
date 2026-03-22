@@ -8,6 +8,9 @@ import {
   HStack,
   Badge,
   Stack,
+  Tabs,
+  Input,
+  Checkbox,
 } from "@chakra-ui/react";
 import {
   Link,
@@ -18,13 +21,28 @@ import {
 } from "react-router";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { useTranslation } from "react-i18next";
-import { LuGitBranch, LuPlus, LuGitMerge, LuTrash2 } from "react-icons/lu";
+import {
+  LuGitBranch,
+  LuPlus,
+  LuGitMerge,
+  LuTrash2,
+  LuSearch,
+  LuUndo2,
+} from "react-icons/lu";
 import { useState, useEffect, useCallback } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import { getBranchBySlug, deleteBranch } from "~/lib/branches.server";
+import {
+  getBranchBySlug,
+  deleteBranch,
+  getBranchKeyDeletions,
+  getBranchKeyDeletionCount,
+  addKeyDeletionsToBranch,
+  removeKeyDeletionFromBranch,
+  searchMainKeysForDeletion,
+} from "~/lib/branches.server";
 import {
   getTranslationKeys,
   createTranslationKey,
@@ -88,6 +106,18 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     branchOnly: true,
   });
 
+  const deletionCount = await getBranchKeyDeletionCount(branch.id);
+  const keyDeletions = await getBranchKeyDeletions(branch.id);
+
+  // Search main keys for deletion picker
+  const deletionSearch = url.searchParams.get("deletionSearch") || undefined;
+  const mainKeysResult = deletionSearch
+    ? await searchMainKeysForDeletion(project.id, branch.id, {
+        search: deletionSearch,
+        limit: LIMIT,
+      })
+    : { data: [], count: 0 };
+
   return {
     organization,
     project,
@@ -98,6 +128,10 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     highlight,
     page,
     sort,
+    deletionCount,
+    keyDeletions,
+    deletionSearch,
+    mainKeysResult,
   };
 }
 
@@ -159,6 +193,28 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return redirect(getBranchesUrl(params.orgSlug, params.projectSlug));
   }
 
+  if (action === "addDeletions") {
+    const keyIds = formData.getAll("keyIds");
+    const validKeyIds = keyIds
+      .map((id) => parseInt(String(id), 10))
+      .filter((id) => !isNaN(id));
+
+    if (validKeyIds.length > 0) {
+      await addKeyDeletionsToBranch(branch.id, validKeyIds);
+    }
+
+    return { success: true, action: "addDeletions" };
+  }
+
+  if (action === "removeDeletion") {
+    const keyId = formData.get("keyId");
+    if (keyId) {
+      await removeKeyDeletionFromBranch(branch.id, parseInt(String(keyId), 10));
+    }
+
+    return { success: true, action: "removeDeletion" };
+  }
+
   throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });
 }
 
@@ -172,6 +228,10 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
     search,
     page,
     sort,
+    deletionCount,
+    keyDeletions,
+    deletionSearch,
+    mainKeysResult,
   } = loaderData;
   const { t } = useTranslation();
   const actionData = useActionData<typeof action>();
@@ -180,6 +240,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
 
   const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
   const [drawerKeyId, setDrawerKeyId] = useState<number | null>(null);
+  const [selectedKeyIds, setSelectedKeyIds] = useState<number[]>([]);
 
   const handleEditInDrawer = useCallback((keyId: number) => {
     setDrawerKeyId(keyId);
@@ -203,6 +264,15 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
       setIsCreateKeyModalOpen(false);
     }
   }, [actionData, navigation.state]);
+
+  // Reset selected keys after successful deletion marking
+  const [prevActionData, setPrevActionData] = useState(actionData);
+  if (actionData !== prevActionData) {
+    setPrevActionData(actionData);
+    if (actionData?.success && actionData.action === "addDeletions") {
+      setSelectedKeyIds([]);
+    }
+  }
 
   return (
     <Container maxW="container.xl" py={5}>
@@ -243,20 +313,8 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                 {branch.description}
               </Text>
             )}
-            <Text color="fg.muted" mt={1} fontSize="sm">
-              {t("translations.count", { count })}
-            </Text>
           </Box>
           <HStack gap={2} flexWrap="wrap">
-            {languages.length > 0 && (
-              <Button
-                colorPalette="accent"
-                onClick={() => setIsCreateKeyModalOpen(true)}
-                size="sm"
-              >
-                <LuPlus /> {t("translations.newKey")}
-              </Button>
-            )}
             <Button asChild size="sm" colorPalette="purple" variant="outline">
               <Link
                 to={getBranchMergeUrl(
@@ -288,52 +346,272 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
           </HStack>
         </Stack>
 
-        <TranslationsSearchBar
-          search={search}
-          sort={sort}
-          organizationSlug={organization.slug}
-          projectSlug={project.slug}
-          branchSlug={branch.slug}
-        />
+        <Tabs.Root defaultValue="additions">
+          <Tabs.List>
+            <Tabs.Trigger value="additions">
+              <LuPlus />
+              {t("branches.tabs.additions")}
+              <Badge size="sm" variant="subtle" ml={1}>
+                {count}
+              </Badge>
+            </Tabs.Trigger>
+            <Tabs.Trigger value="deletions">
+              <LuTrash2 />
+              {t("branches.tabs.deletions")}
+              {deletionCount > 0 && (
+                <Badge size="sm" variant="subtle" colorPalette="red" ml={1}>
+                  {deletionCount}
+                </Badge>
+              )}
+            </Tabs.Trigger>
+          </Tabs.List>
 
-        {languages.length === 0 ? (
-          <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
-            <Text color="fg.muted" mb={4}>
-              {t("translations.noLanguages")}
-            </Text>
-          </Box>
-        ) : data.length === 0 ? (
-          <Box p={8} textAlign="center" bg="bg.subtle" borderRadius="md">
-            <Text color="fg.muted">
-              {search
-                ? t("translations.noResultsForSearch")
-                : t("translations.noKeysEmpty")}
-            </Text>
-          </Box>
-        ) : (
-          <>
-            <TranslationsTable
-              data={data}
-              search={search}
-              totalLanguages={totalLanguages}
-              organizationSlug={organization.slug}
-              projectSlug={project.slug}
-              currentUrl={currentUrl}
-              onEditInDrawer={handleEditInDrawer}
-            />
+          {/* Additions tab */}
+          <Tabs.Content value="additions">
+            <VStack gap={4} align="stretch" pt={4}>
+              <HStack justify="space-between">
+                <TranslationsSearchBar
+                  search={search}
+                  sort={sort}
+                  organizationSlug={organization.slug}
+                  projectSlug={project.slug}
+                  branchSlug={branch.slug}
+                />
+                {languages.length > 0 && (
+                  <Button
+                    colorPalette="accent"
+                    onClick={() => setIsCreateKeyModalOpen(true)}
+                    size="sm"
+                    flexShrink={0}
+                  >
+                    <LuPlus /> {t("translations.newKey")}
+                  </Button>
+                )}
+              </HStack>
 
-            <TranslationsPagination
-              count={count}
-              pageSize={LIMIT}
-              currentPage={page}
-              search={search}
-              sort={sort}
-              organizationSlug={organization.slug}
-              projectSlug={project.slug}
-              branchSlug={branch.slug}
-            />
-          </>
-        )}
+              {languages.length === 0 ? (
+                <Box
+                  p={10}
+                  textAlign="center"
+                  borderWidth={1}
+                  borderRadius="lg"
+                >
+                  <Text color="fg.muted" mb={4}>
+                    {t("translations.noLanguages")}
+                  </Text>
+                </Box>
+              ) : data.length === 0 ? (
+                <Box p={8} textAlign="center" bg="bg.subtle" borderRadius="md">
+                  <Text color="fg.muted">
+                    {search
+                      ? t("translations.noResultsForSearch")
+                      : t("translations.noKeysEmpty")}
+                  </Text>
+                </Box>
+              ) : (
+                <>
+                  <TranslationsTable
+                    data={data}
+                    search={search}
+                    totalLanguages={totalLanguages}
+                    organizationSlug={organization.slug}
+                    projectSlug={project.slug}
+                    currentUrl={currentUrl}
+                    onEditInDrawer={handleEditInDrawer}
+                  />
+
+                  <TranslationsPagination
+                    count={count}
+                    pageSize={LIMIT}
+                    currentPage={page}
+                    search={search}
+                    sort={sort}
+                    organizationSlug={organization.slug}
+                    projectSlug={project.slug}
+                    branchSlug={branch.slug}
+                  />
+                </>
+              )}
+            </VStack>
+          </Tabs.Content>
+
+          {/* Deletions tab */}
+          <Tabs.Content value="deletions">
+            <VStack gap={6} align="stretch" pt={4}>
+              {/* Search main keys for deletion */}
+              <Box>
+                <Text fontWeight="semibold" mb={3}>
+                  {t("branches.deletions.searchMainKeys")}
+                </Text>
+                <Form method="get">
+                  {/* Preserve existing search params */}
+                  {search && (
+                    <input type="hidden" name="search" value={search} />
+                  )}
+                  <HStack>
+                    <Input
+                      name="deletionSearch"
+                      placeholder={t("branches.deletions.search")}
+                      defaultValue={deletionSearch ?? ""}
+                      size="sm"
+                    />
+                    <Button type="submit" size="sm" colorPalette="accent">
+                      <LuSearch />
+                    </Button>
+                  </HStack>
+                </Form>
+
+                {deletionSearch && mainKeysResult.data.length > 0 && (
+                  <Form method="post">
+                    <input type="hidden" name="_action" value="addDeletions" />
+                    {selectedKeyIds.map((id) => (
+                      <input
+                        key={id}
+                        type="hidden"
+                        name="keyIds"
+                        value={String(id)}
+                      />
+                    ))}
+                    <Box
+                      mt={3}
+                      borderWidth={1}
+                      borderRadius="md"
+                      p={3}
+                      maxH="300px"
+                      overflowY="auto"
+                    >
+                      <VStack align="stretch" gap={2}>
+                        {mainKeysResult.data.map((key) => (
+                          <HStack key={key.id}>
+                            <Checkbox.Root
+                              size="sm"
+                              checked={selectedKeyIds.includes(key.id)}
+                              onCheckedChange={(e) => {
+                                if (e.checked) {
+                                  setSelectedKeyIds((prev) => [
+                                    ...prev,
+                                    key.id,
+                                  ]);
+                                } else {
+                                  setSelectedKeyIds((prev) =>
+                                    prev.filter((id) => id !== key.id),
+                                  );
+                                }
+                              }}
+                            >
+                              <Checkbox.HiddenInput />
+                              <Checkbox.Control />
+                              <Checkbox.Label>
+                                <Text fontSize="sm" fontWeight="medium">
+                                  {key.keyName}
+                                </Text>
+                              </Checkbox.Label>
+                            </Checkbox.Root>
+                            {key.description && (
+                              <Text fontSize="xs" color="fg.muted" truncate>
+                                {key.description}
+                              </Text>
+                            )}
+                          </HStack>
+                        ))}
+                      </VStack>
+                    </Box>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      colorPalette="red"
+                      mt={3}
+                      loading={isSubmitting}
+                      disabled={selectedKeyIds.length === 0}
+                    >
+                      <LuTrash2 /> {t("branches.deletions.markForDeletion")} (
+                      {selectedKeyIds.length})
+                    </Button>
+                  </Form>
+                )}
+
+                {deletionSearch && mainKeysResult.data.length === 0 && (
+                  <Box
+                    mt={3}
+                    p={4}
+                    bg="bg.subtle"
+                    borderRadius="md"
+                    textAlign="center"
+                  >
+                    <Text color="fg.muted" fontSize="sm">
+                      {t("branches.deletions.searchEmpty")}
+                    </Text>
+                  </Box>
+                )}
+              </Box>
+
+              {/* List of planned deletions */}
+              <Box>
+                <Text fontWeight="semibold" mb={3}>
+                  {t("branches.deletions.planned")}
+                </Text>
+                {keyDeletions.length === 0 ? (
+                  <Box
+                    p={6}
+                    textAlign="center"
+                    bg="bg.subtle"
+                    borderRadius="md"
+                  >
+                    <Text color="fg.muted" fontSize="sm">
+                      {t("branches.deletions.empty")}
+                    </Text>
+                  </Box>
+                ) : (
+                  <VStack align="stretch" gap={2}>
+                    {keyDeletions.map((key) => (
+                      <HStack
+                        key={key.id}
+                        justify="space-between"
+                        p={2}
+                        borderWidth={1}
+                        // borderRadius="md"
+                        // borderColor="red.muted"
+                        // bg="red.subtle"
+                      >
+                        <VStack align="start" gap={0}>
+                          <Badge size="sm" variant="outline" colorPalette="red">
+                            {key.keyName}
+                          </Badge>
+                          {key.description && (
+                            <Text fontSize="xs" color="fg.muted">
+                              {key.description}
+                            </Text>
+                          )}
+                        </VStack>
+                        <Form method="post">
+                          <input
+                            type="hidden"
+                            name="_action"
+                            value="removeDeletion"
+                          />
+                          <input
+                            type="hidden"
+                            name="keyId"
+                            value={String(key.id)}
+                          />
+                          <Button
+                            type="submit"
+                            size="xs"
+                            variant="ghost"
+                            colorPalette="accent"
+                            loading={isSubmitting}
+                          >
+                            <LuUndo2 /> {t("branches.deletions.restore")}
+                          </Button>
+                        </Form>
+                      </HStack>
+                    ))}
+                  </VStack>
+                )}
+              </Box>
+            </VStack>
+          </Tabs.Content>
+        </Tabs.Root>
 
         {drawerKeyId !== null && (
           <TranslationKeyDrawer

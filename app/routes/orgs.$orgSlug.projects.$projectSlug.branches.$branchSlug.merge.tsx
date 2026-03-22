@@ -26,6 +26,7 @@ import { getProjectBySlug } from "~/lib/projects.server";
 import {
   getBranchBySlug,
   getBranchKeys,
+  getBranchKeyDeletions,
   mergeBranch,
 } from "~/lib/branches.server";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
@@ -55,7 +56,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   // Get keys that would be merged
   const branchKeys = await getBranchKeys(branch.id);
 
-  return { organization, project, branch, branchKeys };
+  // Get keys that would be deleted
+  const keyDeletions = await getBranchKeyDeletions(branch.id);
+
+  return { organization, project, branch, branchKeys, keyDeletions };
 }
 
 export async function action({ params, context }: Route.ActionArgs) {
@@ -85,11 +89,14 @@ export async function action({ params, context }: Route.ActionArgs) {
 }
 
 export default function MergeBranch({ loaderData }: Route.ComponentProps) {
-  const { organization, project, branch, branchKeys } = loaderData;
+  const { organization, project, branch, branchKeys, keyDeletions } =
+    loaderData;
   const { t } = useTranslation();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  const hasChanges = branchKeys.length > 0 || keyDeletions.length > 0;
 
   return (
     <Container maxW="container.md" py={10}>
@@ -131,33 +138,76 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
                 </Box>
               )}
 
-              {branchKeys.length === 0 ? (
+              {!hasChanges ? (
                 <Box p={4} bg="bg.subtle" borderRadius="md">
                   <Text color="fg.muted">{t("branches.merge.empty")}</Text>
                 </Box>
               ) : (
                 <>
-                  <Text>{t("branches.merge.preview")}</Text>
-                  <Box
-                    borderWidth={1}
-                    borderRadius="md"
-                    p={3}
-                    maxH="300px"
-                    overflowY="auto"
-                  >
-                    <VStack align="stretch" gap={1}>
-                      {branchKeys.map((key) => (
-                        <HStack key={key.id}>
-                          <Badge size="sm" variant="outline">
-                            {key.keyName}
-                          </Badge>
-                        </HStack>
-                      ))}
-                    </VStack>
-                  </Box>
+                  {/* Additions section */}
+                  {branchKeys.length > 0 && (
+                    <Box>
+                      <Text fontWeight="semibold" mb={2}>
+                        {t("branches.merge.preview")}
+                      </Text>
+                      <Box
+                        borderWidth={1}
+                        borderRadius="md"
+                        p={3}
+                        maxH="200px"
+                        overflowY="auto"
+                      >
+                        <VStack align="stretch" gap={1}>
+                          {branchKeys.map((key) => (
+                            <HStack key={key.id}>
+                              <Badge size="sm" variant="outline">
+                                {key.keyName}
+                              </Badge>
+                            </HStack>
+                          ))}
+                        </VStack>
+                      </Box>
+                    </Box>
+                  )}
 
+                  {/* Deletions section */}
+                  {keyDeletions.length > 0 && (
+                    <Box>
+                      <Text fontWeight="semibold" mb={2}>
+                        {t("branches.merge.deletions.preview")}
+                      </Text>
+                      <Box
+                        borderWidth={1}
+                        borderColor="red.muted"
+                        borderRadius="md"
+                        p={3}
+                        maxH="200px"
+                        overflowY="auto"
+                        bg="red.subtle"
+                      >
+                        <VStack align="stretch" gap={1}>
+                          {keyDeletions.map((key) => (
+                            <HStack key={key.id}>
+                              <Badge
+                                size="sm"
+                                variant="outline"
+                                colorPalette="red"
+                              >
+                                {key.keyName}
+                              </Badge>
+                            </HStack>
+                          ))}
+                        </VStack>
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* Summary */}
                   <Text color="fg.muted" fontSize="sm">
-                    {t("branches.merge.confirm")}
+                    {t("branches.merge.summary", {
+                      added: branchKeys.length,
+                      deleted: keyDeletions.length,
+                    })}
                   </Text>
 
                   <Form method="post">
@@ -167,11 +217,7 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
                       loading={isSubmitting}
                       width="full"
                     >
-                      <LuGitMerge /> {t("branches.merge")} ({branchKeys.length}{" "}
-                      {t("branches.keysBadge", {
-                        count: branchKeys.length,
-                      })}
-                      )
+                      <LuGitMerge /> {t("branches.merge")}
                     </Button>
                   </Form>
                 </>

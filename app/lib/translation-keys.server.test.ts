@@ -51,6 +51,7 @@ describe("getProjectTranslations", () => {
     expect(result).toEqual([
       {
         branchId: null,
+        deletedAt: null,
         id: key.id,
         projectId,
         description: null,
