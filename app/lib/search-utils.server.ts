@@ -71,6 +71,9 @@ export async function searchTranslationKeys(
     branchCondition = isNull(schema.translationKeys.branchId);
   }
 
+  // Exclude soft-deleted keys
+  const notDeleted = isNull(schema.translationKeys.deletedAt);
+
   // Matches sur keyName et description
   const keyResults = await db
     .select({
@@ -85,6 +88,7 @@ export async function searchTranslationKeys(
       and(
         inArray(schema.translationKeys.projectId, projectIds),
         branchCondition,
+        notDeleted,
         or(
           sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
           sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
@@ -99,6 +103,7 @@ export async function searchTranslationKeys(
   const translationWhere = [
     inArray(schema.translationKeys.projectId, projectIds),
     branchCondition,
+    notDeleted,
     sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
   ];
   if (options?.locale) {

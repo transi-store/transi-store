@@ -192,6 +192,7 @@ export const translationKeys = pgTable(
     }),
     keyName: varchar("key_name", { length: 500 }).notNull(),
     description: text("description"),
+    deletedAt: timestamp("deleted_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -199,6 +200,27 @@ export const translationKeys = pgTable(
     uniqueIndex("unique_project_key").on(table.projectId, table.keyName),
     index("idx_keys_name").on(table.keyName),
     // Index GIN pour la recherche floue seront créés via SQL (voir scripts/enable-fuzzy-search.sh)
+  ],
+);
+
+// Clés de traduction marquées pour suppression dans une branche
+export const branchKeyDeletions = pgTable(
+  "branch_key_deletions",
+  {
+    id: serial("id").primaryKey(),
+    branchId: integer("branch_id")
+      .notNull()
+      .references(() => branches.id, { onDelete: "cascade" }),
+    translationKeyId: integer("translation_key_id")
+      .notNull()
+      .references(() => translationKeys.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("unique_branch_key_deletion").on(
+      table.branchId,
+      table.translationKeyId,
+    ),
   ],
 );
 
@@ -282,3 +304,6 @@ export type OrganizationAiProvider =
   typeof organizationAiProviders.$inferSelect;
 export type NewOrganizationAiProvider =
   typeof organizationAiProviders.$inferInsert;
+
+export type BranchKeyDeletion = typeof branchKeyDeletions.$inferSelect;
+export type NewBranchKeyDeletion = typeof branchKeyDeletions.$inferInsert;

@@ -19,7 +19,7 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branche
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
-import { getBranchesByProject, getBranchKeyCount } from "~/lib/branches.server";
+import { getBranchesByProject, getBranchKeyCount, getBranchKeyDeletionCount } from "~/lib/branches.server";
 import {
   createNewBranchUrl,
   getBranchesUrl,
@@ -48,6 +48,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       keyCount:
         branch.status === BRANCH_STATUS.OPEN
           ? await getBranchKeyCount(branch.id)
+          : 0,
+      deletionCount:
+        branch.status === BRANCH_STATUS.OPEN
+          ? await getBranchKeyDeletionCount(branch.id)
           : 0,
     })),
   );
@@ -172,6 +176,17 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
                               count: branch.keyCount,
                             })}
                           </Badge>
+                          {branch.deletionCount > 0 && (
+                            <Badge
+                              variant="outline"
+                              size="sm"
+                              colorPalette="red"
+                            >
+                              {t("branches.deletionsBadge", {
+                                count: branch.deletionCount,
+                              })}
+                            </Badge>
+                          )}
                           <Button asChild size="sm" variant="outline">
                             <Link
                               to={getBranchUrl(

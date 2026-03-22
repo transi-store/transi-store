@@ -18,6 +18,7 @@ function buildProjectTranslations(
     keyName,
     description: null,
     branchId: null,
+    deletedAt: null,
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
     translations: [

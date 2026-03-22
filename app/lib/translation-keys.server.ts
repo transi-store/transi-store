@@ -1,5 +1,14 @@
 import { db, schema } from "./db.server";
-import { and, desc, eq, inArray, isNull, or, type SQL } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  notInArray,
+  or,
+  type SQL,
+} from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
 import { TranslationKeysSort } from "./sort/keySort";
@@ -15,18 +24,28 @@ type TranslationKeysReturnType = {
  * - branchId = undefined → main only (branch_id IS NULL)
  * - branchId = number, branchOnly = false → main + that branch (for export)
  * - branchId = number, branchOnly = true → only that branch (for UI)
+ *
+ * Always excludes soft-deleted keys (deletedAt IS NULL).
  */
 function branchFilter(branchId?: number, branchOnly?: boolean): SQL {
+  const notDeleted = isNull(schema.translationKeys.deletedAt);
+
   if (branchId !== undefined) {
     if (branchOnly) {
-      return eq(schema.translationKeys.branchId, branchId);
+      return and(
+        eq(schema.translationKeys.branchId, branchId),
+        notDeleted,
+      )!;
     }
-    return or(
-      isNull(schema.translationKeys.branchId),
-      eq(schema.translationKeys.branchId, branchId),
+    return and(
+      or(
+        isNull(schema.translationKeys.branchId),
+        eq(schema.translationKeys.branchId, branchId),
+      )!,
+      notDeleted,
     )!;
   }
-  return isNull(schema.translationKeys.branchId);
+  return and(isNull(schema.translationKeys.branchId), notDeleted)!;
 }
 
 export async function getTranslationKeys(
@@ -337,15 +356,32 @@ export async function getProjectTranslations(
   options?: { branchId?: number },
 ): Promise<ProjectTranslations> {
   // Get all keys for this project, sorted alphabetically by keyName
-  const condition = and(
+  const conditions = [
     eq(schema.translationKeys.projectId, projectId),
     branchFilter(options?.branchId),
-  );
+  ];
+
+  // When exporting with a branch, also exclude main keys marked for deletion in that branch
+  if (options?.branchId !== undefined) {
+    const deletions = await db
+      .select({ translationKeyId: schema.branchKeyDeletions.translationKeyId })
+      .from(schema.branchKeyDeletions)
+      .where(eq(schema.branchKeyDeletions.branchId, options.branchId));
+
+    if (deletions.length > 0) {
+      conditions.push(
+        notInArray(
+          schema.translationKeys.id,
+          deletions.map((d) => d.translationKeyId),
+        ),
+      );
+    }
+  }
 
   const keys = await db
     .select()
     .from(schema.translationKeys)
-    .where(condition)
+    .where(and(...conditions))
     .orderBy(schema.translationKeys.keyName);
 
   if (keys.length === 0) {

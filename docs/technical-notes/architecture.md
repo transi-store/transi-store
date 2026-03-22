@@ -69,7 +69,11 @@ Organization (tenant/workspace)
         │
         ├─→ ProjectLanguages (locales supportées)
         │
-        └─→ TranslationKeys (clés de traduction)
+        ├─→ Branches (branches de modification)
+        │     │
+        │     └─→ BranchKeyDeletions (clés marquées pour suppression)
+        │
+        └─→ TranslationKeys (clés de traduction, avec soft-delete via deletedAt)
               │
               └─→ Translations (valeurs traduites par locale)
 ```

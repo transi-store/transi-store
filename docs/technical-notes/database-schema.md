@@ -28,19 +28,19 @@ transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
 │ organization_    │  │ organization_       │ │   api_keys       │  │  projects  │
 │ members          │  │ invitations         │ └──────────────────┘  └────────────┘
 └──────────────────┘  └─────────────────────┘                              │
-                                                                            │
-                                                       ┌────────────────────┴────────────┐
-                                                       │                                 │
-                                                       ▼                                 ▼
-                                              ┌──────────────────┐         ┌────────────────────┐
-                                              │ project_         │         │ translation_keys   │
-                                              │ languages        │         └────────────────────┘
-                                              └──────────────────┘                    │
-                                                                                      │
-                                                                                      ▼
-                                                                         ┌────────────────────┐
-                                                                         │  translations      │
-                                                                         └────────────────────┘
+                                                       ┌───────────────────┴──────────────────┐
+                                                       │                  │                    │
+                                                       ▼                  ▼                    ▼
+                                              ┌──────────────────┐ ┌──────────────┐ ┌────────────────────┐
+                                              │ project_         │ │  branches    │ │ translation_keys   │
+                                              │ languages        │ └──────────────┘ │ (deletedAt: soft)  │
+                                              └──────────────────┘        │         └────────────────────┘
+                                                                          │                    │
+                                                                          ▼                    ▼
+                                                                ┌──────────────────┐ ┌────────────────────┐
+                                                                │ branch_key_      │ │  translations      │
+                                                                │ deletions        │ └────────────────────┘
+                                                                └──────────────────┘
 ```
 
 ## Concepts clés
@@ -62,13 +62,27 @@ transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
 | `projects`                 | `(organization_id, slug)` unique          | Slug unique par org uniquement        |
 | `translation_keys`         | `(project_id, key_name)` unique           | Une seule clé par nom dans un projet  |
 | `translations`             | `(key_id, locale)` unique                 | Une seule traduction par clé-locale   |
+| `branch_key_deletions`     | `(branch_id, translation_key_id)` unique  | Une suppression par clé par branche   |
 
 ### Relations importantes
 
 - **Users** ↔ **Organizations** : N-N via `organization_members`
 - **Organizations** → **Projects** : 1-N (cascade delete)
 - **Projects** → **TranslationKeys** : 1-N (cascade delete)
+- **Projects** → **Branches** : 1-N (cascade delete)
 - **TranslationKeys** → **Translations** : 1-N (cascade delete)
+- **Branches** → **BranchKeyDeletions** : 1-N (cascade delete)
+
+### Branches de traduction
+
+Les branches permettent d'isoler des modifications de traductions (ajouts et suppressions) avant de les fusionner vers main.
+
+- **Ajouts** : Les clés de traduction ont un champ `branchId` nullable. `NULL` = main, valeur = branche.
+- **Suppressions** : La table `branch_key_deletions` stocke les clés de main marquées pour suppression dans une branche.
+- **Merge** : Déplace les ajouts vers main (`branchId = NULL`) et soft-delete les clés marquées (`deletedAt = now()`).
+- **Soft-delete** : Les clés avec `deletedAt` non-null sont exclues des exports, de la recherche, et de la vue main.
+
+Voir [ADR-018](../decisions/ADR-018-suppression-traductions-branches.md) pour les détails de conception.
 
 ### Invitations
 
