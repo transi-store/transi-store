@@ -16,7 +16,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "download-translations": "yarn transi-store",
     "lint:eslint": "eslint .",
-    "lint:types": "react-router typegen && tsc --noEmit && yarn build:common && yarn workspace @transi-store/common lint:types && yarn workspace @transi-store/cli lint:types",
+    "lint:types": "react-router typegen && yarn build:common && tsc --noEmit && yarn workspace @transi-store/common lint:types && yarn workspace @transi-store/cli lint:types",
     "knip": "react-router typegen && knip",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
