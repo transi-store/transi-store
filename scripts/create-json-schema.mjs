@@ -2,9 +2,9 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import z from "zod";
-import schema from "@transi-store/cli/schema";
+import { configSchema } from "@transi-store/common";
 
-const schemaJson = z.toJSONSchema(schema);
+const schemaJson = z.toJSONSchema(configSchema);
 
 // get current file dir
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

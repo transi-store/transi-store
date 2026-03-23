@@ -71,7 +71,7 @@ jobs:
       - name: Init repository dependencies
         uses: ./.github/actions/setup-project
 
-      - name: Run i18next
+      - name: Run tests
         run: yarn test
         env:
           SESSION_SECRET: test-session-secret

@@ -3156,12 +3156,22 @@ __metadata:
   resolution: "@transi-store/cli@workspace:packages/cli"
   dependencies:
     "@commander-js/extra-typings": "npm:^14.0.0"
+    "@transi-store/common": "workspace:^"
     commander: "npm:^14.0.3"
     simple-git: "npm:^3.33.0"
     typescript: "npm:^5.7.3"
     zod: "npm:^4.3.6"
   bin:
     transi-store: ./dist/cli.js
+  languageName: unknown
+  linkType: soft
+
+"@transi-store/common@workspace:^, @transi-store/common@workspace:packages/common":
+  version: 0.0.0-use.local
+  resolution: "@transi-store/common@workspace:packages/common"
+  dependencies:
+    typescript: "npm:^5.7.3"
+    zod: "npm:^4.3.6"
   languageName: unknown
   linkType: soft
 
@@ -11220,6 +11230,7 @@ __metadata:
     "@react-router/serve": "npm:^7.12.0"
     "@scalar/api-reference-react": "npm:^0.9.13"
     "@transi-store/cli": "workspace:^"
+    "@transi-store/common": "workspace:^"
     "@types/node": "npm:^22.10.7"
     "@types/pg": "npm:^8.16.0"
     "@types/react": "npm:^19.0.7"
