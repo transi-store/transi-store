@@ -3,7 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
 import z from "zod";
-import schema from "./schema.ts";
+import schema from "@transi-store/common/config-schema";
 
 export { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
 

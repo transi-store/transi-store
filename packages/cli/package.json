@@ -4,7 +4,6 @@
   "type": "module",
   "exports": {
     ".": "./dist/cli.js",
-    "./schema": "./dist/schema.js",
     "./schema.json": "./dist/schema.json"
   },
   "bin": {

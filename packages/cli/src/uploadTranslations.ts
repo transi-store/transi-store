@@ -10,7 +10,7 @@ import {
   getModifiedFiles,
   isGitRepository,
 } from "./git.ts";
-import schema from "./schema.ts";
+import schema from "@transi-store/common/config-schema";
 
 export { ImportStrategy } from "@transi-store/common/import-strategy";
 
