@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "react-router dev",
-    "build": "react-router build",
+    "build": "yarn build:common && react-router build",
     "build:common": "yarn workspace @transi-store/common build",
     "build:cli": "yarn build:common && yarn workspace @transi-store/cli build && yarn build:cli:schema",
     "build:cli:schema": "node ./scripts/create-json-schema.mjs",
@@ -22,7 +22,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:setup-search": "./scripts/enable-fuzzy-search.sh",
-    "test": "vitest",
+    "test": "yarn build:common && vitest",
     "prepare": "husky"
   },
   "dependencies": {
