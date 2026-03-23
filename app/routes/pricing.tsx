@@ -78,7 +78,7 @@ interface PricingCardProps {
   ctaLabel: string;
   ctaLink: string;
   highlighted?: boolean;
-  comingSoon?: boolean;
+  payPlan?: boolean;
   children?: React.ReactNode;
 }
 
@@ -91,7 +91,7 @@ function PricingCard({
   ctaLabel,
   ctaLink,
   highlighted,
-  comingSoon,
+  payPlan,
   children,
 }: PricingCardProps) {
   const { t } = useTranslation();
@@ -105,7 +105,7 @@ function PricingCard({
       transition="all 0.2s"
       _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
     >
-      {comingSoon ? (
+      {payPlan ? (
         <Badge
           position="absolute"
           top={4}
@@ -113,7 +113,7 @@ function PricingCard({
           colorPalette="orange"
           variant="solid"
         >
-          {t("pricing.comingSoon")}
+          {t("pricing.noCreditCardRequired")}
         </Badge>
       ) : (
         <Badge
@@ -194,7 +194,6 @@ export default function PricingPage() {
           ]}
           ctaLabel={t("pricing.openSource.cta")}
           ctaLink="https://github.com/transi-store/transi-store#readme"
-          // comingSoon
         />
 
         {/* SaaS Free - Highlighted */}
@@ -228,7 +227,7 @@ export default function PricingPage() {
           ctaLabel={t("pricing.saas.paid.cta")}
           ctaLink="/auth/login"
           highlighted
-          comingSoon
+          payPlan
         >
           <Badge colorPalette="green" variant="subtle" w="fit-content" mt={2}>
             {t("pricing.saas.paid.firstMonthFree")}
