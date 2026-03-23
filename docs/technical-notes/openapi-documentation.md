@@ -29,7 +29,7 @@ app/routes/
 
 ## Single Source of Truth
 
-Zod schemas in `app/lib/api-doc/schemas/` are the **single source of truth**:
+Zod schemas in `apps/website/app/lib/api-doc/schemas/` are the **single source of truth**:
 
 1. **OpenAPI generation**: Schemas are registered in the `@asteasolutions/zod-to-openapi` registry and automatically generate the OpenAPI spec.
 2. **Handler validation**: The same schemas are used in API handlers to validate incoming requests via `safeParse()`.
@@ -38,16 +38,16 @@ This approach guarantees that documentation is always synchronized with validati
 
 ### Handlers Using Schemas
 
-- **Export** (`app/routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx`): Uses `exportQuerySchema.safeParse()` to validate query params.
-- **Import** (`app/lib/import/process-import.server.ts`): Uses `importFieldsSchema.safeParse()` to validate FormData text fields.
+- **Export** (`apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx`): Uses `exportQuerySchema.safeParse()` to validate query params.
+- **Import** (`apps/website/app/lib/import/process-import.server.ts`): Uses `importFieldsSchema.safeParse()` to validate FormData text fields.
 
 ## Adding or Modifying an API Endpoint
 
 When adding or modifying a documented API endpoint:
 
-1. **Update the Zod schema** in `app/lib/api-doc/schemas/` (add fields, change types, etc.)
+1. **Update the Zod schema** in `apps/website/app/lib/api-doc/schemas/` (add fields, change types, etc.)
 2. **Use the schema in the handler** for validation (`safeParse()`)
-3. **Register the path in the OpenAPI registry** in `app/lib/api-doc/openapi.server.ts`
+3. **Register the path in the OpenAPI registry** in `apps/website/app/lib/api-doc/openapi.server.ts`
 4. **Verify the rendering** on `/api/doc` after modification
 
 ### Example: Adding a Query Parameter to Export

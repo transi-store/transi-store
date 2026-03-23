@@ -2,26 +2,37 @@
 
 ## Vue d'ensemble
 
-transi-store est une application full-stack React Router v7 avec SSR (Server-Side Rendering). L'architecture suit un pattern classique de framework full-stack où les routes gèrent à la fois le rendu côté serveur et les interactions client.
+transi-store est un **monorepo Yarn Berry v4** contenant une application full-stack React Router v7 avec SSR (Server-Side Rendering), un CLI et un package de code partagé. L'architecture suit un pattern classique de framework full-stack où les routes gèrent à la fois le rendu côté serveur et les interactions client.
 
 ## Structure du projet
 
 ```
-transi-store/
-├── app/                     # Code applicatif React Router
-│   ├── routes.ts           # Configuration centralisée des routes
-│   ├── root.tsx            # Layout principal (header, session)
-│   ├── routes/             # Route handlers (loaders, actions, composants)
-│   ├── components/         # Composants React réutilisables
-│   ├── lib/                # Utilitaires et logique serveur (*.server.ts)
-│   └── entry.server.tsx    # Point d'entrée SSR
-├── drizzle/                # Schéma et relations Drizzle ORM
-│   ├── schema.ts           # Définitions des tables PostgreSQL
-│   └── relations.ts        # Relations entre tables
-├── docs/                   # Documentation
-│   ├── decisions/          # Architecture Decision Records
-│   └── technical-notes/    # Notes techniques détaillées
-└── scripts/                # Scripts utilitaires (setup DB, etc.)
+transi-store/                    # Racine du monorepo
+├── apps/
+│   └── website/                # Application web principale
+│       ├── app/                # Code applicatif React Router
+│       │   ├── routes.ts      # Configuration centralisée des routes
+│       │   ├── root.tsx       # Layout principal (header, session)
+│       │   ├── routes/        # Route handlers (loaders, actions, composants)
+│       │   ├── components/    # Composants React réutilisables
+│       │   ├── lib/           # Utilitaires et logique serveur (*.server.ts)
+│       │   └── entry.server.tsx # Point d'entrée SSR
+│       ├── server/            # Point d'entrée serveur (app.ts)
+│       ├── drizzle/           # Schéma et relations Drizzle ORM
+│       │   ├── schema.ts     # Définitions des tables PostgreSQL
+│       │   └── relations.ts  # Relations entre tables
+│       └── tests/             # Setup de tests (PGlite)
+├── packages/
+│   ├── cli/                   # CLI pour télécharger les traductions
+│   └── common/                # Types et utilitaires partagés
+├── docs/                      # Documentation
+│   ├── decisions/             # Architecture Decision Records
+│   └── technical-notes/       # Notes techniques détaillées
+├── scripts/                   # Scripts utilitaires (setup DB, etc.)
+├── package.json               # Workspace root + tooling partagé
+├── eslint.config.js           # ESLint config (racine, couvre tout le monorepo)
+├── knip.jsonc                 # Knip config (racine, workspaces)
+└── docker-compose.yml         # Orchestration Docker (PostgreSQL + app)
 ```
 
 ## Pattern architectural
@@ -33,7 +44,7 @@ Le projet utilise React Router v7 en mode "framework" qui fournit :
 - **SSR complet** : Rendu côté serveur de toutes les pages
 - **Loaders** : Chargement de données serveur avant le rendu
 - **Actions** : Mutations de données via form submissions
-- **File-based + configuration** : Routes définies dans `app/routes.ts`
+- **File-based + configuration** : Routes définies dans `apps/website/app/routes.ts`
 
 ### Séparation client/serveur
 

@@ -140,13 +140,20 @@ Tapez `make help` pour voir toutes les commandes disponibles. Principales comman
 
 ```
 transi-store/
-├── app/                    # Code applicatif React Router
-│   ├── routes/            # Routes (file-based routing)
-│   ├── components/        # Composants React
-│   └── lib/               # Utilitaires et helpers
-├── drizzle/               # Schema et migrations Drizzle
+├── apps/
+│   └── website/            # Application web React Router
+│       ├── app/            # Code applicatif (routes, composants, lib)
+│       ├── server/         # Point d'entrée serveur
+│       ├── public/         # Assets statiques
+│       ├── drizzle/        # Schema et relations Drizzle ORM
+│       └── tests/          # Setup de tests
+├── packages/
+│   ├── cli/               # CLI pour télécharger les traductions
+│   └── common/            # Code partagé (types, utilitaires)
 ├── docs/                  # Documentation
-│   └── decisions/         # Architecture Decision Records
+│   ├── decisions/         # Architecture Decision Records
+│   └── technical-notes/   # Notes techniques détaillées
+├── scripts/               # Scripts utilitaires
 └── docker-compose.yml     # Configuration Docker
 ```
 

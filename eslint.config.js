@@ -32,9 +32,10 @@ export default defineConfig(
   },
   {
     ignores: [
-      "build/",
-      "packages/cli/dist/",
-      ".react-router/",
+      "apps/website/build/",
+      "packages/*/dist/",
+      "packages/common/dist/",
+      "apps/website/.react-router/",
       "node_modules/",
     ],
   },

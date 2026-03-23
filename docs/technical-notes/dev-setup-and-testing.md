@@ -14,4 +14,4 @@ yarn test --run
 yarn test --run path/to/file.test.ts
 ```
 
-The project uses **vitest** with an in-memory PGlite database (see `tests/setup-db.ts` and `tests/test-db.ts`).
+The project uses **vitest** with an in-memory PGlite database (see `apps/website/tests/setup-db.ts` and `apps/website/tests/test-db.ts`).

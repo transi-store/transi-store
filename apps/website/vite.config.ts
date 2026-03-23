@@ -1,7 +1,9 @@
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import path from "node:path";
-import "dotenv/config";
+import dotenv from "dotenv";
+
+dotenv.config({ path: [".env", "../../.env"] });
 
 const allowedHosts =
   process.env.DOMAIN_ROOT &&

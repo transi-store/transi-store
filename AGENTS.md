@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Monorepo Structure
+
+This is a **Yarn Berry v4 monorepo** with the following workspaces:
+
+- `apps/website` — The main web application (React Router v7)
+- `packages/common` — Shared types and utilities
+- `packages/cli` — CLI tool for downloading translations
+
+Tooling (ESLint, Prettier, Knip, lint-staged, Husky) is configured at the **root** level.
+
 ## Documentation Structure
 
 This project maintains detailed technical documentation in the `docs/` folder:
@@ -32,11 +42,13 @@ This project maintains detailed technical documentation in the `docs/` folder:
 ## Quick Command Reference
 
 ```bash
-# Development
+# Development (from root — delegates to workspaces)
 yarn dev                     # Start dev server (http://localhost:5173)
-yarn lint:types              # Type check with TypeScript
+yarn lint:types              # Type check all workspaces
+yarn lint:eslint             # Lint all workspaces
 yarn knip                    # Find unused code and dependencies
-yarn build                   # Build for production
+yarn build                   # Build common + website for production
+yarn test                    # Run tests
 
 # Database
 yarn db:push                 # Apply schema to database (no migrations)
@@ -61,7 +73,7 @@ docker compose up -d         # Start PostgreSQL
 
 ### Critical Patterns
 
-1. **Routes**: Manually configured in `app/routes.ts` (NOT file-based discovery)
+1. **Routes**: Manually configured in `apps/website/app/routes.ts` (NOT file-based discovery)
    - Adding a new route requires both creating the file AND declaring it in `routes.ts`
 
 2. **Server-only code**: Use `.server.ts` suffix for code that must never reach the client
@@ -84,7 +96,7 @@ docker compose up -d         # Start PostgreSQL
    ```
 
 4. **Route hierarchy** for new routes:
-   - Authenticated app pages → add inside `layout("routes/app-layout.tsx", [...])` in `routes.ts`
+   - Authenticated app pages → add inside `layout("routes/app-layout.tsx", [...])` in `apps/website/app/routes.ts`
    - Authenticated API routes under `api/orgs/:orgSlug/...` → add inside the `route("api/orgs/:orgSlug", "routes/api-org-layout.tsx", [...])` block
    - Public routes → add outside any layout
 
@@ -92,15 +104,15 @@ docker compose up -d         # Start PostgreSQL
 
 6. **Multi-tenant**: All data isolated by organization via membership checks
 
-7. **API documentation (OpenAPI)**: The API spec is auto-generated from **shared Zod schemas** in `app/lib/api-doc/schemas/`. When adding or modifying an API endpoint:
+7. **API documentation (OpenAPI)**: The API spec is auto-generated from **shared Zod schemas** in `apps/website/app/lib/api-doc/schemas/`. When adding or modifying an API endpoint:
    - Update the Zod schema in the corresponding schema file
    - Use the schema in the handler for validation (`safeParse()`)
-   - Register the path in `app/lib/api-doc/openapi.server.ts`
+   - Register the path in `apps/website/app/lib/api-doc/openapi.server.ts`
    - See [openapi-documentation.md](./docs/technical-notes/openapi-documentation.md) for details
 
 ## Environment Variables
 
-Required in `.env`:
+Required in `.env` (at monorepo root):
 
 ```bash
 DATABASE_URL="postgresql://..."
@@ -115,8 +127,9 @@ SESSION_SECRET="..."
 1. **Always read the relevant technical-notes** before implementing features
 2. **Follow existing patterns** documented in code-patterns.md
 3. **Check ADRs** for context on past decisions
-4. **Verify route configuration** in `app/routes.ts` when adding routes
+4. **Verify route configuration** in `apps/website/app/routes.ts` when adding routes
 5. **Run `yarn lint:types` and `yarn knip`** before committing
+6. **Website code lives in `apps/website/`** — don't create app files at the monorepo root
 
 ---
 

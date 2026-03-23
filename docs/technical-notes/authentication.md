@@ -26,7 +26,7 @@ transi-store utilise OAuth2/OIDC pour l'authentification des utilisateurs avec s
 2. Stocke dans cookie `oauth_state` chiffré (TTL: 10 min)
 3. Redirige vers le provider avec challenge PKCE
 
-**Fichier** : `app/routes/auth.{provider}.login.tsx`
+**Fichier** : `apps/website/app/routes/auth.{provider}.login.tsx`
 
 ### 2. Callback (`/auth/{provider}/callback`)
 
@@ -41,9 +41,9 @@ transi-store utilise OAuth2/OIDC pour l'authentification des utilisateurs avec s
 
 **Fichiers** :
 
-- `app/routes/auth.{provider}.callback.tsx`
-- `app/lib/auth-providers.server.ts`
-- `app/lib/auth.server.ts`
+- `apps/website/app/routes/auth.{provider}.callback.tsx`
+- `apps/website/app/lib/auth-providers.server.ts`
+- `apps/website/app/lib/auth.server.ts`
 
 ### 3. Upsert utilisateur
 
@@ -53,7 +53,7 @@ transi-store utilise OAuth2/OIDC pour l'authentification des utilisateurs avec s
 - Si existe : met à jour email uniquement (préserve le nom)
 - Si nouveau : crée l'utilisateur (name peut être null)
 
-**Fichier** : `app/lib/auth.server.ts` → `upsertUser()`
+**Fichier** : `apps/website/app/lib/auth.server.ts` → `upsertUser()`
 
 ### 4. Complétion du profil
 
@@ -63,7 +63,7 @@ Si l'utilisateur n'a pas de `name` après l'upsert :
 - Formulaire pour saisir le nom
 - Mise à jour en base + création session
 
-**Fichier** : `app/routes/auth.complete-profile.tsx`
+**Fichier** : `apps/website/app/routes/auth.complete-profile.tsx`
 
 ### 5. Gestion de session
 
@@ -83,7 +83,7 @@ Si l'utilisateur n'a pas de `name` après l'upsert :
 - `sessionAuthMiddleware` : Middleware pour les routes app, redirige vers `/auth/login` si pas connecté. Place le user dans `userContext`.
 - `apiAuthMiddleware` : Middleware pour les routes API, accepte Bearer API key ou session cookie. Place le résultat dans `apiAuthContext`.
 
-**Fichiers** : `app/lib/session.server.ts`, `app/middleware/auth.ts`, `app/middleware/api-auth.ts`
+**Fichiers** : `apps/website/app/lib/session.server.ts`, `apps/website/app/middleware/auth.ts`, `apps/website/app/middleware/api-auth.ts`
 
 ## Sécurité
 
@@ -130,13 +130,13 @@ Toutes les routes sous `/orgs/:orgSlug` vérifient l'appartenance via `requireOr
 3. Lance 404 si org inexistante, 403 si pas membre
 4. Retourne l'organisation si OK
 
-**Fichier** : `app/lib/organizations.server.ts`
+**Fichier** : `apps/website/app/lib/organizations.server.ts`
 
 ## Déconnexion
 
 Route `/auth/logout` : Détruit la session (cookie `maxAge: 0`) et redirige vers `/`
 
-**Fichier** : `app/routes/auth.logout.tsx`
+**Fichier** : `apps/website/app/routes/auth.logout.tsx`
 
 ## Variables d'environnement requises
 

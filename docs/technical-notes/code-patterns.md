@@ -94,8 +94,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 **Fichiers** :
 
-- `app/lib/session.server.ts` → `requireUser()`
-- `app/lib/organizations.server.ts` → `requireOrganizationMembership()`
+- `apps/website/app/lib/session.server.ts` → `requireUser()`
+- `apps/website/app/lib/organizations.server.ts` → `requireOrganizationMembership()`
 
 ## Queries Drizzle
 
@@ -203,7 +203,7 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 ```
 
-Disponibles pour toutes les tables dans `drizzle/schema.ts`.
+Disponibles pour toutes les tables dans `apps/website/drizzle/schema.ts`.
 
 ### Types de route
 

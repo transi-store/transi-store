@@ -59,7 +59,7 @@ jobs:
         uses: ./.github/actions/setup-project
 
       - name: Run i18next
-        run: yarn i18next-cli lint
+        run: yarn workspace @transi-store/website i18next:lint
 
   tests:
     name: Tests

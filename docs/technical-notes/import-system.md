@@ -135,18 +135,18 @@ All operations run in a single transaction:
 
 ### Source files
 
-- **API route**: `app/routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx`
-- **UI route**: `app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx`
-- **Zod schema** (validation + OpenAPI): `app/lib/api-doc/schemas/import.ts`
-- **Import orchestrator**: `app/lib/import/process-import.server.ts`
-- **Validation**: `app/lib/import/validate-import-data.server.ts`
-- **DB import logic**: `app/lib/import/import-translations.server.ts`
-- **Format classes**: `app/lib/format/json-format.server.ts`, `app/lib/format/xliff-format.server.ts`
-- **Factory**: `app/lib/format/format-factory.server.ts`
+- **API route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx`
+- **UI route**: `apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx`
+- **Zod schema** (validation + OpenAPI): `apps/website/app/lib/api-doc/schemas/import.ts`
+- **Import orchestrator**: `apps/website/app/lib/import/process-import.server.ts`
+- **Validation**: `apps/website/app/lib/import/validate-import-data.server.ts`
+- **DB import logic**: `apps/website/app/lib/import/import-translations.server.ts`
+- **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`
+- **Factory**: `apps/website/app/lib/format/format-factory.server.ts`
 
 ### Architecture
 
-Text fields from `FormData` (locale, strategy, format, branch) are validated via the shared `importFieldsSchema` Zod schema (defined in `app/lib/api-doc/schemas/import.ts`), which is also used to generate the OpenAPI documentation. The `file` field is validated manually (presence, `File` type check).
+Text fields from `FormData` (locale, strategy, format, branch) are validated via the shared `importFieldsSchema` Zod schema (defined in `apps/website/app/lib/api-doc/schemas/import.ts`), which is also used to generate the OpenAPI documentation. The `file` field is validated manually (presence, `File` type check).
 
 Format detection and parsing is delegated to the `TranslationFormat` interface via the factory:
 
@@ -159,7 +159,7 @@ The validation and DB import steps are format-agnostic and live in their own fil
 
 ### `TranslationFormat` interface
 
-Defined in `app/lib/format/types.ts`:
+Defined in `apps/website/app/lib/format/types.ts`:
 
 ```typescript
 export enum SupportedFormat {
