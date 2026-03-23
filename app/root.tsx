@@ -22,7 +22,7 @@ import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
 import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
-import { Analytics } from "@vercel/analytics/remix";
+import { Analytics } from "@vercel/analytics/react";
 import { ColorModeProvider } from "./components/ui/color-mode";
 
 export const middleware = [queryCounterMiddleware, i18nextMiddleware];
