@@ -22,6 +22,7 @@ import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
 import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
+import { Analytics } from "@vercel/analytics/remix";
 import { ColorModeProvider } from "./components/ui/color-mode";
 
 export const middleware = [queryCounterMiddleware, i18nextMiddleware];
@@ -72,6 +73,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body>
+        <Analytics />
         <ChakraProvider value={system}>
           <ColorModeProvider>{children}</ColorModeProvider>
         </ChakraProvider>
