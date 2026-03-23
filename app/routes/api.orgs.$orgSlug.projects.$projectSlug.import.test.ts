@@ -15,7 +15,7 @@ import {
 } from "../../tests/test-db";
 import { withQueryCounter, getQueryCount } from "~/lib/query-counter.server";
 import { SupportedFormat } from "~/lib/format/types";
-import { ImportStrategy } from "@transi-store/common/import-strategy";
+import { ImportStrategy } from "@transi-store/common";
 
 vi.mock("~/lib/db.server", () => ({
   get db() {

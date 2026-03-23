@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 import { Command, Option } from "@commander-js/extra-typings";
 import {
-  DEFAULT_DOMAIN_ROOT,
   fetchForConfig,
   fetchTranslations,
   type Config,
 } from "./fetchTranslations.ts";
 import {
-  ImportStrategy,
   uploadForConfig,
   uploadTranslations,
   type UploadConfig,
 } from "./uploadTranslations.ts";
+import { DEFAULT_DOMAIN_ROOT, ImportStrategy } from "@transi-store/common";
 
 const program = new Command();
 

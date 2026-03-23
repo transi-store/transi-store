@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { ImportStrategy } from "@transi-store/common/import-strategy";
+import { ImportStrategy } from "@transi-store/common";
 import { db, schema } from "~/lib/db.server";
 
 type ImportParams = {

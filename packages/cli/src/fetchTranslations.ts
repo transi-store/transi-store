@@ -1,11 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
+import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
 import z from "zod";
-import schema from "@transi-store/common/config-schema";
-
-export { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
+import { configSchema } from "@transi-store/common";
 
 export type Config = {
   domainRoot: string;
@@ -93,7 +91,7 @@ export async function fetchForConfig(
   const config = (
     await import(pathToFileURL(fullPath).href, { with: { type: "json" } })
   ).default;
-  const result = schema.safeParse(config);
+  const result = configSchema.safeParse(config);
 
   if (!result.success) {
     const pretty = z.prettifyError(result.error);

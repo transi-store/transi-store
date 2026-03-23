@@ -6,18 +6,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./config-schema": {
-      "types": "./dist/config-schema.d.ts",
-      "default": "./dist/config-schema.js"
-    },
-    "./import-strategy": {
-      "types": "./dist/import-strategy.d.ts",
-      "default": "./dist/import-strategy.js"
-    },
-    "./constants": {
-      "types": "./dist/constants.d.ts",
-      "default": "./dist/constants.js"
     }
   },
   "dependencies": {

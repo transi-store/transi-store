@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
-import { ImportStrategy } from "@transi-store/common/import-strategy";
+import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
+import { ImportStrategy } from "@transi-store/common";
 import z from "zod";
 import {
   getCurrentBranch,
@@ -10,9 +10,7 @@ import {
   getModifiedFiles,
   isGitRepository,
 } from "./git.ts";
-import schema from "@transi-store/common/config-schema";
-
-export { ImportStrategy } from "@transi-store/common/import-strategy";
+import { configSchema } from "@transi-store/common";
 
 export type UploadConfig = {
   domainRoot: string;
@@ -114,7 +112,7 @@ export async function uploadForConfig(
   const config = (
     await import(pathToFileURL(fullPath).href, { with: { type: "json" } })
   ).default;
-  const result = schema.safeParse(config);
+  const result = configSchema.safeParse(config);
 
   if (!result.success) {
     const pretty = z.prettifyError(result.error);

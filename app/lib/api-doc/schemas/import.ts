@@ -1,6 +1,6 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { ImportStrategy } from "@transi-store/common/import-strategy";
+import { ImportStrategy } from "@transi-store/common";
 import { SupportedFormat } from "~/lib/format/types";
 
 extendZodWithOpenApi(z);
