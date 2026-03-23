@@ -2,7 +2,7 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import z from "zod";
-import schema from "@transi-store/cli/schema";
+import schema from "@transi-store/common/config-schema";
 
 const schemaJson = z.toJSONSchema(schema);
 

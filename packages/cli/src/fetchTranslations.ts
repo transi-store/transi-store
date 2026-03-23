@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
 import z from "zod";
 import schema from "./schema.ts";
 
-export const DEFAULT_DOMAIN_ROOT = "https://transi-store.com";
+export { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
 
 export type Config = {
   domainRoot: string;

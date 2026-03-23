@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { ImportStrategy } from "@transi-store/common/import-strategy";
 import { db, schema } from "~/lib/db.server";
-import { ImportStrategy } from "./import-strategy";
 
 type ImportParams = {
   projectId: number;

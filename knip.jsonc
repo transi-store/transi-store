@@ -4,6 +4,7 @@
     ".": {
       "entry": ["server/app.ts", "i18next.config.ts"],
     },
+    "packages/common": {},
     "packages/cli": {},
   },
 }

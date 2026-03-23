@@ -1,0 +1,36 @@
+{
+  "name": "@transi-store/common",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./config-schema": {
+      "types": "./dist/config-schema.d.ts",
+      "default": "./dist/config-schema.js"
+    },
+    "./import-strategy": {
+      "types": "./dist/import-strategy.d.ts",
+      "default": "./dist/import-strategy.js"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "default": "./dist/constants.js"
+    }
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint:types": "tsc --noEmit"
+  },
+  "files": [
+    "dist"
+  ]
+}

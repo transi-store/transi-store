@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common/constants";
+import { ImportStrategy } from "@transi-store/common/import-strategy";
 import z from "zod";
-import { DEFAULT_DOMAIN_ROOT } from "./fetchTranslations.ts";
 import {
   getCurrentBranch,
   getDefaultBranch,
@@ -11,10 +12,7 @@ import {
 } from "./git.ts";
 import schema from "./schema.ts";
 
-export enum ImportStrategy {
-  OVERWRITE = "overwrite",
-  SKIP = "skip",
-}
+export { ImportStrategy } from "@transi-store/common/import-strategy";
 
 export type UploadConfig = {
   domainRoot: string;
