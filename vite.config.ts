@@ -7,7 +7,7 @@ const allowedHosts =
   process.env.DOMAIN_ROOT &&
   new URL(process.env.DOMAIN_ROOT ?? "localhost").hostname;
 
-export default defineConfig(({ isSsrBuild }) => ({
+export default defineConfig(() => ({
   test: {
     setupFiles: ["./tests/setup-db.ts"],
   },
@@ -16,9 +16,6 @@ export default defineConfig(({ isSsrBuild }) => ({
     alias: {
       "~": path.resolve(__dirname, "./app"),
     },
-  },
-  build: {
-    rollupOptions: isSsrBuild ? { input: "./server/app.ts" } : undefined,
   },
   server: {
     host: "0.0.0.0", // Écoute sur toutes les interfaces pour permettre l'accès depuis l'hôte
