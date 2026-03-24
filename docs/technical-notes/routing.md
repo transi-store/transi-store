@@ -2,24 +2,24 @@
 
 ## Configuration
 
-Ce projet utilise **une configuration manuelle des routes** via le fichier `app/routes.ts`, plutôt que le routing automatique par convention de fichiers de React Router 7.
+Ce projet utilise **une configuration manuelle des routes** via le fichier `apps/website/app/routes.ts`, plutôt que le routing automatique par convention de fichiers de React Router 7.
 
 ## Comment ajouter une nouvelle route
 
 ### Étape 1: Créer le fichier de route
 
-Créer le fichier dans `app/routes/` avec la convention de nommage:
+Créer le fichier dans `apps/website/app/routes/` avec la convention de nommage:
 
 - Points (`.`) pour les segments dynamiques: `orgs.$orgSlug.tsx`
 - Underscores (`_`) pour les routes index: `orgs._index.tsx`
 - Tirets (`-`) pour les segments normaux: `auth.complete-profile.tsx`
 
-### Étape 2: Déclarer la route dans app/routes.ts ⚠️
+### Étape 2: Déclarer la route dans routes.ts ⚠️
 
-**IMPORTANT:** Le simple fait de créer le fichier ne suffit PAS. Il faut également ajouter la route dans `app/routes.ts`:
+**IMPORTANT:** Le simple fait de créer le fichier ne suffit PAS. Il faut également ajouter la route dans `apps/website/app/routes.ts`:
 
 ```typescript
-// app/routes.ts
+// apps/website/app/routes.ts
 export default [
   // ... autres routes
   route("auth/complete-profile", "routes/auth.complete-profile.tsx"),
@@ -34,7 +34,7 @@ Error: No route matches URL "/auth/complete-profile"
 
 ### Étape 3: Redémarrer le serveur
 
-Après avoir ajouté la route dans `app/routes.ts`, redémarrer le serveur de développement:
+Après avoir ajouté la route dans `apps/website/app/routes.ts`, redémarrer le serveur de développement:
 
 ```bash
 make dev
@@ -99,7 +99,7 @@ export default [
 React Router 7 supporte deux modes:
 
 1. **File-based routing** (par défaut): Les routes sont automatiquement déduites de la structure des fichiers
-2. **Manual routing** (ce projet): Les routes sont explicitement déclarées dans `app/routes.ts`
+2. **Manual routing** (ce projet): Les routes sont explicitement déclarées dans `apps/website/app/routes.ts`
 
 Ce projet utilise le mode manuel, probablement pour:
 
@@ -109,8 +109,8 @@ Ce projet utilise le mode manuel, probablement pour:
 
 ## Checklist pour ajouter une route
 
-- [ ] Créer le fichier dans `app/routes/` avec la bonne convention de nommage
-- [ ] Ajouter la déclaration dans `app/routes.ts`
+- [ ] Créer le fichier dans `apps/website/app/routes/` avec la bonne convention de nommage
+- [ ] Ajouter la déclaration dans `apps/website/app/routes.ts`
 - [ ] Redémarrer le serveur de développement
 - [ ] Vérifier que les types TypeScript sont générés dans `.react-router/types/`
 - [ ] Tester l'accès à la route dans le navigateur

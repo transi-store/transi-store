@@ -4,7 +4,7 @@ Cette note technique décrit comment les traductions sont gérées dans transi-s
 
 ## Structure des fichiers de traduction
 
-Les fichiers de traduction sont stockés dans le répertoire `app/locales/{lang}/{namespace}.json`, où `{lang}` est le code de langue (par exemple, `en`, `fr`) et `{namespace}` est le nom de l'espace de noms (par exemple, `common`, `dashboard`).
+Les fichiers de traduction sont stockés dans le répertoire `apps/website/app/locales/{lang}/{namespace}.json`, où `{lang}` est le code de langue (par exemple, `en`, `fr`) et `{namespace}` est le nom de l'espace de noms (par exemple, `common`, `dashboard`).
 
 Chaque fichier JSON contient des paires clé-valeur représentant les chaînes traduites. Par exemple :
 

@@ -142,15 +142,15 @@ Content-Disposition: attachment; filename="project-slug-fr.xliff"
 
 ### Source files
 
-- **Route**: `app/routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx`
-- **Zod schema** (validation + OpenAPI): `app/lib/api-doc/schemas/export.ts`
-- **Format classes**: `app/lib/format/json-format.server.ts`, `app/lib/format/xliff-format.server.ts`
-- **Factory**: `app/lib/format/format-factory.server.ts`
-- **Types/interface**: `app/lib/format/types.ts`
+- **Route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx`
+- **Zod schema** (validation + OpenAPI): `apps/website/app/lib/api-doc/schemas/export.ts`
+- **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`
+- **Factory**: `apps/website/app/lib/format/format-factory.server.ts`
+- **Types/interface**: `apps/website/app/lib/format/types.ts`
 
 ### Architecture
 
-Query parameters are validated via the shared `exportQuerySchema` Zod schema (defined in `app/lib/api-doc/schemas/export.ts`), which is also used to generate the OpenAPI documentation. This ensures validation and documentation are always in sync.
+Query parameters are validated via the shared `exportQuerySchema` Zod schema (defined in `apps/website/app/lib/api-doc/schemas/export.ts`), which is also used to generate the OpenAPI documentation. This ensures validation and documentation are always in sync.
 
 The export route is format-agnostic. It delegates entirely to the `TranslationFormat` interface via the factory:
 

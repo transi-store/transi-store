@@ -28,7 +28,7 @@ services:
     container_name: transi-store-app
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./apps/website/Dockerfile
       # network: host
     networks:
       - trst-network

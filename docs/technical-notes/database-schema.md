@@ -4,7 +4,7 @@
 
 transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
 
-**Source de vérité** : Le schéma est défini dans `drizzle/schema.ts`
+**Source de vérité** : Le schéma est défini dans `apps/website/drizzle/schema.ts`
 
 **Application** : Via `make db-push` ou `docker compose exec app yarn db:push` (pas de migrations pour l'instant, adapté au développement early-stage)
 
@@ -120,7 +120,7 @@ Ce script :
 
 ## Types TypeScript
 
-Drizzle infère automatiquement les types depuis `drizzle/schema.ts` :
+Drizzle infère automatiquement les types depuis `apps/website/drizzle/schema.ts` :
 
 ```typescript
 export type User = typeof users.$inferSelect;
@@ -133,7 +133,7 @@ export type NewUser = typeof users.$inferInsert;
 
 ## Relations Drizzle
 
-Définies dans `drizzle/relations.ts` pour charger les données liées en une seule query.
+Définies dans `apps/website/drizzle/relations.ts` pour charger les données liées en une seule query.
 
 **Exemple** : Charger une organisation avec ses projets
 
@@ -150,7 +150,7 @@ const org = await db.query.organizations.findFirst({
 
 **Appliquer les changements** : `make db-push` ou `docker compose exec app yarn db:push`
 
-- Applique `drizzle/schema.ts` directement à la base de données
+- Applique `apps/website/drizzle/schema.ts` directement à la base de données
 - Pas de fichiers de migration (adapté pour développement early-stage)
 
 **Visualiser** : `make db-studio` ou `docker compose exec app yarn db:studio`
@@ -161,9 +161,9 @@ const org = await db.query.organizations.findFirst({
 
 ## Fichiers sources
 
-- **Schéma** : `drizzle/schema.ts`
-- **Relations** : `drizzle/relations.ts`
-- **Configuration** : `app/lib/db.server.ts`
+- **Schéma** : `apps/website/drizzle/schema.ts`
+- **Relations** : `apps/website/drizzle/relations.ts`
+- **Configuration** : `apps/website/app/lib/db.server.ts`
 
 ## Références
 
