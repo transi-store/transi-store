@@ -9,26 +9,25 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "yarn workspace @transi-store/website dev",
-    "build": "yarn workspace @transi-store/website build",
-    "build:common": "yarn workspace @transi-store/common build",
-    "build:cli": "yarn build:common && yarn workspace @transi-store/cli build && yarn build:cli:schema",
-    "build:cli:schema": "node ./scripts/create-json-schema.mjs",
-    "start": "yarn workspace @transi-store/website start",
-    "download-translations": "yarn workspace @transi-store/website download-translations",
+    "dev": "turbo run dev --filter=@transi-store/website",
+    "build": "turbo run build --filter=@transi-store/website",
+    "build:common": "turbo run build --filter=@transi-store/common",
+    "build:cli": "turbo run build --filter=@transi-store/cli",
+    "start": "turbo run start --filter=@transi-store/website",
+    "download-translations": "yarn transi-store",
     "lint:eslint": "eslint .",
-    "lint:types": "yarn build:common && yarn workspace @transi-store/website lint:types && yarn workspace @transi-store/common lint:types && yarn workspace @transi-store/cli lint:types",
+    "lint:types": "yarn turbo lint:types",
     "knip": "yarn workspace @transi-store/website react-router typegen && knip",
     "db:generate": "yarn workspace @transi-store/website db:generate",
     "db:push": "yarn workspace @transi-store/website db:push",
     "db:studio": "yarn workspace @transi-store/website db:studio",
     "db:setup-search": "./scripts/enable-fuzzy-search.sh",
-    "test": "yarn build:common && yarn workspace @transi-store/website test",
-    "prepare": "husky"
+    "test": "yarn workspace @transi-store/website test",
+    "postinstall": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@transi-store/common": "workspace:^",
+    "@transi-store/cli": "workspace:^",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
@@ -37,9 +36,9 @@
     "knip": "^5.85.0",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
+    "turbo": "^2.8.20",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.56.1",
-    "zod": "^4.3.6"
+    "typescript-eslint": "^8.56.1"
   },
   "lint-staged": {
     "{apps,docs,packages,scripts}/**/*.{js,ts,tsx,json,css,md}": "prettier --write"

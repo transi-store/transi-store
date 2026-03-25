@@ -31,24 +31,22 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
-          cache: 'yarn'
+          node-version: "24"
+          cache: "yarn"
 
       - run: yarn install
-
-      - run: yarn build:cli
 
       # Runs a single command using the runners shell
       - name: Download translations
         env:
           TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
-        run: yarn download-translations
+        run: yarn turbo run download-translations
 
       - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
         with:
           # The arguments for the `git add` command (see the paragraph below for more info)
           # Default: '.'
-          add: 'apps/website/app/locales/'
+          add: "apps/website/app/locales/"
 
           # Determines the way the action fills missing author name and email. Three options are available:
           # - github_actor -> UserName <UserName@users.noreply.github.com>
@@ -59,7 +57,7 @@ jobs:
 
           # The message for the commit.
           # Default: 'Commit from GitHub Actions (name of the workflow)'
-          message: 'Download new translations'
+          message: "Download new translations"
 
           # The way the action should handle pathspec errors from the add and remove commands. Three options are available:
           # - ignore -> errors will be logged but the step won't fail

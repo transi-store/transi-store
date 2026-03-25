@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
     "apps/website": {
-      "entry": ["server/app.ts", "i18next.config.ts"],
+      "entry": ["i18next.config.ts"],
     },
     "packages/common": {},
     "packages/cli": {},
