@@ -48,11 +48,11 @@ Creating a key: via the web UI at `/orgs/:orgSlug/settings` (API Keys section). 
 
 ## Query parameters
 
-| Parameter | Values       | Required | Description                     |
-| --------- | ------------ | -------- | ------------------------------- |
-| `format`  | json, xliff  | Yes      | Output format                   |
-| `locale`  | string       | Yes      | Language code (e.g. `fr`, `en`) |
-| `branch`  | string       | No       | Branch slug (defaults to main)  |
+| Parameter | Values      | Required | Description                                                 |
+| --------- | ----------- | -------- | ----------------------------------------------------------- |
+| `format`  | json, xliff | Yes      | Output format                                               |
+| `locale`  | string      | Yes      | Language code (e.g. `fr`, `en`)                             |
+| `branch`  | string      | No       | Branch slug (defaults to main). Use `@all` for all branches |
 
 ## JSON format
 
@@ -131,12 +131,12 @@ Content-Disposition: attachment; filename="project-slug-fr.xliff"
 
 ## Error handling
 
-| Status | Cause                                                    |
-| ------ | -------------------------------------------------------- |
+| Status | Cause                                                          |
+| ------ | -------------------------------------------------------------- |
 | 400    | Missing/invalid parameters, unsupported format, unknown locale |
-| 401    | No valid session or API key                              |
-| 403    | User is not a member of the organization                 |
-| 404    | Project not found                                        |
+| 401    | No valid session or API key                                    |
+| 403    | User is not a member of the organization                       |
+| 404    | Project not found                                              |
 
 ## Implementation
 

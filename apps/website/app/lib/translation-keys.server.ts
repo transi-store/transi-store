@@ -24,18 +24,28 @@ type TranslationKeysReturnType = {
  * - branchId = undefined → main only (branch_id IS NULL)
  * - branchId = number, branchOnly = false → main + that branch (for export)
  * - branchId = number, branchOnly = true → only that branch (for UI)
+ * - allBranches = true → all keys regardless of branch (no branch filtering)
  *
  * Always excludes soft-deleted keys (deletedAt IS NULL).
  */
-function branchFilter(branchId?: number, branchOnly?: boolean): SQL {
+function branchFilter({
+  branchId,
+  branchOnly,
+  allBranches,
+}: {
+  branchId?: number;
+  branchOnly?: boolean;
+  allBranches?: boolean;
+}): SQL {
   const notDeleted = isNull(schema.translationKeys.deletedAt);
+
+  if (allBranches) {
+    return notDeleted;
+  }
 
   if (branchId !== undefined) {
     if (branchOnly) {
-      return and(
-        eq(schema.translationKeys.branchId, branchId),
-        notDeleted,
-      )!;
+      return and(eq(schema.translationKeys.branchId, branchId), notDeleted)!;
     }
     return and(
       or(
@@ -74,7 +84,10 @@ export async function getTranslationKeys(
     },
   });
 
-  const branchCondition = branchFilter(options?.branchId, options?.branchOnly);
+  const branchCondition = branchFilter({
+    branchId: options?.branchId,
+    branchOnly: options?.branchOnly,
+  });
 
   if (options?.search) {
     const searchQuery = options.search.trim();
@@ -353,12 +366,15 @@ export type ProjectTranslations = Array<ProjectTranslation>;
 // Get all translations for a project grouped by key
 export async function getProjectTranslations(
   projectId: number,
-  options?: { branchId?: number },
+  options?: { branchId?: number; allBranches?: boolean },
 ): Promise<ProjectTranslations> {
   // Get all keys for this project, sorted alphabetically by keyName
   const conditions = [
     eq(schema.translationKeys.projectId, projectId),
-    branchFilter(options?.branchId),
+    branchFilter({
+      branchId: options?.branchId,
+      allBranches: options?.allBranches,
+    }),
   ];
 
   // When exporting with a branch, also exclude main keys marked for deletion in that branch
