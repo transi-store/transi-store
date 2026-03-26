@@ -94,7 +94,7 @@ export default function ExportSection({
               <Button key={lang.id} asChild size="sm" variant="outline">
                 <Link
                   reloadDocument
-                  to={`/api/orgs/${organizationSlug}/projects/${projectSlug}/export?format=${selectedFormat}&locale=${lang.locale}`}
+                  to={`/api/orgs/${organizationSlug}/projects/${projectSlug}/translations?format=${selectedFormat}&locale=${lang.locale}`}
                 >
                   <LuDownload />
                   {lang.locale.toUpperCase()}

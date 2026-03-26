@@ -35,7 +35,7 @@ export async function uploadTranslations({
   format,
   branch,
 }: UploadConfig) {
-  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/import`;
+  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/translations`;
 
   const filePath = path.resolve(input);
 

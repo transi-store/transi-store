@@ -57,7 +57,7 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
   // -- Export endpoint --
   registry.registerPath({
     method: "get",
-    path: "/api/orgs/{orgSlug}/projects/{projectSlug}/export",
+    path: "/api/orgs/{orgSlug}/projects/{projectSlug}/translations",
     summary: "Export translations",
     description:
       "Download translations for a single locale in JSON or XLIFF 2.0 format. " +
@@ -138,7 +138,7 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
 
   registry.registerPath({
     method: "post",
-    path: "/api/orgs/{orgSlug}/projects/{projectSlug}/import",
+    path: "/api/orgs/{orgSlug}/projects/{projectSlug}/translations",
     summary: "Import translations",
     description:
       "Upload a translation file (JSON or XLIFF 2.0) for a single locale. " +
