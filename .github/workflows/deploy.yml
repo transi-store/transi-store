@@ -6,7 +6,7 @@ name: Deploy to vercel
 on:
   workflow_dispatch: ~
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
@@ -15,18 +15,17 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
 
-    - name: Enable corepack
-      run: corepack enable
-    
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 24.x
-        cache: 'yarn'
-    - run: yarn dlx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "yarn"
+      - run: yarn dlx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
