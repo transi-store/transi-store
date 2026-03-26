@@ -10,7 +10,11 @@ import {
   uploadTranslations,
   type UploadConfig,
 } from "./uploadTranslations.ts";
-import { DEFAULT_DOMAIN_ROOT, ImportStrategy } from "@transi-store/common";
+import {
+  DEFAULT_DOMAIN_ROOT,
+  ALL_BRANCHES_VALUE,
+  ImportStrategy,
+} from "@transi-store/common";
 
 const program = new Command();
 
@@ -35,7 +39,10 @@ program
   .requiredOption("-l, --locale <locale>", "Locale to export")
   .requiredOption("-O, --output <output>", "Output file path")
   .option("-f, --format <format>", "Export format (json, csv, etc.)", "json")
-  .option("-b, --branch <branch>", "Branch slug (exports main + branch keys)")
+  .option(
+    "-b, --branch <branch>",
+    `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
+  )
   .action((options) => {
     fetchTranslations(options satisfies Config);
   });
@@ -92,7 +99,10 @@ program
     "Path to config file",
     "transi-store.config.json",
   )
-  .option("-b, --branch <branch>", "Branch slug (exports main + branch keys)")
+  .option(
+    "-b, --branch <branch>",
+    `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
+  )
   .addOption(apiKeyOption)
   .action((options) => {
     fetchForConfig(options.config, options.apiKey, options.branch);

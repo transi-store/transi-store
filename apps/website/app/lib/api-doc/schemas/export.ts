@@ -1,5 +1,6 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+import { ALL_BRANCHES_VALUE } from "@transi-store/common";
 import { SupportedFormat } from "~/lib/format/types";
 
 extendZodWithOpenApi(z);
@@ -16,11 +17,13 @@ export const exportQuerySchema = (localeExample = "fr") =>
         "Language code to export (must match one of the project's configured languages).",
       example: localeExample,
     }),
-    branch: z.string().optional().openapi({
-      description:
-        "Branch slug. When set, translations from this branch are merged on top of main translations. Omit to export the main branch only.",
-      example: "feature-xyz",
-    }),
+    branch: z
+      .string()
+      .optional()
+      .openapi({
+        description: `Branch slug. When set, translations from this branch are merged on top of main translations. Use "${ALL_BRANCHES_VALUE}" to export all translations across every branch (no branch filtering). Omit to export the main branch only.`,
+        example: "feature-xyz",
+      }),
   });
 
 export const exportErrorResponseSchema = z

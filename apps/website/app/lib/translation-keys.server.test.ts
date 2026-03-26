@@ -197,6 +197,75 @@ describe("getProjectTranslations", () => {
     });
   });
 
+  describe("allBranches option", () => {
+    it("returns keys from all branches when allBranches is true", async () => {
+      const branch1 = await createBranch(db, projectId, {
+        name: "branch-1",
+        slug: "branch-1",
+      });
+      const branch2 = await createBranch(db, projectId, {
+        name: "branch-2",
+        slug: "branch-2",
+      });
+      await createTranslationKey(db, projectId, "main.key");
+      await createTranslationKey(db, projectId, "branch1.key", {
+        branchId: branch1.id,
+      });
+      await createTranslationKey(db, projectId, "branch2.key", {
+        branchId: branch2.id,
+      });
+
+      const result = await getProjectTranslations(projectId, {
+        allBranches: true,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result.map((r) => r.keyName)).toEqual([
+        "branch1.key",
+        "branch2.key",
+        "main.key",
+      ]);
+    });
+
+    it("excludes soft-deleted keys when allBranches is true", async () => {
+      const branch = await createBranch(db, projectId);
+      await createTranslationKey(db, projectId, "alive.key");
+      await createTranslationKey(db, projectId, "deleted.key", {
+        deletedAt: new Date(),
+      });
+      await createTranslationKey(db, projectId, "branch.alive", {
+        branchId: branch.id,
+      });
+      await createTranslationKey(db, projectId, "branch.deleted", {
+        branchId: branch.id,
+        deletedAt: new Date(),
+      });
+
+      const result = await getProjectTranslations(projectId, {
+        allBranches: true,
+      });
+
+      expect(result).toHaveLength(2);
+      expect(result.map((r) => r.keyName)).toEqual([
+        "alive.key",
+        "branch.alive",
+      ]);
+    });
+
+    it("does not apply branch deletion markers when allBranches is true", async () => {
+      const branch = await createBranch(db, projectId);
+      const key = await createTranslationKey(db, projectId, "some.key");
+      await addKeyDeletionsToBranch(branch.id, [key.id]);
+
+      const result = await getProjectTranslations(projectId, {
+        allBranches: true,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].keyName).toBe("some.key");
+    });
+  });
+
   describe("branch deletion exclusion on export", () => {
     it("excludes keys marked for deletion in branch from export", async () => {
       const branch = await createBranch(db, projectId);

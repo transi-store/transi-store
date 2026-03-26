@@ -1,3 +1,4 @@
+import { ALL_BRANCHES_VALUE } from "@transi-store/common";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
@@ -73,7 +74,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   // Resolve optional branch
   let branchId: number | undefined;
-  if (branchParam) {
+  const allBranches = branchParam === ALL_BRANCHES_VALUE;
+  if (branchParam && !allBranches) {
     const branch = await getBranchBySlug(project.id, branchParam);
 
     if (branch) {
@@ -84,6 +86,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   // Récupérer toutes les traductions du projet (main + branche si spécifiée)
   const projectTranslations = await getProjectTranslations(project.id, {
     branchId,
+    allBranches,
   });
 
   const format = createTranslationFormat(formatName);

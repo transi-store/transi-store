@@ -5,6 +5,7 @@ import { RouterContextProvider } from "react-router";
 import { orgContext } from "~/middleware/api-auth";
 import {
   cleanupDb,
+  createBranch,
   createOrganization,
   createProject,
   createProjectLanguage,
@@ -137,4 +138,44 @@ describe("Export Project Loader", () => {
       "test.key": "Test Value",
     });
   });
+
+  it.each([
+    ["no branch param", undefined, { "main.key": "Main Value" }],
+    [
+      "branch=@all",
+      "@all",
+      { "main.key": "Main Value", "branch.key": "Branch Value" },
+    ],
+  ] as const)(
+    "should return only main keys by default (no branch param)",
+    async (_description, branchParam, expectedData) => {
+      const db = getTestDb();
+      await createProjectLanguage(db, 1);
+      const branch = await createBranch(db, 1, {
+        name: "feat",
+        slug: "feat",
+      });
+      await createTranslationKey(db, 1, "main.key");
+      await createTranslation(db, 1, "en", "Main Value");
+      const branchKey = await createTranslationKey(db, 1, "branch.key", {
+        branchId: branch.id,
+      });
+      await createTranslation(db, branchKey.id, "en", "Branch Value");
+
+      const request = new Request(
+        `https://example.com/api/orgs/test-org/projects/test-project/export?locale=en${branchParam ? `&branch=${branchParam}` : ""}`,
+      );
+
+      const response = await loader({
+        request,
+        params: { orgSlug: "test-org", projectSlug: "test-project" },
+        unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
+        context: createOrgContext(),
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toEqual(expectedData);
+    },
+  );
 });

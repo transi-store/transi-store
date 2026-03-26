@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.5.0
+
+### Added
+
+- Accept `--branch=@all` in CLI to download translations from all branches.
+
 ## 1.4.0
 
 ### Added
