@@ -9,6 +9,6 @@ const schemaJson = z.toJSONSchema(configSchema);
 // get current file dir
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const outputPath = path.resolve(__dirname, "../packages/cli/dist/schema.json");
+const outputPath = path.resolve(__dirname, "../dist/schema.json");
 
 writeFileSync(outputPath, JSON.stringify(schemaJson, null, 2), "utf-8");

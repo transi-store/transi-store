@@ -1,0 +1,32 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "tasks": {
+    "clean": {
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {
+      "dependsOn": ["//#lint:eslint", "lint:types"]
+    },
+    "//#lint:eslint": {},
+    "lint:types": {
+      "dependsOn": ["^build", "^lint:types"]
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "persistent": true,
+      "cache": false
+    },
+    "//#download-translations": {
+      "dependsOn": ["@transi-store/cli#build"],
+      "env": ["TRANSI_STORE_API_KEY"]
+    }
+  }
+}
