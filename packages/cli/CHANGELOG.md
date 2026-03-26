@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.5.1
+
+### Fixed
+
+Fix broken link on common package.
+
 ## 1.5.0
 
 ### Added
