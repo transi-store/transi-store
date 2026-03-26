@@ -31,7 +31,7 @@ export function ApiKeyDocumentation({
         wordBreak="break-all"
       >
         {`curl -H "Authorization: Bearer YOUR_API_KEY" \\
-  "${origin}/api/orgs/${organizationSlug}/projects/PROJECT_SLUG/export?format=json&locale=fr"`}
+  "${origin}/api/orgs/${organizationSlug}/projects/PROJECT_SLUG/translations?format=json&locale=fr"`}
       </Code>
     </Box>
   );

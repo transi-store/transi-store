@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as schema from "../../drizzle/schema";
-import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug.export";
+import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug.translations";
 import { RouterContextProvider } from "react-router";
 import { orgContext } from "~/middleware/api-auth";
 import {
@@ -48,13 +48,13 @@ describe("Export Project Loader", () => {
 
   it("should return 404 if project does not exist", async () => {
     const request = new Request(
-      "https://example.com/api/orgs/test-org/projects/non-existent-project/export",
+      "https://example.com/api/orgs/test-org/projects/non-existent-project/translations",
     );
 
     const response = await loader({
       request,
       params: { orgSlug: "test-org", projectSlug: "non-existent-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
       context: createOrgContext(),
     });
 
@@ -67,13 +67,13 @@ describe("Export Project Loader", () => {
   it("should return 400 error when missing required parameters", async () => {
     // Missing locale → Zod validation error
     const request = new Request(
-      "https://example.com/api/orgs/test-org/projects/test-project/export",
+      "https://example.com/api/orgs/test-org/projects/test-project/translations",
     );
 
     const response = await loader({
       request,
       params: { orgSlug: "test-org", projectSlug: "test-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
       context: createOrgContext(),
     });
 
@@ -86,10 +86,10 @@ describe("Export Project Loader", () => {
     // Locale provided but no languages configured
     const response2 = await loader({
       request: new Request(
-        "https://example.com/api/orgs/test-org/projects/test-project/export?locale=fr",
+        "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=fr",
       ),
       params: { orgSlug: "test-org", projectSlug: "test-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
       context: createOrgContext(),
     });
 
@@ -102,10 +102,10 @@ describe("Export Project Loader", () => {
     // Locale provided but language not found in project
     const response3 = await loader({
       request: new Request(
-        "https://example.com/api/orgs/test-org/projects/test-project/export?locale=dk",
+        "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=dk",
       ),
       params: { orgSlug: "test-org", projectSlug: "test-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
       context: createOrgContext(),
     });
 
@@ -120,13 +120,13 @@ describe("Export Project Loader", () => {
     await createTranslation(getTestDb(), 1, "en", "Test Value");
 
     const request = new Request(
-      "https://example.com/api/orgs/test-org/projects/test-project/export?locale=en",
+      "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=en",
     );
 
     const response = await loader({
       request,
       params: { orgSlug: "test-org", projectSlug: "test-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
       context: createOrgContext(),
     });
 
@@ -163,13 +163,14 @@ describe("Export Project Loader", () => {
       await createTranslation(db, branchKey.id, "en", "Branch Value");
 
       const request = new Request(
-        `https://example.com/api/orgs/test-org/projects/test-project/export?locale=en${branchParam ? `&branch=${branchParam}` : ""}`,
+        `https://example.com/api/orgs/test-org/projects/test-project/translations?locale=en${branchParam ? `&branch=${branchParam}` : ""}`,
       );
 
       const response = await loader({
         request,
         params: { orgSlug: "test-org", projectSlug: "test-project" },
-        unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/export",
+        unstable_pattern:
+          "/api/orgs/:orgSlug/projects/:projectSlug/translations",
         context: createOrgContext(),
       });
 

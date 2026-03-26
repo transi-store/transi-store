@@ -99,12 +99,8 @@ export default [
   layout("routes/api-layout.tsx", [
     route("api/orgs/:orgSlug", "routes/api-org-layout.tsx", [
       route(
-        "projects/:projectSlug/export",
-        "routes/api.orgs.$orgSlug.projects.$projectSlug.export.tsx",
-      ),
-      route(
-        "projects/:projectSlug/import",
-        "routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx",
+        "projects/:projectSlug/translations",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.translations.tsx",
       ),
       route(
         "projects/:projectSlug/translate",

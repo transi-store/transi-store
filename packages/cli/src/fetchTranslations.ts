@@ -30,7 +30,7 @@ export async function fetchTranslations({
   if (branch) {
     params.set("branch", branch);
   }
-  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/export?${params.toString()}`;
+  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/translations?${params.toString()}`;
 
   try {
     const content = await fetch(url, {

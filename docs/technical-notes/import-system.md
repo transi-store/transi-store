@@ -135,7 +135,7 @@ All operations run in a single transaction:
 
 ### Source files
 
-- **API route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.import.tsx`
+- **API route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.translations.tsx`
 - **UI route**: `apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx`
 - **Zod schema** (validation + OpenAPI): `apps/website/app/lib/api-doc/schemas/import.ts`
 - **Import orchestrator**: `apps/website/app/lib/import/process-import.server.ts`
@@ -189,16 +189,16 @@ To add a new format, implement this interface, register it in the factory (`form
 
 ## Error handling
 
-| Cause                        | Error message                                              |
-| ---------------------------- | ---------------------------------------------------------- |
-| Missing file field           | `"Missing 'file' field"`                                   |
-| Missing locale field         | `"Missing 'locale' field"`                                 |
-| Invalid strategy             | `"Invalid 'strategy' field. Use 'overwrite' or 'skip'"`    |
-| Unknown file format          | `"Unsupported file format. Use JSON or XLIFF"`             |
-| Parse error                  | Format-specific parse error message                        |
-| Invalid data structure       | `"Invalid data"` + validation details                      |
-| Locale not in project        | `"Language '{locale}' not found in this project"`          |
-| DB error                     | `"Import failed"` + error details                          |
+| Cause                  | Error message                                           |
+| ---------------------- | ------------------------------------------------------- |
+| Missing file field     | `"Missing 'file' field"`                                |
+| Missing locale field   | `"Missing 'locale' field"`                              |
+| Invalid strategy       | `"Invalid 'strategy' field. Use 'overwrite' or 'skip'"` |
+| Unknown file format    | `"Unsupported file format. Use JSON or XLIFF"`          |
+| Parse error            | Format-specific parse error message                     |
+| Invalid data structure | `"Invalid data"` + validation details                   |
+| Locale not in project  | `"Language '{locale}' not found in this project"`       |
+| DB error               | `"Import failed"` + error details                       |
 
 ## Limitations
 
@@ -218,7 +218,7 @@ curl -X POST \
   -F "locale=fr" \
   -F "strategy=overwrite" \
   -F "file=@translations.json" \
-  "http://localhost:5173/api/orgs/my-org/projects/app/import"
+  "http://localhost:5173/api/orgs/my-org/projects/app/translations"
 ```
 
 ### Via the CLI package
