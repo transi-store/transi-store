@@ -1,192 +1,238 @@
 # transi-store
 
-Outil de gestion de traductions multi-projets, multi-organisations.
+**The open-source translation management platform for developer teams.**
 
-## Description
+Stop paying for Phrase, Crowdin, or Transifex. Host your own translation platform with a first-class developer experience — export API, CLI, CI/CD integration, and ICU MessageFormat support out of the box.
 
-transi-store est une application web permettant de gerer les traductions de chaines de caracteres en plusieurs langues. Il remplace des outils comme Phrase, Crowdin, Transifex ou POEditor.
+🌐 **Hosted version**: [transi-store.com](https://transi-store.com)
 
-## Fonctionnalites
+---
 
-### Gestion des traductions
+## Why transi-store?
 
-- **Multi-organisations** : Chaque utilisateur peut appartenir a plusieurs organisations
-- **Multi-projets** : Chaque organisation peut avoir plusieurs projets de traduction
-- **Multi-langues** : Support de plusieurs langues par projet avec langues par defaut
-- **Cles de traduction** : Gestion centralisee des cles avec descriptions pour les traducteurs
-- **Editeur ICU MessageFormat** : Syntaxe ICU pour pluralisation, genre, et variables avec validation en temps reel
-- **Recherche floue** : Recherche puissante sur les cles et valeurs avec PostgreSQL pg_trgm
+Managing translations across multiple projects and teams is painful. Most tools are either too expensive, too complex, or too locked-in. transi-store is different:
 
-### Import/Export
+- **Free & self-hosted** — run it on your own infrastructure, no per-seat pricing
+- **Developer-first** — REST API, CLI, and CI/CD workflows built in from day one
+- **Multi-tenant** — manage multiple organisations and projects from a single instance
+- **ICU MessageFormat** — proper pluralisation, gender, and variable support with live validation
+- **Blazing fast search** — PostgreSQL `pg_trgm` fuzzy search across all your keys and values
+- **Modern stack** — React 19, React Router v7 SSR, Drizzle ORM, TypeScript end-to-end
 
-- **API d'export** : Telechargement des traductions en JSON (plat ou multi-langues) et XLIFF 2.0
-- **Cles d'API** : Authentification par Bearer token pour integration CI/CD
-- **Import JSON** : Import en masse de traductions avec strategies (overwrite/skip)
+---
 
-### Collaboration
+## Features
 
-- **Gestion d'equipe** : Invitation d'utilisateurs par email avec codes d'invitation
-- **Multi-utilisateurs** : Plusieurs membres par organisation avec acces partage aux projets
-- **Authentification OAuth2/OIDC** : Support multi-provider (Google, Mapado) avec PKCE
+### 🗂️ Translation management
+- **Multi-organisation** — one instance, multiple teams, fully isolated data
+- **Multi-project** — as many projects per organisation as you need
+- **Multi-language** — unlimited locales per project with configurable defaults
+- **ICU MessageFormat editor** — syntax highlighting (CodeMirror), real-time validation, pluralisation and variables
+- **Fuzzy search** — find any key or value instantly, powered by PostgreSQL `pg_trgm`
+- **Branch support** — work on translation changes in branches, just like code
 
-## Demarrage rapide
+### 🔌 Integrations
+- **Export API** — download translations as flat JSON, multi-locale JSON, or XLIFF 2.0
+- **Import API** — bulk-upload translations with `overwrite` or `skip` strategies
+- **API keys** — Bearer token auth for CI/CD pipelines, with usage tracking
+- **CLI** — `@transi-store/cli` package to sync translations in your build pipeline
 
-### Prerequis
+### 👥 Collaboration
+- **Team management** — invite members by email with invitation codes
+- **Multi-user** — shared access to projects within an organisation
+- **OAuth2/OIDC** — sign in with Google, GitHub, or any OIDC provider
 
-- Docker et Docker Compose
-- **Make (fortement recommandé)**
-  - **Linux/Mac** : généralement pré-installé
-  - **Windows** : installer via Chocolatey `choco install make`
-    ```powershell
-    # Dans PowerShell en administrateur
-    choco install make
-    ```
+---
 
-> **Note** : L'application s'exécute entièrement dans Docker. Node.js et Yarn ne sont pas nécessaires sur votre machine hôte.
+## Quick Start
 
-### Installation
+> **Prerequisites**: [Docker](https://docs.docker.com/get-docker/) and [Make](https://www.gnu.org/software/make/)
+> — Node.js and Yarn are **not** required on your host machine, everything runs inside Docker.
 
-1. Cloner le repository :
+### 1. Clone & configure
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/transi-store/transi-store.git
 cd transi-store
-```
-
-2. Copier le fichier d'environnement :
-
-```bash
 cp .env.example .env
 ```
 
-3. Configurer les variables d'environnement dans `.env` :
-
-- `DATABASE_URL` : Utiliser `postgres` comme host (ex: `postgresql://transi-store:transi-store@postgres:5432/transi-store`)
-- `SESSION_SECRET` : Secret pour les sessions
-- `ENCRYPTION_KEY` : Clé de chiffrement
-- Configurer les providers OAuth si nécessaire (au moins un provider est requis pour l'authentification) :
-  - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` : Identifiants OAuth Google
-  - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` : Identifiants OAuth GitHub
-  - `MAPADO_CLIENT_ID` / `MAPADO_CLIENT_SECRET` : Identifiants OAuth Mapado
-
-4. Setup complet en une commande :
+Open `.env` and configure at minimum:
 
 ```bash
-make setup
+SESSION_SECRET=a-long-random-secret-string
+ENCRYPTION_KEY=a-64-character-hexadecimal-key
+
+# At least one OAuth provider is required for authentication.
+# Google OAuth — https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# GitHub OAuth — https://github.com/settings/developers
+# GITHUB_CLIENT_ID=your_client_id
+# GITHUB_CLIENT_SECRET=your_client_secret
 ```
 
-Cette commande va :
+> The `DATABASE_URL` is pre-configured for the Docker Compose PostgreSQL container and doesn't need to be changed.
 
-- Démarrer les conteneurs Docker (app + PostgreSQL)
-- Installer les dépendances
-- Créer le schéma de base de données
-
-5. Demarrer le serveur de developpement :
+### 2. Start everything
 
 ```bash
-make dev
+make setup   # starts Docker, installs dependencies, creates the database schema
+make dev     # starts the dev server
 ```
 
-L'application sera disponible sur http://localhost:5173
+Open **[http://localhost:5173](http://localhost:5173)** — that's it! 🎉
+
+---
+
+## Integrate with your project
+
+### CLI — sync translations in your CI/CD
+
+Install the CLI:
+
+```bash
+npm install -g @transi-store/cli
+```
+
+Create a `transi-store.config.json` in your project:
+
+```jsonc
+{
+  "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+  "org": "my-org",
+  "projects": [
+    {
+      "project": "my-app",
+      "langs": ["en", "fr", "de"],
+      "format": "json",
+      "output": "./locales/<lang>/translations.json"
+    }
+  ]
+}
+```
+
+Download translations (set `TRANSI_STORE_API_KEY` in your environment):
+
+```bash
+TRANSI_STORE_API_KEY=your-api-key transi-store
+```
+
+### REST API — fetch translations programmatically
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://your-instance.com/api/orgs/my-org/projects/my-app/translations?format=json&locale=fr"
+```
+
+### GitHub Actions example
+
+```yaml
+- name: Download translations
+  env:
+    TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
+  run: |
+    npx @transi-store/cli
+```
+
+---
+
+## Available commands
+
+```bash
+make help        # list all available commands
+make setup       # first-time setup (Docker + deps + DB schema)
+make dev         # start dev server at http://localhost:5173
+make build       # production build
+make test        # run tests
+make lint-types  # TypeScript type check
+make knip        # find unused code and dependencies
+make shell       # open a shell inside the app container
+make db-push     # apply schema changes to the database
+make db-studio   # open Drizzle Studio (database GUI)
+make db-reset    # ⚠️  recreate the database (deletes all data)
+make logs        # tail all Docker logs
+make up / down   # start/stop Docker containers
+```
 
 <details>
-<summary><strong>⚠️ Utilisation sans Make (non recommandé)</strong></summary>
-
-Si vous ne pouvez vraiment pas installer Make, vous pouvez utiliser directement les commandes Docker Compose :
+<summary>Using without Make</summary>
 
 ```bash
-# Setup initial
+# Setup
 docker compose up -d
 docker compose exec app yarn install
 docker compose exec app yarn db:push
 
-# Développement
+# Development
 docker compose exec app yarn dev
+
+# Other commands
 docker compose exec app yarn build
+docker compose exec app yarn test
 docker compose exec app yarn lint:types
-
-# Base de données
-docker compose exec app yarn db:push
 docker compose exec app yarn db:studio
-docker compose exec app yarn db:setup-search
 ```
-
-**Important** : Cette approche n'est pas recommandée et rend les commandes plus longues et difficiles à retenir. Installez Make pour une meilleure expérience.
 
 </details>
 
-## Commandes disponibles
+---
 
-Tapez `make help` pour voir toutes les commandes disponibles. Principales commandes :
+## Tech stack
 
-| Commande          | Description                                         |
-| ----------------- | --------------------------------------------------- |
-| `make help`       | Affiche toutes les commandes disponibles            |
-| `make setup`      | Setup initial complet (première utilisation)        |
-| `make dev`        | Démarre le serveur de développement                 |
-| `make build`      | Build l'application pour la production              |
-| `make up`         | Démarre les conteneurs Docker                       |
-| `make down`       | Arrête les conteneurs Docker                        |
-| `make logs`       | Affiche les logs en temps réel                      |
-| `make shell`      | Ouvre un shell dans le conteneur app                |
-| `make install`    | Installe/met à jour les dépendances                 |
-| `make db-push`    | Applique le schéma à la base de données             |
-| `make db-studio`  | Ouvre Drizzle Studio                                |
-| `make db-reset`   | Recrée la base de données (⚠️ supprime les données) |
-| `make lint-types` | Vérifie les types TypeScript                        |
-| `make knip`       | Analyse les imports/exports non utilisés            |
+| Layer           | Technology                             |
+| --------------- | -------------------------------------- |
+| Framework       | React Router v7 (SSR)                  |
+| UI              | React 19 + Chakra UI v3                |
+| Build           | Vite                                   |
+| Package manager | Yarn Berry v4 (monorepo)               |
+| Database        | PostgreSQL 18 + Drizzle ORM            |
+| Auth            | OAuth2/OIDC via Arctic (PKCE)          |
+| Search          | PostgreSQL `pg_trgm` + GIN indexes     |
+| Editor          | CodeMirror 6 (ICU MessageFormat)       |
+| Testing         | Vitest + PGlite (in-memory PostgreSQL) |
 
-## Structure du projet
+---
+
+## Project structure
 
 ```
 transi-store/
-├── apps/
-│   └── website/            # Application web React Router
-│       ├── app/            # Code applicatif (routes, composants, lib)
-│       ├── server/         # Point d'entrée serveur
-│       ├── public/         # Assets statiques
-│       ├── drizzle/        # Schema et relations Drizzle ORM
-│       └── tests/          # Setup de tests
+├── apps/website/           # Main web application (React Router v7)
+│   ├── app/                # Routes, components, server logic
+│   ├── drizzle/            # Database schema & relations
+│   └── tests/              # Test setup (PGlite)
 ├── packages/
-│   ├── cli/               # CLI pour télécharger les traductions
-│   └── common/            # Code partagé (types, utilitaires)
-├── docs/                  # Documentation
-│   ├── decisions/         # Architecture Decision Records
-│   └── technical-notes/   # Notes techniques détaillées
-├── scripts/               # Scripts utilitaires
-└── docker-compose.yml     # Configuration Docker
+│   ├── cli/                # @transi-store/cli — download/upload translations
+│   └── common/             # Shared types and utilities
+├── docs/
+│   ├── technical-notes/    # Architecture, patterns, API docs
+│   └── decisions/          # Architecture Decision Records (ADRs)
+└── docker-compose.yml      # PostgreSQL + app containers
 ```
 
-## Stack technique
+---
 
-| Composant       | Technologie                      |
-| --------------- | -------------------------------- |
-| Frontend        | React 19 + TypeScript            |
-| Build           | Vite                             |
-| Routing         | React Router v7 (mode framework) |
-| Design System   | Chakra UI v3                     |
-| Package Manager | Yarn Berry (v4)                  |
-| Base de donnees | PostgreSQL                       |
-| ORM             | Drizzle ORM                      |
-| Auth            | OAuth2/OIDC                      |
+## Documentation
 
-## Documentation technique
+- **[Technical notes](./docs/technical-notes/)** — architecture, authentication, database schema, export/import API, coding patterns
+- **[Architecture Decision Records](./docs/decisions/)** — history of key technical decisions
+- **[CLI README](./packages/cli/README.md)** — CLI usage and configuration reference
 
-### Architecture et implementation
+---
 
-- **[Notes techniques](./docs/technical-notes/)** : Documentation detaillee de l'architecture, patterns, et systemes
-- **[Decisions d'architecture (ADR)](./docs/decisions/)** : Historique des decisions techniques importantes
+## Contributing
 
-### Pour les developpeurs
+Contributions are welcome! Please read the technical notes before submitting a PR:
 
-Consultez le dossier [`docs/technical-notes/`](./docs/technical-notes/) pour comprendre :
+1. Fork the repository
+2. Run `make setup && make dev` to get your environment running
+3. Run `make lint-types` and `make knip` before committing
+4. Submit a PR with a clear description of your change
 
-- L'architecture generale du projet
-- Le systeme d'authentification OAuth2/OIDC
-- Le schema de base de donnees
-- L'API d'export et le systeme d'import
-- Les patterns de code utilises
+---
 
-## Licence
+## License
 
-GNU AFFERO GENERAL PUBLIC LICENSE Version 3 (AGPL-3.0). See [LICENSE](./LICENSE) for details.
+[GNU Affero General Public License v3.0 (AGPL-3.0)](./LICENSE) — free to use, modify, and self-host. If you distribute a modified version as a web service, you must publish your source code.
