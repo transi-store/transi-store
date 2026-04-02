@@ -1,4 +1,4 @@
-.PHONY: help up down restart logs ps shell install dev build db-generate db-push db-studio db-setup-search lint-types knip clean
+.PHONY: help up down restart logs ps shell install dev build test db-generate db-push db-studio db-setup-search lint-types knip clean
 
 # Couleurs pour l'aide
 BLUE := \033[0;34m
@@ -45,6 +45,9 @@ build: ## Build l'application
 
 start: ## Démarre l'application en production
 	docker compose exec app yarn start
+
+test: ## Lance les tests
+	docker compose exec app yarn test --run
 
 lint-types: ## Vérifie les types TypeScript
 	docker compose exec app yarn lint:types

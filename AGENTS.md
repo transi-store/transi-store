@@ -1,134 +1,157 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents (GitHub Copilot, OpenAI Codex, Cursor, Claude, etc.) when working with code in this repository.
 
-## Monorepo Structure
+## Project overview
 
-This is a **Yarn Berry v4 monorepo** with the following workspaces:
+transi-store is an open-source translation management platform — a self-hosted alternative to Phrase, Crowdin, and Transifex. It is a **Yarn Berry v4 monorepo** with the following workspaces:
 
-- `apps/website` — The main web application (React Router v7)
+- `apps/website` — Main web application (React Router v7 SSR, full-stack)
 - `packages/common` — Shared types and utilities
-- `packages/cli` — CLI tool for downloading translations
+- `packages/cli` — CLI tool (`@transi-store/cli`) for syncing translations
 
 Tooling (ESLint, Prettier, Knip, lint-staged, Husky) is configured at the **root** level.
 
-## Documentation Structure
+## Development environment
 
-This project maintains detailed technical documentation in the `docs/` folder:
+The application runs entirely inside **Docker**. Node.js/Yarn are NOT required on the host machine.
 
-### Essential Reading
-
-**Before making any changes**, please read any relevant documentation in the `docs/technical-notes/` folder. This contains critical information about the architecture, coding patterns, and specific implementation details that are essential for maintaining code quality and consistency:
-
-1. **[docs/technical-notes/](./docs/technical-notes/)** - Technical implementation details
-   - [architecture.md](./docs/technical-notes/architecture.md) - Overall system architecture
-   - [routing.md](./docs/technical-notes/routing.md) - React Router v7 route configuration
-   - [authentication.md](./docs/technical-notes/authentication.md) - OAuth2/OIDC flow with PKCE
-   - [database-schema.md](./docs/technical-notes/database-schema.md) - PostgreSQL schema and relationships
-   - [export-api.md](./docs/technical-notes/export-api.md) - Translation export API (JSON/XLIFF)
-   - [import-system.md](./docs/technical-notes/import-system.md) - Translation import system
-   - [openapi-documentation.md](./docs/technical-notes/openapi-documentation.md) - OpenAPI spec generation and Redoc UI
-   - [code-patterns.md](./docs/technical-notes/code-patterns.md) - Common coding patterns
-   - [code-formatting.md](./docs/technical-notes/code-formatting.md) - Prettier formatting rules
-   - [traductions.md](./docs/technical-notes/traductions.md) - i18n translation management
-   - [dev-setup-and-testing.md](./docs/technical-notes/dev-setup-and-testing.md) - Local development and testing setup
-
-2. **[docs/decisions/](./docs/decisions/)** - Architecture Decision Records (ADRs)
-   - Review relevant ADRs when making architectural changes
-   - See [docs/decisions/README.md](./docs/decisions/README.md) for the complete list
-
-3. **[README.md](./README.md)** - Quick start guide and features overview
-
-## Quick Command Reference
+### First-time setup
 
 ```bash
-# Development (from root — delegates to workspaces)
-yarn dev                     # Start dev server (http://localhost:5173)
-yarn lint:types              # Type check all workspaces
-yarn lint:eslint             # Lint all workspaces
-yarn knip                    # Find unused code and dependencies
-yarn build                   # Build common + website for production
-yarn test                    # Run tests
-
-# Database
-yarn db:push                 # Apply schema to database (no migrations)
-yarn db:studio               # Open Drizzle Studio GUI
-yarn db:setup-search         # Enable pg_trgm + GIN indexes (run once)
-
-# Setup
-yarn install                 # Install dependencies
-cp .env.example .env         # Create environment file
-docker compose up -d         # Start PostgreSQL
+cp .env.example .env   # configure OAuth credentials and secrets (see .env.example)
+make setup             # starts Docker, installs deps, creates DB schema
+make dev               # starts dev server at http://localhost:5173
 ```
 
-## Key Architecture Points
+### Common commands
 
-### Tech Stack
+```bash
+make dev               # start dev server (http://localhost:5173)
+make build             # production build
+make test              # run tests (Vitest)
+make lint-types        # TypeScript type-check (yarn lint:types)
+make knip              # find unused code/deps
+make shell             # open a shell in the app container
+make db-push           # apply schema changes to PostgreSQL
+make db-studio         # open Drizzle Studio GUI
+make db-reset          # ⚠️  wipe and recreate the database
+make up / down         # start/stop Docker containers
+make logs              # tail Docker logs
+```
+
+### Without Make
+
+```bash
+docker compose exec app yarn dev
+docker compose exec app yarn build
+docker compose exec app yarn test --run
+docker compose exec app yarn lint:types
+docker compose exec app yarn db:push
+```
+
+## Documentation structure
+
+**Always read relevant docs before making changes.** All technical notes are in `docs/technical-notes/`:
+
+- [`architecture.md`](./docs/technical-notes/architecture.md) — System architecture overview
+- [`routing.md`](./docs/technical-notes/routing.md) — React Router v7 route configuration
+- [`authentication.md`](./docs/technical-notes/authentication.md) — OAuth2/OIDC flow with PKCE
+- [`database-schema.md`](./docs/technical-notes/database-schema.md) — PostgreSQL schema and relationships
+- [`export-api.md`](./docs/technical-notes/export-api.md) — Translation export API (JSON/XLIFF)
+- [`import-system.md`](./docs/technical-notes/import-system.md) — Translation import system
+- [`openapi-documentation.md`](./docs/technical-notes/openapi-documentation.md) — OpenAPI spec generation and Redoc UI
+- [`code-patterns.md`](./docs/technical-notes/code-patterns.md) — Coding patterns used throughout the codebase
+- [`code-formatting.md`](./docs/technical-notes/code-formatting.md) — Prettier formatting rules
+- [`traductions.md`](./docs/technical-notes/traductions.md) — i18n translation management
+- [`dev-setup-and-testing.md`](./docs/technical-notes/dev-setup-and-testing.md) — Testing setup (Vitest + PGlite)
+
+Architecture Decision Records: [`docs/decisions/`](./docs/decisions/)
+
+## Tech stack
 
 - **Framework**: React Router v7 (SSR framework mode)
 - **UI**: Chakra UI v3 + React 19
 - **Database**: PostgreSQL 18 + Drizzle ORM v1.0.0-beta
-- **Auth**: OAuth2/OIDC via Arctic (Google + Mapado providers)
+- **Auth**: OAuth2/OIDC via Arctic (Google, GitHub, Mapado providers)
 - **Package Manager**: Yarn Berry v4
+- **Testing**: Vitest + PGlite (in-memory PostgreSQL)
 
-### Critical Patterns
+## Critical patterns
 
-1. **Routes**: Manually configured in `apps/website/app/routes.ts` (NOT file-based discovery)
-   - Adding a new route requires both creating the file AND declaring it in `routes.ts`
+### 1. Routes — manual configuration required
 
-2. **Server-only code**: Use `.server.ts` suffix for code that must never reach the client
-   - Database queries, auth logic, secrets
+Routes are manually configured in `apps/website/app/routes.ts` (NOT file-based discovery). Adding a new route requires **both** creating the file AND declaring it in `routes.ts`.
 
-3. **Authentication flow**: Handled by middleware, not per-loader calls.
-   - App routes (under `app-layout.tsx`): session auth middleware redirects to login if unauthenticated
-   - API routes (under `api-layout.tsx` → `api-org-layout.tsx`): dual auth (Bearer API key or session), returns 403 JSON on failure
-   - In loaders/actions, read auth data from context:
+### 2. Server-only code
 
-   ```typescript
-   // App routes — get the authenticated user
-   import { userContext } from "~/middleware/auth";
-   const user = context.get(userContext);
-   const org = await requireOrganizationMembership(user, params.orgSlug);
+Use `.server.ts` suffix for files that must never reach the client:
 
-   // API routes — org is already resolved by middleware
-   import { orgContext } from "~/middleware/api-auth";
-   const organization = context.get(orgContext);
-   ```
+- Database queries, auth logic, secrets
 
-4. **Route hierarchy** for new routes:
-   - Authenticated app pages → add inside `layout("routes/app-layout.tsx", [...])` in `apps/website/app/routes.ts`
-   - Authenticated API routes under `api/orgs/:orgSlug/...` → add inside the `route("api/orgs/:orgSlug", "routes/api-org-layout.tsx", [...])` block
-   - Public routes → add outside any layout
+### 3. Authentication — middleware-based
 
-5. **Database schema changes**: Use `yarn db:push` (no migrations for now)
+Auth is handled by middleware, not per-loader calls.
 
-6. **Multi-tenant**: All data isolated by organization via membership checks
+- **App routes** (under `app-layout.tsx`): session auth middleware redirects to login if unauthenticated
+- **API routes** (under `api-layout.tsx` → `api-org-layout.tsx`): dual auth (Bearer API key or session), returns 403 JSON on failure
 
-7. **API documentation (OpenAPI)**: The API spec is auto-generated from **shared Zod schemas** in `apps/website/app/lib/api-doc/schemas/`. When adding or modifying an API endpoint:
-   - Update the Zod schema in the corresponding schema file
-   - Use the schema in the handler for validation (`safeParse()`)
-   - Register the path in `apps/website/app/lib/api-doc/openapi.server.ts`
-   - See [openapi-documentation.md](./docs/technical-notes/openapi-documentation.md) for details
+```typescript
+// App routes — get the authenticated user
+import { userContext } from "~/middleware/auth";
+const user = context.get(userContext);
+const org = await requireOrganizationMembership(user, params.orgSlug);
 
-## Environment Variables
-
-Required in `.env` (at monorepo root):
-
-```bash
-DATABASE_URL="postgresql://..."
-OIDC_ISSUER="https://..."
-OIDC_CLIENT_ID="..."
-OIDC_CLIENT_SECRET="..."
-SESSION_SECRET="..."
+// API routes — org is already resolved by middleware
+import { orgContext } from "~/middleware/api-auth";
+const organization = context.get(orgContext);
 ```
 
-## When Working on This Codebase
+### 4. Route hierarchy for new routes
+
+- Authenticated app pages → add inside `layout("routes/app-layout.tsx", [...])` in `apps/website/app/routes.ts`
+- Authenticated API routes under `api/orgs/:orgSlug/...` → add inside the `route("api/orgs/:orgSlug", "routes/api-org-layout.tsx", [...])` block
+- Public routes → add outside any layout
+
+### 5. Database changes
+
+Use `yarn db:push` (no migration files — schema is pushed directly during development).
+
+### 6. Multi-tenant
+
+All data is isolated by organisation. All protected operations call `requireOrganizationMembership()`.
+
+### 7. API documentation (OpenAPI)
+
+The API spec is auto-generated from **shared Zod schemas** in `apps/website/app/lib/api-doc/schemas/`. When adding or modifying an API endpoint:
+
+1. Update the Zod schema in the corresponding schema file
+2. Use the schema in the handler for validation (`safeParse()`)
+3. Register the path in `apps/website/app/lib/api-doc/openapi.server.ts`
+
+## Environment variables
+
+Required in `.env` (at monorepo root). See `.env.example` for all options.
+
+```bash
+# Session & encryption
+SESSION_SECRET=a-long-random-string
+ENCRYPTION_KEY=64-char-hex-key
+
+# At least one OAuth provider must be configured
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+```
+
+The `DATABASE_URL` is pre-configured for the Docker Compose setup and does not need to change in development.
+
+## Key rules when contributing
 
 1. **Always read the relevant technical-notes** before implementing features
-2. **Follow existing patterns** documented in code-patterns.md
+2. **Follow existing patterns** documented in `code-patterns.md`
 3. **Check ADRs** for context on past decisions
 4. **Verify route configuration** in `apps/website/app/routes.ts` when adding routes
-5. **Run `yarn lint:types` and `yarn knip`** before committing
+5. **Run `make lint-types` and `make knip`** before committing
 6. **Website code lives in `apps/website/`** — don't create app files at the monorepo root
 
 ---
