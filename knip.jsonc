@@ -5,6 +5,8 @@
       "entry": ["i18next.config.ts"],
     },
     "packages/common": {},
-    "packages/cli": {},
+    "packages/cli": {
+        "entry": ["rolldown.config.js"],
+    },
   },
 }
