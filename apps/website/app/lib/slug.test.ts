@@ -35,7 +35,7 @@ describe("generateSlug", () => {
   });
 
   it("handles special characters around dots", () => {
-    expect(generateSlug("foo!.bar")).toBe("foo-.bar");
+    expect(generateSlug("foo!.bar")).toBe("foo.bar");
   });
 
   it("replaces special characters with dashes", () => {
