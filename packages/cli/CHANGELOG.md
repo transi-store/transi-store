@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.5.2
+
+### Fixed
+
+- Limit http calls with cli #108
+
 ## 1.5.1
 
 ### Fixed
