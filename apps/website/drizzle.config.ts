@@ -10,5 +10,7 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
-  tablesFilter: ["!pg_*", "query_stats"], // Ignore all tables/views starting with pg_
+  // ignore all tables that start with "pg_" and the "query_stats" table, and only include tables in the "public" schema
+  tablesFilter: ["!pg_*", "!query_stats"],
+  schemaFilter: ["!ppg"],
 });
