@@ -31,6 +31,7 @@ import {
 import { getInstance } from "~/middleware/i18next";
 import { getKeyUrl, getTranslationsUrl } from "~/lib/routes-helpers";
 import { TranslationKeysSort } from "~/lib/sort/keySort";
+import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 const LIMIT = 50;
 
@@ -70,7 +71,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const url = new URL(request.url);
@@ -101,7 +102,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const formData = await request.formData();

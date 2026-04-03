@@ -14,6 +14,7 @@ import type {
   Project,
   ProjectLanguage,
 } from "../../../drizzle/schema";
+import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 type ContextType = {
   organization: Organization;
@@ -35,7 +36,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   return {};

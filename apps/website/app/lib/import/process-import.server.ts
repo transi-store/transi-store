@@ -85,7 +85,7 @@ export async function processImport({
   // 6. Resolve project
   const project = await getProjectBySlug(organizationId, projectSlug);
   if (!project) {
-    return { success: false, error: "Project not found" };
+    return { success: false, error: `Project "${projectSlug}" not found` };
   }
 
   // 6b. Resolve optional branch (create if it doesn't exist)

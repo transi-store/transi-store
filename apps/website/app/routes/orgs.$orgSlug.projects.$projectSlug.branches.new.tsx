@@ -26,6 +26,7 @@ import { createBranch, isBranchSlugAvailable } from "~/lib/branches.server";
 import { generateSlug } from "~/lib/slug";
 import { getInstance } from "~/middleware/i18next";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
+import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -36,7 +37,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   return { organization, project };
@@ -52,7 +53,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const formData = await request.formData();

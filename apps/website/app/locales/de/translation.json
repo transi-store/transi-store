@@ -4,7 +4,7 @@
   "api.translate.noAiProvider": "Kein KI-Dienst konfiguriert. Konfigurieren Sie diesen in den Organisationseinstellungen.",
   "api.translate.noSourceTranslation": "Keine Quellübersetzung verfügbar",
   "api.translate.paramsMissing": "Fehlende Parameter",
-  "api.translate.projectNotFound": "Projekt nicht gefunden",
+  "api.translate.projectNotFound": "Projekt \"{projectSlug}\" nicht gefunden",
   "api.translate.translateError": "Fehler bei der Übersetzung",
   "auth.completeProfile.description": "Bitte geben Sie Ihren vollständigen Namen an, um fortzufahren",
   "auth.completeProfile.errors.nameRequired": "Der vollständige Name ist erforderlich",

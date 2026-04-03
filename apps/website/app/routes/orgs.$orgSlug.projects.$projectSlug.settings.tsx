@@ -28,6 +28,7 @@ import {
   removeLanguageFromProject,
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
+import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -49,7 +50,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   return {};
@@ -64,7 +65,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const formData = await request.formData();
@@ -161,7 +162,13 @@ export default function ProjectSettings() {
         )}
 
         {actionData?.success && (
-          <Box p={4} bg="green.subtle" color="green.fg" borderRadius="md" mb={4}>
+          <Box
+            p={4}
+            bg="green.subtle"
+            color="green.fg"
+            borderRadius="md"
+            mb={4}
+          >
             {t("settings.languageActionSuccess")}
           </Box>
         )}

@@ -4,7 +4,7 @@
   "api.translate.noAiProvider": "No AI service configured. Configure it in the organization settings.",
   "api.translate.noSourceTranslation": "No source translation available",
   "api.translate.paramsMissing": "Missing parameters",
-  "api.translate.projectNotFound": "Project not found",
+  "api.translate.projectNotFound": "Project \"{projectSlug}\" not found",
   "api.translate.translateError": "Error during translation",
   "auth.completeProfile.description": "Please enter your full name to continue",
   "auth.completeProfile.errors.nameRequired": "Full name is required",

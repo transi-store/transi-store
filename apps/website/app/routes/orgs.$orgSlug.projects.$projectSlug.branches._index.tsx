@@ -19,13 +19,18 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branche
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
-import { getBranchesByProject, getBranchKeyCount, getBranchKeyDeletionCount } from "~/lib/branches.server";
+import {
+  getBranchesByProject,
+  getBranchKeyCount,
+  getBranchKeyDeletionCount,
+} from "~/lib/branches.server";
 import {
   createNewBranchUrl,
   getBranchesUrl,
   getBranchUrl,
 } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
+import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -36,7 +41,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const branches = await getBranchesByProject(project.id);

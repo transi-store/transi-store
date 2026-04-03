@@ -29,6 +29,7 @@ import type {
   Translation,
   TranslationKey,
 } from "../../drizzle/schema";
+import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 export type KeyLoaderData = {
   organization: Organization;
@@ -54,7 +55,7 @@ export async function loader({
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const key = await getTranslationKeyById(parseInt(params.keyId, 10));
@@ -97,7 +98,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const key = await getTranslationKeyById(parseInt(params.keyId, 10));
