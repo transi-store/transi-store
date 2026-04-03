@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.6.0
+
+### Changed
+
+- improve download command output #109
+
 ## 1.5.2
 
 ### Fixed
