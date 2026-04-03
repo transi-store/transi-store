@@ -19,7 +19,7 @@
     "lint:types": "yarn turbo lint:types",
     "knip": "yarn workspace @transi-store/website react-router typegen && knip",
     "db:generate": "yarn workspace @transi-store/website db:generate",
-    "db:push": "yarn workspace @transi-store/website db:push",
+    "db:push": "yarn workspace @transi-store/website db:push --verbose",
     "db:studio": "yarn workspace @transi-store/website db:studio",
     "db:setup-search": "./scripts/enable-fuzzy-search.sh",
     "test": "yarn workspace @transi-store/website test",
