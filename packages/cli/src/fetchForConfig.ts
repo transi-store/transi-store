@@ -38,7 +38,8 @@ function renderProgressBar(completed: number, total: number): string {
 export async function fetchForConfig(
   configPath: string,
   apiKey: string,
-  branch?: string,
+  branch: string | undefined,
+  projectFilter: Array<string> | undefined,
 ): Promise<void> {
   const cwd = process.cwd();
 
@@ -75,6 +76,9 @@ export async function fetchForConfig(
   const localesByProject = new Map<string, string[]>();
 
   for (const configItem of result.data.projects) {
+    if (projectFilter && !projectFilter.includes(configItem.project)) {
+      continue;
+    }
     if (!localesByProject.has(configItem.project)) {
       projectOrder.push(configItem.project);
       localesByProject.set(configItem.project, []);

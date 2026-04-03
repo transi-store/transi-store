@@ -98,7 +98,8 @@ export async function uploadForConfig(
   configPath: string,
   apiKey: string,
   strategy: ImportStrategy,
-  branch?: string,
+  branch: string | undefined,
+  projectFilter: Array<string> | undefined,
 ): Promise<void> {
   const cwd = process.cwd();
 
@@ -146,6 +147,9 @@ export async function uploadForConfig(
   }
 
   for (const configItem of result.data.projects) {
+    if (projectFilter && !projectFilter.includes(configItem.project)) {
+      continue;
+    }
     for (const locale of configItem.langs) {
       const input = configItem.output
         .replace("<lang>", locale)
