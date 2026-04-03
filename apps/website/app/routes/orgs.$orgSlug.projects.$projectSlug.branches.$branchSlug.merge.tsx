@@ -31,6 +31,7 @@ import {
 } from "~/lib/branches.server";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
+import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -41,7 +42,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const branch = await getBranchBySlug(project.id, params.branchSlug);
@@ -71,7 +72,7 @@ export async function action({ params, context }: Route.ActionArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    throw new Response("Project not found", { status: 404 });
+    throw createProjectNotFoundResponse(params.projectSlug);
   }
 
   const branch = await getBranchBySlug(project.id, params.branchSlug);
