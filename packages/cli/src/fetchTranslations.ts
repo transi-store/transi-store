@@ -1,11 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
-import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
-import z from "zod";
-import { configSchema } from "@transi-store/common";
 
-const CONCURRENCY_CALLS = 5;
+export const CONCURRENCY_CALLS = 5;
 
 export type Config = {
   domainRoot: string;
@@ -18,6 +14,10 @@ export type Config = {
   branch?: string | undefined;
 };
 
+export type FetchResult =
+  | { success: true; output: string }
+  | { success: false; error: string; output: string };
+
 export async function fetchTranslations({
   domainRoot,
   apiKey,
@@ -27,7 +27,7 @@ export async function fetchTranslations({
   locale,
   output,
   branch,
-}: Config) {
+}: Config): Promise<FetchResult> {
   const params = new URLSearchParams({ format, locale });
   if (branch) {
     params.set("branch", branch);
@@ -43,22 +43,14 @@ export async function fetchTranslations({
 
     if (!content.ok) {
       const errorData = await content.text();
-      console.error(
-        `Failed to fetch translations: ${content.status} ${content.statusText}\n`,
-        errorData,
-      );
-      process.exit(1);
+      return {
+        success: false,
+        error: `${content.status} ${content.statusText} — ${errorData.trim()}`,
+        output,
+      };
     }
 
     const data = await content.json();
-
-    if (!content.ok) {
-      console.error(
-        `Failed to fetch translations: ${content.status} ${content.statusText}\n`,
-        data.error,
-      );
-      process.exit(1);
-    }
 
     // create directory if not exists
     const dir = path.dirname(output);
@@ -67,71 +59,12 @@ export async function fetchTranslations({
     }
 
     fs.writeFileSync(output, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
-    console.log(
-      `Translations for project "${project}" and locale "${locale}" "saved to "${output}"`,
-    );
+    return { success: true, output };
   } catch (error) {
-    console.error("Error exporting translations:", error);
-    process.exit(1);
-  }
-}
-
-export async function fetchForConfig(
-  configPath: string,
-  apiKey: string,
-  branch?: string,
-): Promise<void> {
-  const cwd = process.cwd();
-
-  const fullPath = path.resolve(cwd, configPath);
-
-  if (!fs.existsSync(fullPath)) {
-    console.error(`Config file not found: ${configPath}`);
-    process.exit(1);
-  }
-
-  const config = (
-    await import(pathToFileURL(fullPath).href, { with: { type: "json" } })
-  ).default;
-  const result = configSchema.safeParse(config);
-
-  if (!result.success) {
-    const pretty = z.prettifyError(result.error);
-    console.error("Config validation error:", pretty);
-    process.exit(1);
-  }
-
-  const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
-
-  console.log(
-    `Fetching translations from domain "${domainRoot}" for org "${result.data.org}"...`,
-  );
-
-  const tasks = [];
-  for (const configItem of result.data.projects) {
-    for (const locale of configItem.langs) {
-      const options = {
-        domainRoot,
-        apiKey,
-        org: result.data.org,
-        project: configItem.project,
-        format: configItem.format,
-        locale,
-        output: configItem.output
-          .replace("<lang>", locale)
-          .replace("<project>", configItem.project)
-          .replace("<format>", configItem.format),
-        branch,
-      } satisfies Config;
-
-      tasks.push(options);
-    }
-  }
-
-  // Limit concurrent HTTP requests to avoid overwhelming the server
-  for (let i = 0; i < tasks.length; i += CONCURRENCY_CALLS) {
-    await Promise.all(
-      tasks.slice(i, i + CONCURRENCY_CALLS).map(fetchTranslations),
-    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+      output,
+    };
   }
 }
