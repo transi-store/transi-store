@@ -1,5 +1,5 @@
 import { db, schema } from "./db.server";
-import { count, eq, and } from "drizzle-orm";
+import { count, eq, and, isNull } from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
@@ -42,10 +42,27 @@ export async function isProjectSlugAvailable(
 }
 
 export async function getProjectsForOrganization(organizationId: number) {
-  return await db.query.projects.findMany({
-    where: { organizationId },
-    orderBy: (projects, { asc }) => [asc(projects.createdAt)],
-  });
+  return await db
+    .select({
+      id: schema.projects.id,
+      name: schema.projects.name,
+      slug: schema.projects.slug,
+      description: schema.projects.description,
+      createdAt: schema.projects.createdAt,
+      translationKeyCount: count(schema.translationKeys.id),
+    })
+    .from(schema.projects)
+    .leftJoin(
+      schema.translationKeys,
+      and(
+        eq(schema.translationKeys.projectId, schema.projects.id),
+        isNull(schema.translationKeys.deletedAt),
+        isNull(schema.translationKeys.branchId),
+      ),
+    )
+    .where(eq(schema.projects.organizationId, organizationId))
+    .groupBy(schema.projects.id)
+    .orderBy(schema.projects.createdAt);
 }
 
 export async function countProjectsForOrganization(organizationId: number) {

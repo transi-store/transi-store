@@ -301,6 +301,7 @@
   "projects.new.nameLabel": "Projektname",
   "projects.new.namePlaceholder": "Meine Anwendung",
   "projects.new.title": "Neues Projekt",
+  "projects.keyCount": "{count, plural, one {# Übersetzungsschlüssel} other {# Übersetzungsschlüssel}}",
   "search.all": "Alle",
   "search.badgeKey": "Schlüssel",
   "search.badgeTranslation": "Übersetzung",
