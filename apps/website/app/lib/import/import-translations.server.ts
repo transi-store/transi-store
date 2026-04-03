@@ -149,12 +149,15 @@ export async function importTranslations({
       );
 
       // 5. Batch upsert translations based on strategy
-      const translationValues = entries.map(([keyName, value]) => ({
-        keyId: existingKeyMap.get(keyName)!,
-        locale,
-        value,
-        isFuzzy: false,
-      }));
+      // Filter out empty string values: empty translations are not meaningful
+      const translationValues = entries
+        .filter(([, value]) => value !== "")
+        .map(([keyName, value]) => ({
+          keyId: existingKeyMap.get(keyName)!,
+          locale,
+          value,
+          isFuzzy: false,
+        }));
 
       if (strategy === ImportStrategy.OVERWRITE) {
         // INSERT ... ON CONFLICT DO UPDATE for all entries
@@ -172,8 +175,9 @@ export async function importTranslations({
             });
         }
 
-        // Count stats based on what existed before
-        for (const [keyName] of entries) {
+        // Count stats based on what existed before (skip empty values)
+        for (const [keyName, value] of entries) {
+          if (value === "") continue;
           const keyId = existingKeyMap.get(keyName)!;
           if (existingTranslationKeyIds.has(keyId)) {
             stats.translationsUpdated++;
