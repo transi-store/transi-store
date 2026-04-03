@@ -273,6 +273,81 @@ describe("Import API", () => {
     });
   });
 
+  describe("empty string values", () => {
+    it("should not create translations for empty string values (overwrite strategy)", async () => {
+      const request = buildImportRequest("test-org", "test-project", {
+        "home.title": "Home",
+        "home.empty": "",
+      });
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.stats.keysCreated).toBe(2); // Both keys are created
+      expect(data.stats.translationsCreated).toBe(1); // Only non-empty translation is created
+
+      const db = getTestDb();
+      const translations = await db.query.translations.findMany({
+        where: { locale: "en" },
+      });
+
+      expect(translations).toHaveLength(1);
+      expect(translations[0].value).toBe("Home");
+    });
+
+    it("should not update translations to empty string values (overwrite strategy)", async () => {
+      const db = getTestDb();
+      const key = await createTranslationKey(db, 1, "home.title");
+      await createTranslation(db, key.id, "en", "Old Home");
+
+      const request = buildImportRequest("test-org", "test-project", {
+        "home.title": "",
+      });
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.stats.translationsCreated).toBe(0);
+      expect(data.stats.translationsUpdated).toBe(0);
+
+      // Verify value was NOT updated
+      const translation = await db.query.translations.findFirst({
+        where: { keyId: key.id, locale: "en" },
+      });
+
+      expect(translation?.value).toBe("Old Home");
+    });
+
+    it("should not create translations for empty string values (skip strategy)", async () => {
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        {
+          "home.title": "Home",
+          "home.empty": "",
+        },
+        { strategy: ImportStrategy.SKIP },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.stats.keysCreated).toBe(2); // Both keys are created
+      expect(data.stats.translationsCreated).toBe(1); // Only non-empty translation is created
+
+      const db = getTestDb();
+      const translations = await db.query.translations.findMany({
+        where: { locale: "en" },
+      });
+
+      expect(translations).toHaveLength(1);
+      expect(translations[0].value).toBe("Home");
+    });
+  });
+
   describe("query count", () => {
     it("should use a bounded number of queries regardless of import size", async () => {
       const smallData: Record<string, string> = {};
