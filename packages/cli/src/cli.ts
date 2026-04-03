@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 import { Command, Option } from "@commander-js/extra-typings";
-import {
-  fetchForConfig,
-  fetchTranslations,
-  type Config,
-} from "./fetchTranslations.ts";
+import { fetchTranslationsAndPrint, fetchForConfig } from "./fetchForConfig.ts";
+import { type Config } from "./fetchTranslations.ts";
 import {
   uploadForConfig,
   uploadTranslations,
@@ -44,7 +41,7 @@ program
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
   )
   .action((options) => {
-    fetchTranslations(options satisfies Config);
+    fetchTranslationsAndPrint(options satisfies Config);
   });
 
 program
