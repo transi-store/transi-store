@@ -5,6 +5,8 @@ import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
 import z from "zod";
 import { configSchema } from "@transi-store/common";
 
+const CONCURRENCY_CALLS = 5;
+
 export type Config = {
   domainRoot: string;
   org: string;
@@ -105,6 +107,7 @@ export async function fetchForConfig(
     `Fetching translations from domain "${domainRoot}" for org "${result.data.org}"...`,
   );
 
+  const tasks = [];
   for (const configItem of result.data.projects) {
     for (const locale of configItem.langs) {
       const options = {
@@ -121,7 +124,14 @@ export async function fetchForConfig(
         branch,
       } satisfies Config;
 
-      fetchTranslations(options);
+      tasks.push(options);
     }
+  }
+
+  // Limit concurrent HTTP requests to avoid overwhelming the server
+  for (let i = 0; i < tasks.length; i += CONCURRENCY_CALLS) {
+    await Promise.all(
+      tasks.slice(i, i + CONCURRENCY_CALLS).map(fetchTranslations),
+    );
   }
 }
