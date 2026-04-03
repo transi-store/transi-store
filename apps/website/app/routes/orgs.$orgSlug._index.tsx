@@ -63,9 +63,14 @@ export default function OrganizationProjects() {
             <Card.Root key={project.id} asChild>
               <Link to={getProjectUrl(organization.slug, project.slug)}>
                 <Card.Body>
-                  <Heading as="h3" size="md" mb={2}>
+                  <Heading as="h3" size="md" mb={1}>
                     {project.name}
                   </Heading>
+                  <Text fontSize="xs" color="fg.subtle" mb={1}>
+                    {t("projects.keyCount", {
+                      count: project.translationKeyCount,
+                    })}
+                  </Text>
                   {project.description && (
                     <Text fontSize="sm" color="fg.muted">
                       {project.description}
