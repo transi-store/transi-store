@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.7.0
+
+### Added
+
+- Added `--project` option to `download:config` and `upload:config` commands to filter by a comma-separated list of project slugs. ([#110](https://github.com/transi-store/transi-store/pull/110))
+
 ## 1.6.0
 
 ### Changed
