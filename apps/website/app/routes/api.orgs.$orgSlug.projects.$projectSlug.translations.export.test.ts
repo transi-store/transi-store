@@ -61,7 +61,7 @@ describe("Export Project Loader", () => {
     expect(response.status).toBe(404);
     const data = await response.json();
 
-    expect(data.error).toBe("Project not found");
+    expect(data.error).toBe('Project "non-existent-project" not found');
   });
 
   it("should return 400 error when missing required parameters", async () => {

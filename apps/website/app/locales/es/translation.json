@@ -4,7 +4,7 @@
   "api.translate.noAiProvider": "No hay ningún servicio de IA configurado. Configúrelo en los ajustes de la organización.",
   "api.translate.noSourceTranslation": "Traducción de origen no disponible",
   "api.translate.paramsMissing": "Parámetros faltantes",
-  "api.translate.projectNotFound": "Proyecto no encontrado",
+  "api.translate.projectNotFound": "Proyecto \"{projectSlug}\" no encontrado",
   "api.translate.translateError": "Error durante la traducción",
   "auth.completeProfile.description": "Por favor, introduzca su nombre completo para continuar",
   "auth.completeProfile.errors.nameRequired": "El nombre completo es obligatorio",

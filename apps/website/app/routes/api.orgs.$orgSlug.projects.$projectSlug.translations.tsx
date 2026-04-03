@@ -15,10 +15,13 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
   if (!project) {
-    return new Response(JSON.stringify({ error: "Project not found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: `Project "${params.projectSlug}" not found` }),
+      {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 
   const url = new URL(request.url);
