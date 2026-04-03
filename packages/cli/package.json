@@ -1,6 +1,6 @@
 {
   "name": "@transi-store/cli",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "type": "module",
   "exports": {
     ".": "./dist/cli.js",
