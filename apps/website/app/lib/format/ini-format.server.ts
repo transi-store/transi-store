@@ -7,17 +7,8 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
 export class IniTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
-    if (fileContent.length > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: "Le fichier est trop volumineux (maximum 5 MB)",
-      };
-    }
-
     try {
       const data: Record<string, string> = {};
       const lines = fileContent.split(/\r?\n/);
@@ -62,7 +53,7 @@ export class IniTranslationFormat implements TranslationFormat {
         return {
           success: false,
           error:
-            "Aucune traduction trouvée dans le fichier INI (format attendu : clé=valeur)",
+            "No translations found in the INI file (expected format: key=value)",
         };
       }
 
@@ -70,7 +61,7 @@ export class IniTranslationFormat implements TranslationFormat {
     } catch (_error) {
       return {
         success: false,
-        error: "Format INI invalide",
+        error: "Invalid INI format",
       };
     }
   }

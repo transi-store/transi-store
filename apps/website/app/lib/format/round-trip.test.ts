@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { createTranslationFormat } from "./format-factory.server";
 import { SupportedFormat } from "./types";
-import type { ProjectTranslations, TranslationFormat } from "./types";
+import type { TranslationFormat } from "./types";
+import { buildProjectTranslations } from "./test-helpers";
 
 /**
  * Round-trip tests: verify that data survives import→export→import
@@ -10,33 +11,6 @@ import type { ProjectTranslations, TranslationFormat } from "./types";
  * The test starts from JS translation data, exports to each format,
  * then reimports and validates the result matches the original data.
  */
-
-function buildProjectTranslations(
-  data: Record<string, string>,
-  locale: string,
-): ProjectTranslations {
-  return Object.entries(data).map(([keyName, value], index) => ({
-    id: index + 1,
-    projectId: 1,
-    keyName,
-    description: null,
-    branchId: null,
-    deletedAt: null,
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
-    translations: [
-      {
-        id: index + 1,
-        keyId: index + 1,
-        locale,
-        value,
-        isFuzzy: false,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
-      },
-    ],
-  }));
-}
 
 /**
  * Base translation data used for all round-trip tests.

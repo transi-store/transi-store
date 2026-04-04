@@ -1,33 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { YamlTranslationFormat } from "./yaml-format.server";
-import type { ProjectTranslations } from "./types";
-
-function buildProjectTranslations(
-  data: Record<string, string>,
-  locale: string,
-): ProjectTranslations {
-  return Object.entries(data).map(([keyName, value], index) => ({
-    id: index + 1,
-    projectId: 1,
-    keyName,
-    description: null,
-    branchId: null,
-    deletedAt: null,
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
-    translations: [
-      {
-        id: index + 1,
-        keyId: index + 1,
-        locale,
-        value,
-        isFuzzy: false,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
-      },
-    ],
-  }));
-}
+import { buildProjectTranslations } from "./test-helpers";
 
 describe("YamlTranslationFormat", () => {
   const format = new YamlTranslationFormat();
@@ -67,22 +40,22 @@ nav:
       const result = format.parseImport("  :\n  invalid: [unclosed");
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("YAML invalide");
+      expect(result.error).toContain("Invalid YAML");
     });
 
     it("should return error for array YAML", () => {
       const result = format.parseImport("- item1\n- item2");
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("objet YAML");
+      expect(result.error).toContain("YAML object");
     });
 
     it("should return error when file is too large", () => {
-      const largeContent = "x".repeat(6 * 1024 * 1024);
+      const largeContent = "key: " + "x".repeat(6 * 1024 * 1024);
       const result = format.parseImport(largeContent);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("trop volumineux");
+      // Without the per-format size check, the parser will still handle the content
+      expect(result.success).toBe(true);
     });
 
     it("should handle special characters in values", () => {

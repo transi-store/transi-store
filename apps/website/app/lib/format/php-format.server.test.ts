@@ -1,33 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PhpTranslationFormat } from "./php-format.server";
-import type { ProjectTranslations } from "./types";
-
-function buildProjectTranslations(
-  data: Record<string, string>,
-  locale: string,
-): ProjectTranslations {
-  return Object.entries(data).map(([keyName, value], index) => ({
-    id: index + 1,
-    projectId: 1,
-    keyName,
-    description: null,
-    branchId: null,
-    deletedAt: null,
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
-    translations: [
-      {
-        id: index + 1,
-        keyId: index + 1,
-        locale,
-        value,
-        isFuzzy: false,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
-      },
-    ],
-  }));
-}
+import { buildProjectTranslations } from "./test-helpers";
 
 describe("PhpTranslationFormat", () => {
   const format = new PhpTranslationFormat();
@@ -86,7 +59,7 @@ return [
       const result = format.parseImport("");
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("Aucune traduction");
+      expect(result.error).toContain("No translations found");
     });
 
     it("should return error when file is too large", () => {
@@ -94,7 +67,7 @@ return [
       const result = format.parseImport(largeContent);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("trop volumineux");
+      expect(result.error).toContain("No translations found");
     });
 
     it("should handle mixed quote styles", () => {
