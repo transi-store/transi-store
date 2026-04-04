@@ -30,8 +30,9 @@ export const exportErrorResponseSchema = z
   .object({
     error: z.string().openapi({
       description: "Human-readable error message.",
-      example:
-        "Invalid format. Use 'json', 'xliff', 'yaml', 'csv', 'po', 'ini', or 'php'",
+      example: `Invalid format. Use ${Object.values(SupportedFormat)
+        .map((f) => `'${f}'`)
+        .join(", ")}`,
     }),
   })
   .openapi("ExportError");

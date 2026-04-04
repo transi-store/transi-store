@@ -11,9 +11,12 @@ import {
   DEFAULT_DOMAIN_ROOT,
   ALL_BRANCHES_VALUE,
   ImportStrategy,
+  SupportedFormat,
 } from "@transi-store/common";
 
 const program = new Command();
+
+const validFormats = Object.values(SupportedFormat).join(", ");
 
 const apiKeyOption = new Option(
   "-k, --api-key <apiKey>",
@@ -35,7 +38,7 @@ program
   .requiredOption("-p, --project <project>", "Project slug")
   .requiredOption("-l, --locale <locale>", "Locale to export")
   .requiredOption("-O, --output <output>", "Output file path")
-  .option("-f, --format <format>", "Export format (json, csv, etc.)", "json")
+  .option("-f, --format <format>", `Export format (${validFormats})`, "json")
   .option(
     "-b, --branch <branch>",
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
@@ -56,7 +59,7 @@ program
   .requiredOption("-o, --org <org>", "Organization slug")
   .requiredOption("-p, --project <project>", "Project slug")
   .requiredOption("-l, --locale <locale>", "Target locale")
-  .requiredOption("-I, --input <input>", "Input file path (JSON or XLIFF)")
+  .requiredOption("-I, --input <input>", "Input file path")
   .option(
     "-s, --strategy <strategy>",
     `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
@@ -64,7 +67,7 @@ program
   )
   .option(
     "-f, --format <format>",
-    "File format (json or xliff). Auto-detected from extension if omitted",
+    `File format (${validFormats}). Auto-detected from extension if omitted`,
   )
   .option(
     "-b, --branch <branch>",
