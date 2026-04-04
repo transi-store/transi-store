@@ -67,10 +67,21 @@ export async function processImport({
     format = SupportedFormat.XLIFF;
   } else if (file.name.endsWith(".json") || file.type === "application/json") {
     format = SupportedFormat.JSON;
+  } else if (file.name.endsWith(".yaml") || file.name.endsWith(".yml")) {
+    format = SupportedFormat.YAML;
+  } else if (file.name.endsWith(".csv")) {
+    format = SupportedFormat.CSV;
+  } else if (file.name.endsWith(".po")) {
+    format = SupportedFormat.PO;
+  } else if (file.name.endsWith(".ini")) {
+    format = SupportedFormat.INI;
+  } else if (file.name.endsWith(".php")) {
+    format = SupportedFormat.PHP;
   } else {
     return {
       success: false,
-      error: "Unsupported file format. Use JSON or XLIFF",
+      error:
+        "Unsupported file format. Use JSON, XLIFF, YAML, CSV, PO, INI, or PHP",
     };
   }
 

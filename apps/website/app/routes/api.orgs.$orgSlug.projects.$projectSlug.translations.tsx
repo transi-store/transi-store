@@ -54,7 +54,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   if (!isSupportedFormat(formatName)) {
     return new Response(
       JSON.stringify({
-        error: "Invalid format. Use 'json' or 'xliff'",
+        error:
+          "Invalid format. Use 'json', 'xliff', 'yaml', 'csv', 'po', 'ini', or 'php'",
       }),
       {
         status: 400,
