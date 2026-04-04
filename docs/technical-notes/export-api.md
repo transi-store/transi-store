@@ -86,7 +86,7 @@ GET /api/orgs/my-org/projects/app/translations?format=xliff&locale=fr
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en" trgLang="fr">
-  <file id="my-project">
+  <file id="my-project" trgLang="fr">
     <unit id="home.title">
       <notes>
         <note>Welcome message on homepage</note>

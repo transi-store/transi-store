@@ -31,7 +31,7 @@ The `<source>` element is treated as the **key name** (used to match translation
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en" trgLang="fr">
-  <file id="my-project">
+  <file id="my-project" trgLang="fr">
     <unit id="home.title">
       <segment>
         <source>home.title</source>

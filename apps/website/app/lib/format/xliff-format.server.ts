@@ -83,7 +83,13 @@ export class XliffTranslationFormat implements TranslationFormat {
         escapeXml(locale) +
         '">',
     );
-    xml.push('  <file id="' + escapeXml(projectName!) + '">');
+    xml.push(
+      '  <file id="' +
+        escapeXml(projectName!) +
+        '" trgLang="' +
+        escapeXml(locale) +
+        '">',
+    );
 
     for (const key of projectTranslations) {
       const translation = key.translations.find((t) => t.locale === locale);
