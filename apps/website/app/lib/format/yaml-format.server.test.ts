@@ -98,33 +98,15 @@ unicode: "Émojis: 🎉🚀"`;
       "fr",
     );
 
-    it("should return error when locale is missing", () => {
-      const result = format.handleExportRequest({
-        searchParams: new URLSearchParams(),
-        projectTranslations: translations,
-        projectName: "My Project",
-        availableLocales: ["en", "fr"],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain("locale");
-      }
-    });
-
     it("should return YAML content with correct content-type", () => {
       const result = format.handleExportRequest({
-        searchParams: new URLSearchParams("locale=fr"),
+        locale: "fr",
         projectTranslations: translations,
         projectName: "My Project",
-        availableLocales: ["en", "fr"],
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.contentType).toBe("text/yaml");
-        expect(result.fileExtension).toBe("yaml");
-      }
+      expect(result.contentType).toBe("text/yaml");
+      expect(result.fileExtension).toBe("yaml");
     });
   });
 });

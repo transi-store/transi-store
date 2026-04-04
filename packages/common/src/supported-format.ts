@@ -46,5 +46,5 @@ export function getFormatFromFilename(
 }
 
 export function isSupportedFormat(format: string): format is SupportedFormat {
-  return (Object.values(SupportedFormat) as string[]).includes(format);
+  return (Object.values(SupportedFormat) as Array<string>).includes(format);
 }
