@@ -9,7 +9,7 @@ export const exportQuerySchema = (localeExample = "fr") =>
   z.object({
     format: z.enum(SupportedFormat).default(SupportedFormat.JSON).openapi({
       description:
-        "Output format. JSON returns a flat key-value object. XLIFF returns an XLIFF 2.0 XML document.",
+        "Output format. Supported formats: json, xliff, yaml, csv, po, ini, php.",
       example: SupportedFormat.JSON,
     }),
     locale: z.string().openapi({
@@ -30,7 +30,8 @@ export const exportErrorResponseSchema = z
   .object({
     error: z.string().openapi({
       description: "Human-readable error message.",
-      example: "Invalid format. Use 'json' or 'xliff'",
+      example:
+        "Invalid format. Use 'json', 'xliff', 'yaml', 'csv', 'po', 'ini', or 'php'",
     }),
   })
   .openapi("ExportError");
