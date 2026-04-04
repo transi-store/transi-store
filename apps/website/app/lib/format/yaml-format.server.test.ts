@@ -50,7 +50,7 @@ nav:
       expect(result.error).toContain("YAML object");
     });
 
-    it("should return error when file is too large", () => {
+    it("should handle large content gracefully", () => {
       const largeContent = "key: " + "x".repeat(6 * 1024 * 1024);
       const result = format.parseImport(largeContent);
 
