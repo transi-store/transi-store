@@ -304,49 +304,16 @@ describe("XliffTranslationFormat", () => {
       "fr",
     );
 
-    it("should return error when locale is missing", () => {
-      const result = format.handleExportRequest({
-        searchParams: new URLSearchParams(),
-        projectTranslations: translations,
-        projectName: "My Project",
-        availableLocales: ["en", "fr"],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          "Missing 'locale' parameter. Use ?format=xliff&locale=fr",
-        );
-      }
-    });
-
-    it("should return error when locale not in project", () => {
-      const result = format.handleExportRequest({
-        searchParams: new URLSearchParams("locale=de"),
-        projectTranslations: translations,
-        projectName: "My Project",
-        availableLocales: ["en", "fr"],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("Language 'de' not found in this project");
-      }
-    });
-
     it("should return XLIFF content with correct content-type", () => {
       const result = format.handleExportRequest({
-        searchParams: new URLSearchParams("locale=fr"),
+        locale: "fr",
         projectTranslations: translations,
         projectName: "My Project",
-        availableLocales: ["en", "fr"],
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.contentType).toBe("application/x-xliff+xml");
-        expect(result.fileExtension).toBe("xliff");
-        expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
+      expect(result.contentType).toBe("application/x-xliff+xml");
+      expect(result.fileExtension).toBe("xliff");
+      expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
   <file id="My Project">
     <unit id="home.title">
@@ -357,7 +324,6 @@ describe("XliffTranslationFormat", () => {
     </unit>
   </file>
 </xliff>`);
-      }
     });
   });
 });

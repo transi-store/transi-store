@@ -9,7 +9,7 @@ import {
   SupportedFormat,
   SUPPORTED_FORMATS_LIST,
   getFormatFromFilename,
-} from "../format/types";
+} from "@transi-store/common";
 import { importFieldsSchema } from "../api-doc/schemas/import";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
