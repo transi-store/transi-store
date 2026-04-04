@@ -45,7 +45,7 @@ export interface TranslationFormat {
 
   /**
    * Handle a full export request: export content and return
-   * the response body, filename extension, and content-type.
+   * the content string, filename extension, and content-type.
    *
    * Locale and format validation is done by the caller (route handler).
    */
