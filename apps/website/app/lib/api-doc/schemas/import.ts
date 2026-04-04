@@ -19,7 +19,7 @@ export const importFieldsSchema = (localeExample = "fr") =>
     }),
     format: z.enum(SupportedFormat).optional().openapi({
       description:
-        "File format. Auto-detected from file extension if omitted (.json → json, .xliff/.xlf → xliff).",
+        "File format. Auto-detected from file extension if omitted (.json → json, .xliff/.xlf → xliff, .yaml/.yml → yaml, .csv → csv, .po → po, .ini → ini, .php → php).",
       example: SupportedFormat.JSON,
     }),
     branch: z.string().optional().openapi({

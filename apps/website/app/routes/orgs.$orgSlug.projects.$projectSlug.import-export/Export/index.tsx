@@ -22,6 +22,11 @@ const formatCollection = createListCollection({
   items: [
     { label: "JSON", value: SupportedFormat.JSON },
     { label: "XLIFF", value: SupportedFormat.XLIFF },
+    { label: "YAML", value: SupportedFormat.YAML },
+    { label: "CSV", value: SupportedFormat.CSV },
+    { label: "Gettext (PO)", value: SupportedFormat.PO },
+    { label: "INI", value: SupportedFormat.INI },
+    { label: "PHP", value: SupportedFormat.PHP },
   ],
 });
 
