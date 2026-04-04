@@ -7,17 +7,8 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
 export class PhpTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
-    if (fileContent.length > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: "Le fichier est trop volumineux (maximum 5 MB)",
-      };
-    }
-
     try {
       const data: Record<string, string> = {};
 
@@ -37,7 +28,7 @@ export class PhpTranslationFormat implements TranslationFormat {
         return {
           success: false,
           error:
-            "Aucune traduction trouvée dans le fichier PHP (format attendu : tableau associatif 'clé' => 'valeur')",
+            "No translations found in the PHP file (expected format: 'key' => 'value' array)",
         };
       }
 
@@ -45,7 +36,7 @@ export class PhpTranslationFormat implements TranslationFormat {
     } catch (_error) {
       return {
         success: false,
-        error: "Format PHP invalide",
+        error: "Invalid PHP format",
       };
     }
   }

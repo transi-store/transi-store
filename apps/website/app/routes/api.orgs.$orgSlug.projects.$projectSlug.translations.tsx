@@ -1,4 +1,7 @@
-import { ALL_BRANCHES_VALUE, SupportedFormat } from "@transi-store/common";
+import {
+  ALL_BRANCHES_VALUE,
+  SUPPORTED_FORMATS_LIST,
+} from "@transi-store/common";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
@@ -52,13 +55,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   } = queryParseResult.data;
 
   if (!isSupportedFormat(formatName)) {
-    const validFormats = Object.values(SupportedFormat)
-      .map((f) => `'${f}'`)
-      .join(", ");
-
     return new Response(
       JSON.stringify({
-        error: `Invalid format. Use ${validFormats}`,
+        error: `Invalid format. Use ${SUPPORTED_FORMATS_LIST}`,
       }),
       {
         status: 400,

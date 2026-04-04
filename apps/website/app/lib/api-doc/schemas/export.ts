@@ -1,17 +1,22 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { ALL_BRANCHES_VALUE } from "@transi-store/common";
-import { SupportedFormat } from "~/lib/format/types";
+import {
+  ALL_BRANCHES_VALUE,
+  SupportedFormat,
+  SUPPORTED_FORMATS_LIST,
+} from "@transi-store/common";
 
 extendZodWithOpenApi(z);
 
 export const exportQuerySchema = (localeExample = "fr") =>
   z.object({
-    format: z.enum(SupportedFormat).default(SupportedFormat.JSON).openapi({
-      description:
-        "Output format. Supported formats: json, xliff, yaml, csv, po, ini, php.",
-      example: SupportedFormat.JSON,
-    }),
+    format: z
+      .enum(SupportedFormat)
+      .default(SupportedFormat.JSON)
+      .openapi({
+        description: `Output format. Supported formats: ${SUPPORTED_FORMATS_LIST}.`,
+        example: SupportedFormat.JSON,
+      }),
     locale: z.string().openapi({
       description:
         "Language code to export (must match one of the project's configured languages).",
@@ -30,9 +35,7 @@ export const exportErrorResponseSchema = z
   .object({
     error: z.string().openapi({
       description: "Human-readable error message.",
-      example: `Invalid format. Use ${Object.values(SupportedFormat)
-        .map((f) => `'${f}'`)
-        .join(", ")}`,
+      example: `Invalid format. Use ${SUPPORTED_FORMATS_LIST}`,
     }),
   })
   .openapi("ExportError");

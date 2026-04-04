@@ -1,34 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { XliffTranslationFormat } from "./xliff-format.server";
-import type { ProjectTranslations } from "./types";
-
-function buildProjectTranslations(
-  data: Record<string, string>,
-  locale: string,
-  descriptions?: Record<string, string>,
-): ProjectTranslations {
-  return Object.entries(data).map(([keyName, value], index) => ({
-    id: index + 1,
-    projectId: 1,
-    keyName,
-    description: descriptions?.[keyName] ?? null,
-    branchId: null,
-    deletedAt: null,
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
-    translations: [
-      {
-        id: index + 1,
-        keyId: index + 1,
-        locale,
-        value,
-        isFuzzy: false,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
-      },
-    ],
-  }));
-}
+import { buildProjectTranslations } from "./test-helpers";
 
 describe("XliffTranslationFormat", () => {
   const format = new XliffTranslationFormat();

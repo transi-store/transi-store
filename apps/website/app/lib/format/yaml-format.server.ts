@@ -8,17 +8,8 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
 export class YamlTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
-    if (fileContent.length > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: "Le fichier est trop volumineux (maximum 5 MB)",
-      };
-    }
-
     try {
       const parsed = YAML.parse(fileContent);
 
@@ -29,8 +20,7 @@ export class YamlTranslationFormat implements TranslationFormat {
       ) {
         return {
           success: false,
-          error:
-            "Le fichier doit contenir un objet YAML avec des paires clé/valeur",
+          error: "File must contain a YAML object with key/value pairs",
         };
       }
 
@@ -44,7 +34,7 @@ export class YamlTranslationFormat implements TranslationFormat {
     } catch (_error) {
       return {
         success: false,
-        error: "Format YAML invalide",
+        error: "Invalid YAML format",
       };
     }
   }
