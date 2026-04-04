@@ -34,22 +34,20 @@ describe("XliffTranslationFormat", () => {
   const format = new XliffTranslationFormat();
 
   describe("parseImport", () => {
-    it("should parse a valid XLIFF 2.0 file with target translations", () => {
+    it("should parse a valid XLIFF 1.2 file with target translations", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="my-project">
-    <unit id="home.title">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="my-project" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="home.title" resname="home.title">
         <source>home.title</source>
         <target>Accueil</target>
-      </segment>
-    </unit>
-    <unit id="home.subtitle">
-      <segment>
+      </trans-unit>
+      <trans-unit id="home.subtitle" resname="home.subtitle">
         <source>home.subtitle</source>
         <target>Bienvenue</target>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`;
 
@@ -62,21 +60,19 @@ describe("XliffTranslationFormat", () => {
       });
     });
 
-    it("should skip units without a <target> element", () => {
+    it("should skip trans-units without a <target> element", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="my-project">
-    <unit id="home.title">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="my-project" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="home.title" resname="home.title">
         <source>home.title</source>
         <target>Accueil</target>
-      </segment>
-    </unit>
-    <unit id="home.untranslated">
-      <segment>
+      </trans-unit>
+      <trans-unit id="home.untranslated" resname="home.untranslated">
         <source>home.untranslated</source>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`;
 
@@ -90,14 +86,14 @@ describe("XliffTranslationFormat", () => {
 
     it("should unescape XML entities in keys and values", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
-    <unit id="key.with.&amp;special">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="key.with.&amp;special" resname="key.with.&amp;special">
         <source>key.with.&amp;special</source>
         <target>Value with &lt;html&gt; &amp; &quot;quotes&quot;</target>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`;
 
@@ -109,19 +105,17 @@ describe("XliffTranslationFormat", () => {
       });
     });
 
-    it("should handle units with notes", () => {
+    it("should handle trans-units with notes", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
-    <unit id="greeting">
-      <notes>
-        <note>Used on the homepage</note>
-      </notes>
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="greeting" resname="greeting">
         <source>greeting</source>
         <target>Bonjour</target>
-      </segment>
-    </unit>
+        <note>Used on the homepage</note>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`;
 
@@ -131,15 +125,53 @@ describe("XliffTranslationFormat", () => {
       expect(result.data).toEqual({ greeting: "Bonjour" });
     });
 
-    it("should return error when no target translations are found", () => {
+    it("should parse XLIFF 1.2 using resname when both id and resname are present", () => {
       const xliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="1" resname="home.title">
+        <source>home.title</source>
+        <target>Accueil</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>`;
+
+      const result = format.parseImport(xliff);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ "home.title": "Accueil" });
+    });
+
+    it("should parse XLIFF 2.0 for backward compatibility", () => {
+      const xliff = `<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+  <file id="my-project">
     <unit id="home.title">
       <segment>
         <source>home.title</source>
+        <target>Accueil</target>
       </segment>
     </unit>
+  </file>
+</xliff>`;
+
+      const result = format.parseImport(xliff);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ "home.title": "Accueil" });
+    });
+
+    it("should return error when no target translations are found", () => {
+      const xliff = `<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="home.title" resname="home.title">
+        <source>home.title</source>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`;
 
@@ -165,7 +197,7 @@ describe("XliffTranslationFormat", () => {
   });
 
   describe("exportSingleLocale", () => {
-    it("should export valid XLIFF 2.0 with key as source", () => {
+    it("should export valid XLIFF 1.2 with key as source and resname", () => {
       const translations = buildProjectTranslations(
         { "home.title": "Accueil", "home.subtitle": "Bienvenue" },
         "fr",
@@ -177,20 +209,18 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="my-project">
-    <unit id="home.title">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="my-project" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="home.title" resname="home.title">
         <source>home.title</source>
         <target>Accueil</target>
-      </segment>
-    </unit>
-    <unit id="home.subtitle">
-      <segment>
+      </trans-unit>
+      <trans-unit id="home.subtitle" resname="home.subtitle">
         <source>home.subtitle</source>
         <target>Bienvenue</target>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`);
     });
@@ -207,14 +237,14 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
-    <unit id="key.with.&amp;special">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="key.with.&amp;special" resname="key.with.&amp;special">
         <source>key.with.&amp;special</source>
         <target>Value with &lt;html&gt; &amp; &quot;quotes&quot;</target>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`);
     });
@@ -232,22 +262,20 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
-    <unit id="greeting">
-      <notes>
-        <note>Used on the homepage</note>
-      </notes>
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="greeting" resname="greeting">
         <source>greeting</source>
         <target>Bonjour</target>
-      </segment>
-    </unit>
+        <note>Used on the homepage</note>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`);
     });
 
-    it("should not include notes when description is null", () => {
+    it("should not include note when description is null", () => {
       const translations = buildProjectTranslations(
         { greeting: "Bonjour" },
         "fr",
@@ -259,14 +287,14 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
-    <unit id="greeting">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="greeting" resname="greeting">
         <source>greeting</source>
         <target>Bonjour</target>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`);
     });
@@ -280,13 +308,13 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
-    <unit id="key">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="key" resname="key">
         <source>key</source>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`);
     });
@@ -298,8 +326,10 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="test">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+    </body>
   </file>
 </xliff>`);
     });
@@ -313,14 +343,14 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="Project &quot;Special&quot; &amp; &lt;test&gt;">
-    <unit id="key">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="Project &quot;Special&quot; &amp; &lt;test&gt;" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="key" resname="key">
         <source>key</source>
         <target>value</target>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`);
     });
@@ -375,14 +405,14 @@ describe("XliffTranslationFormat", () => {
         expect(result.contentType).toBe("application/x-xliff+xml");
         expect(result.fileExtension).toBe("xliff");
         expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
-  <file id="My Project">
-    <unit id="home.title">
-      <segment>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="My Project" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="home.title" resname="home.title">
         <source>home.title</source>
         <target>Accueil</target>
-      </segment>
-    </unit>
+      </trans-unit>
+    </body>
   </file>
 </xliff>`);
       }

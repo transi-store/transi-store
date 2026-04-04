@@ -39,17 +39,46 @@ export class XliffTranslationFormat implements TranslationFormat {
     try {
       const data: Record<string, string> = {};
 
-      const unitRegex = /<unit\s[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/unit>/g;
-      let unitMatch;
+      // Support XLIFF 1.2: <trans-unit resname="key"> or <trans-unit id="key">
+      const transUnitRegex = /<trans-unit\s[^>]*>([\s\S]*?)<\/trans-unit>/g;
+      let transUnitMatch;
 
-      while ((unitMatch = unitRegex.exec(fileContent)) !== null) {
-        const keyName = unescapeXml(unitMatch[1]);
-        const unitContent = unitMatch[2];
+      while ((transUnitMatch = transUnitRegex.exec(fileContent)) !== null) {
+        const fullTag = transUnitMatch[0];
+        const unitContent = transUnitMatch[1];
 
+        const resnameMatch = /\bresname="([^"]*)"/.exec(fullTag);
+        const idMatch = /\bid="([^"]*)"/.exec(fullTag);
+        const rawKey = resnameMatch
+          ? resnameMatch[1]
+          : idMatch
+            ? idMatch[1]
+            : null;
+
+        if (!rawKey) continue;
+
+        const keyName = unescapeXml(rawKey);
         const targetMatch = /<target>([\s\S]*?)<\/target>/.exec(unitContent);
 
         if (targetMatch) {
           data[keyName] = unescapeXml(targetMatch[1]);
+        }
+      }
+
+      // Support XLIFF 2.0 (backward compatibility): <unit id="key">
+      if (Object.keys(data).length === 0) {
+        const unitRegex = /<unit\s[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/unit>/g;
+        let unitMatch;
+
+        while ((unitMatch = unitRegex.exec(fileContent)) !== null) {
+          const keyName = unescapeXml(unitMatch[1]);
+          const unitContent = unitMatch[2];
+
+          const targetMatch = /<target>([\s\S]*?)<\/target>/.exec(unitContent);
+
+          if (targetMatch) {
+            data[keyName] = unescapeXml(targetMatch[1]);
+          }
         }
       }
 
@@ -79,24 +108,27 @@ export class XliffTranslationFormat implements TranslationFormat {
 
     xml.push('<?xml version="1.0" encoding="UTF-8"?>');
     xml.push(
-      '<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="' +
-        escapeXml(locale) +
-        '">',
+      '<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">',
     );
-    xml.push('  <file id="' + escapeXml(projectName!) + '">');
+    xml.push(
+      '  <file original="' +
+        escapeXml(projectName!) +
+        '" source-language="en" target-language="' +
+        escapeXml(locale) +
+        '" datatype="plaintext">',
+    );
+    xml.push("    <body>");
 
     for (const key of projectTranslations) {
       const translation = key.translations.find((t) => t.locale === locale);
 
-      xml.push('    <unit id="' + escapeXml(key.keyName) + '">');
-
-      if (key.description) {
-        xml.push("      <notes>");
-        xml.push("        <note>" + escapeXml(key.description) + "</note>");
-        xml.push("      </notes>");
-      }
-
-      xml.push("      <segment>");
+      xml.push(
+        '      <trans-unit id="' +
+          escapeXml(key.keyName) +
+          '" resname="' +
+          escapeXml(key.keyName) +
+          '">',
+      );
       xml.push("        <source>" + escapeXml(key.keyName) + "</source>");
 
       if (translation) {
@@ -105,10 +137,14 @@ export class XliffTranslationFormat implements TranslationFormat {
         );
       }
 
-      xml.push("      </segment>");
-      xml.push("    </unit>");
+      if (key.description) {
+        xml.push("        <note>" + escapeXml(key.description) + "</note>");
+      }
+
+      xml.push("      </trans-unit>");
     }
 
+    xml.push("    </body>");
     xml.push("  </file>");
     xml.push("</xliff>");
 
