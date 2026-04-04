@@ -1,4 +1,5 @@
 import z from "zod";
+import { SupportedFormat } from "./supported-format.ts";
 
 const configItemSchema = z.object({
   project: z.string().nonempty(),
@@ -8,7 +9,7 @@ const configItemSchema = z.object({
     .refine((arr) => new Set(arr).size === arr.length, {
       message: "langs must contain unique items",
     }),
-  format: z.enum(["json", "yaml", "po", "xlf", "xliff", "csv"]),
+  format: z.enum(SupportedFormat),
   output: z
     .string()
     .nonempty()

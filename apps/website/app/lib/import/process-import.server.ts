@@ -78,10 +78,11 @@ export async function processImport({
   } else if (file.name.endsWith(".php")) {
     format = SupportedFormat.PHP;
   } else {
+    const validFormats = Object.values(SupportedFormat).join(", ");
+
     return {
       success: false,
-      error:
-        "Unsupported file format. Use JSON, XLIFF, YAML, CSV, PO, INI, or PHP",
+      error: `Unsupported file format. Use ${validFormats}`,
     };
   }
 

@@ -1,16 +1,8 @@
 import type { ProjectTranslations } from "~/lib/translation-keys.server";
+import { SupportedFormat } from "@transi-store/common";
 
 export type { ProjectTranslations };
-
-export enum SupportedFormat {
-  JSON = "json",
-  XLIFF = "xliff",
-  YAML = "yaml",
-  CSV = "csv",
-  PO = "po",
-  INI = "ini",
-  PHP = "php",
-}
+export { SupportedFormat };
 
 export type ParseResult = {
   success: boolean;
