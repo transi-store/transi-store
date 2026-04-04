@@ -101,7 +101,7 @@ msgstr "Bonjour"`;
       expect(result.error).toContain("No translations found");
     });
 
-    it("should return error when file is too large", () => {
+    it("should handle large content without translations", () => {
       const largeContent = "x".repeat(6 * 1024 * 1024);
       const result = format.parseImport(largeContent);
 
