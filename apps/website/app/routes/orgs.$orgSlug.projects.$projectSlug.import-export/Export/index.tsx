@@ -16,7 +16,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LuDownload } from "react-icons/lu";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
-import { SupportedFormat, FORMAT_LABELS } from "~/lib/format/types";
+import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
 
 const formatCollection = createListCollection({
   items: Object.values(SupportedFormat).map((value) => ({

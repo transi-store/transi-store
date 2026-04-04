@@ -1,14 +1,10 @@
-import {
-  ALL_BRANCHES_VALUE,
-  SUPPORTED_FORMATS_LIST,
-} from "@transi-store/common";
+import { ALL_BRANCHES_VALUE } from "@transi-store/common";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { orgContext } from "~/middleware/api-auth";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.translations";
-import { isSupportedFormat } from "~/lib/format/types";
 import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
 import { processImport } from "~/lib/import/process-import.server";
 
@@ -54,11 +50,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     branch: branchParam,
   } = queryParseResult.data;
 
-  if (!isSupportedFormat(formatName)) {
+  // Récupérer les langues du projet
+  const languages = await getProjectLanguages(project.id);
+
+  if (languages.length === 0) {
     return new Response(
-      JSON.stringify({
-        error: `Invalid format. Use ${SUPPORTED_FORMATS_LIST}`,
-      }),
+      JSON.stringify({ error: "No languages configured for this project" }),
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -66,12 +63,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     );
   }
 
-  // Récupérer les langues du projet
-  const languages = await getProjectLanguages(project.id);
-
-  if (languages.length === 0) {
+  const availableLocales = languages.map((l) => l.locale);
+  if (!availableLocales.includes(locale)) {
     return new Response(
-      JSON.stringify({ error: "No languages configured for this project" }),
+      JSON.stringify({
+        error: `Language '${locale}' not found in this project`,
+      }),
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -98,18 +95,10 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const format = createTranslationFormat(formatName);
   const result = format.handleExportRequest({
-    searchParams: url.searchParams,
+    locale,
     projectTranslations,
     projectName: project.name,
-    availableLocales: languages.map((l) => l.locale),
   });
-
-  if (!result.success) {
-    return new Response(JSON.stringify({ error: result.error }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
 
   const filename = `${project.slug}-${locale}.${result.fileExtension}`;
 

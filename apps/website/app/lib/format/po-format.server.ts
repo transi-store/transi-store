@@ -107,28 +107,11 @@ export class PoTranslationFormat implements TranslationFormat {
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
-    const { searchParams, projectTranslations, availableLocales } = params;
-
-    const locale = searchParams.get("locale");
-
-    if (!locale) {
-      return {
-        success: false,
-        error: "Missing 'locale' parameter. Use ?format=po&locale=fr",
-      };
-    }
-
-    if (!availableLocales.includes(locale)) {
-      return {
-        success: false,
-        error: `Language '${locale}' not found in this project`,
-      };
-    }
+    const { locale, projectTranslations } = params;
 
     const content = this.exportSingleLocale(projectTranslations, { locale });
 
     return {
-      success: true,
       content,
       fileExtension: "po",
       contentType: "text/x-gettext-translation",
