@@ -24,25 +24,23 @@ Constraints:
 - Values: strings
 - Max file size: **5 MB**
 
-### XLIFF 1.2
+### XLIFF 2.0
 
-The `<source>` element is treated as the **key name** (used to match translation keys), not as a translation value. The `<target>` element contains the translation. The `resname` attribute on `<trans-unit>` also identifies the key.
+The `<source>` element is treated as the **key name** (used to match translation keys), not as a translation value. The `<target>` element contains the translation.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
-  <file original="my-project" source-language="en" target-language="fr" datatype="plaintext">
-    <body>
-      <trans-unit id="home.title" resname="home.title">
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en" trgLang="fr">
+  <file id="my-project">
+    <unit id="home.title">
+      <segment>
         <source>home.title</source>
         <target>Accueil</target>
-      </trans-unit>
-    </body>
+      </segment>
+    </unit>
   </file>
 </xliff>
 ```
-
-XLIFF 2.0 files (with `<unit>` and `<segment>` elements) are also accepted for backward compatibility.
 
 ## User interface
 
@@ -104,7 +102,7 @@ After:
 - File size: max 5 MB
 - Format detection: explicit `format` param, or inferred from file extension (`.json`, `.xliff`, `.xlf`)
 - Parse file content
-- Structure: flat object only (JSON), or valid XLIFF 1.2 (XLIFF 2.0 also accepted for backward compatibility)
+- Structure: flat object only (JSON), or valid XLIFF 2.0
 - Keys: non-empty strings, max 500 chars
 - Values: strings only
 
@@ -240,4 +238,4 @@ npx @transi-store/cli upload \
 - [OpenAPI documentation](./openapi-documentation.md) — How the API spec is generated from the Zod schemas
 - [ADR-014](../decisions/ADR-014-import-api-endpoint.md) — Decision record for the import API endpoint
 - [ADR-017](../decisions/ADR-017-openapi-documentation.md) — Decision record for the OpenAPI approach
-- [XLIFF 1.2 Specification](https://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html)
+- [XLIFF 2.0 Specification](https://docs.oasis-open.org/xliff/xliff-core/v2.0/xliff-core-v2.0.html)

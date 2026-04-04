@@ -112,18 +112,20 @@ describe("Round-trip: XLIFF", () => {
 
   it("import then re-export then re-import should preserve data", () => {
     const originalXliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
-  <file original="test-project" source-language="en" target-language="fr" datatype="plaintext">
-    <body>
-      <trans-unit id="home.title" resname="home.title">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+  <file id="test-project">
+    <unit id="home.title">
+      <segment>
         <source>home.title</source>
         <target>Accueil</target>
-      </trans-unit>
-      <trans-unit id="nav.about" resname="nav.about">
+      </segment>
+    </unit>
+    <unit id="nav.about">
+      <segment>
         <source>nav.about</source>
         <target>À propos</target>
-      </trans-unit>
-    </body>
+      </segment>
+    </unit>
   </file>
 </xliff>`;
 
@@ -185,18 +187,20 @@ describe("Cross-format round-trip", () => {
 
   it("XLIFF import → JSON export → JSON import should preserve data", () => {
     const originalXliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
-  <file original="test" source-language="en" target-language="fr" datatype="plaintext">
-    <body>
-      <trans-unit id="home.title" resname="home.title">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+  <file id="test">
+    <unit id="home.title">
+      <segment>
         <source>home.title</source>
         <target>Accueil</target>
-      </trans-unit>
-      <trans-unit id="nav.about" resname="nav.about">
+      </segment>
+    </unit>
+    <unit id="nav.about">
+      <segment>
         <source>nav.about</source>
         <target>À propos</target>
-      </trans-unit>
-    </body>
+      </segment>
+    </unit>
   </file>
 </xliff>`;
 

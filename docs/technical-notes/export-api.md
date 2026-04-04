@@ -73,7 +73,7 @@ GET /api/orgs/my-org/projects/app/translations?format=json&locale=fr
 }
 ```
 
-## XLIFF 1.2 format
+## XLIFF 2.0 format
 
 **Example**:
 
@@ -85,19 +85,23 @@ GET /api/orgs/my-org/projects/app/translations?format=xliff&locale=fr
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
-  <file original="my-project" source-language="en" target-language="fr" datatype="plaintext">
-    <body>
-      <trans-unit id="home.title" resname="home.title">
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en" trgLang="fr">
+  <file id="my-project">
+    <unit id="home.title">
+      <notes>
+        <note>Welcome message on homepage</note>
+      </notes>
+      <segment>
         <source>home.title</source>
         <target>Accueil</target>
-        <note>Welcome message on homepage</note>
-      </trans-unit>
-      <trans-unit id="navbar.about" resname="navbar.about">
+      </segment>
+    </unit>
+    <unit id="navbar.about">
+      <segment>
         <source>navbar.about</source>
         <target>À propos</target>
-      </trans-unit>
-    </body>
+      </segment>
+    </unit>
   </file>
 </xliff>
 ```
@@ -105,10 +109,9 @@ GET /api/orgs/my-org/projects/app/translations?format=xliff&locale=fr
 Notes:
 
 - `<source>` contains the **key name** (not a translation in a source language)
-- `resname` attribute on `<trans-unit>` also contains the **key name**
-- Key descriptions are exported as `<note>` elements inside each `<trans-unit>`
+- Key descriptions are exported as `<notes>`
 - XML special characters are automatically escaped
-- `source-language` is always `"en"` (conventional placeholder, since the source is the key name)
+- `srcLang` is always `"en"` (conventional placeholder, since the source text is the key name)
 
 ## Response headers
 
@@ -194,7 +197,7 @@ async function downloadTranslations(locale) {
 
 ## References
 
-- [XLIFF 1.2 Specification](https://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html)
+- [XLIFF 2.0 Specification](http://docs.oasis-open.org/xliff/xliff-core/v2.0/xliff-core-v2.0.html)
 - [RFC 6750 - Bearer Token](https://datatracker.ietf.org/doc/html/rfc6750)
 - [OpenAPI documentation](./openapi-documentation.md) — How the API spec is generated from the Zod schemas
 - [ADR-017](../decisions/ADR-017-openapi-documentation.md) — Decision record for the OpenAPI approach
