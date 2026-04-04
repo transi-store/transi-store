@@ -7,17 +7,8 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
 export class PoTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
-    if (fileContent.length > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: "Le fichier est trop volumineux (maximum 5 MB)",
-      };
-    }
-
     try {
       const data: Record<string, string> = {};
 
@@ -68,7 +59,7 @@ export class PoTranslationFormat implements TranslationFormat {
         return {
           success: false,
           error:
-            "Aucune traduction trouvée dans le fichier PO (pas d'entrées msgid/msgstr)",
+            "No translations found in the PO file (no msgid/msgstr entries)",
         };
       }
 
@@ -76,7 +67,7 @@ export class PoTranslationFormat implements TranslationFormat {
     } catch (_error) {
       return {
         success: false,
-        error: "Format PO invalide",
+        error: "Invalid PO format",
       };
     }
   }

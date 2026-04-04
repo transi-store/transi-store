@@ -7,8 +7,6 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
 function escapeCsvValue(value: string): string {
   if (
     value.includes(",") ||
@@ -65,13 +63,6 @@ function parseCsvLine(line: string): Array<string> {
 
 export class CsvTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
-    if (fileContent.length > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: "Le fichier est trop volumineux (maximum 5 MB)",
-      };
-    }
-
     try {
       const data: Record<string, string> = {};
       const lines = fileContent.split(/\r?\n/);
@@ -96,7 +87,7 @@ export class CsvTranslationFormat implements TranslationFormat {
         return {
           success: false,
           error:
-            "Aucune traduction trouvée dans le fichier CSV (format attendu : clé,valeur)",
+            "No translations found in the CSV file (expected format: key,value)",
         };
       }
 
@@ -104,7 +95,7 @@ export class CsvTranslationFormat implements TranslationFormat {
     } catch (_error) {
       return {
         success: false,
-        error: "Format CSV invalide",
+        error: "Invalid CSV format",
       };
     }
   }
