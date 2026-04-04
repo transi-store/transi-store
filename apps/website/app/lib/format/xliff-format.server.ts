@@ -47,6 +47,8 @@ export class XliffTranslationFormat implements TranslationFormat {
         const fullTag = transUnitMatch[0];
         const unitContent = transUnitMatch[1];
 
+        // Prefer resname (XLIFF 1.2 resource name = translation key) over id
+        // (which may be a sequential number or a sanitized identifier).
         const resnameMatch = /\bresname="([^"]*)"/.exec(fullTag);
         const idMatch = /\bid="([^"]*)"/.exec(fullTag);
         const rawKey = resnameMatch
@@ -66,6 +68,8 @@ export class XliffTranslationFormat implements TranslationFormat {
       }
 
       // Support XLIFF 2.0 (backward compatibility): <unit id="key">
+      // Only attempted when no XLIFF 1.2 <trans-unit> elements were found,
+      // so mixed-format files are not supported (the first match wins).
       if (Object.keys(data).length === 0) {
         const unitRegex = /<unit\s[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/unit>/g;
         let unitMatch;
