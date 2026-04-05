@@ -86,7 +86,7 @@ navbar.about=À propos
 
 ### PHP
 
-Symfony-compatible PHP translation array. Both single-quoted and double-quoted strings are supported on import.
+PHP translation array (`return ['key' => 'value']`). Both single-quoted and double-quoted strings are supported on import.
 
 ```php
 <?php
