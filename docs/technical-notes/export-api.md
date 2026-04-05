@@ -183,7 +183,7 @@ msgstr "À propos"
 
 Notes:
 
-- Standard Gettext PO format, compatible with Symfony and other tools
+- Standard Gettext PO format
 - Header entry includes charset and language metadata
 - Special characters (quotes, newlines, backslashes) are properly escaped
 
@@ -233,7 +233,7 @@ return [
 
 Notes:
 
-- Standard Symfony translation array format
+- Standard PHP translation array format (`return ['key' => 'value']`)
 - On import, both single-quoted and double-quoted strings are supported
 - Single quotes in values are properly escaped with backslash
 

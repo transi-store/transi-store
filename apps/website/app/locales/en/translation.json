@@ -173,7 +173,7 @@
   "landing.features.ai.title": "AI-powered Translation",
   "landing.features.api.description": "Programmatic access with API keys for seamless CI/CD integration.",
   "landing.features.api.title": "API & CI/CD Integration",
-  "landing.features.export.description": "Export translations in 7 industry-standard formats including JSON, XLIFF, YAML, CSV, Gettext PO, INI and PHP (Symfony-compatible).",
+  "landing.features.export.description": "Export translations in 7 industry-standard formats including JSON, XLIFF, YAML, CSV, Gettext PO, INI and PHP.",
   "landing.features.export.title": "Multi-format Export",
   "landing.features.multiLang.description": "Manage translations in unlimited languages with full ICU message support.",
   "landing.features.multiLang.title": "Multi-language Support",
