@@ -17,6 +17,7 @@ Documentation technique détaillée de l'implémentation de transi-store.
 | [traductions.md](./traductions.md)                     | Gestion des traductions du site (i18next, i18n)                          |
 | [dev-setup-and-testing.md](./dev-setup-and-testing.md) | Setup développement local et tests                                       |
 | [openapi-documentation.md](./openapi-documentation.md) | Documentation OpenAPI auto-générée depuis Zod, rendu Redoc               |
+| [docs-pages.md](./docs-pages.md)                       | Pages de documentation utilisateur (MDX), maintenance et structure       |
 
 ## Ordre de lecture recommandé
 

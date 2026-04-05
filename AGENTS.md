@@ -129,6 +129,15 @@ The API spec is auto-generated from **shared Zod schemas** in `apps/website/app/
 2. Use the schema in the handler for validation (`safeParse()`)
 3. Register the path in `apps/website/app/lib/api-doc/openapi.server.ts`
 
+### 8. User-facing documentation pages
+
+Documentation pages live in `apps/website/app/docs/` as **MDX files**. When adding or significantly changing a feature:
+
+1. Update the relevant MDX file (`usage.mdx` for end-user features, `developer.mdx` for self-hosting/infrastructure changes).
+2. If a new UI mockup is needed, add a component in `apps/website/app/components/docs/ui-mockups/`.
+3. Update the sidebar nav in `apps/website/app/components/docs/DocLayout.tsx` if a new section is added.
+4. See `docs/technical-notes/docs-pages.md` for the full documentation maintenance guide.
+
 ## Environment variables
 
 Required in `.env` (at monorepo root). See `.env.example` for all options.

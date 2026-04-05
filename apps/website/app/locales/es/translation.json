@@ -370,5 +370,6 @@
   "translations.table.translations": "Traducciones",
   "translations.title": "Claves de traducción",
   "website.description": "Herramienta de gestión de traducciones para múltiples proyectos",
-  "website.title": "Transi-Store - Sistema de traducción sencillo y potente"
+  "website.title": "Transi-Store - Sistema de traducción sencillo y potente",
+  "header.docs": "Docs"
 }

@@ -1,0 +1,194 @@
+## Self-Hosting Overview
+
+Transi-Store is fully open-source and can be self-hosted on your own infrastructure. You get the same features as the cloud version, without any usage limits.
+
+The application is a **React Router v7** SSR application backed by **PostgreSQL**. The recommended way to run it is with **Docker Compose**.
+
+---
+
+## Requirements
+
+| Requirement | Version |
+|-------------|---------|
+| Docker | 24+ |
+| Docker Compose | v2+ |
+| RAM | 512 MB minimum |
+| Disk | 1 GB minimum |
+
+You do **not** need Node.js or Yarn on the host machine — everything runs inside Docker.
+
+At least one **OAuth provider** (Google or GitHub) must be configured for authentication.
+
+---
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/transi-store/transi-store.git
+cd transi-store
+```
+
+### 2. Configure environment variables
+
+Copy the example environment file and fill in the required values:
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and configure at minimum:
+
+```bash
+# Required — generate with: openssl rand -hex 32
+SESSION_SECRET=a-long-random-string
+
+# Required — generate with: openssl rand -hex 32
+ENCRYPTION_KEY=64-char-hex-string
+
+# Required — at least one OAuth provider
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Optional — used for the docs and email links
+DOMAIN_ROOT=https://your-domain.com
+```
+
+> **Note:** `DATABASE_URL` is pre-configured for the Docker Compose setup and does not need to change unless you use an external database.
+
+### 3. Start the application
+
+```bash
+make setup   # First time only — installs dependencies and creates the database schema
+make dev     # Development server at http://localhost:5173
+```
+
+For a **production build**:
+
+```bash
+make build   # Build the application
+make up      # Start production Docker containers
+```
+
+---
+
+## Configuration
+
+### Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SESSION_SECRET` | Yes | Secret used to sign session cookies |
+| `ENCRYPTION_KEY` | Yes | 64-char hex key for encrypting API keys |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `GOOGLE_CLIENT_ID` | At least one provider | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | At least one provider | Google OAuth client secret |
+| `GITHUB_CLIENT_ID` | At least one provider | GitHub OAuth app client ID |
+| `GITHUB_CLIENT_SECRET` | At least one provider | GitHub OAuth app client secret |
+| `DOMAIN_ROOT` | Recommended | Public URL of your instance |
+| `OPENAI_API_KEY` | Optional | Enables OpenAI-powered AI translations |
+| `GOOGLE_AI_API_KEY` | Optional | Enables Gemini-powered AI translations |
+
+### Setting up OAuth providers
+
+**Google OAuth:**
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+2. Create a new OAuth 2.0 client ID (type: Web application).
+3. Add `https://your-domain.com/auth/google/callback` as an authorized redirect URI.
+4. Copy the Client ID and Client Secret to your `.env` file.
+
+**GitHub OAuth:**
+
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers).
+2. Create a new OAuth App.
+3. Set the **Authorization callback URL** to `https://your-domain.com/auth/github/callback`.
+4. Copy the Client ID and generate a Client Secret for your `.env` file.
+
+---
+
+## Running in Production
+
+### Docker Compose (recommended)
+
+The repository ships with a production-ready `docker-compose.yml`. After configuring your `.env` file:
+
+```bash
+make up    # Start all services (app + PostgreSQL)
+make logs  # Follow logs
+make down  # Stop all services
+```
+
+The application listens on port `5173` by default. Use a reverse proxy (nginx, Caddy, Traefik) to expose it on port 443 with HTTPS.
+
+### Reverse proxy example (nginx)
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name transi.example.com;
+
+    location / {
+        proxy_pass http://localhost:5173;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+```
+
+### Database management
+
+```bash
+make db-push    # Apply schema changes after updating to a new version
+make db-studio  # Open Drizzle Studio GUI in your browser
+make db-reset   # Warning: wipe and recreate the database (destructive!)
+```
+
+> **Upgrading:** after pulling a new version, run `make db-push` to apply any schema changes before restarting.
+
+---
+
+## CLI Tool
+
+The `@transi-store/cli` package provides a command-line interface for syncing translations in CI/CD pipelines.
+
+### Installation
+
+```bash
+npm install -g @transi-store/cli
+# or add to your project
+npm install --save-dev @transi-store/cli
+```
+
+### Configuration
+
+Create a `transi-store.config.json` at the root of your project:
+
+```json
+{
+  "apiUrl": "https://transi.example.com",
+  "apiKey": "YOUR_API_KEY",
+  "orgSlug": "acme",
+  "projectSlug": "webapp",
+  "localesDir": "./src/locales",
+  "defaultLocale": "en",
+  "format": "json"
+}
+```
+
+### Syncing translations
+
+```bash
+# Pull translations from the server to your local files
+transi-store pull
+
+# Push local translations to the server
+transi-store push
+
+# Push with overwrite strategy (replaces server values)
+transi-store push --strategy overwrite
+```
+
+This is ideal for integrating into CI/CD — pull translated strings at build time and push new source strings after developers add them.

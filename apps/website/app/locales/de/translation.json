@@ -399,5 +399,6 @@
   "translations.table.translations": "Übersetzungen",
   "translations.title": "Übersetzungsschlüssel",
   "website.description": "Tool zur Verwaltung von Multi-Projekt-Übersetzungen",
-  "website.title": "Transi-Store - Einfache und leistungsstarke Übersetzungsverwaltung"
+  "website.title": "Transi-Store - Einfache und leistungsstarke Übersetzungsverwaltung",
+  "header.docs": "Docs"
 }

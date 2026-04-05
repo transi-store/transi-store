@@ -1,5 +1,8 @@
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
+import mdx from "@mdx-js/rollup";
+import remarkGfm from "remark-gfm";
+import rehypeSlug from "rehype-slug";
 import path from "node:path";
 import dotenv from "dotenv";
 
@@ -13,7 +16,10 @@ export default defineConfig(() => ({
   test: {
     setupFiles: ["./tests/setup-db.ts"],
   },
-  plugins: [reactRouter()],
+  plugins: [
+    mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeSlug] }),
+    reactRouter(),
+  ],
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "./app"),

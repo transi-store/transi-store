@@ -399,5 +399,6 @@
   "translations.table.translations": "Translations",
   "translations.title": "Translation keys",
   "website.description": "Multi-project translation management system",
-  "website.title": "Transi-Store - Simple and powerful translation system"
+  "website.title": "Transi-Store - Simple and powerful translation system",
+  "header.docs": "Docs"
 }
