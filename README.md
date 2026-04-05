@@ -32,7 +32,7 @@ Managing translations across multiple projects and teams is painful. Most tools 
 - **Branch support** — work on translation changes in branches, just like code
 
 ### 🔌 Integrations
-- **Export API** — download translations in 7 formats: JSON, XLIFF, YAML, CSV, Gettext PO, INI, PHP (Symfony-compatible)
+- **Export API** — download translations in 7 formats: JSON, XLIFF, YAML, CSV, Gettext PO, INI, PHP
 - **Import API** — bulk-upload translations with `overwrite` or `skip` strategies
 - **API keys** — Bearer token auth for CI/CD pipelines, with usage tracking
 - **CLI** — `@transi-store/cli` package to sync translations in your build pipeline
