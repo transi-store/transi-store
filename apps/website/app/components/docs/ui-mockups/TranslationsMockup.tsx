@@ -1,35 +1,79 @@
-import { Badge, Box, HStack, Stack, Text, VStack } from "@chakra-ui/react";
+import {
+  Badge,
+  Box,
+  HStack,
+  Progress,
+  Stack,
+  Table,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import { LuCopy, LuPanelRightOpen } from "react-icons/lu";
 
 const SAMPLE_KEYS = [
   {
     key: "common.save",
-    en: "Save",
-    fr: "Enregistrer",
-    de: "Speichern",
-    status: "complete",
+    defaultTranslation: "Save",
+    translatedLocales: ["fr", "de", "es"],
+    totalLanguages: 3,
   },
   {
     key: "common.cancel",
-    en: "Cancel",
-    fr: "Annuler",
-    de: "Abbrechen",
-    status: "complete",
+    defaultTranslation: "Cancel",
+    translatedLocales: ["fr", "de"],
+    totalLanguages: 3,
   },
   {
     key: "checkout.title",
-    en: "Checkout",
-    fr: "Paiement",
-    de: "",
-    status: "partial",
+    defaultTranslation: "Checkout",
+    translatedLocales: ["fr"],
+    totalLanguages: 3,
   },
   {
-    key: "checkout.confirm",
-    en: "Confirm order",
-    fr: "",
-    de: "",
-    status: "missing",
+    key: "checkout.confirm_button",
+    defaultTranslation: "Confirm order",
+    translatedLocales: [],
+    totalLanguages: 3,
   },
 ];
+
+function TranslationProgress({
+  translatedCount,
+  totalLanguages,
+  translatedLocales,
+}: {
+  translatedCount: number;
+  totalLanguages: number;
+  translatedLocales: string[];
+}) {
+  const progressPercent =
+    totalLanguages > 0 ? (translatedCount / totalLanguages) * 100 : 0;
+
+  return (
+    <VStack align="stretch" gap={2}>
+      <HStack justify="space-between" fontSize="sm">
+        <Text color="fg.muted">
+          {translatedCount}/{totalLanguages}
+        </Text>
+        <Text color="fg.muted">{Math.round(progressPercent)}%</Text>
+      </HStack>
+      <Progress.Root value={progressPercent} size="sm" colorPalette="brand">
+        <Progress.Track>
+          <Progress.Range />
+        </Progress.Track>
+      </Progress.Root>
+      {translatedLocales.length > 0 && (
+        <HStack gap={1} flexWrap="wrap">
+          {translatedLocales.map((locale) => (
+            <Badge key={locale} size="sm" colorPalette="brand">
+              {locale.toUpperCase()}
+            </Badge>
+          ))}
+        </HStack>
+      )}
+    </VStack>
+  );
+}
 
 export function TranslationsMockup() {
   return (
@@ -65,115 +109,96 @@ export function TranslationsMockup() {
             borderColor="border"
           >
             <Text fontSize="xs" color="fg.muted" fontFamily="mono">
-              transi-store.io/orgs/acme/projects/webapp/translations
+              transi-store.com/orgs/acme/projects/webapp/translations
             </Text>
           </Box>
         </Stack>
       </Box>
 
-      {/* Table header */}
-      <Box px={4} pt={3} pb={2} borderBottom="1px solid" borderColor="border">
-        <HStack gap={0}>
-          <Box w="30%" px={2}>
-            <Text
-              fontSize="xs"
-              fontWeight="semibold"
-              color="fg.muted"
-              textTransform="uppercase"
-            >
-              Key
-            </Text>
-          </Box>
-          <Box flex={1} px={2}>
-            <Text
-              fontSize="xs"
-              fontWeight="semibold"
-              color="fg.muted"
-              textTransform="uppercase"
-            >
-              English
-            </Text>
-          </Box>
-          <Box flex={1} px={2}>
-            <Text
-              fontSize="xs"
-              fontWeight="semibold"
-              color="fg.muted"
-              textTransform="uppercase"
-            >
-              French
-            </Text>
-          </Box>
-          <Box flex={1} px={2}>
-            <Text
-              fontSize="xs"
-              fontWeight="semibold"
-              color="fg.muted"
-              textTransform="uppercase"
-            >
-              German
-            </Text>
-          </Box>
-          <Box w={20} px={2} />
-        </HStack>
-      </Box>
-
-      {/* Rows */}
-      <VStack gap={0} align="stretch">
-        {SAMPLE_KEYS.map((row, i) => (
-          <Box
-            key={row.key}
-            px={4}
-            py={2.5}
-            borderBottom={i < SAMPLE_KEYS.length - 1 ? "1px solid" : "none"}
-            borderColor="border"
-            _hover={{ bg: "bg.subtle" }}
-          >
-            <HStack gap={0} align="center">
-              <Box w="30%" px={2}>
-                <Text fontSize="sm" fontFamily="mono" color="fg.muted">
-                  {row.key}
-                </Text>
-              </Box>
-              <Box flex={1} px={2}>
-                <Text fontSize="sm">{row.en || ""}</Text>
-              </Box>
-              <Box flex={1} px={2}>
+      {/* Translations table matching the actual UI */}
+      <Table.Root variant="outline">
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader>Key name</Table.ColumnHeader>
+            <Table.ColumnHeader maxW="300px">
+              Default translation
+            </Table.ColumnHeader>
+            <Table.ColumnHeader w="160px">Translations</Table.ColumnHeader>
+            <Table.ColumnHeader w="200px">Actions</Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {SAMPLE_KEYS.map((row) => (
+            <Table.Row key={row.key}>
+              <Table.Cell>
+                <HStack gap={2}>
+                  <Text
+                    fontFamily="mono"
+                    fontSize="sm"
+                    fontWeight="medium"
+                    wordBreak="break-all"
+                  >
+                    {row.key}
+                  </Text>
+                  <Box color="fg.subtle" cursor="pointer">
+                    <LuCopy size={14} />
+                  </Box>
+                </HStack>
+              </Table.Cell>
+              <Table.Cell maxW="300px">
                 <Text
                   fontSize="sm"
-                  color={row.fr ? "fg" : "fg.subtle"}
-                  fontStyle={row.fr ? "normal" : "italic"}
+                  overflow="hidden"
+                  textOverflow="ellipsis"
+                  whiteSpace="nowrap"
                 >
-                  {row.fr || "—"}
+                  {row.defaultTranslation}
                 </Text>
-              </Box>
-              <Box flex={1} px={2}>
-                <Text
-                  fontSize="sm"
-                  color={row.de ? "fg" : "fg.subtle"}
-                  fontStyle={row.de ? "normal" : "italic"}
-                >
-                  {row.de || "—"}
-                </Text>
-              </Box>
-              <Box w={20} px={2}>
-                <Badge
-                  size="sm"
-                  colorPalette={
-                    row.status === "complete"
-                      ? "green"
-                      : row.status === "partial"
-                        ? "yellow"
-                        : "red"
-                  }
-                >
-                  {row.status}
-                </Badge>
-              </Box>
-            </HStack>
-          </Box>
-        ))}
-      </VStack>
+              </Table.Cell>
+              <Table.Cell w="160px">
+                <TranslationProgress
+                  translatedCount={row.translatedLocales.length}
+                  totalLanguages={row.totalLanguages}
+                  translatedLocales={row.translatedLocales}
+                />
+              </Table.Cell>
+              <Table.Cell w="200px">
+                <HStack gap={2}>
+                  <Box
+                    px={2}
+                    py={1}
+                    bg="brand.solid"
+                    color="white"
+                    borderRadius="md"
+                    fontSize="xs"
+                    fontWeight="semibold"
+                    cursor="pointer"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                  >
+                    <LuPanelRightOpen size={12} /> Edit
+                  </Box>
+                  <Box
+                    px={2}
+                    py={1}
+                    border="1px solid"
+                    borderColor="border"
+                    borderRadius="md"
+                    fontSize="xs"
+                    cursor="pointer"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                  >
+                    <LuCopy size={12} /> Duplicate
+                  </Box>
+                </HStack>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
     </Box>
   );
 }
