@@ -93,15 +93,17 @@ export function TranslationsMockup() {
         </Stack>
       </Box>
 
-      {/* Real TranslationsTable component with sample data */}
-      <TranslationsTable
-        data={SAMPLE_KEYS}
-        totalLanguages={3}
-        organizationSlug="acme"
-        projectSlug="webapp"
-        currentUrl="/orgs/acme/projects/webapp/translations"
-        onEditInDrawer={() => {}}
-      />
+      {/* Real TranslationsTable component with sample data — non-interactive */}
+      <Box pointerEvents="none">
+        <TranslationsTable
+          data={SAMPLE_KEYS}
+          totalLanguages={3}
+          organizationSlug="acme"
+          projectSlug="webapp"
+          currentUrl="/orgs/acme/projects/webapp/translations"
+          onEditInDrawer={() => {}}
+        />
+      </Box>
     </Box>
   );
 }

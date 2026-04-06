@@ -72,8 +72,8 @@ export function BranchesMockup() {
         </Stack>
       </Box>
 
-      {/* Real BranchList component with sample data */}
-      <Box p={4}>
+      {/* Real BranchList component with sample data — non-interactive */}
+      <Box p={4} pointerEvents="none">
         <BranchList
           branches={SAMPLE_BRANCHES}
           organizationSlug="acme"
