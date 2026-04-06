@@ -6,9 +6,7 @@ import {
   Box,
   Text,
   HStack,
-  Badge,
   Stack,
-  Card,
 } from "@chakra-ui/react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -24,13 +22,10 @@ import {
   getBranchKeyCount,
   getBranchKeyDeletionCount,
 } from "~/lib/branches.server";
-import {
-  createNewBranchUrl,
-  getBranchesUrl,
-  getBranchUrl,
-} from "~/lib/routes-helpers";
+import { createNewBranchUrl, getBranchesUrl } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { BranchList } from "~/components/branches/BranchList";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -63,11 +58,6 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   return { organization, project, branches: branchesWithCounts };
 }
-
-const STATUS_COLOR_MAP = {
-  [BRANCH_STATUS.OPEN]: "green",
-  [BRANCH_STATUS.MERGED]: "purple",
-} as const;
 
 export default function BranchesList({ loaderData }: Route.ComponentProps) {
   const { organization, project, branches } = loaderData;
@@ -137,80 +127,11 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
             <Text color="fg.muted">{t("branches.list.empty")}</Text>
           </Box>
         ) : (
-          <VStack gap={3} align="stretch">
-            {branches.map((branch) => (
-              <Card.Root key={branch.id} size="sm">
-                <Card.Body>
-                  <HStack justify="space-between" align="center">
-                    <VStack align="start" gap={1}>
-                      <HStack>
-                        <LuGitBranch />
-                        {branch.status === BRANCH_STATUS.OPEN ? (
-                          <Link
-                            to={getBranchUrl(
-                              organization.slug,
-                              project.slug,
-                              branch.slug,
-                            )}
-                          >
-                            <Text fontWeight="semibold">{branch.name}</Text>
-                          </Link>
-                        ) : (
-                          <Text fontWeight="semibold" color="fg.muted">
-                            {branch.name}
-                          </Text>
-                        )}
-                        <Badge
-                          colorPalette={STATUS_COLOR_MAP[branch.status]}
-                          size="sm"
-                        >
-                          {t(`branches.status.${branch.status}`)}
-                        </Badge>
-                      </HStack>
-                      {branch.description && (
-                        <Text color="fg.muted" fontSize="sm">
-                          {branch.description}
-                        </Text>
-                      )}
-                    </VStack>
-                    <HStack gap={3}>
-                      {branch.status === BRANCH_STATUS.OPEN && (
-                        <>
-                          <Badge variant="outline" size="sm">
-                            {t("branches.keysBadge", {
-                              count: branch.keyCount,
-                            })}
-                          </Badge>
-                          {branch.deletionCount > 0 && (
-                            <Badge
-                              variant="outline"
-                              size="sm"
-                              colorPalette="red"
-                            >
-                              {t("branches.deletionsBadge", {
-                                count: branch.deletionCount,
-                              })}
-                            </Badge>
-                          )}
-                          <Button asChild size="sm" variant="outline">
-                            <Link
-                              to={getBranchUrl(
-                                organization.slug,
-                                project.slug,
-                                branch.slug,
-                              )}
-                            >
-                              {t("translations.edit")}
-                            </Link>
-                          </Button>
-                        </>
-                      )}
-                    </HStack>
-                  </HStack>
-                </Card.Body>
-              </Card.Root>
-            ))}
-          </VStack>
+          <BranchList
+            branches={branches}
+            organizationSlug={organization.slug}
+            projectSlug={project.slug}
+          />
         )}
       </VStack>
     </Container>
