@@ -263,6 +263,7 @@
   "pricing.title": "Precios",
   "project.back": "Atrás",
   "project.defaultSuffix": " (predeterminado)",
+  "projects.keyCount": "{count, plural, one {# clave} other {# claves}}",
   "projects.new.create": "Crear el proyecto",
   "projects.new.descriptionLabel": "Descripción (opcional)",
   "projects.new.descriptionPlaceholder": "Descripción del proyecto...",
@@ -370,5 +371,6 @@
   "translations.table.translations": "Traducciones",
   "translations.title": "Claves de traducción",
   "website.description": "Herramienta de gestión de traducciones para múltiples proyectos",
-  "website.title": "Transi-Store - Sistema de traducción sencillo y potente"
+  "website.title": "Transi-Store - Sistema de traducción sencillo y potente",
+  "header.docs": "Docs"
 }

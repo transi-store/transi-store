@@ -3,11 +3,11 @@
   "compilerOptions": {
     "rootDirs": [".", "./.react-router/types"],
     "outDir": "./build",
-    "types": ["node", "vite/client"],
+    "types": ["node", "vite/client", "mdx"],
     "paths": {
       "~/*": ["./app/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".react-router/types/**/*"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.mdx", ".react-router/types/**/*"],
   "exclude": ["node_modules", "build"]
 }

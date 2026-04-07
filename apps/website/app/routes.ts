@@ -10,6 +10,13 @@ export default [
   index("routes/_index.tsx"),
   route("pricing", "routes/pricing.tsx"),
 
+  // Documentation routes (public, no auth required)
+  layout("routes/docs-layout.tsx", [
+    route("docs", "routes/docs._index.tsx"),
+    route("docs/usage", "routes/docs.usage.tsx"),
+    route("docs/developer", "routes/docs.developer.tsx"),
+  ]),
+
   // Authentication routes (no auth required)
   route("auth/login", "routes/auth.login.tsx"),
   route("auth/google/login", "routes/auth.google.login.tsx"),

@@ -292,6 +292,7 @@
   "pricing.title": "Pricing",
   "project.back": "Back",
   "project.defaultSuffix": " (default)",
+  "projects.keyCount": "{count, plural, one {# key} other {# keys}}",
   "projects.new.create": "Create project",
   "projects.new.descriptionLabel": "Description (optional)",
   "projects.new.descriptionPlaceholder": "Project description...",
@@ -399,5 +400,6 @@
   "translations.table.translations": "Translations",
   "translations.title": "Translation keys",
   "website.description": "Multi-project translation management system",
-  "website.title": "Transi-Store - Simple and powerful translation system"
+  "website.title": "Transi-Store - Simple and powerful translation system",
+  "header.docs": "Docs"
 }

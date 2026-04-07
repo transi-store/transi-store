@@ -1,0 +1,170 @@
+import { TranslationsMockup } from "~/components/docs/ui-mockups/TranslationsMockup";
+import { BranchesMockup } from "~/components/docs/ui-mockups/BranchesMockup";
+import { IcuEditorMockup } from "~/components/docs/ui-mockups/IcuEditorMockup";
+import { AiSuggestionsMockup } from "~/components/docs/ui-mockups/AiSuggestionsMockup";
+
+## Getting Started
+
+Transi-Store is an open-source translation management platform for teams. It lets you manage all your translation keys in one place, collaborate with your team, and export translations in multiple formats.
+
+### Create your organization
+
+When you first log in, you will be prompted to create an **organization**. An organization is the top-level container for all your projects and team members.
+
+1. Click **Get Started** on the homepage and sign in with GitHub or Google.
+2. Enter your organization name and slug (used in URLs).
+3. You are now the owner of your organization.
+
+### Create a project
+
+A project holds all the translation keys for a specific application or service.
+
+1. From your organization dashboard, click **New project**.
+2. Enter a name and slug for your project.
+3. Choose the **source locale** (the language you write keys in, e.g. `en`).
+4. Add **target locales** — the languages you want to translate into (e.g. `fr`, `de`, `es`).
+
+---
+
+## Managing Translations
+
+<TranslationsMockup />
+
+The translations editor is the heart of Transi-Store. Each row represents a translation **key** with its value in every locale.
+
+### Adding a key
+
+1. Open your project and go to the **Translations** tab.
+2. Click **Add key** and enter the key name (e.g. `checkout.confirm_button`).
+3. Enter the value for the source locale.
+4. Add translations for each target locale.
+
+### ICU Message Format
+
+Transi-Store supports **ICU message format** for pluralization, gender, and variable interpolation:
+
+```
+You have {count, plural, one {# message} other {# messages}}.
+```
+
+The built-in editor validates your ICU syntax in real time and provides a live preview where you can fill in variable values to see the rendered output.
+
+<IcuEditorMockup />
+
+### Searching and filtering
+
+Use the search bar to filter keys by name or value. You can also filter by:
+
+- **Untranslated** — keys missing translations in one or more locales
+- **Locale** — filter the view to show a specific language pair
+
+---
+
+## Branch Management
+
+<BranchesMockup />
+
+Branches let you prepare sets of translation changes **without affecting the main project** until you are ready to merge. This workflow mirrors how developers use Git branches for code.
+
+### How branches work
+
+A branch is an isolated workspace where you can:
+
+- **Add** new translation keys
+- **Delete** keys (a deletion is staged and only applied when the branch is merged)
+
+The main project remains unchanged until you **merge** the branch.
+
+### Creating a branch
+
+1. Go to your project and open the **Branches** tab.
+2. Click **New branch**.
+3. Give it a descriptive name (e.g. `feature/checkout-flow` or `release/v2.0`).
+4. You now have an isolated workspace to add keys or stage deletions.
+
+### Working on a branch
+
+When you open a branch, you can add new translation keys or stage deletions. All changes are scoped to the branch and do not affect the main project.
+
+The branch detail page shows:
+
+- **Keys count** — how many keys have been added or modified in this branch
+- **Deletions count** — how many keys are staged for deletion
+
+### Merging a branch
+
+Once your translation work is ready:
+
+1. Open the branch and click **Merge branch**.
+2. A merge preview shows all keys that will be added and all deletions that will be applied to the main project.
+3. If there are **conflicts** (a key was modified both on the branch and in the main project after the branch was created), the merge will be blocked and the conflicting keys will be listed.
+4. Resolve conflicts by editing the relevant keys, then retry the merge.
+5. After a successful merge, the branch is marked as **merged** and becomes read-only.
+
+### Best practices
+
+- Use one branch per feature or release to keep changes isolated.
+- Name branches after the feature they relate to (e.g. `feature/onboarding-flow`).
+- Merge branches promptly to avoid long-lived divergence.
+
+---
+
+## Import and Export
+
+### Exporting translations
+
+Go to **Import / Export** in your project and choose the format:
+
+| Format | Extension | Notes |
+|--------|-----------|-------|
+| JSON | `.json` | Flat or nested key structure |
+| XLIFF | `.xliff` | Industry-standard XML format |
+| YAML | `.yaml` | Popular in Ruby on Rails |
+| CSV | `.csv` | Spreadsheet-friendly |
+| PO | `.po` | GNU gettext format |
+
+You can also export via the **REST API** using your organization's API key:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp/translations?locale=fr&format=json"
+```
+
+### Importing translations
+
+1. Go to **Import / Export** and select your file.
+2. Choose an **import strategy**:
+   - **Overwrite** — replace existing translations with values from the file
+   - **Skip** — keep existing translations; only add keys that do not exist yet
+3. Click **Import** to apply changes.
+
+---
+
+## AI Translations
+
+Transi-Store can suggest translations using AI (powered by Google Gemini or OpenAI).
+
+To enable AI translations, configure your AI provider in **Organization Settings → AI**.
+
+Once configured, an **AI suggest** button appears in each translation cell. Click it to generate a suggestion based on the source locale value and the context of surrounding keys.
+
+<AiSuggestionsMockup />
+
+> **Note:** AI suggestions are a starting point — always review them before publishing.
+
+---
+
+## Team Collaboration
+
+### Inviting members
+
+1. Go to your organization and open the **Members** tab.
+2. Click **Invite member** and enter their email or share the invite link.
+3. The invited user receives access to all projects within the organization.
+
+### Roles
+
+| Role | Permissions |
+|------|-------------|
+| Owner | Full access including billing and member management |
+| Member | Can create/edit projects, keys, and branches |
