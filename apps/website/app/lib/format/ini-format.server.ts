@@ -1,3 +1,4 @@
+import ini from "ini";
 import type {
   TranslationFormat,
   ParseResult,
@@ -10,41 +11,12 @@ import type {
 export class IniTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
     try {
+      const parsed = ini.parse(fileContent);
+
       const data: Record<string, string> = {};
-      const lines = fileContent.split(/\r?\n/);
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-
-        // Skip empty lines and comments
-        if (
-          trimmed === "" ||
-          trimmed.startsWith(";") ||
-          trimmed.startsWith("#")
-        ) {
-          continue;
-        }
-
-        // Skip section headers
-        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-          continue;
-        }
-
-        const eqIndex = trimmed.indexOf("=");
-        if (eqIndex === -1) continue;
-
-        const key = trimmed.slice(0, eqIndex).trim();
-        let value = trimmed.slice(eqIndex + 1).trim();
-
-        // Remove surrounding quotes if present
-        if (
-          (value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))
-        ) {
-          value = value.slice(1, -1);
-        }
-
-        if (key) {
+      for (const [key, value] of Object.entries(parsed)) {
+        if (typeof value === "string") {
           data[key] = value;
         }
       }
@@ -70,7 +42,7 @@ export class IniTranslationFormat implements TranslationFormat {
     projectTranslations: ProjectTranslations,
     options: ExportOptions,
   ): string {
-    const lines: Array<string> = [];
+    const data: Record<string, string> = {};
 
     for (const key of projectTranslations) {
       const translation = key.translations.find(
@@ -78,17 +50,12 @@ export class IniTranslationFormat implements TranslationFormat {
       );
 
       if (translation) {
-        const value = translation.value;
-        // Quote value if it contains special characters
-        if (needsQuoting(value)) {
-          lines.push(key.keyName + "=" + '"' + escapeIniValue(value) + '"');
-        } else {
-          lines.push(key.keyName + "=" + value);
-        }
+        data[key.keyName] = translation.value;
       }
     }
 
-    return lines.join("\n");
+    // ini.stringify adds a trailing newline; trim it for consistency
+    return ini.stringify(data).trimEnd();
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
@@ -102,20 +69,4 @@ export class IniTranslationFormat implements TranslationFormat {
       contentType: "text/plain",
     };
   }
-}
-
-function needsQuoting(value: string): boolean {
-  return (
-    value.includes('"') ||
-    value.includes("=") ||
-    value.includes(";") ||
-    value.includes("#") ||
-    value.includes("\n") ||
-    value.startsWith(" ") ||
-    value.endsWith(" ")
-  );
-}
-
-function escapeIniValue(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }

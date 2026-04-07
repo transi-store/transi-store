@@ -45,9 +45,22 @@ greeting=Bonjour`;
       });
     });
 
-    it("should skip section headers", () => {
+    it("should ignore entries under section headers", () => {
       const ini = `[section]
 greeting=Bonjour`;
+
+      const result = format.parseImport(ini);
+
+      // The ini package groups entries under sections as nested objects,
+      // which are not picked up as top-level string translations
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("No translations found");
+    });
+
+    it("should parse entries before any section header", () => {
+      const ini = `greeting=Bonjour
+[section]
+other=Value`;
 
       const result = format.parseImport(ini);
 
@@ -110,15 +123,19 @@ home.subtitle=Bienvenue`;
       expect(result).toBe("home.title=Accueil\nnav.about=À propos");
     });
 
-    it("should quote values with special characters", () => {
+    it("should handle values with special characters (round-trip)", () => {
       const translations = buildProjectTranslations(
         { greeting: 'Hello "world"' },
         "en",
       );
 
-      const result = format.exportSingleLocale(translations, { locale: "en" });
+      const exported = format.exportSingleLocale(translations, {
+        locale: "en",
+      });
+      const reimported = format.parseImport(exported);
 
-      expect(result).toBe('greeting="Hello \\"world\\""');
+      expect(reimported.success).toBe(true);
+      expect(reimported.data).toEqual({ greeting: 'Hello "world"' });
     });
 
     it("should handle empty translations list", () => {

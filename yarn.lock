@@ -3828,6 +3828,8 @@ __metadata:
     "@react-router/serve": "npm:^7.12.0"
     "@scalar/api-reference-react": "npm:^0.9.13"
     "@transi-store/common": "workspace:^"
+    "@types/gettext-parser": "npm:^9.0.0"
+    "@types/ini": "npm:^4.1.1"
     "@types/mdx": "npm:^2.0.13"
     "@types/node": "npm:^22.10.7"
     "@types/pg": "npm:^8.16.0"
@@ -3836,19 +3838,24 @@ __metadata:
     "@vercel/analytics": "npm:^2.0.1"
     ai: "npm:^6.0.127"
     arctic: "npm:^3.7.0"
+    csv-parse: "npm:^6.2.1"
+    csv-stringify: "npm:^6.7.0"
     dotenv: "npm:^17.2.3"
     drizzle-kit: "npm:1.0.0-beta.12-a5629fb"
     drizzle-orm: "npm:1.0.0-beta.12-a5629fb"
+    gettext-parser: "npm:^9.0.2"
     i18next: "npm:^25.8.0"
     i18next-browser-languagedetector: "npm:^8.2.0"
     i18next-cli: "npm:^1.42.6"
     i18next-fetch-backend: "npm:^7.0.0"
     i18next-icu: "npm:^2.4.3"
+    ini: "npm:^6.0.0"
     intl-messageformat: "npm:^11.1.2"
     isbot: "npm:^5.1.17"
     jose: "npm:^6.1.3"
     next-themes: "npm:^0.4.6"
     pg: "npm:^8.17.2"
+    php-array-reader: "npm:^2.1.3"
     pretty-cache-header: "npm:^1.0.0"
     react: "npm:^19.2.4"
     react-dom: "npm:^19.2.4"
@@ -3965,6 +3972,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/gettext-parser@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@types/gettext-parser@npm:9.0.0"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/d1aa62018d179930f8601b97d134b03899655ee91ada43bdb10c12f2d57f2e8d2b89eaebb541547d62f845d497f4ac302ad8079bfc46a9be2f43fa889fc14744
+  languageName: node
+  linkType: hard
+
 "@types/har-format@npm:^1.2.15":
   version: 1.2.16
   resolution: "@types/har-format@npm:1.2.16"
@@ -3978,6 +3994,13 @@ __metadata:
   dependencies:
     "@types/unist": "npm:*"
   checksum: 10c0/3249781a511b38f1d330fd1e3344eed3c4e7ea8eff82e835d35da78e637480d36fad37a78be5a7aed8465d237ad0446abc1150859d0fde395354ea634decf9f7
+  languageName: node
+  linkType: hard
+
+"@types/ini@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "@types/ini@npm:4.1.1"
+  checksum: 10c0/a060753a39f8bd73b615186018f7aded0eeb5698c0cb00e2f92ae495aa44b6351260e27f938891eeb304e28c2d42036bac5793a4e2031eff1df1a47de8cc8a97
   languageName: node
   linkType: hard
 
@@ -6273,7 +6296,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"content-type@npm:~1.0.4, content-type@npm:~1.0.5":
+"content-type@npm:^1.0.5, content-type@npm:~1.0.4, content-type@npm:~1.0.5":
   version: 1.0.5
   resolution: "content-type@npm:1.0.5"
   checksum: 10c0/b76ebed15c000aee4678c3707e0860cb6abd4e680a598c0a26e17f0bfae723ec9cc2802f0ff1bc6e4d80603719010431d2231018373d4dde10f9ccff9dadf5af
@@ -6357,6 +6380,20 @@ __metadata:
   version: 3.2.3
   resolution: "csstype@npm:3.2.3"
   checksum: 10c0/cd29c51e70fa822f1cecd8641a1445bed7063697469d35633b516e60fe8c1bde04b08f6c5b6022136bb669b64c63d4173af54864510fbb4ee23281801841a3ce
+  languageName: node
+  linkType: hard
+
+"csv-parse@npm:^6.2.1":
+  version: 6.2.1
+  resolution: "csv-parse@npm:6.2.1"
+  checksum: 10c0/8b6f14b244ca62476d4217aac721131ba0ada3e4ed7614e43ebc99203807564dcb054144d1de4ef22ee8b0c63b431640f75d46a0e1e0f72853a954b279ba1c61
+  languageName: node
+  linkType: hard
+
+"csv-stringify@npm:^6.7.0":
+  version: 6.7.0
+  resolution: "csv-stringify@npm:6.7.0"
+  checksum: 10c0/2f1272e0462c31935650b42f34cb5dafbbc9a3b479074283ec4ed6491756c791d2d6230226c530198d85002d4d3f3b69da14b1f424ab93ad3263124ea25e5ea3
   languageName: node
   linkType: hard
 
@@ -7946,12 +7983,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"get-tsconfig@npm:4.13.7, get-tsconfig@npm:^4.7.5":
+"get-tsconfig@npm:4.13.7":
   version: 4.13.7
   resolution: "get-tsconfig@npm:4.13.7"
   dependencies:
     resolve-pkg-maps: "npm:^1.0.0"
   checksum: 10c0/1118eb7e9b27bce0b9b6f042e98f0d067e26dfa1ca32bc4b56e892b615b57a5a4af9e6f801c7b0611a4afef2e31c4941be4c6026e0e6a480aaf1ddaf261113d5
+  languageName: node
+  linkType: hard
+
+"get-tsconfig@npm:^4.7.5":
+  version: 4.13.0
+  resolution: "get-tsconfig@npm:4.13.0"
+  dependencies:
+    resolve-pkg-maps: "npm:^1.0.0"
+  checksum: 10c0/2c49ef8d3907047a107f229fd610386fe3b7fe9e42dfd6b42e7406499493cdda8c62e83e57e8d7a98125610774b9f604d3a0ff308d7f9de5c7ac6d1b07cb6036
+  languageName: node
+  linkType: hard
+
+"gettext-parser@npm:^9.0.2":
+  version: 9.0.2
+  resolution: "gettext-parser@npm:9.0.2"
+  dependencies:
+    content-type: "npm:^1.0.5"
+    encoding: "npm:^0.1.13"
+  checksum: 10c0/080b026b1833fcac734af2933607227473b3df07a7a7e0045609af879fd7007b9fc56075345f4e96a6267c6d9851cb67e8f8f80cfbe6d65f0ade8db364186f39
   languageName: node
   linkType: hard
 
@@ -8653,6 +8709,13 @@ __metadata:
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
   checksum: 10c0/4e531f648b29039fb7426fb94075e6545faa1eb9fe83c29f0b6d9e7263aceb4289d2d4557db0d428188eeb449cc7c5e77b0a0b2c4e248ff2a65933a0dee49ef2
+  languageName: node
+  linkType: hard
+
+"ini@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "ini@npm:6.0.0"
+  checksum: 10c0/9a7f55f306e2b25b41ae67c8b526e8f4673f057b70852b9025816ef4f15f07bf1ba35ed68ea4471ff7b31718f7ef1bc50d709f8d03cb012e10a3135eb99c7206
   languageName: node
   linkType: hard
 
@@ -11274,6 +11337,22 @@ __metadata:
   dependencies:
     split2: "npm:^4.1.0"
   checksum: 10c0/5ea6c9b2de04c33abb08d33a2dded303c4a3c7162a9264519cbe85c0a9857d712463140ba42fad0c7cd4b21f644dd870b45bb2e02fcbe505b4de0744fd802c1d
+  languageName: node
+  linkType: hard
+
+"php-array-reader@npm:^2.1.3":
+  version: 2.1.3
+  resolution: "php-array-reader@npm:2.1.3"
+  dependencies:
+    php-parser: "npm:^3.1.5"
+  checksum: 10c0/77df2d60c1f6044c2ae59b30bccd6c02136c7e2bf85d9a76637d16f53a48b62d2c655772362e070d6c3e199a3aa7651d43a98af9e3ee59ea13c12c9fa15ff44e
+  languageName: node
+  linkType: hard
+
+"php-parser@npm:^3.1.5":
+  version: 3.5.1
+  resolution: "php-parser@npm:3.5.1"
+  checksum: 10c0/ac4eebbe234d561b2f6a884532758e2b6def79c69a81bf130a0929c813ea93b0c2736f568b6c7190982705117f8253b016511d83cbe6ef4bfff5e4346441aa53
   languageName: node
   linkType: hard
 
