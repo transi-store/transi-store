@@ -292,6 +292,7 @@
   "pricing.title": "Preise",
   "project.back": "Zurück",
   "project.defaultSuffix": " (Standard)",
+  "projects.keyCount": "{count, plural, one {# Schlüssel} other {# Schlüssel}}",
   "projects.new.create": "Projekt erstellen",
   "projects.new.descriptionLabel": "Beschreibung (optional)",
   "projects.new.descriptionPlaceholder": "Projektbeschreibung...",

@@ -41,7 +41,7 @@ export function AiSuggestionsMockup() {
           </Text>
           <Text color="fg.muted">→</Text>
           <Text fontStyle="italic" color="fg">
-            "Confirm order"
+            &quot;Confirm order&quot;
           </Text>
         </HStack>
 

@@ -5,7 +5,7 @@ import { LuGitBranch } from "react-icons/lu";
 import { getBranchUrl } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
 
-export type BranchListItem = {
+type BranchListItem = {
   id: number;
   name: string;
   slug: string;
