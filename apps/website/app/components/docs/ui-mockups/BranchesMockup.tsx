@@ -1,6 +1,7 @@
-import { Box, Stack, Text } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { BranchList } from "~/components/branches/BranchList";
 import { BRANCH_STATUS } from "~/lib/branches";
+import { MockupContainer } from "./MockupContainer";
 
 const SAMPLE_BRANCHES = [
   {
@@ -34,44 +35,7 @@ const SAMPLE_BRANCHES = [
 
 export function BranchesMockup() {
   return (
-    <Box
-      borderRadius="xl"
-      overflow="hidden"
-      border="1px solid"
-      borderColor="border"
-      bg="bg"
-      boxShadow="md"
-      my={6}
-    >
-      {/* Browser chrome */}
-      <Box
-        bg="bg.subtle"
-        px={4}
-        py={2}
-        borderBottom="1px solid"
-        borderColor="border"
-      >
-        <Stack direction="row" gap={2} align="center">
-          <Box w={3} h={3} borderRadius="full" bg="red.400" />
-          <Box w={3} h={3} borderRadius="full" bg="yellow.400" />
-          <Box w={3} h={3} borderRadius="full" bg="green.400" />
-          <Box
-            flex={1}
-            mx={4}
-            px={3}
-            py={1}
-            bg="bg"
-            borderRadius="md"
-            border="1px solid"
-            borderColor="border"
-          >
-            <Text fontSize="xs" color="fg.muted" fontFamily="mono">
-              transi-store.com/orgs/acme/projects/webapp/branches
-            </Text>
-          </Box>
-        </Stack>
-      </Box>
-
+    <MockupContainer url="transi-store.com/orgs/acme/projects/webapp/branches">
       {/* Real BranchList component with sample data — non-interactive */}
       <Box p={4} pointerEvents="none">
         <BranchList
@@ -80,6 +44,6 @@ export function BranchesMockup() {
           projectSlug="webapp"
         />
       </Box>
-    </Box>
+    </MockupContainer>
   );
 }

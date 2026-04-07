@@ -1,6 +1,7 @@
-import { Box, Stack, Text } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { TranslationsTable } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsTable";
 import type { RegularDataRow } from "~/lib/translation-helper";
+import { MockupContainer } from "./MockupContainer";
 
 const SAMPLE_KEYS: RegularDataRow[] = [
   {
@@ -55,44 +56,7 @@ const SAMPLE_KEYS: RegularDataRow[] = [
 
 export function TranslationsMockup() {
   return (
-    <Box
-      borderRadius="xl"
-      overflow="hidden"
-      border="1px solid"
-      borderColor="border"
-      bg="bg"
-      boxShadow="md"
-      my={6}
-    >
-      {/* Browser chrome */}
-      <Box
-        bg="bg.subtle"
-        px={4}
-        py={2}
-        borderBottom="1px solid"
-        borderColor="border"
-      >
-        <Stack direction="row" gap={2} align="center">
-          <Box w={3} h={3} borderRadius="full" bg="red.400" />
-          <Box w={3} h={3} borderRadius="full" bg="yellow.400" />
-          <Box w={3} h={3} borderRadius="full" bg="green.400" />
-          <Box
-            flex={1}
-            mx={4}
-            px={3}
-            py={1}
-            bg="bg"
-            borderRadius="md"
-            border="1px solid"
-            borderColor="border"
-          >
-            <Text fontSize="xs" color="fg.muted" fontFamily="mono">
-              transi-store.com/orgs/acme/projects/webapp/translations
-            </Text>
-          </Box>
-        </Stack>
-      </Box>
-
+    <MockupContainer url="transi-store.com/orgs/acme/projects/webapp/translations">
       {/* Real TranslationsTable component with sample data — non-interactive */}
       <Box pointerEvents="none">
         <TranslationsTable
@@ -104,6 +68,6 @@ export function TranslationsMockup() {
           onEditInDrawer={() => {}}
         />
       </Box>
-    </Box>
+    </MockupContainer>
   );
 }
