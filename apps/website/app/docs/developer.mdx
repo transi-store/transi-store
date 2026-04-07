@@ -51,7 +51,7 @@ ENCRYPTION_KEY=64-char-hex-string
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# Optional — used for the docs and email links
+# Required — public URL used for OAuth redirect URIs
 DOMAIN_ROOT=https://your-domain.com
 ```
 
@@ -86,9 +86,7 @@ make up      # Start production Docker containers
 | `GOOGLE_CLIENT_SECRET` | At least one provider | Google OAuth client secret |
 | `GITHUB_CLIENT_ID` | At least one provider | GitHub OAuth app client ID |
 | `GITHUB_CLIENT_SECRET` | At least one provider | GitHub OAuth app client secret |
-| `DOMAIN_ROOT` | Recommended | Public URL of your instance |
-| `OPENAI_API_KEY` | Optional | Enables OpenAI-powered AI translations |
-| `GOOGLE_AI_API_KEY` | Optional | Enables Gemini-powered AI translations |
+| `DOMAIN_ROOT` | Yes | Public URL of your instance (used for OAuth redirect URIs) |
 
 ### Setting up OAuth providers
 
