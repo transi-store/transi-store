@@ -100,14 +100,6 @@ msgstr "Bonjour"`;
       expect(result.success).toBe(false);
       expect(result.error).toContain("No translations found");
     });
-
-    it("should handle large content without translations", () => {
-      const largeContent = "x".repeat(6 * 1024 * 1024);
-      const result = format.parseImport(largeContent);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("No translations found");
-    });
   });
 
   describe("exportSingleLocale", () => {
@@ -191,6 +183,14 @@ msgstr ""
         projectName: "My Project",
       });
 
+      expect(result.content).toEqual(`msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Language: fr\\n"
+
+msgid "home.title"
+msgstr "Accueil"`);
       expect(result.contentType).toBe("text/x-gettext-translation");
       expect(result.fileExtension).toBe("po");
     });

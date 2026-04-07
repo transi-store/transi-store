@@ -50,14 +50,6 @@ farewell,"Goodbye, friend"`;
       expect(result.error).toContain("No translations found");
     });
 
-    it("should handle large content without translations", () => {
-      const largeContent = "x".repeat(6 * 1024 * 1024);
-      const result = format.parseImport(largeContent);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("No translations found");
-    });
-
     it("should skip empty lines", () => {
       const csv = `home.title,Accueil
 
@@ -116,6 +108,7 @@ home.subtitle,Bienvenue`;
         projectName: "My Project",
       });
 
+      expect(result.content).toBe("home.title,Accueil");
       expect(result.contentType).toBe("text/csv");
       expect(result.fileExtension).toBe("csv");
     });

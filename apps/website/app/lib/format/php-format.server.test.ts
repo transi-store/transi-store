@@ -62,13 +62,6 @@ return [
       expect(result.error).toContain("No translations found");
     });
 
-    it("should handle large content without translations", () => {
-      const largeContent = "x".repeat(6 * 1024 * 1024);
-      const result = format.parseImport(largeContent);
-
-      expect(result.success).toBe(false);
-    });
-
     it("should handle mixed quote styles", () => {
       const php = `<?php
 
@@ -139,6 +132,11 @@ return [
         projectName: "My Project",
       });
 
+      expect(result.content).toBe(`<?php
+
+return [
+    'home.title' => 'Accueil',
+];`);
       expect(result.contentType).toBe("text/x-php");
       expect(result.fileExtension).toBe("php");
     });

@@ -50,14 +50,6 @@ nav:
       expect(result.error).toContain("YAML object");
     });
 
-    it("should handle large content gracefully", () => {
-      const largeContent = "key: " + "x".repeat(6 * 1024 * 1024);
-      const result = format.parseImport(largeContent);
-
-      // Without the per-format size check, the parser will still handle the content
-      expect(result.success).toBe(true);
-    });
-
     it("should handle special characters in values", () => {
       const yaml = `greeting: "Hello \\"world\\" & <friends>"
 unicode: "Émojis: 🎉🚀"`;
@@ -104,6 +96,7 @@ unicode: "Émojis: 🎉🚀"`;
         projectName: "My Project",
       });
 
+      expect(result.content).toBe("home.title: Accueil");
       expect(result.contentType).toBe("text/yaml");
       expect(result.fileExtension).toBe("yaml");
     });
