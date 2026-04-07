@@ -119,9 +119,14 @@ msgstr "Bonjour"`;
 
       const result = format.exportSingleLocale(translations, { locale: "fr" });
 
-      expect(result).toContain('msgid "home.title"');
-      expect(result).toContain('msgstr "Accueil"');
-      expect(result).toContain('"Language: fr\\n"');
+      expect(result).toEqual(`msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Language: fr\\n"
+
+msgid "home.title"
+msgstr "Accueil"`);
     });
 
     it("should include PO header", () => {
@@ -129,9 +134,14 @@ msgstr "Bonjour"`;
 
       const result = format.exportSingleLocale(translations, { locale: "fr" });
 
-      expect(result).toContain('msgid ""');
-      expect(result).toContain('msgstr ""');
-      expect(result).toContain("Content-Type: text/plain; charset=");
+      expect(result).toEqual(`msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Language: fr\\n"
+
+msgid "key"
+msgstr "value"`);
     });
 
     it("should escape special characters (round-trip)", () => {
@@ -142,9 +152,16 @@ msgstr "Bonjour"`;
 
       const result = format.exportSingleLocale(translations, { locale: "en" });
 
-      // Verify the exported content contains the escaped msgid
-      expect(result).toContain('msgid "greeting"');
-      // gettext-parser may split multiline strings; verify round-trip instead
+      expect(result).toEqual(`msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Language: en\\n"
+
+msgid "greeting"
+msgstr ""
+"Hello \\"world\\"\\n"
+"New line"`);
       const reimported = format.parseImport(result);
       expect(reimported.success).toBe(true);
       expect(reimported.data?.greeting).toBe('Hello "world"\nNew line');
@@ -153,9 +170,11 @@ msgstr "Bonjour"`;
     it("should handle empty translations list", () => {
       const result = format.exportSingleLocale([], { locale: "fr" });
 
-      // Should still have header
-      expect(result).toContain('msgid ""');
-      expect(result).toContain('msgstr ""');
+      expect(result).toEqual(`msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Language: fr\\n"`);
     });
   });
 

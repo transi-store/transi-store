@@ -81,8 +81,7 @@ unicode: "Émojis: 🎉🚀"`;
 
       const result = format.exportSingleLocale(translations, { locale: "fr" });
 
-      expect(result).toContain("home.title: Accueil");
-      expect(result).toContain("nav.about: À propos");
+      expect(result).toEqual("home.title: Accueil\nnav.about: À propos");
     });
 
     it("should handle empty translations list", () => {

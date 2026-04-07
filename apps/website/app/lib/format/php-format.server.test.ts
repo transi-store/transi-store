@@ -112,7 +112,11 @@ return [
 
       const result = format.exportSingleLocale(translations, { locale: "en" });
 
-      expect(result).toContain("'It\\'s a test'");
+      expect(result).toEqual(`<?php
+
+return [
+    'greeting' => 'It\\'s a test',
+];`);
     });
 
     it("should handle empty translations list", () => {
