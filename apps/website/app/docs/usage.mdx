@@ -1,5 +1,7 @@
 import { TranslationsMockup } from "~/components/docs/ui-mockups/TranslationsMockup";
 import { BranchesMockup } from "~/components/docs/ui-mockups/BranchesMockup";
+import { IcuEditorMockup } from "~/components/docs/ui-mockups/IcuEditorMockup";
+import { AiSuggestionsMockup } from "~/components/docs/ui-mockups/AiSuggestionsMockup";
 
 ## Getting Started
 
@@ -45,7 +47,9 @@ Transi-Store supports **ICU message format** for pluralization, gender, and vari
 You have {count, plural, one {# message} other {# messages}}.
 ```
 
-The built-in editor validates your ICU syntax in real time.
+The built-in editor validates your ICU syntax in real time and provides a live preview where you can fill in variable values to see the rendered output.
+
+<IcuEditorMockup />
 
 ### Searching and filtering
 
@@ -143,6 +147,8 @@ Transi-Store can suggest translations using AI (powered by Google Gemini or Open
 To enable AI translations, configure your AI provider in **Organization Settings → AI**.
 
 Once configured, an **AI suggest** button appears in each translation cell. Click it to generate a suggestion based on the source locale value and the context of surrounding keys.
+
+<AiSuggestionsMockup />
 
 > **Note:** AI suggestions are a starting point — always review them before publishing.
 
