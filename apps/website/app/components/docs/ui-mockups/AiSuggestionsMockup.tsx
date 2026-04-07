@@ -7,19 +7,19 @@ const SUGGESTIONS = [
     text: "Confirmer la commande",
     confidence: 0.95,
     notes:
-      "Terme commercial standard, utilisé dans la majorité des boutiques en ligne françaises.",
+      "Standard commercial term used by the majority of French online stores.",
   },
   {
     text: "Valider ma commande",
     confidence: 0.88,
     notes:
-      "Formulation plus personnelle et engageante, très courante dans l'e-commerce (ex. : Amazon FR).",
+      "More personal and engaging phrasing, very common in e-commerce (e.g. Amazon FR).",
   },
   {
     text: "Passer la commande",
     confidence: 0.74,
     notes:
-      "Expression idiomatique qui met l'accent sur l'action plutôt que la confirmation.",
+      "Idiomatic expression that emphasises the action rather than the confirmation.",
   },
 ];
 
