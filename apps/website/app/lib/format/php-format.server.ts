@@ -1,3 +1,4 @@
+import { fromString } from "php-array-reader";
 import type {
   TranslationFormat,
   ParseResult,
@@ -10,18 +11,29 @@ import type {
 export class PhpTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
     try {
+      const parsed = fromString(fileContent);
+
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        Array.isArray(parsed)
+      ) {
+        return {
+          success: false,
+          error:
+            "No translations found in the PHP file (expected format: 'key' => 'value' array)",
+        };
+      }
+
       const data: Record<string, string> = {};
-
-      // Match key => value pairs in PHP array syntax
-      // Supports both 'key' => 'value' and "key" => "value"
-      const entryRegex =
-        /(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")\s*=>\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
-
-      let match;
-      while ((match = entryRegex.exec(fileContent)) !== null) {
-        const key = unescapePhpString(match[1] ?? match[2]);
-        const value = unescapePhpString(match[3] ?? match[4]);
-        data[key] = value;
+      for (const [key, value] of Object.entries(
+        parsed as Record<string, unknown>,
+      )) {
+        if (typeof value === "string") {
+          data[key] = value;
+        } else if (value !== null && value !== undefined) {
+          data[key] = String(value);
+        }
       }
 
       if (Object.keys(data).length === 0) {
@@ -91,8 +103,4 @@ function escapePhpString(str: string): string {
 
 function quotePhpString(str: string): string {
   return "'" + escapePhpString(str) + "'";
-}
-
-function unescapePhpString(str: string): string {
-  return str.replace(/\\'/g, "'").replace(/\\\\/g, "\\");
 }

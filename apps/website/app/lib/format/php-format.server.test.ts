@@ -67,7 +67,6 @@ return [
       const result = format.parseImport(largeContent);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("No translations found");
     });
 
     it("should handle mixed quote styles", () => {

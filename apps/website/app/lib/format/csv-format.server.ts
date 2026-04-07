@@ -1,3 +1,5 @@
+import { parse } from "csv-parse/sync";
+import { stringify } from "csv-stringify/sync";
 import type {
   TranslationFormat,
   ParseResult,
@@ -7,76 +9,21 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-function escapeCsvValue(value: string): string {
-  if (
-    value.includes(",") ||
-    value.includes('"') ||
-    value.includes("\n") ||
-    value.includes("\r")
-  ) {
-    return '"' + value.replace(/"/g, '""') + '"';
-  }
-  return value;
-}
-
-function parseCsvLine(line: string): Array<string> {
-  const fields: Array<string> = [];
-  let current = "";
-  let inQuotes = false;
-  let i = 0;
-
-  while (i < line.length) {
-    const char = line[i];
-
-    if (inQuotes) {
-      if (char === '"') {
-        if (i + 1 < line.length && line[i + 1] === '"') {
-          current += '"';
-          i += 2;
-        } else {
-          inQuotes = false;
-          i++;
-        }
-      } else {
-        current += char;
-        i++;
-      }
-    } else {
-      if (char === '"') {
-        inQuotes = true;
-        i++;
-      } else if (char === ",") {
-        fields.push(current);
-        current = "";
-        i++;
-      } else {
-        current += char;
-        i++;
-      }
-    }
-  }
-
-  fields.push(current);
-
-  return fields;
-}
-
 export class CsvTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
     try {
+      const records: Array<Array<string>> = parse(fileContent, {
+        relax_column_count: true,
+        skip_empty_lines: true,
+      });
+
       const data: Record<string, string> = {};
-      const lines = fileContent.split(/\r?\n/);
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed === "") continue;
+      for (const record of records) {
+        if (record.length < 2) continue;
 
-        const fields = parseCsvLine(trimmed);
-
-        if (fields.length < 2) continue;
-
-        const key = fields[0];
-        const value = fields[1];
+        const key = record[0];
+        const value = record[1];
 
         if (key) {
           data[key] = value;
@@ -104,7 +51,7 @@ export class CsvTranslationFormat implements TranslationFormat {
     projectTranslations: ProjectTranslations,
     options: ExportOptions,
   ): string {
-    const lines: Array<string> = [];
+    const records: Array<Array<string>> = [];
 
     for (const key of projectTranslations) {
       const translation = key.translations.find(
@@ -112,13 +59,12 @@ export class CsvTranslationFormat implements TranslationFormat {
       );
 
       if (translation) {
-        lines.push(
-          escapeCsvValue(key.keyName) + "," + escapeCsvValue(translation.value),
-        );
+        records.push([key.keyName, translation.value]);
       }
     }
 
-    return lines.join("\n");
+    // csv-stringify always adds a trailing newline; trim it for consistency
+    return stringify(records).trimEnd();
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
