@@ -13,7 +13,7 @@ const SUGGESTIONS = [
     text: "Valider ma commande",
     confidence: 0.88,
     notes:
-      "More personal and engaging phrasing, very common in e-commerce (e.g. Amazon FR).",
+      "More personal and engaging phrasing, very common in e-commerce.",
   },
   {
     text: "Passer la commande",
