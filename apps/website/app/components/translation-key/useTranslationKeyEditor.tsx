@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useFetcher, type FetcherWithComponents } from "react-router";
+import { useTranslation } from "react-i18next";
+import { VStack, Text } from "@chakra-ui/react";
+import { toaster } from "~/components/ui/toaster";
 import type {
   ProjectLanguage,
   Translation,
@@ -22,11 +25,8 @@ type UseTranslationKeyEditorParams = {
 type ReturnType = {
   translationValues: Record<string, string>;
   fuzzyFlags: Record<string, boolean>;
-  /** Set of locales that need a programmatic save (fuzzy change, AI suggestion). */
-  pendingSaveLocales: Set<string>;
-  /** Remove a locale from the pending-save set after the save has been triggered. */
-  clearPendingSave: (locale: string) => void;
   handleTranslationChange: (locale: string, value: string) => void;
+  handleTranslationBlur: (locale: string) => void;
   handleFuzzyChange: (locale: string, isFuzzy: boolean) => void;
   handleRequestAiTranslation: (locale: string) => void;
   handleSelectSuggestion: (text: string) => void;
@@ -44,6 +44,9 @@ type ReturnType = {
     error?: string;
     action?: string;
   }>;
+
+  // Save state — the locale currently being saved, or null if idle
+  savingLocale: string | null;
 };
 
 export function useTranslationKeyEditor({
@@ -52,7 +55,13 @@ export function useTranslationKeyEditor({
   translations,
   organization,
   project,
+  actionUrl,
 }: UseTranslationKeyEditorParams): ReturnType {
+  const { t } = useTranslation();
+
+  // Fetcher for auto-saving translations
+  const saveFetcher = useFetcher();
+
   // Fetcher for editing key metadata
   const editKeyFetcher = useFetcher<{
     success?: boolean;
@@ -84,10 +93,16 @@ export function useTranslationKeyEditor({
     return initial;
   });
 
-  // Set of locales that need a programmatic save
-  const [pendingSaveLocales, setPendingSaveLocales] = useState<Set<string>>(
-    () => new Set(),
-  );
+  // Track last-saved values to detect changes on blur (state, not ref)
+  const [lastSavedValues, setLastSavedValues] = useState<
+    Record<string, string>
+  >(() => {
+    const initial: Record<string, string> = {};
+    for (const lang of languages) {
+      initial[lang.locale] = translationMap.get(lang.locale) || "";
+    }
+    return initial;
+  });
 
   // Reset translation values when key/translations change (e.g. drawer navigation)
   useEffect(() => {
@@ -102,7 +117,7 @@ export function useTranslationKeyEditor({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTranslationValues(initial);
     setFuzzyFlags(initialFuzzy);
-    setPendingSaveLocales(new Set());
+    setLastSavedValues(initial);
   }, [translationKey.id, languages, translations]);
 
   // Edit key modal state
@@ -124,6 +139,46 @@ export function useTranslationKeyEditor({
   const [aiDialogLocale, setAiDialogLocale] = useState<string | null>(null);
   const aiFetcher = useFetcher<TranslateAction>();
 
+  const submitSave = useCallback(
+    (locale: string, value: string, isFuzzy: boolean) => {
+      setLastSavedValues((prev) => ({ ...prev, [locale]: value }));
+
+      saveFetcher.submit(
+        {
+          _action: "saveTranslation",
+          locale,
+          value: value || "",
+          isFuzzy: String(isFuzzy),
+        },
+        {
+          method: "POST",
+          ...(actionUrl ? { action: actionUrl } : {}),
+        },
+      );
+
+      toaster.success({
+        title: t("common.saveInProgress"),
+        description: (
+          <VStack align="start" gap={1}>
+            <Text>
+              <strong>{t("key.save.key")} </strong>
+              {translationKey.keyName}
+            </Text>
+            <Text>
+              <strong>{t("key.save.locale")}</strong>
+              {locale}
+            </Text>
+            <Text>
+              <strong>{t("key.save.value")}</strong>{" "}
+              {value || t("key.save.empty")}
+            </Text>
+          </VStack>
+        ),
+      });
+    },
+    [translationKey.keyName, actionUrl, saveFetcher, t],
+  );
+
   const handleTranslationChange = useCallback(
     (locale: string, value: string) => {
       setTranslationValues((prev) => ({ ...prev, [locale]: value }));
@@ -131,11 +186,28 @@ export function useTranslationKeyEditor({
     [],
   );
 
-  const handleFuzzyChange = useCallback((locale: string, isFuzzy: boolean) => {
-    setFuzzyFlags((prev) => ({ ...prev, [locale]: isFuzzy }));
-    // Signal LanguageDetail to save with the updated fuzzy flag
-    setPendingSaveLocales((prev) => new Set(prev).add(locale));
-  }, []);
+  const handleTranslationBlur = useCallback(
+    (locale: string) => {
+      const value = translationValues[locale];
+
+      // Only save if the value has changed
+      if (value !== lastSavedValues[locale]) {
+        submitSave(locale, value, fuzzyFlags[locale] || false);
+      }
+    },
+    [translationValues, lastSavedValues, fuzzyFlags, submitSave],
+  );
+
+  const handleFuzzyChange = useCallback(
+    (locale: string, isFuzzy: boolean) => {
+      setFuzzyFlags((prev) => ({ ...prev, [locale]: isFuzzy }));
+
+      // Auto-save when fuzzy flag changes
+      const value = translationValues[locale];
+      submitSave(locale, value, isFuzzy);
+    },
+    [translationValues, submitSave],
+  );
 
   const handleRequestAiTranslation = useCallback(
     (locale: string) => {
@@ -159,27 +231,19 @@ export function useTranslationKeyEditor({
       if (aiDialogLocale) {
         handleTranslationChange(aiDialogLocale, text);
         setAiDialogLocale(null);
-        // Signal LanguageDetail to save the AI-selected value
-        setPendingSaveLocales((prev) => new Set(prev).add(aiDialogLocale));
+
+        // save the value
+        submitSave(aiDialogLocale, text, fuzzyFlags[aiDialogLocale] || false);
       }
     },
-    [aiDialogLocale, handleTranslationChange],
+    [aiDialogLocale, handleTranslationChange, fuzzyFlags, submitSave],
   );
-
-  const clearPendingSave = useCallback((locale: string) => {
-    setPendingSaveLocales((prev) => {
-      const next = new Set(prev);
-      next.delete(locale);
-      return next;
-    });
-  }, []);
 
   return {
     translationValues,
     fuzzyFlags,
-    pendingSaveLocales,
-    clearPendingSave,
     handleTranslationChange,
+    handleTranslationBlur,
     handleFuzzyChange,
     handleRequestAiTranslation,
     handleSelectSuggestion,
@@ -193,5 +257,11 @@ export function useTranslationKeyEditor({
     isEditKeyModalOpen,
     setIsEditKeyModalOpen,
     editKeyFetcher,
+
+    // Save state — track which locale is currently being saved
+    savingLocale:
+      saveFetcher.state !== "idle"
+        ? ((saveFetcher.formData?.get("locale") as string | null) ?? null)
+        : null,
   };
 }

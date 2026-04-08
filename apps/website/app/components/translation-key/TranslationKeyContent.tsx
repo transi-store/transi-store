@@ -37,7 +37,7 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { Switch } from "@chakra-ui/react/switch";
-import { Link, useFetcher, type FetcherWithComponents } from "react-router";
+import { Link, type FetcherWithComponents } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPencil, LuSparkles, LuCircleAlert } from "react-icons/lu";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -47,7 +47,6 @@ import {
   TRANSLATIONS_KEY_MODEL_MODE,
 } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
 import { Tooltip } from "~/components/ui/tooltip";
-import { toaster } from "~/components/ui/toaster";
 import { useTranslationKeyEditor } from "./useTranslationKeyEditor";
 import type {
   TranslationKey,
@@ -62,7 +61,7 @@ import {
   type TranslateAction,
 } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
 import { TranslationPreview } from "./TranslationPreview";
-import { useCallback, useEffect, useRef, type JSX } from "react";
+import { useCallback, type JSX } from "react";
 
 type TranslationKeyContentProps = {
   translationKey: TranslationKey;
@@ -92,9 +91,8 @@ export function TranslationKeyContent({
   const {
     translationValues,
     fuzzyFlags,
-    pendingSaveLocales,
-    clearPendingSave,
     handleTranslationChange,
+    handleTranslationBlur,
     handleFuzzyChange,
     handleRequestAiTranslation,
     handleSelectSuggestion,
@@ -104,6 +102,7 @@ export function TranslationKeyContent({
     isEditKeyModalOpen,
     setIsEditKeyModalOpen,
     editKeyFetcher,
+    savingLocale,
   } = useTranslationKeyEditor({
     translationKey,
     languages,
@@ -186,18 +185,15 @@ export function TranslationKeyContent({
                   )}
 
                   <LanguageDetail
-                    key={`${translationKey.id}-${lang.locale}`}
                     lang={lang}
-                    translationKey={translationKey}
                     handleTranslationChange={handleTranslationChange}
                     value={translationValues[lang.locale] || ""}
                     isFuzzy={fuzzyFlags[lang.locale] || false}
+                    handleTranslationBlur={handleTranslationBlur}
                     handleFuzzyChange={handleFuzzyChange}
                     handleRequestAiTranslation={handleRequestAiTranslation}
                     hasAiProvider={hasAiProvider}
-                    needsSave={pendingSaveLocales.has(lang.locale)}
-                    onSaveTriggered={() => clearPendingSave(lang.locale)}
-                    actionUrl={actionUrl}
+                    isSaving={savingLocale === lang.locale}
                   />
                 </>
               ))}
@@ -233,110 +229,33 @@ export function TranslationKeyContent({
 
 type LanguageDetailProps = {
   lang: ProjectLanguage;
-  translationKey: TranslationKey;
   handleTranslationChange: (locale: string, value: string) => void;
   value: string;
   isFuzzy: boolean;
+  handleTranslationBlur: (locale: string) => void;
   handleFuzzyChange: (locale: string, isFuzzy: boolean) => void;
   handleRequestAiTranslation: (locale: string) => void;
   hasAiProvider: boolean;
-  /** Whether a programmatic save is pending for this locale (fuzzy change, AI suggestion). */
-  needsSave: boolean;
-  /** Callback to clear the pending-save flag after the save has been triggered. */
-  onSaveTriggered: () => void;
-  actionUrl?: string;
+  isSaving: boolean;
 };
 
 function LanguageDetail({
   lang,
-  translationKey,
   handleTranslationChange,
   value,
   isFuzzy,
+  handleTranslationBlur,
   handleFuzzyChange,
   handleRequestAiTranslation,
   hasAiProvider,
-  needsSave,
-  onSaveTriggered,
-  actionUrl,
+  isSaving,
 }: LanguageDetailProps): JSX.Element {
-  const { t } = useTranslation();
-  const saveFetcher = useFetcher();
-
-  // Track the last saved value to detect unsaved changes on blur
-  const originalValueRef = useRef(value);
-
-  // Keep refs to current values so the programmatic-save effect can read them
-  // without depending on them (avoids re-firing on every keystroke).
-  const valueRef = useRef(value);
-  valueRef.current = value;
-  const isFuzzyRef = useRef(isFuzzy);
-  isFuzzyRef.current = isFuzzy;
-
   const handleChange = useCallback(
     (newValue: string): void => {
       handleTranslationChange(lang.locale, newValue);
     },
     [handleTranslationChange, lang.locale],
   );
-
-  const doSave = useCallback(
-    (currentValue: string, currentFuzzy: boolean) => {
-      originalValueRef.current = currentValue;
-      saveFetcher.submit(
-        {
-          _action: "saveTranslation",
-          locale: lang.locale,
-          value: currentValue || "",
-          isFuzzy: String(currentFuzzy),
-        },
-        {
-          method: "POST",
-          ...(actionUrl ? { action: actionUrl } : {}),
-        },
-      );
-      toaster.success({
-        title: t("common.saveInProgress"),
-        description: (
-          <VStack align="start" gap={1}>
-            <Text>
-              <strong>{t("key.save.key")} </strong>
-              {translationKey.keyName}
-            </Text>
-            <Text>
-              <strong>{t("key.save.locale")}</strong>
-              {lang.locale}
-            </Text>
-            <Text>
-              <strong>{t("key.save.value")}</strong>{" "}
-              {currentValue || t("key.save.empty")}
-            </Text>
-          </VStack>
-        ),
-      });
-    },
-    [saveFetcher, lang.locale, actionUrl, translationKey.keyName, t],
-  );
-
-  // Keep a ref to the latest doSave so the trigger effect doesn't need it as a dep
-  const doSaveRef = useRef(doSave);
-  doSaveRef.current = doSave;
-
-  const handleBlur = useCallback(() => {
-    if (value !== originalValueRef.current) {
-      doSave(value, isFuzzy);
-    }
-  }, [value, isFuzzy, doSave]);
-
-  // Trigger a programmatic save when requested (fuzzy change or AI suggestion)
-  useEffect(() => {
-    if (needsSave) {
-      doSaveRef.current(valueRef.current, isFuzzyRef.current);
-      onSaveTriggered();
-    }
-  }, [needsSave, onSaveTriggered]);
-
-  const isSaving = saveFetcher.state !== "idle";
 
   return (
     <GridItem key={`lang-${lang.id}`}>
@@ -346,8 +265,8 @@ function LanguageDetail({
         value={value}
         isFuzzy={isFuzzy}
         onChange={handleChange}
-        onBlur={handleBlur}
-        onFuzzyChange={(fuzzy) => handleFuzzyChange(lang.locale, fuzzy)}
+        onBlur={() => handleTranslationBlur(lang.locale)}
+        onFuzzyChange={(isFuzzy) => handleFuzzyChange(lang.locale, isFuzzy)}
         onRequestAi={() => handleRequestAiTranslation(lang.locale)}
         hasAiProvider={hasAiProvider}
         disabled={isSaving}
