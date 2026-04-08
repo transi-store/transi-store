@@ -100,9 +100,22 @@ program
     "-b, --branch <branch>",
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
   )
+  .option(
+    "-p, --project <projects>",
+    "Comma-separated list of project slugs to download (default: all projects)",
+  )
   .addOption(apiKeyOption)
   .action((options) => {
-    fetchForConfig(options.config, options.apiKey, options.branch);
+    const projectFilter = options.project
+      ? options.project.split(",").map((s) => s.trim())
+      : undefined;
+
+    fetchForConfig(
+      options.config,
+      options.apiKey,
+      options.branch,
+      projectFilter,
+    );
   });
 
 program
@@ -122,6 +135,10 @@ program
     `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
     ImportStrategy.SKIP,
   )
+  .option(
+    "-p, --project <projects>",
+    "Comma-separated list of project slugs to upload (default: all projects)",
+  )
   .addOption(apiKeyOption)
   .action((options) => {
     const strategy = options.strategy;
@@ -135,7 +152,17 @@ program
       process.exit(1);
     }
 
-    uploadForConfig(options.config, options.apiKey, strategy, options.branch);
+    const projectFilter = options.project
+      ? options.project.split(",").map((s) => s.trim())
+      : undefined;
+
+    uploadForConfig(
+      options.config,
+      options.apiKey,
+      strategy,
+      options.branch,
+      projectFilter,
+    );
   });
 
 program.parse();
