@@ -1,5 +1,4 @@
 {
-"test.pr.push":"this is a test", 
   "api.translate.keyNotFound": "Key not found",
   "api.translate.missingParams": "keyId and targetLocale are required",
   "api.translate.noAiProvider": "No AI service configured. Configure it in the organization settings.",
