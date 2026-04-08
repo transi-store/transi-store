@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.7.1
+
+### Fixed
+
+- Git optimization for `upload:config` now also works on the default branch (main/master) by comparing against the previous commit. Previously, the optimization only worked on feature branches, causing all files to be uploaded when running on main.
+
 ## 1.7.0
 
 ### Added

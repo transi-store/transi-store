@@ -8,6 +8,7 @@ import {
   getCurrentBranch,
   getDefaultBranch,
   getModifiedFiles,
+  getModifiedFilesFromLastCommit,
   isGitRepository,
 } from "./git.ts";
 import { configSchema } from "@transi-store/common";
@@ -138,10 +139,19 @@ export async function uploadForConfig(
       currentBranch &&
       currentBranch !== defaultBranch.replace(/^origin\//, "")
     ) {
+      // On a feature branch: compare against the default branch
       modifiedFiles = await getModifiedFiles(defaultBranch);
       console.log(
         `Git optimization enabled: only uploading files modified compared to "${defaultBranch}"`,
       );
+    } else {
+      // On the default branch or detached HEAD (e.g. CI): compare against the previous commit
+      modifiedFiles = await getModifiedFilesFromLastCommit();
+      if (modifiedFiles) {
+        console.log(
+          `Git optimization enabled: only uploading files modified in the last commit`,
+        );
+      }
     }
   }
 

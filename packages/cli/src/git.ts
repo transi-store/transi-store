@@ -79,3 +79,29 @@ export async function getModifiedFiles(
 
   return modified;
 }
+
+/**
+ * Returns the set of absolute paths of files that have been modified
+ * in the last commit (HEAD vs HEAD~1).
+ * Returns null if the comparison is not possible (e.g. initial commit).
+ */
+export async function getModifiedFilesFromLastCommit(): Promise<Set<string> | null> {
+  const git = getGit();
+
+  try {
+    const repoRoot = (await git.revparse(["--show-toplevel"])).trim();
+
+    const diff = await git.diff(["--name-only", "HEAD~1", "HEAD"]);
+    const diffFiles = diff.trim().split("\n").filter(Boolean);
+
+    const modified = new Set<string>();
+    for (const f of diffFiles) {
+      modified.add(`${repoRoot}/${f}`);
+    }
+
+    return modified;
+  } catch {
+    // HEAD~1 may not exist (initial commit)
+    return null;
+  }
+}
