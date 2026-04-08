@@ -60,12 +60,12 @@ export function Header({ user }: HeaderProps) {
 
           <HStack gap={2} mdDown={{ justifyContent: "space-between" }}>
             <Box>
-              <Button asChild variant="ghost" size="sm" hideBelow="sm">
+              <Button asChild variant="ghost" size="sm">
                 <Link to="/docs">{t("header.docs")}</Link>
               </Button>
 
-              <Button asChild variant="ghost" size="sm" hideBelow="sm">
-                <Link to="/api/doc">{t("header.doc")}</Link>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/api/doc">{t("header.api-doc")}</Link>
               </Button>
 
               <LanguageSelector />
