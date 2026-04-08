@@ -92,7 +92,8 @@ export function TranslationKeyContent({
   const {
     translationValues,
     fuzzyFlags,
-    saveTriggers,
+    pendingSaveLocales,
+    clearPendingSave,
     handleTranslationChange,
     handleFuzzyChange,
     handleRequestAiTranslation,
@@ -194,7 +195,8 @@ export function TranslationKeyContent({
                     handleFuzzyChange={handleFuzzyChange}
                     handleRequestAiTranslation={handleRequestAiTranslation}
                     hasAiProvider={hasAiProvider}
-                    saveTrigger={saveTriggers[lang.locale] ?? 0}
+                    needsSave={pendingSaveLocales.has(lang.locale)}
+                    onSaveTriggered={() => clearPendingSave(lang.locale)}
                     actionUrl={actionUrl}
                   />
                 </>
@@ -238,8 +240,10 @@ type LanguageDetailProps = {
   handleFuzzyChange: (locale: string, isFuzzy: boolean) => void;
   handleRequestAiTranslation: (locale: string) => void;
   hasAiProvider: boolean;
-  /** Counter incremented to request a programmatic save (fuzzy change, AI suggestion). */
-  saveTrigger: number;
+  /** Whether a programmatic save is pending for this locale (fuzzy change, AI suggestion). */
+  needsSave: boolean;
+  /** Callback to clear the pending-save flag after the save has been triggered. */
+  onSaveTriggered: () => void;
   actionUrl?: string;
 };
 
@@ -252,7 +256,8 @@ function LanguageDetail({
   handleFuzzyChange,
   handleRequestAiTranslation,
   hasAiProvider,
-  saveTrigger,
+  needsSave,
+  onSaveTriggered,
   actionUrl,
 }: LanguageDetailProps): JSX.Element {
   const { t } = useTranslation();
@@ -260,7 +265,6 @@ function LanguageDetail({
 
   // Track the last saved value to detect unsaved changes on blur
   const originalValueRef = useRef(value);
-  const prevSaveTriggerRef = useRef(saveTrigger);
 
   const handleChange = useCallback(
     (newValue: string): void => {
@@ -317,13 +321,13 @@ function LanguageDetail({
     }
   }, [value, isFuzzy, doSave]);
 
-  // Trigger a programmatic save when saveTrigger increments (fuzzy change or AI suggestion)
+  // Trigger a programmatic save when requested (fuzzy change or AI suggestion)
   useEffect(() => {
-    if (saveTrigger !== prevSaveTriggerRef.current) {
-      prevSaveTriggerRef.current = saveTrigger;
+    if (needsSave) {
       doSaveRef.current(value, isFuzzy);
+      onSaveTriggered();
     }
-  }, [saveTrigger, value, isFuzzy]);
+  }, [needsSave, value, isFuzzy, onSaveTriggered]);
 
   const isSaving = saveFetcher.state !== "idle";
 

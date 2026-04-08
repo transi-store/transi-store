@@ -22,8 +22,10 @@ type UseTranslationKeyEditorParams = {
 type ReturnType = {
   translationValues: Record<string, string>;
   fuzzyFlags: Record<string, boolean>;
-  /** Counter incremented each time a programmatic save is requested for a locale. */
-  saveTriggers: Record<string, number>;
+  /** Set of locales that need a programmatic save (fuzzy change, AI suggestion). */
+  pendingSaveLocales: Set<string>;
+  /** Remove a locale from the pending-save set after the save has been triggered. */
+  clearPendingSave: (locale: string) => void;
   handleTranslationChange: (locale: string, value: string) => void;
   handleFuzzyChange: (locale: string, isFuzzy: boolean) => void;
   handleRequestAiTranslation: (locale: string) => void;
@@ -82,8 +84,10 @@ export function useTranslationKeyEditor({
     return initial;
   });
 
-  // Counter per locale — incremented to signal a programmatic save is needed
-  const [saveTriggers, setSaveTriggers] = useState<Record<string, number>>({});
+  // Set of locales that need a programmatic save
+  const [pendingSaveLocales, setPendingSaveLocales] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   // Reset translation values when key/translations change (e.g. drawer navigation)
   useEffect(() => {
@@ -98,7 +102,7 @@ export function useTranslationKeyEditor({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTranslationValues(initial);
     setFuzzyFlags(initialFuzzy);
-    setSaveTriggers({});
+    setPendingSaveLocales(new Set());
   }, [translationKey.id, languages, translations]);
 
   // Edit key modal state
@@ -130,10 +134,7 @@ export function useTranslationKeyEditor({
   const handleFuzzyChange = useCallback((locale: string, isFuzzy: boolean) => {
     setFuzzyFlags((prev) => ({ ...prev, [locale]: isFuzzy }));
     // Signal LanguageDetail to save with the updated fuzzy flag
-    setSaveTriggers((prev) => ({
-      ...prev,
-      [locale]: (prev[locale] ?? 0) + 1,
-    }));
+    setPendingSaveLocales((prev) => new Set(prev).add(locale));
   }, []);
 
   const handleRequestAiTranslation = useCallback(
@@ -159,19 +160,25 @@ export function useTranslationKeyEditor({
         handleTranslationChange(aiDialogLocale, text);
         setAiDialogLocale(null);
         // Signal LanguageDetail to save the AI-selected value
-        setSaveTriggers((prev) => ({
-          ...prev,
-          [aiDialogLocale]: (prev[aiDialogLocale] ?? 0) + 1,
-        }));
+        setPendingSaveLocales((prev) => new Set(prev).add(aiDialogLocale));
       }
     },
     [aiDialogLocale, handleTranslationChange],
   );
 
+  const clearPendingSave = useCallback((locale: string) => {
+    setPendingSaveLocales((prev) => {
+      const next = new Set(prev);
+      next.delete(locale);
+      return next;
+    });
+  }, []);
+
   return {
     translationValues,
     fuzzyFlags,
-    saveTriggers,
+    pendingSaveLocales,
+    clearPendingSave,
     handleTranslationChange,
     handleFuzzyChange,
     handleRequestAiTranslation,
