@@ -266,6 +266,13 @@ function LanguageDetail({
   // Track the last saved value to detect unsaved changes on blur
   const originalValueRef = useRef(value);
 
+  // Keep refs to current values so the programmatic-save effect can read them
+  // without depending on them (avoids re-firing on every keystroke).
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const isFuzzyRef = useRef(isFuzzy);
+  isFuzzyRef.current = isFuzzy;
+
   const handleChange = useCallback(
     (newValue: string): void => {
       handleTranslationChange(lang.locale, newValue);
@@ -324,10 +331,10 @@ function LanguageDetail({
   // Trigger a programmatic save when requested (fuzzy change or AI suggestion)
   useEffect(() => {
     if (needsSave) {
-      doSaveRef.current(value, isFuzzy);
+      doSaveRef.current(valueRef.current, isFuzzyRef.current);
       onSaveTriggered();
     }
-  }, [needsSave, value, isFuzzy, onSaveTriggered]);
+  }, [needsSave, onSaveTriggered]);
 
   const isSaving = saveFetcher.state !== "idle";
 
