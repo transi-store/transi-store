@@ -37,7 +37,7 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { Switch } from "@chakra-ui/react/switch";
-import { Link, type FetcherWithComponents } from "react-router";
+import { Link, useFetcher, type FetcherWithComponents } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPencil, LuSparkles, LuCircleAlert } from "react-icons/lu";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -47,6 +47,7 @@ import {
   TRANSLATIONS_KEY_MODEL_MODE,
 } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
 import { Tooltip } from "~/components/ui/tooltip";
+import { toaster } from "~/components/ui/toaster";
 import { useTranslationKeyEditor } from "./useTranslationKeyEditor";
 import type {
   TranslationKey,
@@ -61,7 +62,7 @@ import {
   type TranslateAction,
 } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
 import { TranslationPreview } from "./TranslationPreview";
-import { useCallback, type JSX } from "react";
+import { useCallback, useEffect, useRef, type JSX } from "react";
 
 type TranslationKeyContentProps = {
   translationKey: TranslationKey;
@@ -91,8 +92,8 @@ export function TranslationKeyContent({
   const {
     translationValues,
     fuzzyFlags,
+    saveTriggers,
     handleTranslationChange,
-    handleTranslationBlur,
     handleFuzzyChange,
     handleRequestAiTranslation,
     handleSelectSuggestion,
@@ -102,7 +103,6 @@ export function TranslationKeyContent({
     isEditKeyModalOpen,
     setIsEditKeyModalOpen,
     editKeyFetcher,
-    savingLocale,
   } = useTranslationKeyEditor({
     translationKey,
     languages,
@@ -185,15 +185,17 @@ export function TranslationKeyContent({
                   )}
 
                   <LanguageDetail
+                    key={`${translationKey.id}-${lang.locale}`}
                     lang={lang}
+                    translationKey={translationKey}
                     handleTranslationChange={handleTranslationChange}
                     value={translationValues[lang.locale] || ""}
                     isFuzzy={fuzzyFlags[lang.locale] || false}
-                    handleTranslationBlur={handleTranslationBlur}
                     handleFuzzyChange={handleFuzzyChange}
                     handleRequestAiTranslation={handleRequestAiTranslation}
                     hasAiProvider={hasAiProvider}
-                    isSaving={savingLocale === lang.locale}
+                    saveTrigger={saveTriggers[lang.locale] ?? 0}
+                    actionUrl={actionUrl}
                   />
                 </>
               ))}
@@ -229,33 +231,97 @@ export function TranslationKeyContent({
 
 type LanguageDetailProps = {
   lang: ProjectLanguage;
+  translationKey: TranslationKey;
   handleTranslationChange: (locale: string, value: string) => void;
   value: string;
   isFuzzy: boolean;
-  handleTranslationBlur: (locale: string) => void;
   handleFuzzyChange: (locale: string, isFuzzy: boolean) => void;
   handleRequestAiTranslation: (locale: string) => void;
   hasAiProvider: boolean;
-  isSaving: boolean;
+  /** Counter incremented to request a programmatic save (fuzzy change, AI suggestion). */
+  saveTrigger: number;
+  actionUrl?: string;
 };
 
 function LanguageDetail({
   lang,
+  translationKey,
   handleTranslationChange,
   value,
   isFuzzy,
-  handleTranslationBlur,
   handleFuzzyChange,
   handleRequestAiTranslation,
   hasAiProvider,
-  isSaving,
+  saveTrigger,
+  actionUrl,
 }: LanguageDetailProps): JSX.Element {
+  const { t } = useTranslation();
+  const saveFetcher = useFetcher();
+
+  // Track the last saved value to detect unsaved changes on blur
+  const originalValueRef = useRef(value);
+  const prevSaveTriggerRef = useRef(saveTrigger);
+
   const handleChange = useCallback(
     (newValue: string): void => {
       handleTranslationChange(lang.locale, newValue);
     },
     [handleTranslationChange, lang.locale],
   );
+
+  const doSave = useCallback(
+    (currentValue: string, currentFuzzy: boolean) => {
+      originalValueRef.current = currentValue;
+      saveFetcher.submit(
+        {
+          _action: "saveTranslation",
+          locale: lang.locale,
+          value: currentValue || "",
+          isFuzzy: String(currentFuzzy),
+        },
+        {
+          method: "POST",
+          ...(actionUrl ? { action: actionUrl } : {}),
+        },
+      );
+      toaster.success({
+        title: t("common.saveInProgress"),
+        description: (
+          <VStack align="start" gap={1}>
+            <Text>
+              <strong>{t("key.save.key")} </strong>
+              {translationKey.keyName}
+            </Text>
+            <Text>
+              <strong>{t("key.save.locale")}</strong>
+              {lang.locale}
+            </Text>
+            <Text>
+              <strong>{t("key.save.value")}</strong>{" "}
+              {currentValue || t("key.save.empty")}
+            </Text>
+          </VStack>
+        ),
+      });
+    },
+    [saveFetcher, lang.locale, actionUrl, translationKey.keyName, t],
+  );
+
+  const handleBlur = useCallback(() => {
+    if (value !== originalValueRef.current) {
+      doSave(value, isFuzzy);
+    }
+  }, [value, isFuzzy, doSave]);
+
+  // Trigger a programmatic save when saveTrigger increments (fuzzy change or AI suggestion)
+  useEffect(() => {
+    if (saveTrigger !== prevSaveTriggerRef.current) {
+      prevSaveTriggerRef.current = saveTrigger;
+      doSave(value, isFuzzy);
+    }
+  }, [saveTrigger, value, isFuzzy, doSave]);
+
+  const isSaving = saveFetcher.state !== "idle";
 
   return (
     <GridItem key={`lang-${lang.id}`}>
@@ -265,8 +331,8 @@ function LanguageDetail({
         value={value}
         isFuzzy={isFuzzy}
         onChange={handleChange}
-        onBlur={() => handleTranslationBlur(lang.locale)}
-        onFuzzyChange={(isFuzzy) => handleFuzzyChange(lang.locale, isFuzzy)}
+        onBlur={handleBlur}
+        onFuzzyChange={(fuzzy) => handleFuzzyChange(lang.locale, fuzzy)}
         onRequestAi={() => handleRequestAiTranslation(lang.locale)}
         hasAiProvider={hasAiProvider}
         disabled={isSaving}
