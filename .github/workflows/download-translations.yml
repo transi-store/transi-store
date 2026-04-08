@@ -1,15 +1,15 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Download translations
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   schedule:
     - cron: 15 4 * * *
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch slug to download translations from (exports main + branch keys)"
+        required: false
+        type: string
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -36,11 +36,10 @@ jobs:
 
       - run: yarn install
 
-      # Runs a single command using the runners shell
       - name: Download translations
         env:
           TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
-        run: yarn turbo run download-translations
+        run: yarn turbo run download-translations${{ inputs.branch && format(' -- --branch {0}', inputs.branch) || '' }}
 
       - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
         with:
