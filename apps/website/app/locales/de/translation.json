@@ -74,7 +74,7 @@
   "export.description": "Exportieren Sie Ihre Übersetzungen im JSON- oder XLIFF-Format",
   "export.formatLabel": "Format",
   "export.title": "Übersetzungen exportieren",
-  "header.doc": "API-Dokumentation",
+  "header.api-doc": "API",
   "header.docs": "Docs",
   "header.login": "Login",
   "header.logoAlt": "Logo",
