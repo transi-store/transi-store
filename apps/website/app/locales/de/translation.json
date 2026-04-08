@@ -75,6 +75,7 @@
   "export.formatLabel": "Format",
   "export.title": "Übersetzungen exportieren",
   "header.doc": "API-Dokumentation",
+  "header.docs": "Docs",
   "header.login": "Login",
   "header.logoAlt": "Logo",
   "header.logout": "Abmelden",
@@ -292,7 +293,6 @@
   "pricing.title": "Preise",
   "project.back": "Zurück",
   "project.defaultSuffix": " (Standard)",
-  "projects.keyCount": "{count, plural, one {# Schlüssel} other {# Schlüssel}}",
   "projects.new.create": "Projekt erstellen",
   "projects.new.descriptionLabel": "Beschreibung (optional)",
   "projects.new.descriptionPlaceholder": "Projektbeschreibung...",
@@ -302,6 +302,7 @@
   "projects.new.nameLabel": "Projektname",
   "projects.new.namePlaceholder": "Meine Anwendung",
   "projects.new.title": "Neues Projekt",
+  "projets.keyCount": "{count, plural, one {# Schlüssel} other {# Schlüssel}}",
   "search.all": "Alle",
   "search.badgeKey": "Schlüssel",
   "search.badgeTranslation": "Übersetzung",
@@ -400,6 +401,5 @@
   "translations.table.translations": "Übersetzungen",
   "translations.title": "Übersetzungsschlüssel",
   "website.description": "Tool zur Verwaltung von Multi-Projekt-Übersetzungen",
-  "website.title": "Transi-Store - Einfache und leistungsstarke Übersetzungsverwaltung",
-  "header.docs": "Docs"
+  "website.title": "Transi-Store - Einfache und leistungsstarke Übersetzungsverwaltung"
 }

@@ -292,7 +292,6 @@
   "pricing.title": "Pricing",
   "project.back": "Back",
   "project.defaultSuffix": " (default)",
-  "projects.keyCount": "{count, plural, one {# key} other {# keys}}",
   "projects.new.create": "Create project",
   "projects.new.descriptionLabel": "Description (optional)",
   "projects.new.descriptionPlaceholder": "Project description...",
@@ -302,6 +301,7 @@
   "projects.new.nameLabel": "Project name",
   "projects.new.namePlaceholder": "My application",
   "projects.new.title": "New project",
+  "projets.keyCount": "{count, plural, one {# key} other {# keys}}",
   "search.all": "All",
   "search.badgeKey": "Key",
   "search.badgeTranslation": "Translation",
@@ -400,6 +400,5 @@
   "translations.table.translations": "Translations",
   "translations.title": "Translation keys",
   "website.description": "Multi-project translation management system",
-  "website.title": "Transi-Store - Simple and powerful translation system",
-  "header.docs": "Docs"
+  "website.title": "Transi-Store - Simple and powerful translation system"
 }
