@@ -10,23 +10,23 @@ import {
 import type { MDXComponents } from "mdx/types";
 
 export const mdxComponents: MDXComponents = {
-  h1: ({ children }) => (
-    <Heading as="h1" size="2xl" mt={8} mb={4} lineHeight="tight">
+  h1: ({ children, id }) => (
+    <Heading as="h1" id={id} size="2xl" mt={8} mb={4} lineHeight="tight">
       {children}
     </Heading>
   ),
-  h2: ({ children }) => (
-    <Heading as="h2" size="xl" mt={8} mb={3} lineHeight="tight">
+  h2: ({ children, id }) => (
+    <Heading as="h2" id={id} size="xl" mt={8} mb={3} lineHeight="tight">
       {children}
     </Heading>
   ),
-  h3: ({ children }) => (
-    <Heading as="h3" size="lg" mt={6} mb={2}>
+  h3: ({ children, id }) => (
+    <Heading as="h3" id={id} size="lg" mt={6} mb={2}>
       {children}
     </Heading>
   ),
-  h4: ({ children }) => (
-    <Heading as="h4" size="md" mt={4} mb={2}>
+  h4: ({ children, id }) => (
+    <Heading as="h4" id={id} size="md" mt={4} mb={2}>
       {children}
     </Heading>
   ),
