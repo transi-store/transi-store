@@ -102,7 +102,7 @@ export function TranslationKeyContent({
     isEditKeyModalOpen,
     setIsEditKeyModalOpen,
     editKeyFetcher,
-    isSaving,
+    savingLocale,
   } = useTranslationKeyEditor({
     translationKey,
     languages,
@@ -193,7 +193,7 @@ export function TranslationKeyContent({
                     handleFuzzyChange={handleFuzzyChange}
                     handleRequestAiTranslation={handleRequestAiTranslation}
                     hasAiProvider={hasAiProvider}
-                    isSaving={isSaving}
+                    isSaving={savingLocale === lang.locale}
                   />
                 </>
               ))}

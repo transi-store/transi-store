@@ -45,8 +45,8 @@ type ReturnType = {
     action?: string;
   }>;
 
-  // Save state
-  isSaving: boolean;
+  // Save state — the locale currently being saved, or null if idle
+  savingLocale: string | null;
 };
 
 export function useTranslationKeyEditor({
@@ -279,7 +279,10 @@ export function useTranslationKeyEditor({
     setIsEditKeyModalOpen,
     editKeyFetcher,
 
-    // Save state
-    isSaving: saveFetcher.state !== "idle",
+    // Save state — track which locale is currently being saved
+    savingLocale:
+      saveFetcher.state !== "idle"
+        ? ((saveFetcher.formData?.get("locale") as string | null) ?? null)
+        : null,
   };
 }
