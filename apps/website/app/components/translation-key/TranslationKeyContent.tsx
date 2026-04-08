@@ -307,6 +307,10 @@ function LanguageDetail({
     [saveFetcher, lang.locale, actionUrl, translationKey.keyName, t],
   );
 
+  // Keep a ref to the latest doSave so the trigger effect doesn't need it as a dep
+  const doSaveRef = useRef(doSave);
+  doSaveRef.current = doSave;
+
   const handleBlur = useCallback(() => {
     if (value !== originalValueRef.current) {
       doSave(value, isFuzzy);
@@ -317,9 +321,9 @@ function LanguageDetail({
   useEffect(() => {
     if (saveTrigger !== prevSaveTriggerRef.current) {
       prevSaveTriggerRef.current = saveTrigger;
-      doSave(value, isFuzzy);
+      doSaveRef.current(value, isFuzzy);
     }
-  }, [saveTrigger, value, isFuzzy, doSave]);
+  }, [saveTrigger, value, isFuzzy]);
 
   const isSaving = saveFetcher.state !== "idle";
 
