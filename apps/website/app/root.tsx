@@ -111,7 +111,7 @@ export default function App() {
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   const { t } = useTranslation();
 
-  let message = t("error");
+  const message = t("error");
   let details = t("common.error");
   let stack: string | undefined;
 
