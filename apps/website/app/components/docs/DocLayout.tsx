@@ -7,7 +7,157 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router";
-import { TransistorLegs } from "../TransistorLegs";
+
+/** Subtle circuit-board traces as a background for the doc sidebar. */
+function SidebarCircuitBg() {
+  return (
+    <Box
+      position="absolute"
+      inset={0}
+      pointerEvents="none"
+      overflow="hidden"
+      opacity={0.1}
+      borderRadius="lg"
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 240 500"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        {/* Horizontal traces */}
+        <line
+          x1="0"
+          y1="60"
+          x2="120"
+          y2="60"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="140"
+          y1="60"
+          x2="240"
+          y2="60"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="0"
+          y1="200"
+          x2="80"
+          y2="200"
+          stroke="#1569D4"
+          strokeWidth="1"
+        />
+        <line
+          x1="100"
+          y1="200"
+          x2="240"
+          y2="200"
+          stroke="#1569D4"
+          strokeWidth="1"
+        />
+        <line
+          x1="20"
+          y1="340"
+          x2="180"
+          y2="340"
+          stroke="#87C241"
+          strokeWidth="1"
+        />
+        <line
+          x1="200"
+          y1="340"
+          x2="240"
+          y2="340"
+          stroke="#87C241"
+          strokeWidth="1"
+        />
+        <line
+          x1="0"
+          y1="440"
+          x2="240"
+          y2="440"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        {/* Vertical connectors */}
+        <line
+          x1="120"
+          y1="0"
+          x2="120"
+          y2="60"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="80"
+          y1="60"
+          x2="80"
+          y2="200"
+          stroke="#1569D4"
+          strokeWidth="1"
+          strokeDasharray="3 6"
+        />
+        <line
+          x1="180"
+          y1="200"
+          x2="180"
+          y2="340"
+          stroke="#87C241"
+          strokeWidth="1"
+        />
+        <line
+          x1="40"
+          y1="340"
+          x2="40"
+          y2="500"
+          stroke="#1569D4"
+          strokeWidth="1"
+          strokeDasharray="3 6"
+        />
+        <line
+          x1="200"
+          y1="340"
+          x2="200"
+          y2="440"
+          stroke="#43AECE"
+          strokeWidth="1"
+          strokeDasharray="3 6"
+        />
+        {/* Pin nodes */}
+        <circle cx="120" cy="60" r="3" fill="#43AECE" />
+        <circle cx="80" cy="200" r="3" fill="#1569D4" />
+        <circle cx="180" cy="340" r="3" fill="#87C241" />
+        <circle cx="200" cy="340" r="2.5" fill="#43AECE" />
+        {/* Connector pad */}
+        <rect
+          x="130"
+          y="54"
+          width="12"
+          height="12"
+          rx="2"
+          fill="none"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <rect
+          x="90"
+          y="194"
+          width="12"
+          height="12"
+          rx="2"
+          fill="none"
+          stroke="#1569D4"
+          strokeWidth="1"
+        />
+      </svg>
+    </Box>
+  );
+}
 
 interface DocNavItem {
   label: string;
@@ -81,11 +231,10 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
           borderRadius="lg"
           p={4}
           boxShadow="0 0 12px rgba(67,174,206,0.08)"
+          css={{ position: "relative", overflow: "hidden" }}
         >
-          <VStack gap={5} align="stretch">
-            <Box display="flex" justifyContent="center">
-              <TransistorLegs height={22} opacity={0.35} />
-            </Box>
+          <SidebarCircuitBg />
+          <VStack gap={5} align="stretch" position="relative">
             {NAV_SECTIONS.map((section) => (
               <Box key={section.title}>
                 <Text

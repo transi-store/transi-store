@@ -6,7 +6,105 @@ import { Navigation } from "./Navigation";
 import { LanguageSelector } from "./LanguageSelector";
 import { UserMenu } from "./UserMenu";
 import { ColorModeButton, useColorMode } from "../ui/color-mode";
-import { TransistorLegs } from "../TransistorLegs";
+
+/** Subtle circuit-board traces as a background for the header bar. */
+function HeaderCircuitBg() {
+  return (
+    <Box
+      position="absolute"
+      inset={0}
+      pointerEvents="none"
+      overflow="hidden"
+      opacity={0.12}
+      borderRadius="lg"
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 800 50"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        {/* Horizontal traces */}
+        <line
+          x1="0"
+          y1="12"
+          x2="250"
+          y2="12"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="300"
+          y1="12"
+          x2="800"
+          y2="12"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="0"
+          y1="38"
+          x2="400"
+          y2="38"
+          stroke="#1569D4"
+          strokeWidth="1"
+        />
+        <line
+          x1="440"
+          y1="38"
+          x2="800"
+          y2="38"
+          stroke="#87C241"
+          strokeWidth="1"
+        />
+        {/* Vertical connectors */}
+        <line
+          x1="250"
+          y1="0"
+          x2="250"
+          y2="25"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="440"
+          y1="25"
+          x2="440"
+          y2="50"
+          stroke="#87C241"
+          strokeWidth="1"
+          strokeDasharray="3 5"
+        />
+        <line
+          x1="600"
+          y1="0"
+          x2="600"
+          y2="50"
+          stroke="#1569D4"
+          strokeWidth="1"
+          strokeDasharray="3 5"
+        />
+        {/* Pin nodes */}
+        <circle cx="250" cy="12" r="3" fill="#43AECE" />
+        <circle cx="440" cy="38" r="3" fill="#87C241" />
+        <circle cx="600" cy="25" r="2.5" fill="#1569D4" />
+        {/* Connector pad */}
+        <rect
+          x="290"
+          y="6"
+          width="12"
+          height="12"
+          rx="2"
+          fill="none"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+      </svg>
+    </Box>
+  );
+}
 
 type HeaderProps = {
   user: SessionData | null;
@@ -32,10 +130,15 @@ export function Header({ user }: HeaderProps) {
           boxShadow="0 0 12px rgba(67,174,206,0.1)"
           px={{ base: 4, md: 5 }}
           py={2.5}
+          position="relative"
+          overflow="hidden"
         >
+          <HeaderCircuitBg />
+
           <HStack
             gap={{ base: 2, md: 6 }}
             mdDown={{ justifyContent: "center" }}
+            position="relative"
           >
             <HStack asChild gap={2.5} px={1} py={1}>
               <Link to="/">
@@ -66,8 +169,6 @@ export function Header({ user }: HeaderProps) {
               </Link>
             </HStack>
 
-            <TransistorLegs height={18} opacity={0.4} />
-
             {user && (
               <Box hideBelow="md">
                 <Navigation lastOrganizationSlug={user.lastOrganizationSlug} />
@@ -75,7 +176,11 @@ export function Header({ user }: HeaderProps) {
             )}
           </HStack>
 
-          <HStack gap={1} mdDown={{ justifyContent: "space-between" }}>
+          <HStack
+            gap={1}
+            mdDown={{ justifyContent: "space-between" }}
+            position="relative"
+          >
             <Box>
               <Button asChild variant="ghost" size="sm">
                 <Link to="/docs">{t("header.docs")}</Link>
