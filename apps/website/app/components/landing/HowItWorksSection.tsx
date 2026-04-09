@@ -123,7 +123,7 @@ export function HowItWorksSection() {
                     opacity={0.5}
                     css={{
                       _dark: {
-                        boxShadow: `0 0 6px ${step.color}`,
+                        boxShadow: step.glow,
                         opacity: 0.7,
                       },
                     }}

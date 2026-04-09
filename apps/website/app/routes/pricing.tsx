@@ -85,6 +85,7 @@ interface PricingCardProps {
   highlighted?: boolean;
   payPlan?: boolean;
   children?: React.ReactNode;
+  index?: number;
 }
 
 function PricingCard({
@@ -99,7 +100,7 @@ function PricingCard({
   payPlan,
   children,
   index = 0,
-}: PricingCardProps & { index?: number }) {
+}: PricingCardProps) {
   const { t } = useTranslation();
   const accentColor = NEON_CYCLE[index % NEON_CYCLE.length];
   const glowShadow = neonGlowAt(index);
