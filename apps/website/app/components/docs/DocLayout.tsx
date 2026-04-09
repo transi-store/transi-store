@@ -7,6 +7,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router";
+import { TransistorLegs } from "../TransistorLegs";
 
 interface DocNavItem {
   label: string;
@@ -82,6 +83,9 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
           boxShadow="0 0 12px rgba(67,174,206,0.08)"
         >
           <VStack gap={5} align="stretch">
+            <Box display="flex" justifyContent="center">
+              <TransistorLegs height={22} opacity={0.35} />
+            </Box>
             {NAV_SECTIONS.map((section) => (
               <Box key={section.title}>
                 <Text

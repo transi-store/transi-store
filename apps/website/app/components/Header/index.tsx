@@ -6,6 +6,7 @@ import { Navigation } from "./Navigation";
 import { LanguageSelector } from "./LanguageSelector";
 import { UserMenu } from "./UserMenu";
 import { ColorModeButton, useColorMode } from "../ui/color-mode";
+import { TransistorLegs } from "../TransistorLegs";
 
 type HeaderProps = {
   user: SessionData | null;
@@ -64,6 +65,8 @@ export function Header({ user }: HeaderProps) {
                 </Text>
               </Link>
             </HStack>
+
+            <TransistorLegs height={18} opacity={0.4} />
 
             {user && (
               <Box hideBelow="md">
