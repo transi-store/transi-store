@@ -180,6 +180,14 @@ const config = defineConfig({
             },
           },
         },
+        neon: {
+          fg: {
+            value: {
+              _light: "{colors.teal.500}",
+              _dark: "{colors.teal.400}",
+            },
+          },
+        },
         surface: {
           canvas: {
             value: {

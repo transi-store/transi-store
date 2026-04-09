@@ -46,7 +46,7 @@ function FeatureCard({
       _hover={{
         borderColor: accentColor,
         transform: "translateY(-2px)",
-        _dark: { boxShadow: glowShadow },
+        boxShadow: glowShadow,
       }}
       animationName="fade-in, slide-from-bottom"
       animationDuration="400ms"
@@ -62,14 +62,14 @@ function FeatureCard({
         w={10}
         h="2px"
         bg={accentColor}
-        css={{ _dark: { boxShadow: `0 0 6px ${accentColor}` } }}
+        boxShadow={`0 0 6px ${accentColor}`}
       />
 
       <VStack align="flex-start" gap={3}>
         <Icon
           fontSize="xl"
           color={accentColor}
-          css={{ _dark: { filter: `drop-shadow(0 0 4px ${accentColor})` } }}
+          filter={`drop-shadow(0 0 4px ${accentColor})`}
         >
           <FeatureIcon />
         </Icon>

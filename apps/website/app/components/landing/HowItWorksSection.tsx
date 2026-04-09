@@ -96,7 +96,7 @@ export function HowItWorksSection() {
                     fontSize="lg"
                     fontWeight="bold"
                     fontFamily="heading"
-                    css={{ _dark: { boxShadow: step.glow } }}
+                    boxShadow={step.glow}
                   >
                     {step.number}
                   </Box>
@@ -120,13 +120,8 @@ export function HowItWorksSection() {
                     w={8}
                     h="2px"
                     bg={step.color}
-                    opacity={0.5}
-                    css={{
-                      _dark: {
-                        boxShadow: step.glow,
-                        opacity: 0.7,
-                      },
-                    }}
+                    opacity={0.6}
+                    boxShadow={step.glow}
                   />
                 </Box>
               )}

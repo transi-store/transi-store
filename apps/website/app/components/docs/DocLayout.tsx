@@ -79,11 +79,7 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
           borderColor="surface.border"
           borderRadius="lg"
           p={4}
-          css={{
-            _dark: {
-              boxShadow: "0 0 12px rgba(67,174,206,0.08)",
-            },
-          }}
+          boxShadow="0 0 12px rgba(67,174,206,0.08)"
         >
           <VStack gap={5} align="stretch">
             {NAV_SECTIONS.map((section) => (
@@ -93,14 +89,9 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
                   fontWeight="bold"
                   textTransform="uppercase"
                   letterSpacing="0.15em"
-                  color="fg.muted"
+                  color="neon.fg"
+                  textShadow="0 0 8px rgba(67,174,206,0.3)"
                   mb={2}
-                  css={{
-                    _dark: {
-                      color: "rgba(67,174,206,0.75)",
-                      textShadow: "0 0 8px rgba(67,174,206,0.3)",
-                    },
-                  }}
                 >
                   {section.title}
                 </Text>
@@ -128,15 +119,9 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
                         borderColor={isActive ? "brand.solid" : "transparent"}
                         _hover={{ bg: "surface.panelMuted", color: "fg" }}
                         transition="all 0.15s"
-                        css={
+                        boxShadow={
                           isActive
-                            ? {
-                                _dark: {
-                                  borderColor: "#3B82F6",
-                                  boxShadow:
-                                    "inset 2px 0 8px rgba(59,130,246,0.2)",
-                                },
-                              }
+                            ? "inset 2px 0 8px rgba(59,130,246,0.2)"
                             : undefined
                         }
                       >

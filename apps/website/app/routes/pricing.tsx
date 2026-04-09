@@ -116,7 +116,7 @@ function PricingCard({
       transition="all 0.2s"
       _hover={{
         borderColor: highlighted ? "brand.solid" : "accent.solid",
-        _dark: { boxShadow: glowShadow },
+        boxShadow: glowShadow,
       }}
     >
       {payPlan ? (
@@ -146,9 +146,7 @@ function PricingCard({
           <Icon
             fontSize="xl"
             color="brand.solid"
-            css={{
-              _dark: { filter: `drop-shadow(0 0 4px ${accentColor})` },
-            }}
+            filter={`drop-shadow(0 0 4px ${accentColor})`}
           >
             <IconComponent />
           </Icon>
@@ -196,7 +194,7 @@ export default function PricingPage() {
             as="h1"
             textStyle={{ base: "3xl", md: "5xl" }}
             fontFamily="heading"
-            css={{ _dark: { textShadow: NEON_TEXT_GLOW.blue } }}
+            textShadow={NEON_TEXT_GLOW.blue}
           >
             {t("pricing.title")}
           </Heading>

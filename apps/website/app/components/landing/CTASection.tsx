@@ -23,16 +23,8 @@ export function CTASection() {
           bg={{ _light: "#121B28", _dark: "#0a1018" }}
           color="white"
           border="1px solid"
-          borderColor={{
-            _light: "transparent",
-            _dark: "rgba(67,174,206,0.25)",
-          }}
-          css={{
-            _dark: {
-              boxShadow:
-                "0 0 15px rgba(67,174,206,0.15), inset 0 0 30px rgba(67,174,206,0.04)",
-            },
-          }}
+          borderColor="rgba(67,174,206,0.25)"
+          boxShadow="0 0 15px rgba(67,174,206,0.15), inset 0 0 30px rgba(67,174,206,0.04)"
           px={{ base: 8, md: 12 }}
           py={{ base: 10, md: 14 }}
         >
