@@ -111,12 +111,11 @@ export default function App() {
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   const { t } = useTranslation();
 
-  let message = "Oops!";
+  let message = t("error");
   let details = t("common.error");
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = "Error";
     details = error.statusText || details;
     details += ` (status ${error.status})`;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
