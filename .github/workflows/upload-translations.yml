@@ -1,0 +1,42 @@
+name: Upload translations
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      strategy:
+        description: "Import strategy: 'skip' (default) or 'overwrite' existing translations"
+        required: false
+        default: "skip"
+        type: choice
+        options:
+          - skip
+          - overwrite
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - run: corepack enable
+
+      - name: setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - run: yarn install
+
+      - name: Upload translations
+        env:
+          TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
+        run: yarn turbo run upload-translations -- --branch ${{ github.ref_name }} --strategy ${{ inputs.strategy || 'skip' }}

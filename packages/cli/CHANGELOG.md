@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.7.1
+
+### Fixed
+
+- Git optimization for `upload:config` now always compares the full branch against the default branch (main/master). Previously, the optimization only worked on feature branches with full git history available. Now it also fetches `origin/main` when not locally available (e.g. CI shallow clones).
+
 ## 1.7.0
 
 ### Added

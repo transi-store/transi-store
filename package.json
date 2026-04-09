@@ -15,6 +15,7 @@
     "build:cli": "turbo run build --filter=@transi-store/cli",
     "start": "turbo run start --filter=@transi-store/website",
     "download-translations": "yarn transi-store",
+    "upload-translations": "yarn transi-store upload:config",
     "lint:eslint": "eslint .",
     "lint:types": "yarn turbo lint:types",
     "knip": "yarn workspace @transi-store/website react-router typegen && knip",
