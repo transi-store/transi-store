@@ -83,13 +83,8 @@ export function TranslationKeyRow({
       bg={
         highlight?.split(",").includes(key.keyName)
           ? "accent.subtle"
-          : "transparent"
+          : undefined
       }
-      _hover={{
-        bg: highlight?.split(",").includes(key.keyName)
-          ? "accent.subtle"
-          : "surface.panelMuted",
-      }}
     >
       <Table.Cell>
         <LinkBox>

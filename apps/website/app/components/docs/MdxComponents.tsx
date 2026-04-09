@@ -56,10 +56,10 @@ export const mdxComponents: MDXComponents = {
       return (
         <Box
           as="pre"
-          bg="surface.panelMuted"
+          bg="bg.subtle"
           border="1px solid"
-          borderColor="surface.border"
-          borderRadius="2xl"
+          borderColor="border"
+          borderRadius="md"
           p={4}
           mb={4}
           overflowX="auto"
@@ -72,7 +72,7 @@ export const mdxComponents: MDXComponents = {
     }
     return (
       <Code
-        bg="surface.panelMuted"
+        bg="bg.subtle"
         px={1.5}
         py={0.5}
         borderRadius="sm"
@@ -86,13 +86,13 @@ export const mdxComponents: MDXComponents = {
   pre: ({ children }) => <>{children}</>,
   blockquote: ({ children }) => (
     <Box
-      borderLeftWidth={4}
+      borderLeftWidth={3}
       borderColor="accent.solid"
       pl={4}
       py={1}
       mb={4}
-      bg="surface.panelMuted"
-      borderRadius="xl"
+      bg="bg.subtle"
+      borderRadius="sm"
     >
       {children}
     </Box>
@@ -115,23 +115,22 @@ export const mdxComponents: MDXComponents = {
         as="table"
         width="full"
         borderWidth={1}
-        borderColor="surface.border"
-        borderRadius="2xl"
+        borderColor="border"
+        borderRadius="md"
         overflow="hidden"
-        bg="surface.panelMuted"
       >
         {children}
       </Box>
     </Box>
   ),
   thead: ({ children }) => (
-    <Box as="thead" bg="surface.panel">
+    <Box as="thead" bg="bg.subtle">
       {children}
     </Box>
   ),
   tbody: ({ children }) => <Box as="tbody">{children}</Box>,
   tr: ({ children }) => (
-    <HStack as="tr" borderBottomWidth={1} borderColor="surface.border">
+    <HStack as="tr" borderBottomWidth={1} borderColor="border">
       {children}
     </HStack>
   ),

@@ -1,6 +1,5 @@
 import {
   Box,
-  Card,
   Container,
   Heading,
   Icon,
@@ -30,39 +29,47 @@ function FeatureCard({
   description: string;
   index: number;
 }) {
+  const colors = ["#1569D4", "#87C241", "#43AECE"];
+  const accentColor = colors[index % colors.length];
+
   return (
-    <Card.Root
-      variant="outline"
-      bg="surface.panelMuted"
-      borderColor="surface.border"
-      borderRadius="2xl"
-      overflow="hidden"
+    <Box
       position="relative"
+      p={6}
+      bg="surface.panel"
+      border="1px solid"
+      borderColor="surface.border"
+      borderRadius="lg"
       transition="all 0.2s"
-      _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+      _hover={{ borderColor: accentColor, transform: "translateY(-2px)" }}
       animationName="fade-in, slide-from-bottom"
-      animationDuration="500ms"
+      animationDuration="400ms"
       animationTimingFunction="ease-out"
       animationFillMode="backwards"
-      animationDelay={`${index * 100}ms`}
-      _before={{
-        content: '""',
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        h: "3px",
-        bgGradient: "linear(to-r, brand.solid, accent.solid)",
-      }}
+      animationDelay={`${index * 80}ms`}
     >
-      <Card.Body gap={3}>
-        <Icon fontSize="2xl" color="brand.solid">
+      {/* Top accent line — like a circuit trace */}
+      <Box
+        position="absolute"
+        top={0}
+        left={6}
+        w={10}
+        h="2px"
+        bg={accentColor}
+      />
+
+      <VStack align="flex-start" gap={3}>
+        <Icon fontSize="xl" color={accentColor}>
           <FeatureIcon />
         </Icon>
-        <Card.Title>{title}</Card.Title>
-        <Card.Description>{description}</Card.Description>
-      </Card.Body>
-    </Card.Root>
+        <Heading as="h3" textStyle="md" fontFamily="heading">
+          {title}
+        </Heading>
+        <Text fontSize="sm" color="fg.muted" lineHeight="tall">
+          {description}
+        </Text>
+      </VStack>
+    </Box>
   );
 }
 
@@ -103,41 +110,32 @@ export function FeaturesSection() {
   ];
 
   return (
-    <Box as="section" py={{ base: 12, md: 20 }} px={{ base: 3, md: 4 }}>
+    <Box as="section" py={{ base: 16, md: 24 }}>
       <Container maxW="container.xl">
-        <Box
-          bg="surface.panel"
-          border="1px solid"
-          borderColor="surface.border"
-          borderRadius="4xl"
-          px={{ base: 6, md: 8 }}
-          py={{ base: 8, md: 10 }}
-          boxShadow={{
-            base: "0 24px 48px rgba(15, 23, 42, 0.06)",
-            _dark: "0 24px 48px rgba(0, 0, 0, 0.24)",
-          }}
-        >
-          <VStack gap={4} mb={12} textAlign="center">
-            <Heading as="h2" textStyle={{ base: "3xl", md: "4xl" }}>
-              {t("landing.features.title")}
-            </Heading>
-            <Text color="fg.muted" textStyle="lg" maxW="2xl">
-              {t("landing.features.subtitle")}
-            </Text>
-          </VStack>
+        <VStack gap={4} mb={14} textAlign="center">
+          <Heading
+            as="h2"
+            textStyle={{ base: "3xl", md: "4xl" }}
+            fontFamily="heading"
+          >
+            {t("landing.features.title")}
+          </Heading>
+          <Text color="fg.muted" textStyle="lg" maxW="2xl">
+            {t("landing.features.subtitle")}
+          </Text>
+        </VStack>
 
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6}>
-            {features.map((feature, index) => (
-              <FeatureCard
-                key={feature.title}
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-                index={index}
-              />
-            ))}
-          </SimpleGrid>
-        </Box>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={5}>
+          {features.map((feature, index) => (
+            <FeatureCard
+              key={feature.title}
+              icon={feature.icon}
+              title={feature.title}
+              description={feature.description}
+              index={index}
+            />
+          ))}
+        </SimpleGrid>
       </Container>
     </Box>
   );

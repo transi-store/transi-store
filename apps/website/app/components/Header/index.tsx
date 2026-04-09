@@ -16,14 +16,7 @@ export function Header({ user }: HeaderProps) {
   const { colorMode } = useColorMode();
 
   return (
-    <Box
-      as="header"
-      position="sticky"
-      top={0}
-      zIndex={20}
-      py={4}
-      px={{ base: 3, md: 4 }}
-    >
+    <Box as="header" position="sticky" top={0} zIndex={20} py={3} px={4}>
       <Container maxW="container.xl">
         <HStack
           justify="space-between"
@@ -33,29 +26,16 @@ export function Header({ user }: HeaderProps) {
           bg="header.bg"
           border="1px solid"
           borderColor="header.border"
-          borderRadius="3xl"
-          backdropFilter="blur(18px)"
-          boxShadow={{
-            base: "0 20px 40px rgba(15, 23, 42, 0.08)",
-            _dark: "0 20px 40px rgba(0, 0, 0, 0.28)",
-          }}
+          borderRadius="lg"
+          backdropFilter="blur(20px)"
           px={{ base: 4, md: 5 }}
-          py={{ base: 3, md: 3.5 }}
+          py={2.5}
         >
           <HStack
             gap={{ base: 2, md: 6 }}
             mdDown={{ justifyContent: "center" }}
           >
-            <HStack
-              asChild
-              gap={3}
-              px={2}
-              py={1.5}
-              borderRadius="full"
-              bg="surface.panelMuted"
-              border="1px solid"
-              borderColor="surface.border"
-            >
+            <HStack asChild gap={2.5} px={1} py={1}>
               <Link to="/">
                 <img
                   src={
@@ -64,14 +44,15 @@ export function Header({ user }: HeaderProps) {
                       : "/logo-square-black.svg"
                   }
                   alt={t("header.logoAlt")}
-                  width={32}
-                  height={32}
+                  width={28}
+                  height={28}
                 />
                 <Text
                   as="span"
-                  fontSize={{ base: "lg", md: "xl" }}
+                  fontSize="md"
                   fontWeight="bold"
                   letterSpacing="tight"
+                  fontFamily="heading"
                 >
                   <Text as="span" color="header.fg">
                     Transi-
@@ -90,7 +71,7 @@ export function Header({ user }: HeaderProps) {
             )}
           </HStack>
 
-          <HStack gap={2} mdDown={{ justifyContent: "space-between" }}>
+          <HStack gap={1} mdDown={{ justifyContent: "space-between" }}>
             <Box>
               <Button asChild variant="ghost" size="sm">
                 <Link to="/docs">{t("header.docs")}</Link>
@@ -113,7 +94,12 @@ export function Header({ user }: HeaderProps) {
                   <Button asChild variant="ghost" size="sm" hideBelow="sm">
                     <Link to="/pricing">{t("header.pricing")}</Link>
                   </Button>
-                  <Button asChild size="sm">
+                  <Button
+                    asChild
+                    size="sm"
+                    colorPalette="accent"
+                    fontWeight="bold"
+                  >
                     <Link to="/auth/login">{t("header.login")}</Link>
                   </Button>
                 </>

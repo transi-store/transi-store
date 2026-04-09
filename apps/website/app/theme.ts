@@ -1,11 +1,22 @@
 import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
 
-// Configuration du thème Transi-Store
+/**
+ * Transi-Store theme — industrial design language
+ *
+ * Palette extracted from the transistor logo:
+ *   Blue  #1569D4  — translation bubble
+ *   Green #87C241  — transistor body / arrows
+ *   Teal  #43AECE  — connector accent
+ *   Navy  #121B28  — transistor pins (dark)
+ */
 const config = defineConfig({
   cssVarsPrefix: "transi",
 
   globalCss: {
     body: {
+      fontFamily: "'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, monospace",
+    },
+    "h1, h2, h3, h4, h5, h6": {
       fontFamily:
         "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
     },
@@ -15,44 +26,71 @@ const config = defineConfig({
     keyframes: {
       float: {
         "0%, 100%": { transform: "translateY(0)" },
-        "50%": { transform: "translateY(-10px)" },
+        "50%": { transform: "translateY(-8px)" },
+      },
+      "pulse-glow": {
+        "0%, 100%": { opacity: "0.4" },
+        "50%": { opacity: "1" },
       },
     },
     tokens: {
       colors: {
-        // Bleu principal (#3B82F6)
         brand: {
-          50: { value: "#EBF5FF" },
-          100: { value: "#D1E9FF" },
-          200: { value: "#B3DDFF" },
-          300: { value: "#84CAFF" },
-          400: { value: "#4B8BF5" },
-          500: { value: "#3B82F6" },
-          600: { value: "#2563EB" },
-          700: { value: "#1D4ED8" },
-          800: { value: "#1E40AF" },
-          900: { value: "#1E3A8A" },
-          950: { value: "#172554" },
+          50: { value: "#e8f0fd" },
+          100: { value: "#c5d9fa" },
+          200: { value: "#9fbef6" },
+          300: { value: "#6da0f0" },
+          400: { value: "#3b82f6" },
+          500: { value: "#1569D4" },
+          600: { value: "#1158b8" },
+          700: { value: "#0d479c" },
+          800: { value: "#0a3780" },
+          900: { value: "#072a66" },
+          950: { value: "#041a45" },
         },
-        // Accent industriel cuivre/ambre
         accent: {
-          50: { value: "#FFF8ED" },
-          100: { value: "#FEEBC8" },
-          200: { value: "#FBD38D" },
-          300: { value: "#F6AD55" },
-          400: { value: "#ED8936" },
-          500: { value: "#DD6B20" },
-          600: { value: "#C05621" },
-          700: { value: "#9C4221" },
-          800: { value: "#7B341E" },
-          900: { value: "#652B19" },
-          950: { value: "#2A180F" },
+          50: { value: "#f2fce4" },
+          100: { value: "#e0f7c0" },
+          200: { value: "#c5ef8a" },
+          300: { value: "#a6e352" },
+          400: { value: "#8CC749" },
+          500: { value: "#87C241" },
+          600: { value: "#6da134" },
+          700: { value: "#558028" },
+          800: { value: "#3e5f1d" },
+          900: { value: "#2a4014" },
+          950: { value: "#172409" },
+        },
+        teal: {
+          50: { value: "#e6f7fb" },
+          100: { value: "#c0ecf5" },
+          200: { value: "#8fddec" },
+          300: { value: "#5dcde2" },
+          400: { value: "#43AECE" },
+          500: { value: "#3698b5" },
+          600: { value: "#2c7f99" },
+          700: { value: "#22647a" },
+          800: { value: "#194b5c" },
+          900: { value: "#10333f" },
+          950: { value: "#081d25" },
+        },
+        navy: {
+          50: { value: "#e8ecf0" },
+          100: { value: "#c4cdd8" },
+          200: { value: "#96a4b8" },
+          300: { value: "#687a97" },
+          400: { value: "#3e5377" },
+          500: { value: "#1e3456" },
+          600: { value: "#182a47" },
+          700: { value: "#121F36" },
+          800: { value: "#121B28" },
+          900: { value: "#0a1018" },
+          950: { value: "#060a10" },
         },
       },
     },
     semanticTokens: {
       colors: {
-        // Couleurs de marque (bleu principal)
         brand: {
           solid: {
             value: {
@@ -74,7 +112,10 @@ const config = defineConfig({
             },
           },
           subtle: {
-            value: { _light: "{colors.brand.50}", _dark: "{colors.brand.950}" },
+            value: {
+              _light: "{colors.brand.50}",
+              _dark: "{colors.brand.950}",
+            },
           },
           emphasized: {
             value: {
@@ -89,7 +130,6 @@ const config = defineConfig({
             },
           },
         },
-        // Couleurs d'accent (vert)
         accent: {
           solid: {
             value: {
@@ -132,19 +172,19 @@ const config = defineConfig({
         header: {
           bg: {
             value: {
-              _light: "rgba(255, 255, 255, 0.82)",
-              _dark: "rgba(10, 15, 24, 0.82)",
+              _light: "rgba(255, 255, 255, 0.85)",
+              _dark: "rgba(10, 16, 24, 0.88)",
             },
           },
           border: {
             value: {
-              _light: "rgba(15, 23, 42, 0.08)",
-              _dark: "rgba(148, 163, 184, 0.18)",
+              _light: "rgba(18, 27, 40, 0.10)",
+              _dark: "rgba(67, 174, 206, 0.20)",
             },
           },
           fg: {
             value: {
-              _light: "{colors.accent.950}",
+              _light: "{colors.navy.800}",
               _dark: "#ffffff",
             },
           },
@@ -152,31 +192,31 @@ const config = defineConfig({
         surface: {
           canvas: {
             value: {
-              _light: "#f4f1ea",
+              _light: "#f5f6f8",
               _dark: "#0a1018",
             },
           },
           panel: {
             value: {
-              _light: "rgba(255, 255, 255, 0.88)",
-              _dark: "rgba(15, 23, 36, 0.9)",
+              _light: "rgba(255, 255, 255, 0.92)",
+              _dark: "rgba(18, 27, 40, 0.92)",
             },
           },
           panelMuted: {
             value: {
-              _light: "rgba(244, 241, 234, 0.92)",
-              _dark: "rgba(19, 28, 43, 0.92)",
+              _light: "rgba(245, 246, 248, 0.95)",
+              _dark: "rgba(14, 21, 32, 0.95)",
             },
           },
           border: {
             value: {
-              _light: "rgba(15, 23, 42, 0.08)",
-              _dark: "rgba(148, 163, 184, 0.18)",
+              _light: "rgba(18, 27, 40, 0.10)",
+              _dark: "rgba(67, 174, 206, 0.15)",
             },
           },
           highlight: {
             value: {
-              _light: "rgba(59, 130, 246, 0.12)",
+              _light: "rgba(21, 105, 212, 0.10)",
               _dark: "rgba(59, 130, 246, 0.18)",
             },
           },
@@ -186,5 +226,4 @@ const config = defineConfig({
   },
 });
 
-// Créer le système avec la config par défaut et notre config personnalisée
 export const system = createSystem(defaultConfig, config);

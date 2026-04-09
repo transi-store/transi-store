@@ -62,46 +62,38 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
   const location = useLocation();
 
   return (
-    <Container
-      maxW="container.xl"
-      py={{ base: 6, md: 10 }}
-      px={{ base: 3, md: 4 }}
-    >
+    <Container maxW="container.xl" py={{ base: 6, md: 10 }}>
       <Box
         display={{ base: "block", md: "grid" }}
-        gridTemplateColumns={{ md: "260px 1fr" }}
+        gridTemplateColumns={{ md: "240px 1fr" }}
         gap={8}
         alignItems="start"
       >
         <Box
           as="aside"
           position={{ md: "sticky" }}
-          top={{ md: 24 }}
+          top={{ md: 20 }}
           mb={{ base: 6, md: 0 }}
           bg="surface.panel"
           border="1px solid"
           borderColor="surface.border"
-          borderRadius="3xl"
-          p={5}
-          boxShadow={{
-            base: "0 18px 36px rgba(15, 23, 42, 0.06)",
-            _dark: "0 18px 36px rgba(0, 0, 0, 0.22)",
-          }}
+          borderRadius="lg"
+          p={4}
         >
-          <VStack gap={6} align="stretch">
+          <VStack gap={5} align="stretch">
             {NAV_SECTIONS.map((section) => (
               <Box key={section.title}>
                 <Text
                   fontSize="xs"
-                  fontWeight="semibold"
+                  fontWeight="bold"
                   textTransform="uppercase"
-                  letterSpacing="0.2em"
+                  letterSpacing="0.15em"
                   color="fg.muted"
                   mb={2}
                 >
                   {section.title}
                 </Text>
-                <VStack gap={1} align="stretch">
+                <VStack gap={0.5} align="stretch">
                   {section.items.map((item) => {
                     const itemPath = item.href.split("#")[0];
                     const itemHash = item.href.includes("#")
@@ -115,14 +107,14 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
                         key={item.href}
                         asChild
                         px={3}
-                        py={2}
-                        borderRadius="xl"
+                        py={1.5}
+                        borderRadius="md"
                         fontSize="sm"
                         bg={isActive ? "surface.highlight" : "transparent"}
                         color={isActive ? "fg" : "fg.muted"}
                         fontWeight={isActive ? "medium" : "normal"}
-                        border="1px solid"
-                        borderColor={isActive ? "brand.muted" : "transparent"}
+                        borderLeft="2px solid"
+                        borderColor={isActive ? "brand.solid" : "transparent"}
                         _hover={{ bg: "surface.panelMuted", color: "fg" }}
                         transition="all 0.15s"
                       >
@@ -136,22 +128,9 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
           </VStack>
         </Box>
 
-        <Box
-          as="main"
-          minW={0}
-          bg="surface.panel"
-          border="1px solid"
-          borderColor="surface.border"
-          borderRadius="4xl"
-          px={{ base: 6, md: 8 }}
-          py={{ base: 8, md: 10 }}
-          boxShadow={{
-            base: "0 24px 48px rgba(15, 23, 42, 0.08)",
-            _dark: "0 24px 48px rgba(0, 0, 0, 0.26)",
-          }}
-        >
+        <Box as="main" minW={0}>
           <Box mb={8}>
-            <Heading as="h1" size="2xl" mb={2}>
+            <Heading as="h1" size="2xl" mb={2} fontFamily="heading">
               {title}
             </Heading>
             {description && (

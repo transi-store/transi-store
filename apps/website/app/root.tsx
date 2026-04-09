@@ -108,17 +108,7 @@ export default function App() {
   }, [locale, i18n]);
 
   return (
-    <Box
-      minH="100vh"
-      bg="surface.canvas"
-      backgroundImage={{
-        _light:
-          "radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 32%), radial-gradient(circle at top right, rgba(221, 107, 32, 0.12), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.7), rgba(244,241,234,0.96)), repeating-linear-gradient(90deg, rgba(15,23,42,0.05) 0, rgba(15,23,42,0.05) 1px, transparent 1px, transparent 88px)",
-        _dark:
-          "radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 30%), radial-gradient(circle at top right, rgba(221, 107, 32, 0.18), transparent 24%), linear-gradient(180deg, rgba(10,16,24,0.96), rgba(8,12,20,0.98)), repeating-linear-gradient(90deg, rgba(148,163,184,0.08) 0, rgba(148,163,184,0.08) 1px, transparent 1px, transparent 88px)",
-      }}
-      backgroundAttachment="fixed"
-    >
+    <Box minH="100vh" bg="surface.canvas">
       <title>{t("website.title")}</title>
       <meta name="description" content={t("website.description")} />
 
@@ -129,7 +119,7 @@ export default function App() {
 
       <Toaster />
       <Header user={user} />
-      <Box as="main" position="relative" zIndex={1}>
+      <Box as="main">
         <Outlet />
       </Box>
     </Box>

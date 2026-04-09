@@ -1,4 +1,4 @@
-import { Box, Table } from "@chakra-ui/react";
+import { Table } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { TranslationKeyRow } from "./TranslationKeyRow";
 import type { RegularDataRow, SearchDataRow } from "~/lib/translation-helper";
@@ -25,49 +25,37 @@ export function TranslationsTable({
   const { t } = useTranslation();
 
   return (
-    <Box
-      overflow="hidden"
-      borderRadius="3xl"
-      border="1px solid"
-      borderColor="surface.border"
-      bg="surface.panel"
-      boxShadow={{
-        base: "0 18px 36px rgba(15, 23, 42, 0.06)",
-        _dark: "0 18px 36px rgba(0, 0, 0, 0.24)",
-      }}
-    >
-      <Table.Root variant="outline" interactive>
-        <Table.Header mdDown={{ display: "flex", flexDirection: "column" }}>
-          <Table.Row bg="surface.panelMuted">
-            <Table.ColumnHeader>
-              {t("translations.table.keyName")}
-            </Table.ColumnHeader>
-            <Table.ColumnHeader maxW="500px">
-              {t("translations.table.defaultTranslation")}
-            </Table.ColumnHeader>
-            <Table.ColumnHeader w="150px">
-              {t("translations.table.translations")}
-            </Table.ColumnHeader>
-            <Table.ColumnHeader w="280px">
-              {t("translations.table.actions")}
-            </Table.ColumnHeader>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {data.map((key) => (
-            <TranslationKeyRow
-              key={key.id}
-              translationKey={key}
-              search={search}
-              totalLanguages={totalLanguages}
-              organizationSlug={organizationSlug}
-              projectSlug={projectSlug}
-              currentUrl={currentUrl}
-              onEditInDrawer={onEditInDrawer}
-            />
-          ))}
-        </Table.Body>
-      </Table.Root>
-    </Box>
+    <Table.Root variant="outline" interactive>
+      <Table.Header mdDown={{ display: "flex", flexDirection: "column" }}>
+        <Table.Row>
+          <Table.ColumnHeader>
+            {t("translations.table.keyName")}
+          </Table.ColumnHeader>
+          <Table.ColumnHeader maxW="500px">
+            {t("translations.table.defaultTranslation")}
+          </Table.ColumnHeader>
+          <Table.ColumnHeader w="150px">
+            {t("translations.table.translations")}
+          </Table.ColumnHeader>
+          <Table.ColumnHeader w="280px">
+            {t("translations.table.actions")}
+          </Table.ColumnHeader>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {data.map((key) => (
+          <TranslationKeyRow
+            key={key.id}
+            translationKey={key}
+            search={search}
+            totalLanguages={totalLanguages}
+            organizationSlug={organizationSlug}
+            projectSlug={projectSlug}
+            currentUrl={currentUrl}
+            onEditInDrawer={onEditInDrawer}
+          />
+        ))}
+      </Table.Body>
+    </Table.Root>
   );
 }
