@@ -222,7 +222,7 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
       >
         <Box
           as="aside"
-          position={{ md: "sticky" }}
+          position={{ base: "relative", md: "sticky" }}
           top={{ md: 20 }}
           mb={{ base: 6, md: 0 }}
           bg="surface.panel"
@@ -231,7 +231,7 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
           borderRadius="lg"
           p={4}
           boxShadow="0 0 12px rgba(67,174,206,0.08)"
-          css={{ position: "relative", overflow: "hidden" }}
+          overflow="hidden"
         >
           <SidebarCircuitBg />
           <VStack gap={5} align="stretch" position="relative">
