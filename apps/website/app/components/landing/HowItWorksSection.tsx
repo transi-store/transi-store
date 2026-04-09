@@ -8,7 +8,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { NEON_BLUE, NEON_GREEN, NEON_TEAL } from "./neon-colors";
+import { NEON_BLUE, NEON_GREEN, NEON_TEAL, NEON_GLOW } from "./neon-colors";
 
 export function HowItWorksSection() {
   const { t } = useTranslation();
@@ -19,18 +19,21 @@ export function HowItWorksSection() {
       title: t("landing.howItWorks.step1.title"),
       description: t("landing.howItWorks.step1.description"),
       color: NEON_BLUE,
+      glow: NEON_GLOW.blue,
     },
     {
       number: 2,
       title: t("landing.howItWorks.step2.title"),
       description: t("landing.howItWorks.step2.description"),
       color: NEON_GREEN,
+      glow: NEON_GLOW.green,
     },
     {
       number: 3,
       title: t("landing.howItWorks.step3.title"),
       description: t("landing.howItWorks.step3.description"),
       color: NEON_TEAL,
+      glow: NEON_GLOW.teal,
     },
   ];
 
@@ -93,6 +96,7 @@ export function HowItWorksSection() {
                     fontSize="lg"
                     fontWeight="bold"
                     fontFamily="heading"
+                    css={{ _dark: { boxShadow: step.glow } }}
                   >
                     {step.number}
                   </Box>
@@ -112,7 +116,18 @@ export function HowItWorksSection() {
                   alignItems="center"
                   px={2}
                 >
-                  <Box w={8} h="2px" bg={step.color} opacity={0.5} />
+                  <Box
+                    w={8}
+                    h="2px"
+                    bg={step.color}
+                    opacity={0.5}
+                    css={{
+                      _dark: {
+                        boxShadow: `0 0 6px ${step.color}`,
+                        opacity: 0.7,
+                      },
+                    }}
+                  />
                 </Box>
               )}
             </HStack>

@@ -15,6 +15,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { LuGithub, LuCloud, LuRocket, LuCheck } from "react-icons/lu";
+import {
+  NEON_CYCLE,
+  neonGlowAt,
+  NEON_TEXT_GLOW,
+} from "~/components/landing/neon-colors";
 
 function PricingTierTable() {
   const { t } = useTranslation();
@@ -93,8 +98,11 @@ function PricingCard({
   highlighted,
   payPlan,
   children,
-}: PricingCardProps) {
+  index = 0,
+}: PricingCardProps & { index?: number }) {
   const { t } = useTranslation();
+  const accentColor = NEON_CYCLE[index % NEON_CYCLE.length];
+  const glowShadow = neonGlowAt(index);
 
   return (
     <Card.Root
@@ -105,7 +113,10 @@ function PricingCard({
       bg="surface.panel"
       borderRadius="lg"
       transition="all 0.2s"
-      _hover={{ borderColor: highlighted ? "brand.solid" : "accent.solid" }}
+      _hover={{
+        borderColor: highlighted ? "brand.solid" : "accent.solid",
+        _dark: { boxShadow: glowShadow },
+      }}
     >
       {payPlan ? (
         <Badge
@@ -131,7 +142,13 @@ function PricingCard({
 
       <Card.Header>
         <HStack gap={3}>
-          <Icon fontSize="xl" color="brand.solid">
+          <Icon
+            fontSize="xl"
+            color="brand.solid"
+            css={{
+              _dark: { filter: `drop-shadow(0 0 4px ${accentColor})` },
+            }}
+          >
             <IconComponent />
           </Icon>
           <Card.Title>{title}</Card.Title>
@@ -178,6 +195,7 @@ export default function PricingPage() {
             as="h1"
             textStyle={{ base: "3xl", md: "5xl" }}
             fontFamily="heading"
+            css={{ _dark: { textShadow: NEON_TEXT_GLOW.blue } }}
           >
             {t("pricing.title")}
           </Heading>
@@ -200,6 +218,7 @@ export default function PricingPage() {
             ]}
             ctaLabel={t("pricing.openSource.cta")}
             ctaLink="https://github.com/transi-store/transi-store#readme"
+            index={0}
           />
 
           <PricingCard
@@ -215,6 +234,7 @@ export default function PricingPage() {
             ]}
             ctaLabel={t("pricing.saas.free.cta")}
             ctaLink="/auth/login"
+            index={1}
           />
 
           <PricingCard
@@ -232,6 +252,7 @@ export default function PricingPage() {
             ctaLink="/auth/login"
             highlighted
             payPlan
+            index={2}
           >
             <Badge colorPalette="green" variant="subtle" w="fit-content" mt={2}>
               {t("pricing.saas.paid.firstMonthFree")}

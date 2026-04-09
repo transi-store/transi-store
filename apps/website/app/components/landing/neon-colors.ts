@@ -8,3 +8,26 @@ export const NEON_TEAL = "#43AECE";
 
 /** Cycling accent colors for indexed elements (cards, steps, etc.) */
 export const NEON_CYCLE = [NEON_BLUE, NEON_GREEN, NEON_TEAL] as const;
+
+/**
+ * Dark-mode neon glow utilities.
+ * Apply these only via `_dark` conditions so light theme stays clean.
+ */
+export const NEON_GLOW = {
+  blue: `0 0 6px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.15)`,
+  green: `0 0 6px rgba(135,194,65,0.5), 0 0 20px rgba(135,194,65,0.15)`,
+  teal: `0 0 6px rgba(67,174,206,0.5), 0 0 20px rgba(67,174,206,0.15)`,
+} as const;
+
+const GLOW_CYCLE = [NEON_GLOW.blue, NEON_GLOW.green, NEON_GLOW.teal] as const;
+
+/** Get the box-shadow glow for a cycling index (dark mode only) */
+export function neonGlowAt(index: number) {
+  return GLOW_CYCLE[index % GLOW_CYCLE.length];
+}
+
+/** Subtle text-shadow for neon headings (dark mode only) */
+export const NEON_TEXT_GLOW = {
+  teal: `0 0 12px rgba(67,174,206,0.4)`,
+  blue: `0 0 12px rgba(59,130,246,0.4)`,
+} as const;

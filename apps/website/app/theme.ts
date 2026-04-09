@@ -170,7 +170,7 @@ const config = defineConfig({
           border: {
             value: {
               _light: "rgba(18, 27, 40, 0.10)",
-              _dark: "rgba(67, 174, 206, 0.20)",
+              _dark: "rgba(67, 174, 206, 0.25)",
             },
           },
           fg: {

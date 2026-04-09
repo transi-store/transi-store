@@ -28,6 +28,11 @@ export function Header({ user }: HeaderProps) {
           borderColor="header.border"
           borderRadius="lg"
           backdropFilter="blur(20px)"
+          css={{
+            _dark: {
+              boxShadow: "0 0 12px rgba(67,174,206,0.1)",
+            },
+          }}
           px={{ base: 4, md: 5 }}
           py={2.5}
         >

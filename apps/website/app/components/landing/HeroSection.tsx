@@ -25,7 +25,8 @@ function CircuitDecoration() {
       inset={0}
       pointerEvents="none"
       overflow="hidden"
-      opacity={{ _light: 0.4, _dark: 0.3 }}
+      opacity={{ _light: 0.4, _dark: 0.45 }}
+      css={{ _dark: { filter: "drop-shadow(0 0 3px rgba(67,174,206,0.4))" } }}
     >
       <svg
         width="100%"

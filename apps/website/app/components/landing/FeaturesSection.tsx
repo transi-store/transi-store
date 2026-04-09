@@ -17,7 +17,7 @@ import {
   LuPlug,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
-import { NEON_CYCLE } from "./neon-colors";
+import { NEON_CYCLE, neonGlowAt } from "./neon-colors";
 
 function FeatureCard({
   icon: FeatureIcon,
@@ -32,6 +32,7 @@ function FeatureCard({
 }) {
   // Neon-bright accent colors cycling through the palette
   const accentColor = NEON_CYCLE[index % NEON_CYCLE.length];
+  const glowShadow = neonGlowAt(index);
 
   return (
     <Box
@@ -42,7 +43,11 @@ function FeatureCard({
       borderColor="surface.border"
       borderRadius="lg"
       transition="all 0.2s"
-      _hover={{ borderColor: accentColor, transform: "translateY(-2px)" }}
+      _hover={{
+        borderColor: accentColor,
+        transform: "translateY(-2px)",
+        _dark: { boxShadow: glowShadow },
+      }}
       animationName="fade-in, slide-from-bottom"
       animationDuration="400ms"
       animationTimingFunction="ease-out"
@@ -57,10 +62,15 @@ function FeatureCard({
         w={10}
         h="2px"
         bg={accentColor}
+        css={{ _dark: { boxShadow: `0 0 6px ${accentColor}` } }}
       />
 
       <VStack align="flex-start" gap={3}>
-        <Icon fontSize="xl" color={accentColor}>
+        <Icon
+          fontSize="xl"
+          color={accentColor}
+          css={{ _dark: { filter: `drop-shadow(0 0 4px ${accentColor})` } }}
+        >
           <FeatureIcon />
         </Icon>
         <Heading as="h3" textStyle="md" fontFamily="heading">
