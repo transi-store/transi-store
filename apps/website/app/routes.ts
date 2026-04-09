@@ -115,4 +115,7 @@ export default [
       ),
     ]),
   ]),
+
+  // Catch-all route: return 404 for any unmatched URL
+  route("*", "routes/$.tsx"),
 ] satisfies RouteConfig;
