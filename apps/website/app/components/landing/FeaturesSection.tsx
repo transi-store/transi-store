@@ -17,6 +17,7 @@ import {
   LuPlug,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
+import { NEON_CYCLE } from "./neon-colors";
 
 function FeatureCard({
   icon: FeatureIcon,
@@ -30,8 +31,7 @@ function FeatureCard({
   index: number;
 }) {
   // Neon-bright accent colors cycling through the palette
-  const colors = ["#3B82F6", "#87C241", "#43AECE"];
-  const accentColor = colors[index % colors.length];
+  const accentColor = NEON_CYCLE[index % NEON_CYCLE.length];
 
   return (
     <Box

@@ -8,6 +8,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import { NEON_BLUE, NEON_GREEN, NEON_TEAL } from "./neon-colors";
 
 export function HowItWorksSection() {
   const { t } = useTranslation();
@@ -17,19 +18,19 @@ export function HowItWorksSection() {
       number: 1,
       title: t("landing.howItWorks.step1.title"),
       description: t("landing.howItWorks.step1.description"),
-      color: "#3B82F6",
+      color: NEON_BLUE,
     },
     {
       number: 2,
       title: t("landing.howItWorks.step2.title"),
       description: t("landing.howItWorks.step2.description"),
-      color: "#87C241",
+      color: NEON_GREEN,
     },
     {
       number: 3,
       title: t("landing.howItWorks.step3.title"),
       description: t("landing.howItWorks.step3.description"),
-      color: "#43AECE",
+      color: NEON_TEAL,
     },
   ];
 

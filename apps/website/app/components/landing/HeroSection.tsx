@@ -35,6 +35,8 @@ function CircuitDecoration() {
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMidYMid slice"
       >
+        {/* Respect prefers-reduced-motion */}
+        <style>{`@media (prefers-reduced-motion: reduce) { animateMotion { display: none; } }`}</style>
         {/* ── Horizontal traces ── */}
         <line
           x1="0"

@@ -37,6 +37,7 @@ export function CTASection() {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
+              <style>{`@media (prefers-reduced-motion: reduce) { animateMotion { display: none; } }`}</style>
               <line
                 x1="0"
                 y1="30"
