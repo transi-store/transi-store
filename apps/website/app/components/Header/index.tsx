@@ -16,40 +16,72 @@ export function Header({ user }: HeaderProps) {
   const { colorMode } = useColorMode();
 
   return (
-    <Box as="header" borderBottomWidth={1} borderColor="border" py={4}>
+    <Box
+      as="header"
+      position="sticky"
+      top={0}
+      zIndex={20}
+      py={4}
+      px={{ base: 3, md: 4 }}
+    >
       <Container maxW="container.xl">
         <HStack
           justify="space-between"
           flexWrap="wrap"
           gap={{ base: 2, md: 4 }}
           mdDown={{ flexDirection: "column", alignItems: "stretch" }}
+          bg="header.bg"
+          border="1px solid"
+          borderColor="header.border"
+          borderRadius="3xl"
+          backdropFilter="blur(18px)"
+          boxShadow={{
+            base: "0 20px 40px rgba(15, 23, 42, 0.08)",
+            _dark: "0 20px 40px rgba(0, 0, 0, 0.28)",
+          }}
+          px={{ base: 4, md: 5 }}
+          py={{ base: 3, md: 3.5 }}
         >
           <HStack
             gap={{ base: 2, md: 6 }}
             mdDown={{ justifyContent: "center" }}
           >
-            <Link to="/">
-              <img
-                src={
-                  colorMode === "dark"
-                    ? "/logo-square-white.svg"
-                    : "/logo-square-black.svg"
-                }
-                alt={t("header.logoAlt")}
-                width={32}
-                height={32}
-              />
-            </Link>
-            <Text asChild fontSize={{ base: "lg", md: "xl" }} fontWeight="bold">
+            <HStack
+              asChild
+              gap={3}
+              px={2}
+              py={1.5}
+              borderRadius="full"
+              bg="surface.panelMuted"
+              border="1px solid"
+              borderColor="surface.border"
+            >
               <Link to="/">
-                <Text as="span" color="header.fg">
-                  Transi-
-                </Text>
-                <Text as="span" color="accent.solid">
-                  Store
+                <img
+                  src={
+                    colorMode === "dark"
+                      ? "/logo-square-white.svg"
+                      : "/logo-square-black.svg"
+                  }
+                  alt={t("header.logoAlt")}
+                  width={32}
+                  height={32}
+                />
+                <Text
+                  as="span"
+                  fontSize={{ base: "lg", md: "xl" }}
+                  fontWeight="bold"
+                  letterSpacing="tight"
+                >
+                  <Text as="span" color="header.fg">
+                    Transi-
+                  </Text>
+                  <Text as="span" color="accent.solid">
+                    Store
+                  </Text>
                 </Text>
               </Link>
-            </Text>
+            </HStack>
 
             {user && (
               <Box hideBelow="md">

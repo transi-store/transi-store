@@ -47,9 +47,12 @@ export function ProjectNav({ organizationSlug, projectSlug }: ProjectNavProps) {
           <Button
             key={item.path}
             asChild
-            variant={isActive ? "solid" : "ghost"}
+            variant={isActive ? "solid" : "outline"}
             colorPalette={isActive ? "brand" : "gray"}
             size="sm"
+            borderRadius="full"
+            bg={isActive ? undefined : "surface.panelMuted"}
+            borderColor={isActive ? undefined : "surface.border"}
           >
             <Link to={fullPath}>
               {item.icon} {item.label}

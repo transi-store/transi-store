@@ -84,7 +84,21 @@ export function TranslationsSearchBar({
 
   return (
     <Form method="get" onSubmit={handleFormSubmit}>
-      <HStack align="end" flexWrap="wrap">
+      <HStack
+        align="end"
+        flexWrap="wrap"
+        gap={3}
+        bg="surface.panel"
+        border="1px solid"
+        borderColor="surface.border"
+        borderRadius="2xl"
+        px={4}
+        py={4}
+        boxShadow={{
+          base: "0 12px 24px rgba(15, 23, 42, 0.05)",
+          _dark: "0 12px 24px rgba(0, 0, 0, 0.18)",
+        }}
+      >
         <Box flex="1">
           <InputGroup
             endElement={
@@ -109,6 +123,7 @@ export function TranslationsSearchBar({
             <Input
               key={search}
               name="search"
+              bg="surface.panelMuted"
               placeholder={t("translations.searchPlaceholder")}
               defaultValue={search}
               minW={{ base: "240px", md: "320px" }}
@@ -138,7 +153,7 @@ export function TranslationsSearchBar({
             <Select.HiddenSelect />
             <Select.Label>{t("translations.sort.label")}</Select.Label>
             <Select.Control>
-              <Select.Trigger>
+              <Select.Trigger bg="surface.panelMuted">
                 <Select.ValueText />
               </Select.Trigger>
 

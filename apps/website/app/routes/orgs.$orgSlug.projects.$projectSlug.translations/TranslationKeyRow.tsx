@@ -83,8 +83,13 @@ export function TranslationKeyRow({
       bg={
         highlight?.split(",").includes(key.keyName)
           ? "accent.subtle"
-          : undefined
+          : "transparent"
       }
+      _hover={{
+        bg: highlight?.split(",").includes(key.keyName)
+          ? "accent.subtle"
+          : "surface.panelMuted",
+      }}
     >
       <Table.Cell>
         <LinkBox>
@@ -115,7 +120,7 @@ export function TranslationKeyRow({
             </HStack>
 
             {key.description && (
-              <Text fontSize="xs" color="gray.400">
+              <Text fontSize="xs" color="fg.muted">
                 <TextHighlight text={key.description} query={search} />
               </Text>
             )}

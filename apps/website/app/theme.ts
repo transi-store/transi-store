@@ -34,19 +34,19 @@ const config = defineConfig({
           900: { value: "#1E3A8A" },
           950: { value: "#172554" },
         },
-        // Vert accent (#84CC16)
+        // Accent industriel cuivre/ambre
         accent: {
-          50: { value: "#F7FEE7" },
-          100: { value: "#ECFCCB" },
-          200: { value: "#D9F99D" },
-          300: { value: "#BEF264" },
-          400: { value: "#A3E635" },
-          500: { value: "#84CC16" },
-          600: { value: "#65A30D" },
-          700: { value: "#4D7C0F" },
-          800: { value: "#3F6212" },
-          900: { value: "#365314" },
-          950: { value: "#121B28" },
+          50: { value: "#FFF8ED" },
+          100: { value: "#FEEBC8" },
+          200: { value: "#FBD38D" },
+          300: { value: "#F6AD55" },
+          400: { value: "#ED8936" },
+          500: { value: "#DD6B20" },
+          600: { value: "#C05621" },
+          700: { value: "#9C4221" },
+          800: { value: "#7B341E" },
+          900: { value: "#652B19" },
+          950: { value: "#2A180F" },
         },
       },
     },
@@ -130,10 +130,54 @@ const config = defineConfig({
           },
         },
         header: {
+          bg: {
+            value: {
+              _light: "rgba(255, 255, 255, 0.82)",
+              _dark: "rgba(10, 15, 24, 0.82)",
+            },
+          },
+          border: {
+            value: {
+              _light: "rgba(15, 23, 42, 0.08)",
+              _dark: "rgba(148, 163, 184, 0.18)",
+            },
+          },
           fg: {
             value: {
               _light: "{colors.accent.950}",
               _dark: "#ffffff",
+            },
+          },
+        },
+        surface: {
+          canvas: {
+            value: {
+              _light: "#f4f1ea",
+              _dark: "#0a1018",
+            },
+          },
+          panel: {
+            value: {
+              _light: "rgba(255, 255, 255, 0.88)",
+              _dark: "rgba(15, 23, 36, 0.9)",
+            },
+          },
+          panelMuted: {
+            value: {
+              _light: "rgba(244, 241, 234, 0.92)",
+              _dark: "rgba(19, 28, 43, 0.92)",
+            },
+          },
+          border: {
+            value: {
+              _light: "rgba(15, 23, 42, 0.08)",
+              _dark: "rgba(148, 163, 184, 0.18)",
+            },
+          },
+          highlight: {
+            value: {
+              _light: "rgba(59, 130, 246, 0.12)",
+              _dark: "rgba(59, 130, 246, 0.18)",
             },
           },
         },

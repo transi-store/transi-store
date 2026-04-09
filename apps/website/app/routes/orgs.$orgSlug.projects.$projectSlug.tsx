@@ -29,17 +29,22 @@ export default function ProjectLayout() {
   const { organization, project, languages } = useLoaderData<typeof loader>();
 
   return (
-    <Container maxW="container.xl" py={5}>
-      <Box></Box>
-
+    <Container maxW="container.xl" py={5} px={{ base: 3, md: 4 }}>
       <VStack gap={4} align="stretch">
-        {/* Navigation */}
         <Stack
           direction={{ base: "column", md: "row" }}
           gap={2}
-          borderBottomWidth={1}
-          pb={2}
+          bg="surface.panel"
+          border="1px solid"
+          borderColor="surface.border"
+          borderRadius="3xl"
+          px={{ base: 4, md: 5 }}
+          py={4}
           align={{ base: "stretch", md: "center" }}
+          boxShadow={{
+            base: "0 18px 36px rgba(15, 23, 42, 0.06)",
+            _dark: "0 18px 36px rgba(0, 0, 0, 0.24)",
+          }}
         >
           <Box flex={{ base: "1", md: "auto" }} overflow="hidden">
             <ProjectBreadcrumb
@@ -57,12 +62,18 @@ export default function ProjectLayout() {
         </Stack>
 
         {project.description && (
-          <Box>
+          <Box
+            bg="surface.panelMuted"
+            border="1px solid"
+            borderColor="surface.border"
+            borderRadius="2xl"
+            px={5}
+            py={4}
+          >
             <Text color="fg.muted">{project.description}</Text>
           </Box>
         )}
 
-        {/* Child route content */}
         <Outlet context={{ organization, project, languages }} />
       </VStack>
     </Container>
