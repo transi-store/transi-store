@@ -17,6 +17,7 @@ function HeaderCircuitBg() {
       overflow="hidden"
       opacity={0.12}
       borderRadius="lg"
+      hideBelow="md"
     >
       <svg
         width="100%"
