@@ -27,13 +27,8 @@ export function CTASection() {
           px={{ base: 8, md: 12 }}
           py={{ base: 10, md: 14 }}
         >
-          {/* Circuit trace decoration */}
-          <Box
-            position="absolute"
-            inset={0}
-            pointerEvents="none"
-            opacity={0.15}
-          >
+          {/* Circuit trace decoration — denser with animated dot */}
+          <Box position="absolute" inset={0} pointerEvents="none" opacity={0.2}>
             <svg
               width="100%"
               height="100%"
@@ -44,17 +39,33 @@ export function CTASection() {
             >
               <line
                 x1="0"
-                y1="40"
+                y1="30"
                 x2="600"
-                y2="40"
+                y2="30"
                 stroke="#43AECE"
                 strokeWidth="1"
               />
               <line
                 x1="0"
-                y1="160"
+                y1="100"
+                x2="250"
+                y2="100"
+                stroke="#1569D4"
+                strokeWidth="1"
+              />
+              <line
+                x1="300"
+                y1="100"
                 x2="600"
-                y2="160"
+                y2="100"
+                stroke="#1569D4"
+                strokeWidth="1"
+              />
+              <line
+                x1="0"
+                y1="170"
+                x2="600"
+                y2="170"
                 stroke="#87C241"
                 strokeWidth="1"
               />
@@ -68,16 +79,53 @@ export function CTASection() {
                 strokeDasharray="4 8"
               />
               <line
+                x1="350"
+                y1="0"
+                x2="350"
+                y2="200"
+                stroke="#43AECE"
+                strokeWidth="1"
+                strokeDasharray="4 8"
+              />
+              <line
                 x1="500"
                 y1="0"
                 x2="500"
                 y2="200"
-                stroke="#1569D4"
+                stroke="#87C241"
                 strokeWidth="1"
                 strokeDasharray="4 8"
               />
-              <circle cx="100" cy="40" r="3" fill="#43AECE" />
-              <circle cx="500" cy="160" r="3" fill="#87C241" />
+              <circle cx="100" cy="30" r="3" fill="#43AECE" />
+              <circle cx="250" cy="100" r="3" fill="#1569D4" />
+              <circle cx="500" cy="170" r="3" fill="#87C241" />
+              <circle cx="350" cy="30" r="3" fill="#43AECE" />
+              <rect
+                x="290"
+                y="93"
+                width="14"
+                height="14"
+                rx="2"
+                fill="none"
+                stroke="#1569D4"
+                strokeWidth="1"
+              />
+
+              {/* Animated dot */}
+              <circle r="4" fill="#43AECE">
+                <animateMotion
+                  dur="8s"
+                  repeatCount="indefinite"
+                  path="M 0,30 L 350,30 L 350,170 L 600,170"
+                />
+              </circle>
+              <circle r="8" fill="#43AECE" opacity="0.3">
+                <animateMotion
+                  dur="8s"
+                  repeatCount="indefinite"
+                  path="M 0,30 L 350,30 L 350,170 L 600,170"
+                />
+              </circle>
             </svg>
           </Box>
 

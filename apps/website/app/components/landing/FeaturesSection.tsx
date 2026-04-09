@@ -29,7 +29,8 @@ function FeatureCard({
   description: string;
   index: number;
 }) {
-  const colors = ["brand.500", "accent.500", "teal.400"];
+  // Neon-bright accent colors cycling through the palette
+  const colors = ["#3B82F6", "#87C241", "#43AECE"];
   const accentColor = colors[index % colors.length];
 
   return (

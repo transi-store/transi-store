@@ -3,27 +3,29 @@ import {
   Button,
   Container,
   Heading,
-  HStack,
   Stack,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import { useColorMode } from "../ui/color-mode";
 
 /**
- * Decorative SVG — circuit-board traces with transistor-pin motifs.
- * Purely visual, no semantic meaning.
+ * Dense circuit-board SVG with an animated dot traveling along the traces.
+ * Purely decorative — no semantic content.
  */
 function CircuitDecoration() {
+  // The path the animated dot follows: a continuous route through the circuit
+  const travelPath =
+    "M 0,80 L 300,80 L 300,200 L 520,200 L 520,400 L 700,400 L 700,520 L 800,520";
+
   return (
     <Box
       position="absolute"
       inset={0}
       pointerEvents="none"
       overflow="hidden"
-      opacity={{ _light: 0.35, _dark: 0.25 }}
+      opacity={{ _light: 0.4, _dark: 0.3 }}
     >
       <svg
         width="100%"
@@ -33,104 +35,175 @@ function CircuitDecoration() {
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMidYMid slice"
       >
-        {/* Horizontal traces */}
+        {/* ── Horizontal traces ── */}
         <line
           x1="0"
-          y1="100"
+          y1="80"
           x2="300"
-          y2="100"
+          y2="80"
           stroke="#43AECE"
           strokeWidth="1"
         />
         <line
           x1="350"
-          y1="100"
+          y1="80"
           x2="800"
-          y2="100"
+          y2="80"
           stroke="#43AECE"
           strokeWidth="1"
         />
         <line
           x1="0"
-          y1="300"
-          x2="200"
-          y2="300"
+          y1="200"
+          x2="180"
+          y2="200"
           stroke="#1569D4"
           strokeWidth="1"
         />
         <line
-          x1="250"
-          y1="300"
-          x2="550"
-          y2="300"
+          x1="230"
+          y1="200"
+          x2="520"
+          y2="200"
           stroke="#1569D4"
           strokeWidth="1"
         />
         <line
-          x1="600"
-          y1="300"
+          x1="570"
+          y1="200"
           x2="800"
-          y2="300"
+          y2="200"
           stroke="#1569D4"
           strokeWidth="1"
         />
         <line
-          x1="100"
-          y1="500"
+          x1="60"
+          y1="340"
+          x2="400"
+          y2="340"
+          stroke="#87C241"
+          strokeWidth="1"
+        />
+        <line
+          x1="440"
+          y1="340"
+          x2="750"
+          y2="340"
+          stroke="#87C241"
+          strokeWidth="1"
+        />
+        <line
+          x1="0"
+          y1="400"
+          x2="520"
+          y2="400"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="560"
+          y1="400"
+          x2="800"
+          y2="400"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
+        <line
+          x1="80"
+          y1="520"
           x2="700"
-          y2="500"
+          y2="520"
           stroke="#87C241"
           strokeWidth="1"
         />
 
-        {/* Vertical traces */}
+        {/* ── Vertical traces ── */}
         <line
           x1="300"
           y1="0"
           x2="300"
-          y2="100"
+          y2="80"
           stroke="#43AECE"
           strokeWidth="1"
         />
         <line
           x1="300"
-          y1="100"
+          y1="80"
           x2="300"
-          y2="300"
+          y2="200"
           stroke="#43AECE"
           strokeWidth="1"
           strokeDasharray="4 8"
         />
         <line
-          x1="550"
-          y1="300"
-          x2="550"
-          y2="500"
+          x1="520"
+          y1="200"
+          x2="520"
+          y2="400"
+          stroke="#1569D4"
+          strokeWidth="1"
+        />
+        <line
+          x1="180"
+          y1="200"
+          x2="180"
+          y2="340"
+          stroke="#1569D4"
+          strokeWidth="1"
+          strokeDasharray="4 8"
+        />
+        <line
+          x1="700"
+          y1="340"
+          x2="700"
+          y2="520"
           stroke="#87C241"
           strokeWidth="1"
         />
         <line
-          x1="200"
-          y1="300"
-          x2="200"
+          x1="400"
+          y1="340"
+          x2="400"
+          y2="600"
+          stroke="#87C241"
+          strokeWidth="1"
+          strokeDasharray="4 8"
+        />
+        <line
+          x1="60"
+          y1="340"
+          x2="60"
           y2="600"
           stroke="#1569D4"
+          strokeWidth="1"
+        />
+        <line
+          x1="750"
+          y1="80"
+          x2="750"
+          y2="340"
+          stroke="#43AECE"
           strokeWidth="1"
           strokeDasharray="4 8"
         />
 
-        {/* Pin nodes — small circles at intersections like transistor pins */}
-        <circle cx="300" cy="100" r="4" fill="#43AECE" />
-        <circle cx="200" cy="300" r="4" fill="#1569D4" />
-        <circle cx="550" cy="300" r="4" fill="#1569D4" />
-        <circle cx="550" cy="500" r="4" fill="#87C241" />
-        <circle cx="100" cy="500" r="3" fill="#87C241" />
-        <circle cx="700" cy="500" r="3" fill="#87C241" />
+        {/* ── Pin nodes at intersections ── */}
+        <circle cx="300" cy="80" r="4" fill="#43AECE" />
+        <circle cx="180" cy="200" r="4" fill="#1569D4" />
+        <circle cx="520" cy="200" r="4" fill="#1569D4" />
+        <circle cx="180" cy="340" r="3" fill="#1569D4" />
+        <circle cx="400" cy="340" r="4" fill="#87C241" />
+        <circle cx="700" cy="340" r="4" fill="#87C241" />
+        <circle cx="750" cy="340" r="3" fill="#43AECE" />
+        <circle cx="520" cy="400" r="4" fill="#43AECE" />
+        <circle cx="700" cy="520" r="4" fill="#87C241" />
+        <circle cx="60" cy="340" r="3" fill="#1569D4" />
+        <circle cx="750" cy="80" r="3" fill="#43AECE" />
 
-        {/* Larger connector pads */}
+        {/* ── Connector pads ── */}
         <rect
           x="340"
-          y="92"
+          y="72"
           width="16"
           height="16"
           rx="2"
@@ -139,8 +212,8 @@ function CircuitDecoration() {
           strokeWidth="1"
         />
         <rect
-          x="242"
-          y="292"
+          x="222"
+          y="192"
           width="16"
           height="16"
           rx="2"
@@ -149,8 +222,8 @@ function CircuitDecoration() {
           strokeWidth="1"
         />
         <rect
-          x="592"
-          y="292"
+          x="562"
+          y="192"
           width="16"
           height="16"
           rx="2"
@@ -158,94 +231,43 @@ function CircuitDecoration() {
           stroke="#1569D4"
           strokeWidth="1"
         />
-      </svg>
-    </Box>
-  );
-}
-
-/** Fake translation interface illustration */
-function TranslationMockup() {
-  return (
-    <Box
-      position="relative"
-      borderRadius="md"
-      overflow="hidden"
-      bg="surface.panel"
-      border="1px solid"
-      borderColor="surface.border"
-      w="full"
-      maxW="md"
-      animationName="float"
-      animationDuration="4s"
-      animationTimingFunction="ease-in-out"
-      animationIterationCount="infinite"
-    >
-      {/* Title bar */}
-      <HStack
-        bg="surface.panelMuted"
-        px={4}
-        py={3}
-        borderBottom="1px solid"
-        borderColor="surface.border"
-        gap={2}
-      >
-        <Box w={2.5} h={2.5} borderRadius="full" bg="accent.solid" />
-        <Box w={2.5} h={2.5} borderRadius="full" bg="brand.solid" />
-        <Box w={2.5} h={2.5} borderRadius="full" bg="fg.muted" />
-        <Box flex={1} />
-        <Box
-          h={2}
-          w="30%"
-          borderRadius="sm"
-          bg={{ _light: "blackAlpha.100", _dark: "whiteAlpha.100" }}
+        <rect
+          x="432"
+          y="332"
+          width="16"
+          height="16"
+          rx="2"
+          fill="none"
+          stroke="#87C241"
+          strokeWidth="1"
         />
-      </HStack>
+        <rect
+          x="552"
+          y="392"
+          width="16"
+          height="16"
+          rx="2"
+          fill="none"
+          stroke="#43AECE"
+          strokeWidth="1"
+        />
 
-      {/* Content */}
-      <Box p={4}>
-        {/* Header row */}
-        <HStack gap={3} mb={4}>
-          <Box flex={1} h={2.5} borderRadius="sm" bg="brand.muted" />
-          <Box w={16} h={2.5} borderRadius="sm" bg="accent.muted" />
-        </HStack>
-
-        {/* Translation rows */}
-        {[1, 2, 3].map((row) => (
-          <HStack
-            key={row}
-            gap={3}
-            mb={2}
-            p={3}
-            borderRadius="md"
-            bg="surface.panelMuted"
-            border="1px solid"
-            borderColor="surface.border"
-          >
-            <Box
-              w={1}
-              h={6}
-              borderRadius="full"
-              bg={
-                row === 1
-                  ? "accent.solid"
-                  : row === 2
-                    ? "brand.solid"
-                    : "fg.subtle"
-              }
-            />
-            <Box w="25%" h={2} borderRadius="sm" bg="fg.subtle" />
-            <Box flex={1} h={2} borderRadius="sm" bg="brand.muted" />
-            <Box w={8} h={2} borderRadius="sm" bg="accent.muted" />
-          </HStack>
-        ))}
-      </Box>
+        {/* ── Animated traveling dot ── */}
+        <path id="travel-path" d={travelPath} stroke="none" fill="none" />
+        <circle r="5" fill="#43AECE">
+          <animateMotion dur="12s" repeatCount="indefinite" path={travelPath} />
+        </circle>
+        {/* Glow effect around the traveling dot */}
+        <circle r="10" fill="#43AECE" opacity="0.3">
+          <animateMotion dur="12s" repeatCount="indefinite" path={travelPath} />
+        </circle>
+      </svg>
     </Box>
   );
 }
 
 export function HeroSection() {
   const { t } = useTranslation();
-  const { colorMode } = useColorMode();
 
   return (
     <Box
@@ -257,98 +279,47 @@ export function HeroSection() {
       <CircuitDecoration />
 
       <Container maxW="container.xl" position="relative">
-        <Stack
-          direction={{ base: "column", lg: "row" }}
-          gap={{ base: 12, lg: 20 }}
+        <VStack
+          gap={8}
           align="center"
+          textAlign="center"
+          animationName="fade-in, slide-from-bottom"
+          animationDuration="600ms"
+          animationTimingFunction="ease-out"
         >
-          <VStack
-            flex={1}
-            gap={8}
-            align={{ base: "center", lg: "flex-start" }}
-            textAlign={{ base: "center", lg: "left" }}
-            animationName="fade-in, slide-from-bottom"
-            animationDuration="600ms"
-            animationTimingFunction="ease-out"
+          <Heading
+            as="h1"
+            textStyle={{ base: "4xl", md: "5xl", lg: "6xl" }}
+            lineHeight="1.1"
+            letterSpacing="tight"
+            maxW="3xl"
+            fontFamily="heading"
           >
-            {/* Tag */}
-            <HStack
-              gap={2}
-              px={3}
-              py={1.5}
-              borderRadius="md"
-              border="1px solid"
-              borderColor="surface.border"
-              bg="surface.panelMuted"
-            >
-              <img
-                src={
-                  colorMode === "dark"
-                    ? "/logo-square-white.svg"
-                    : "/logo-square-black.svg"
-                }
-                alt="Transi-Store"
-                width={18}
-                height={18}
-              />
-              <Text
-                fontSize="xs"
-                fontWeight="bold"
-                letterSpacing="0.15em"
-                textTransform="uppercase"
-                color="fg.muted"
-              >
-                {t("landing.hero.openSource")}
-              </Text>
-            </HStack>
+            {t("landing.hero.title")}
+          </Heading>
 
-            <Heading
-              as="h1"
-              textStyle={{ base: "4xl", md: "5xl", lg: "6xl" }}
-              lineHeight="1.1"
-              letterSpacing="tight"
-              maxW="2xl"
-              fontFamily="heading"
-            >
-              {t("landing.hero.title")}
-            </Heading>
-
-            <Text
-              textStyle={{ base: "lg", md: "xl" }}
-              color="fg.muted"
-              maxW="xl"
-              lineHeight="tall"
-            >
-              {t("landing.hero.subtitle")}
-            </Text>
-
-            <Stack
-              direction={{ base: "column", sm: "row" }}
-              gap={3}
-              w={{ base: "full", sm: "auto" }}
-            >
-              <Button asChild size="lg" colorPalette="accent" fontWeight="bold">
-                <Link to="/auth/login">{t("landing.hero.cta.getStarted")}</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/pricing">{t("landing.hero.cta.viewPricing")}</Link>
-              </Button>
-            </Stack>
-          </VStack>
-
-          <Box
-            flex={1}
-            display={{ base: "none", md: "flex" }}
-            justifyContent="center"
-            animationName="fade-in, slide-from-right"
-            animationDuration="600ms"
-            animationTimingFunction="ease-out"
-            animationDelay="200ms"
-            animationFillMode="backwards"
+          <Text
+            textStyle={{ base: "lg", md: "xl" }}
+            color="fg.muted"
+            maxW="2xl"
+            lineHeight="tall"
           >
-            <TranslationMockup />
-          </Box>
-        </Stack>
+            {t("landing.hero.subtitle")}
+          </Text>
+
+          <Stack
+            direction={{ base: "column", sm: "row" }}
+            gap={3}
+            w={{ base: "full", sm: "auto" }}
+          >
+            <Button asChild size="lg" colorPalette="accent" fontWeight="bold">
+              <Link to="/auth/login">{t("landing.hero.cta.getStarted")}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/pricing">{t("landing.hero.cta.viewPricing")}</Link>
+            </Button>
+          </Stack>
+        </VStack>
       </Container>
     </Box>
   );

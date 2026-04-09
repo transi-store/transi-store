@@ -23,16 +23,7 @@ const config = defineConfig({
   },
 
   theme: {
-    keyframes: {
-      float: {
-        "0%, 100%": { transform: "translateY(0)" },
-        "50%": { transform: "translateY(-8px)" },
-      },
-      "pulse-glow": {
-        "0%, 100%": { opacity: "0.4" },
-        "50%": { opacity: "1" },
-      },
-    },
+    keyframes: {},
     tokens: {
       colors: {
         brand: {
