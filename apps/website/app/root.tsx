@@ -3,14 +3,25 @@ import {
   data,
   isRouteErrorResponse,
   Links,
+  Link,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useRouteLoaderData,
 } from "react-router";
 import type { Route } from "./+types/root";
-import { ChakraProvider, Box, Alert, Container } from "@chakra-ui/react";
+import {
+  ChakraProvider,
+  Box,
+  Alert,
+  Container,
+  Heading,
+  Text,
+  Button,
+  VStack,
+} from "@chakra-ui/react";
 import {
   getLocale,
   i18nextMiddleware,
@@ -109,48 +120,82 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  const { t } = useTranslation();
+  const rootData = useRouteLoaderData<typeof loader>("root");
+  const user = rootData?.user ?? null;
+
+  const is404 = isRouteErrorResponse(error) && error.status === 404;
+
+  let details: string | undefined;
   let stack: string | undefined;
 
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? `The requested page could not be found.`
-        : error.statusText || details;
-
-    details += ` (status ${error.status})`;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    console.log(error);
-    details = error.message;
-    stack = error.stack;
+  if (!is404) {
+    if (isRouteErrorResponse(error)) {
+      details = error.statusText || t("common.error");
+      details += ` (status ${error.status})`;
+    } else if (import.meta.env.DEV && error && error instanceof Error) {
+      console.log(error);
+      details = error.message;
+      stack = error.stack;
+    } else {
+      details = t("common.error");
+    }
   }
 
   return (
-    <Container maxW="container.lg" py={10}>
-      <Alert.Root status="error">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Title>{message}</Alert.Title>
-          <Alert.Description>
-            {details}
-            {stack && (
-              <Box
-                mt={4}
-                p={4}
-                bg="gray.100"
-                borderRadius="md"
-                overflow="auto"
-                fontFamily="mono"
-                fontSize="sm"
+    <>
+      <Toaster />
+      <Header user={user} />
+      <Box as="main">
+        {is404 ? (
+          <Container maxW="container.lg" py={20}>
+            <VStack gap={6} textAlign="center">
+              <Heading
+                fontSize={{ base: "8xl", md: "9xl" }}
+                fontWeight="bold"
+                color="accent.solid"
+                lineHeight={1}
               >
-                {stack}
-              </Box>
-            )}
-          </Alert.Description>
-        </Alert.Content>
-      </Alert.Root>
-    </Container>
+                404
+              </Heading>
+              <Heading size="2xl" fontWeight="semibold">
+                {t("notFound.title")}
+              </Heading>
+              <Text color="fg.muted" fontSize="lg" maxW="md">
+                {t("notFound.description")}
+              </Text>
+              <Button asChild size="lg" mt={4}>
+                <Link to="/">{t("notFound.backHome")}</Link>
+              </Button>
+            </VStack>
+          </Container>
+        ) : (
+          <Container maxW="container.lg" py={10}>
+            <Alert.Root status="error">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>{t("error")}</Alert.Title>
+                <Alert.Description>
+                  {details}
+                  {stack && (
+                    <Box
+                      mt={4}
+                      p={4}
+                      bg="gray.100"
+                      borderRadius="md"
+                      overflow="auto"
+                      fontFamily="mono"
+                      fontSize="sm"
+                    >
+                      {stack}
+                    </Box>
+                  )}
+                </Alert.Description>
+              </Alert.Content>
+            </Alert.Root>
+          </Container>
+        )}
+      </Box>
+    </>
   );
 }
