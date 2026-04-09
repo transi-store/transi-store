@@ -14,7 +14,7 @@ const config = defineConfig({
 
   globalCss: {
     body: {
-      fontFamily: "'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, monospace",
+      fontFamily: "JetBrains Mono, SF Mono, Fira Code, Menlo, monospace",
     },
     "h1, h2, h3, h4, h5, h6": {
       fontFamily:

@@ -98,10 +98,10 @@ export function CTASection() {
               <Button
                 asChild
                 size="lg"
-                bg="#87C241"
-                color="#121B28"
+                bg="accent.solid"
+                color="white"
                 fontWeight="bold"
-                _hover={{ bg: "#8CC749" }}
+                _hover={{ opacity: 0.9 }}
               >
                 <Link to="/auth/login">{t("landing.cta.getStarted")}</Link>
               </Button>

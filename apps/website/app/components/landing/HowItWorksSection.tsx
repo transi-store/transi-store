@@ -17,19 +17,19 @@ export function HowItWorksSection() {
       number: 1,
       title: t("landing.howItWorks.step1.title"),
       description: t("landing.howItWorks.step1.description"),
-      color: "#1569D4",
+      color: "brand.500",
     },
     {
       number: 2,
       title: t("landing.howItWorks.step2.title"),
       description: t("landing.howItWorks.step2.description"),
-      color: "#87C241",
+      color: "accent.500",
     },
     {
       number: 3,
       title: t("landing.howItWorks.step3.title"),
       description: t("landing.howItWorks.step3.description"),
-      color: "#43AECE",
+      color: "teal.400",
     },
   ];
 

@@ -298,7 +298,7 @@ export function HeroSection() {
                 textTransform="uppercase"
                 color="fg.muted"
               >
-                Open Source
+                {t("landing.hero.openSource")}
               </Text>
             </HStack>
 

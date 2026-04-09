@@ -29,7 +29,7 @@ function FeatureCard({
   description: string;
   index: number;
 }) {
-  const colors = ["#1569D4", "#87C241", "#43AECE"];
+  const colors = ["brand.500", "accent.500", "teal.400"];
   const accentColor = colors[index % colors.length];
 
   return (
