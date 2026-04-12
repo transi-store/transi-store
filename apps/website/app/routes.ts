@@ -30,6 +30,9 @@ export default [
   // Invitation route (custom auth handling: shows login prompt if not authenticated)
   route("orgs/invite/:code", "routes/orgs.invite.$code.tsx"),
 
+  // robots.txt (dynamic, disallow all unless on production domain)
+  route("robots.txt", "routes/robots[.txt].ts"),
+
   // Public API routes (no auth required)
   route("api/locales/:lng/:ns", "routes/api.locales.$lng.$ns.ts"),
   route("api/doc.json", "routes/api.doc.json.tsx"),
