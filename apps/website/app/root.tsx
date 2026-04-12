@@ -34,17 +34,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const url = new URL(request.url);
 
-  const hreflangLinks = AVAILABLE_LANGUAGES.map((lang) => {
-    const langUrl = new URL(url);
-    langUrl.searchParams.set("lng", lang.code);
-    return { hrefLang: lang.code, href: langUrl.href };
-  });
+  const baseParams = new URLSearchParams(url.searchParams);
+  baseParams.delete("lng");
+  const baseWithoutLng = `${url.origin}${url.pathname}${baseParams.size > 0 ? `?${baseParams.toString()}` : ""}`;
 
-  const defaultUrl = new URL(url);
-  defaultUrl.searchParams.delete("lng");
+  const hreflangLinks = AVAILABLE_LANGUAGES.map((lang) => ({
+    hrefLang: lang.code,
+    href: `${baseWithoutLng}${baseParams.size > 0 ? "&" : "?"}lng=${lang.code}`,
+  }));
 
   return data(
-    { user, locale, hreflangLinks, defaultHref: defaultUrl.href },
+    { user, locale, hreflangLinks, defaultHref: baseWithoutLng },
     { headers: { "Set-Cookie": await localeCookie.serialize(locale) } },
   );
 }
