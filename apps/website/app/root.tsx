@@ -16,6 +16,7 @@ import {
   i18nextMiddleware,
   localeCookie,
 } from "~/middleware/i18next";
+import { AVAILABLE_LANGUAGES } from "~/lib/i18n";
 import { queryCounterMiddleware } from "~/middleware/query-counter";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
@@ -31,8 +32,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
   const locale = getLocale(context);
 
+  const url = new URL(request.url);
+
+  const baseParams = new URLSearchParams(url.searchParams);
+  baseParams.delete("lng");
+  const baseWithoutLng = `${url.origin}${url.pathname}${baseParams.size > 0 ? `?${baseParams.toString()}` : ""}`;
+
+  const hreflangLinks = AVAILABLE_LANGUAGES.map((lang) => ({
+    hrefLang: lang.code,
+    href: `${baseWithoutLng}${baseParams.size > 0 ? "&" : "?"}lng=${lang.code}`,
+  }));
+
   return data(
-    { user, locale }, // Return the locale to the UI
+    { user, locale, hreflangLinks, defaultHref: baseWithoutLng },
     { headers: { "Set-Cookie": await localeCookie.serialize(locale) } },
   );
 }
@@ -85,7 +97,8 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-  const { user, locale } = useLoaderData<typeof loader>();
+  const { user, locale, hreflangLinks, defaultHref } =
+    useLoaderData<typeof loader>();
   const { i18n, t } = useTranslation();
 
   useEffect(() => {
@@ -98,6 +111,11 @@ export default function App() {
     <>
       <title>{t("website.title")}</title>
       <meta name="description" content={t("website.description")} />
+
+      {hreflangLinks.map(({ hrefLang, href }) => (
+        <link key={hrefLang} rel="alternate" hrefLang={hrefLang} href={href} />
+      ))}
+      <link rel="alternate" hrefLang="x-default" href={defaultHref} />
 
       <Toaster />
       <Header user={user} />
