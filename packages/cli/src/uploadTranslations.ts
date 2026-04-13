@@ -4,7 +4,12 @@ import { pathToFileURL } from "node:url";
 import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
 import { ImportStrategy } from "@transi-store/common";
 import z from "zod";
-import { getDefaultBranch, getModifiedFiles, isGitRepository } from "./git.ts";
+import {
+  getDefaultBranch,
+  getModifiedFiles,
+  isGitRepository,
+  getCurrentBranch,
+} from "./git.ts";
 import { configSchema } from "@transi-store/common";
 
 export type UploadConfig = {
@@ -117,6 +122,16 @@ export async function uploadForConfig(
 
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
+  // Auto-detect current git branch if not explicitly provided
+  let resolvedBranch = branch;
+  if (!resolvedBranch && (await isGitRepository())) {
+    const currentBranch = await getCurrentBranch();
+    if (currentBranch) {
+      resolvedBranch = currentBranch;
+      console.log(`Git: auto-detected branch "${resolvedBranch}"`);
+    }
+  }
+
   console.log(
     `Uploading translations to domain "${domainRoot}" for org "${result.data.org}"...`,
   );
@@ -167,7 +182,7 @@ export async function uploadForConfig(
         locale,
         input,
         strategy,
-        branch,
+        branch: resolvedBranch,
       });
     }
   }

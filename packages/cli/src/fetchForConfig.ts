@@ -14,14 +14,24 @@ import {
 import { isGitRepository, getCurrentBranch } from "./git.ts";
 
 export async function fetchTranslationsAndPrint(config: Config): Promise<void> {
-  const result = await fetchTranslations(config);
+  // Auto-detect branch if not explicitly provided
+  let resolvedConfig = config;
+  if (!config.branch && (await isGitRepository())) {
+    const currentBranch = await getCurrentBranch();
+    if (currentBranch) {
+      console.log(pc.dim(`Git: auto-detected branch "${currentBranch}"`));
+      resolvedConfig = { ...config, branch: currentBranch };
+    }
+  }
+
+  const result = await fetchTranslations(resolvedConfig);
   if (result.success) {
     console.log(
-      `${pc.green("✓")} ${pc.bold(`${config.project} / ${config.locale}`)} ${pc.dim("→")} ${result.output}`,
+      `${pc.green("✓")} ${pc.bold(`${resolvedConfig.project} / ${resolvedConfig.locale}`)} ${pc.dim("→")} ${result.output}`,
     );
   } else {
     console.error(
-      `${pc.red("✗")} ${pc.bold(`${config.project} / ${config.locale}`)} — ${pc.red(result.error)}`,
+      `${pc.red("✗")} ${pc.bold(`${resolvedConfig.project} / ${resolvedConfig.locale}`)} — ${pc.red(result.error)}`,
     );
     process.exit(1);
   }

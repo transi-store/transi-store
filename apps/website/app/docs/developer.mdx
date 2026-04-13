@@ -209,6 +209,8 @@ transi-store upload:config --branch feature/my-feature
 transi-store upload --org acme --project webapp --locale fr --input ./locales/fr.json
 ```
 
-> **Git optimization:** `upload:config` skips files that have not changed compared to the default branch (`main`/`master`) when running in a git repository, to avoid unnecessary API calls.
+> **Git branch auto-detection:** when `--branch` is not provided, the CLI automatically detects the current git branch and uses it. On `main`/`master`, no branch filter is applied (keys are uploaded to the main project).
+
+> **Git optimization:** `upload:config` also skips files that have not changed compared to the default branch (`main`/`master`) when running in a git repository, to avoid unnecessary API calls.
 
 This is ideal for integrating into CI/CD — download translated strings at build time and upload new source strings after developers add them.

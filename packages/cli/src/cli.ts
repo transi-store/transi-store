@@ -12,8 +12,6 @@ import {
   ALL_BRANCHES_VALUE,
   ImportStrategy,
 } from "@transi-store/common";
-import { isGitRepository, getCurrentBranch } from "./git.ts";
-import pc from "picocolors";
 
 const program = new Command();
 
@@ -43,15 +41,7 @@ program
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
   )
   .action(async (options) => {
-    let branch = options.branch;
-    if (!branch && (await isGitRepository())) {
-      const currentBranch = await getCurrentBranch();
-      if (currentBranch) {
-        branch = currentBranch;
-        console.log(pc.dim(`Git: auto-detected branch "${branch}"`));
-      }
-    }
-    await fetchTranslationsAndPrint({ ...options, branch } satisfies Config);
+    await fetchTranslationsAndPrint(options satisfies Config);
   });
 
 program
