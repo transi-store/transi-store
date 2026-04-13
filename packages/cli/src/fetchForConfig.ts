@@ -11,18 +11,16 @@ import {
   type Config,
   type FetchResult,
 } from "./fetchTranslations.ts";
-import { isGitRepository, getCurrentBranch } from "./git.ts";
+import { resolveGitBranch } from "./git.ts";
 
 export async function fetchTranslationsAndPrint(config: Config): Promise<void> {
   // Auto-detect branch if not explicitly provided
-  let resolvedConfig = config;
-  if (!config.branch && (await isGitRepository())) {
-    const currentBranch = await getCurrentBranch();
-    if (currentBranch) {
-      console.log(pc.dim(`Git: auto-detected branch "${currentBranch}"`));
-      resolvedConfig = { ...config, branch: currentBranch };
-    }
+  const { branch, wasAutoDetected } = await resolveGitBranch(config.branch);
+  if (wasAutoDetected && branch) {
+    console.log(pc.dim(`Git: auto-detected branch "${branch}"`));
   }
+  const resolvedConfig =
+    branch !== config.branch ? { ...config, branch } : config;
 
   const result = await fetchTranslations(resolvedConfig);
   if (result.success) {
@@ -74,14 +72,8 @@ export async function fetchForConfig(
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
   // Auto-detect current git branch if not explicitly provided
-  let resolvedBranch = branch;
-  if (!resolvedBranch && (await isGitRepository())) {
-    const currentBranch = await getCurrentBranch();
-    if (currentBranch) {
-      resolvedBranch = currentBranch;
-    }
-  }
-  const wasAutoDetected = !branch && !!resolvedBranch;
+  const { branch: resolvedBranch, wasAutoDetected } =
+    await resolveGitBranch(branch);
 
   let branchLabel: string;
   if (resolvedBranch) {

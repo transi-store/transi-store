@@ -81,6 +81,35 @@ export async function getCurrentBranch(): Promise<string | null> {
   }
 }
 
+export type ResolvedBranch = {
+  /** The resolved branch slug, or undefined when on main/master or outside a git repo. */
+  branch: string | undefined;
+  /** True when the branch was resolved automatically (not explicitly provided by the caller). */
+  wasAutoDetected: boolean;
+};
+
+/**
+ * Resolves the branch to use for API calls.
+ * - If `explicitBranch` is provided, it is used as-is.
+ * - Otherwise the current git branch is detected; main/master/detached HEAD resolve to undefined.
+ */
+export async function resolveGitBranch(
+  explicitBranch?: string,
+): Promise<ResolvedBranch> {
+  if (explicitBranch) {
+    return { branch: explicitBranch, wasAutoDetected: false };
+  }
+
+  if (await isGitRepository()) {
+    const currentBranch = await getCurrentBranch();
+    if (currentBranch) {
+      return { branch: currentBranch, wasAutoDetected: true };
+    }
+  }
+
+  return { branch: undefined, wasAutoDetected: false };
+}
+
 /**
  * Returns the set of absolute paths of files that have been modified
  * compared to the given base ref, including untracked files.

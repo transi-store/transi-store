@@ -40,8 +40,8 @@ program
     "-b, --branch <branch>",
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
   )
-  .action(async (options) => {
-    await fetchTranslationsAndPrint(options satisfies Config);
+  .action((options) => {
+    fetchTranslationsAndPrint(options satisfies Config);
   });
 
 program

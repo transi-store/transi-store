@@ -8,7 +8,7 @@ import {
   getDefaultBranch,
   getModifiedFiles,
   isGitRepository,
-  getCurrentBranch,
+  resolveGitBranch,
 } from "./git.ts";
 import { configSchema } from "@transi-store/common";
 
@@ -123,13 +123,10 @@ export async function uploadForConfig(
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
   // Auto-detect current git branch if not explicitly provided
-  let resolvedBranch = branch;
-  if (!resolvedBranch && (await isGitRepository())) {
-    const currentBranch = await getCurrentBranch();
-    if (currentBranch) {
-      resolvedBranch = currentBranch;
-      console.log(`Git: auto-detected branch "${resolvedBranch}"`);
-    }
+  const { branch: resolvedBranch, wasAutoDetected } =
+    await resolveGitBranch(branch);
+  if (wasAutoDetected && resolvedBranch) {
+    console.log(`Git: auto-detected branch "${resolvedBranch}"`);
   }
 
   console.log(
