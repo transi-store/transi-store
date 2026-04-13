@@ -12,6 +12,7 @@ import {
   ALL_BRANCHES_VALUE,
   ImportStrategy,
 } from "@transi-store/common";
+import { isGitRepository, getCurrentBranch } from "./git.ts";
 
 const program = new Command();
 
@@ -40,8 +41,16 @@ program
     "-b, --branch <branch>",
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
   )
-  .action((options) => {
-    fetchTranslationsAndPrint(options satisfies Config);
+  .action(async (options) => {
+    let branch = options.branch;
+    if (!branch && (await isGitRepository())) {
+      const currentBranch = await getCurrentBranch();
+      if (currentBranch) {
+        branch = currentBranch;
+        console.log(`Git: auto-detected branch "${branch}"`);
+      }
+    }
+    fetchTranslationsAndPrint({ ...options, branch } satisfies Config);
   });
 
 program

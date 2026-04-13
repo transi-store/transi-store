@@ -11,6 +11,7 @@ import {
   type Config,
   type FetchResult,
 } from "./fetchTranslations.ts";
+import { isGitRepository, getCurrentBranch } from "./git.ts";
 
 export async function fetchTranslationsAndPrint(config: Config): Promise<void> {
   const result = await fetchTranslations(config);
@@ -62,11 +63,24 @@ export async function fetchForConfig(
 
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
+  // Auto-detect current git branch if not explicitly provided
+  let resolvedBranch = branch;
+  if (!resolvedBranch && (await isGitRepository())) {
+    const currentBranch = await getCurrentBranch();
+    if (currentBranch) {
+      resolvedBranch = currentBranch;
+    }
+  }
+
   console.log();
   console.log(pc.bold(pc.cyan("↓ Downloading translations")));
   console.log(pc.dim(`  Domain : ${domainRoot}`));
   console.log(pc.dim(`  Org    : ${result.data.org}`));
-  console.log(pc.dim(`  Branch : ${branch ?? pc.italic("(main)")}`));
+  console.log(
+    pc.dim(
+      `  Branch : ${resolvedBranch ? `${resolvedBranch}${!branch ? pc.italic(" (auto-detected)") : ""}` : pc.italic("(main)")}`,
+    ),
+  );
   console.log();
 
   // Build tasks, preserving project and locale order from config
@@ -92,7 +106,7 @@ export async function fetchForConfig(
           .replace("<lang>", locale)
           .replace("<project>", configItem.project)
           .replace("<format>", configItem.format),
-        branch,
+        branch: resolvedBranch,
       });
     }
   }

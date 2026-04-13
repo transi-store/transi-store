@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `download` and `download:config` commands now automatically detect and use the current git branch when `--branch` is not explicitly provided. If you are on a feature branch, translations will be fetched for that branch without any extra flags. [#126](https://github.com/transi-store/transi-store/pull/126)
+
 ### Fixed
 
 - Git optimization for `upload:config` now always compares the full branch against the default branch (main/master). Previously, the optimization only worked on feature branches with full git history available. Now it also fetches `origin/main` when not locally available (e.g. CI shallow clones).
@@ -11,7 +15,7 @@
 
 ### Changed
 
-- improve download command output #109
+- improve download command output [#109](https://github.com/transi-store/transi-store/pull/109)
 
 ## 1.5.2
 

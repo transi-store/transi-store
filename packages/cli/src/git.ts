@@ -57,6 +57,31 @@ export async function getDefaultBranch(): Promise<string | null> {
 }
 
 /**
+ * Returns the current git branch name, or null if:
+ * - in detached HEAD state
+ * - on the default branch (main/master) — no branch slug needed for download
+ */
+export async function getCurrentBranch(): Promise<string | null> {
+  try {
+    const git = getGit();
+    const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
+    const name = branch.trim();
+
+    if (!name || name === "HEAD") {
+      return null;
+    }
+
+    if (name === "main" || name === "master") {
+      return null;
+    }
+
+    return name;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Returns the set of absolute paths of files that have been modified
  * compared to the given base ref, including untracked files.
  */
