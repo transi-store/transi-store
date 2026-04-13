@@ -13,6 +13,7 @@ import {
   ImportStrategy,
 } from "@transi-store/common";
 import { isGitRepository, getCurrentBranch } from "./git.ts";
+import pc from "picocolors";
 
 const program = new Command();
 
@@ -47,10 +48,10 @@ program
       const currentBranch = await getCurrentBranch();
       if (currentBranch) {
         branch = currentBranch;
-        console.log(`Git: auto-detected branch "${branch}"`);
+        console.log(pc.dim(`Git: auto-detected branch "${branch}"`));
       }
     }
-    fetchTranslationsAndPrint({ ...options, branch } satisfies Config);
+    await fetchTranslationsAndPrint({ ...options, branch } satisfies Config);
   });
 
 program

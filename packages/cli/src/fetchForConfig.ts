@@ -72,15 +72,20 @@ export async function fetchForConfig(
     }
   }
 
+  let branchLabel: string;
+  if (resolvedBranch) {
+    branchLabel = !branch
+      ? `${resolvedBranch}${pc.italic(" (auto-detected)")}`
+      : resolvedBranch;
+  } else {
+    branchLabel = pc.italic("(main)");
+  }
+
   console.log();
   console.log(pc.bold(pc.cyan("↓ Downloading translations")));
   console.log(pc.dim(`  Domain : ${domainRoot}`));
   console.log(pc.dim(`  Org    : ${result.data.org}`));
-  console.log(
-    pc.dim(
-      `  Branch : ${resolvedBranch ? `${resolvedBranch}${!branch ? pc.italic(" (auto-detected)") : ""}` : pc.italic("(main)")}`,
-    ),
-  );
+  console.log(pc.dim(`  Branch : ${branchLabel}`));
   console.log();
 
   // Build tasks, preserving project and locale order from config
