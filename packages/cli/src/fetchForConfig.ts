@@ -19,8 +19,7 @@ export async function fetchTranslationsAndPrint(config: Config): Promise<void> {
   if (wasAutoDetected && branch) {
     console.log(pc.dim(`Git: auto-detected branch "${branch}"`));
   }
-  const resolvedConfig =
-    branch !== config.branch ? { ...config, branch } : config;
+  const resolvedConfig = { ...config, branch };
 
   const result = await fetchTranslations(resolvedConfig);
   if (result.success) {

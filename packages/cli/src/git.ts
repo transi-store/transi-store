@@ -61,7 +61,7 @@ export async function getDefaultBranch(): Promise<string | null> {
  * - in detached HEAD state
  * - on the default branch (main/master) — no branch slug needed for download
  */
-export async function getCurrentBranch(): Promise<string | null> {
+async function getCurrentBranch(): Promise<string | null> {
   try {
     const git = getGit();
     const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
@@ -81,7 +81,7 @@ export async function getCurrentBranch(): Promise<string | null> {
   }
 }
 
-export type ResolvedBranch = {
+type ResolvedBranch = {
   /** The resolved branch slug, or undefined when on main/master or outside a git repo. */
   branch: string | undefined;
   /** True when the branch was resolved automatically (not explicitly provided by the caller). */
