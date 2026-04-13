@@ -71,10 +71,11 @@ export async function fetchForConfig(
       resolvedBranch = currentBranch;
     }
   }
+  const wasAutoDetected = !branch && !!resolvedBranch;
 
   let branchLabel: string;
   if (resolvedBranch) {
-    branchLabel = !branch
+    branchLabel = wasAutoDetected
       ? `${resolvedBranch}${pc.italic(" (auto-detected)")}`
       : resolvedBranch;
   } else {
