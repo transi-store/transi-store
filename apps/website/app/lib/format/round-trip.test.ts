@@ -112,7 +112,7 @@ describe("Round-trip: XLIFF", () => {
 
   it("import then re-export then re-import should preserve data", () => {
     const originalXliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
   <file id="test-project">
     <unit id="home.title">
       <segment>
@@ -187,7 +187,7 @@ describe("Cross-format round-trip", () => {
 
   it("XLIFF import → JSON export → JSON import should preserve data", () => {
     const originalXliff = `<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="fr">
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
   <file id="test">
     <unit id="home.title">
       <segment>

@@ -79,7 +79,7 @@ export class XliffTranslationFormat implements TranslationFormat {
 
     xml.push('<?xml version="1.0" encoding="UTF-8"?>');
     xml.push(
-      '<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" trgLang="' +
+      '<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="' +
         escapeXml(locale) +
         '">',
     );

@@ -85,7 +85,7 @@ GET /api/orgs/my-org/projects/app/translations?format=xliff&locale=fr
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" trgLang="fr">
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en" trgLang="fr">
   <file id="my-project">
     <unit id="home.title">
       <notes>
@@ -111,7 +111,7 @@ Notes:
 - `<source>` contains the **key name** (not a translation in a source language)
 - Key descriptions are exported as `<notes>`
 - XML special characters are automatically escaped
-- The `<xliff>` root only has `trgLang` (no `srcLang`)
+- `srcLang` is always `"en"` (conventional placeholder, since the source text is the key name)
 
 ## Response headers
 
