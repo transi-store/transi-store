@@ -2,11 +2,13 @@ import {
   Box,
   Container,
   Heading,
+  HStack,
   Stack,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import { NEON_BLUE, NEON_GREEN, NEON_TEAL, NEON_GLOW } from "./neon-colors";
 
 export function HowItWorksSection() {
   const { t } = useTranslation();
@@ -16,24 +18,34 @@ export function HowItWorksSection() {
       number: 1,
       title: t("landing.howItWorks.step1.title"),
       description: t("landing.howItWorks.step1.description"),
+      color: NEON_BLUE,
+      glow: NEON_GLOW.blue,
     },
     {
       number: 2,
       title: t("landing.howItWorks.step2.title"),
       description: t("landing.howItWorks.step2.description"),
+      color: NEON_GREEN,
+      glow: NEON_GLOW.green,
     },
     {
       number: 3,
       title: t("landing.howItWorks.step3.title"),
       description: t("landing.howItWorks.step3.description"),
+      color: NEON_TEAL,
+      glow: NEON_GLOW.teal,
     },
   ];
 
   return (
-    <Box as="section" py={{ base: 12, md: 20 }} bg="bg.subtle">
+    <Box as="section" py={{ base: 16, md: 24 }}>
       <Container maxW="container.xl">
-        <VStack gap={4} mb={12} textAlign="center">
-          <Heading as="h2" textStyle={{ base: "3xl", md: "4xl" }}>
+        <VStack gap={4} mb={14} textAlign="center">
+          <Heading
+            as="h2"
+            textStyle={{ base: "3xl", md: "4xl" }}
+            fontFamily="heading"
+          >
             {t("landing.howItWorks.title")}
           </Heading>
           <Text color="fg.muted" textStyle="lg">
@@ -43,42 +55,77 @@ export function HowItWorksSection() {
 
         <Stack
           direction={{ base: "column", md: "row" }}
-          gap={{ base: 8, md: 12 }}
+          gap={0}
           justify="center"
-          align={{ base: "center", md: "flex-start" }}
+          align="stretch"
         >
           {steps.map((step, index) => (
-            <VStack
+            <HStack
               key={step.number}
-              gap={4}
-              textAlign="center"
               flex={1}
-              maxW="sm"
+              gap={0}
+              align="stretch"
               animationName="fade-in, slide-from-bottom"
-              animationDuration="500ms"
+              animationDuration="400ms"
               animationTimingFunction="ease-out"
               animationFillMode="backwards"
-              animationDelay={`${index * 150}ms`}
+              animationDelay={`${index * 120}ms`}
             >
-              <Box
-                w={14}
-                h={14}
-                borderRadius="full"
-                bg="brand.solid"
-                color="brand.contrast"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                fontSize="xl"
-                fontWeight="bold"
+              <VStack
+                flex={1}
+                gap={4}
+                p={6}
+                bg="surface.panel"
+                border="1px solid"
+                borderColor="surface.border"
+                borderRadius="lg"
+                align="flex-start"
+                position="relative"
               >
-                {step.number}
-              </Box>
-              <Heading as="h3" textStyle="lg">
-                {step.title}
-              </Heading>
-              <Text color="fg.muted">{step.description}</Text>
-            </VStack>
+                {/* Step number — like a pin label */}
+                <HStack gap={3} align="center">
+                  <Box
+                    w={10}
+                    h={10}
+                    borderRadius="md"
+                    bg={step.color}
+                    color="white"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    fontSize="lg"
+                    fontWeight="bold"
+                    fontFamily="heading"
+                    boxShadow={step.glow}
+                  >
+                    {step.number}
+                  </Box>
+                  <Heading as="h3" textStyle="md" fontFamily="heading">
+                    {step.title}
+                  </Heading>
+                </HStack>
+                <Text color="fg.muted" fontSize="sm" lineHeight="tall">
+                  {step.description}
+                </Text>
+              </VStack>
+
+              {/* Connector line between steps */}
+              {index < steps.length - 1 && (
+                <Box
+                  display={{ base: "none", md: "flex" }}
+                  alignItems="center"
+                  px={2}
+                >
+                  <Box
+                    w={8}
+                    h="2px"
+                    bg={step.color}
+                    opacity={0.6}
+                    boxShadow={step.glow}
+                  />
+                </Box>
+              )}
+            </HStack>
           ))}
         </Stack>
       </Container>

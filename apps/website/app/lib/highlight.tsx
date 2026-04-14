@@ -26,14 +26,13 @@ export function TextHighlight({
 
   return parts.map((part, i) =>
     i % 2 === 1 ? (
-      <Box 
-        as="span" 
-        key={i} 
-        bg="yellow.muted" 
+      <Box
+        as="span"
+        key={i}
+        bg="yellow.muted"
         color="yellow.fg"
-        px={1} 
+        px={1}
         borderRadius="sm"
-        fontWeight="medium"
       >
         {part}
       </Box>

@@ -94,12 +94,7 @@ export function TranslationKeyRow({
                 <Link
                   to={`${getKeyUrl(organizationSlug, projectSlug, key.id)}?redirectTo=${encodeURIComponent(currentUrl)}`}
                 >
-                  <Text
-                    fontFamily="mono"
-                    fontSize="sm"
-                    fontWeight="medium"
-                    wordBreak="break-all"
-                  >
+                  <Text fontFamily="mono" wordBreak="break-all">
                     <TextHighlight text={key.keyName} query={search} />
                   </Text>
                 </Link>
@@ -115,7 +110,7 @@ export function TranslationKeyRow({
             </HStack>
 
             {key.description && (
-              <Text fontSize="xs" color="gray.400">
+              <Text fontSize="xs" color="fg.muted">
                 <TextHighlight text={key.description} query={search} />
               </Text>
             )}
@@ -133,7 +128,7 @@ export function TranslationKeyRow({
       </Table.Cell>
       <Table.Cell>
         <Text
-          fontSize="s"
+          fontSize="sm"
           overflow="hidden"
           textOverflow="ellipsis"
           whiteSpace="wrap"

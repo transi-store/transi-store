@@ -1,6 +1,5 @@
 import {
   Box,
-  Card,
   Container,
   Heading,
   Icon,
@@ -18,6 +17,7 @@ import {
   LuPlug,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
+import { NEON_CYCLE, neonGlowAt } from "./neon-colors";
 
 function FeatureCard({
   icon: FeatureIcon,
@@ -30,25 +30,57 @@ function FeatureCard({
   description: string;
   index: number;
 }) {
+  // Neon-bright accent colors cycling through the palette
+  const accentColor = NEON_CYCLE[index % NEON_CYCLE.length];
+  const glowShadow = neonGlowAt(index);
+
   return (
-    <Card.Root
-      variant="outline"
+    <Box
+      position="relative"
+      p={6}
+      bg="surface.panel"
+      border="1px solid"
+      borderColor="surface.border"
+      borderRadius="lg"
       transition="all 0.2s"
-      _hover={{ transform: "translateY(-4px)", boxShadow: "md" }}
+      _hover={{
+        borderColor: accentColor,
+        transform: "translateY(-2px)",
+        boxShadow: glowShadow,
+      }}
       animationName="fade-in, slide-from-bottom"
-      animationDuration="500ms"
+      animationDuration="400ms"
       animationTimingFunction="ease-out"
       animationFillMode="backwards"
-      animationDelay={`${index * 100}ms`}
+      animationDelay={`${index * 80}ms`}
     >
-      <Card.Body gap={3}>
-        <Icon fontSize="2xl" color="brand.solid">
+      {/* Top accent line — like a circuit trace */}
+      <Box
+        position="absolute"
+        top={0}
+        left={6}
+        w={10}
+        h="2px"
+        bg={accentColor}
+        boxShadow={`0 0 6px ${accentColor}`}
+      />
+
+      <VStack align="flex-start" gap={3}>
+        <Icon
+          fontSize="xl"
+          color={accentColor}
+          filter={`drop-shadow(0 0 4px ${accentColor})`}
+        >
           <FeatureIcon />
         </Icon>
-        <Card.Title>{title}</Card.Title>
-        <Card.Description>{description}</Card.Description>
-      </Card.Body>
-    </Card.Root>
+        <Heading as="h3" textStyle="md" fontFamily="heading">
+          {title}
+        </Heading>
+        <Text fontSize="sm" color="fg.muted" lineHeight="tall">
+          {description}
+        </Text>
+      </VStack>
+    </Box>
   );
 }
 
@@ -89,10 +121,14 @@ export function FeaturesSection() {
   ];
 
   return (
-    <Box as="section" py={{ base: 12, md: 20 }}>
+    <Box as="section" py={{ base: 16, md: 24 }}>
       <Container maxW="container.xl">
-        <VStack gap={4} mb={12} textAlign="center">
-          <Heading as="h2" textStyle={{ base: "3xl", md: "4xl" }}>
+        <VStack gap={4} mb={14} textAlign="center">
+          <Heading
+            as="h2"
+            textStyle={{ base: "3xl", md: "4xl" }}
+            fontFamily="heading"
+          >
             {t("landing.features.title")}
           </Heading>
           <Text color="fg.muted" textStyle="lg" maxW="2xl">
@@ -100,7 +136,7 @@ export function FeaturesSection() {
           </Text>
         </VStack>
 
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6}>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={5}>
           {features.map((feature, index) => (
             <FeatureCard
               key={feature.title}

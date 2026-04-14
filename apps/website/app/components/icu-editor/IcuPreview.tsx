@@ -113,7 +113,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
           borderWidth={1}
           borderColor="brand.muted"
         >
-          <Text fontSize="sm" fontWeight="medium" color="brand.fg" mb={2}>
+          <Text color="brand.fg" mb={2}>
             {t("icu.variablesDetected")}
           </Text>
           <HStack flexWrap="wrap" gap={3}>
@@ -145,12 +145,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
         borderWidth={1}
         borderColor={error ? "red.muted" : "green.muted"}
       >
-        <Text
-          fontSize="sm"
-          fontWeight="medium"
-          color={error ? "red.fg" : "green.fg"}
-          mb={1}
-        >
+        <Text fontSize="sm" color={error ? "red.fg" : "green.fg"} mb={1}>
           {error ? t("icu.errorLabel") : t("icu.previewLabel")}
         </Text>
         {error ? (
@@ -158,7 +153,7 @@ export function IcuPreview({ message, locale }: IcuPreviewProps) {
             {error}
           </Text>
         ) : (
-          <Text color="green.emphasized">
+          <Text color="green">
             {formatted || <em>{t("icu.emptyMessage")}</em>}
           </Text>
         )}

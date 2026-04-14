@@ -15,6 +15,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { LuGithub, LuCloud, LuRocket, LuCheck } from "react-icons/lu";
+import {
+  NEON_CYCLE,
+  neonGlowAt,
+  NEON_TEXT_GLOW,
+} from "~/components/landing/neon-colors";
 
 function PricingTierTable() {
   const { t } = useTranslation();
@@ -80,6 +85,7 @@ interface PricingCardProps {
   highlighted?: boolean;
   payPlan?: boolean;
   children?: React.ReactNode;
+  index?: number;
 }
 
 function PricingCard({
@@ -93,17 +99,25 @@ function PricingCard({
   highlighted,
   payPlan,
   children,
+  index = 0,
 }: PricingCardProps) {
   const { t } = useTranslation();
+  const accentColor = NEON_CYCLE[index % NEON_CYCLE.length];
+  const glowShadow = neonGlowAt(index);
 
   return (
     <Card.Root
       variant={highlighted ? "elevated" : "outline"}
       position="relative"
       borderWidth={highlighted ? 2 : 1}
-      borderColor={highlighted ? "brand.solid" : "border"}
+      borderColor={highlighted ? "brand.solid" : "surface.border"}
+      bg="surface.panel"
+      borderRadius="lg"
       transition="all 0.2s"
-      _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+      _hover={{
+        borderColor: highlighted ? "brand.solid" : "accent.solid",
+        boxShadow: glowShadow,
+      }}
     >
       {payPlan ? (
         <Badge
@@ -129,7 +143,11 @@ function PricingCard({
 
       <Card.Header>
         <HStack gap={3}>
-          <Icon fontSize="xl" color="brand.solid">
+          <Icon
+            fontSize="xl"
+            color="brand.solid"
+            filter={`drop-shadow(0 0 4px ${accentColor})`}
+          >
             <IconComponent />
           </Icon>
           <Card.Title>{title}</Card.Title>
@@ -169,72 +187,79 @@ export default function PricingPage() {
   const { t } = useTranslation();
 
   return (
-    <Container maxW="container.xl" py={{ base: 10, md: 20 }}>
-      <VStack gap={4} mb={12} textAlign="center">
-        <Heading as="h1" textStyle={{ base: "3xl", md: "5xl" }}>
-          {t("pricing.title")}
-        </Heading>
-        <Text color="fg.muted" textStyle="lg" maxW="2xl">
-          {t("pricing.subtitle")}
-        </Text>
-      </VStack>
+    <Box py={{ base: 10, md: 20 }}>
+      <Container maxW="container.xl">
+        <VStack gap={4} mb={12} textAlign="center">
+          <Heading
+            as="h1"
+            textStyle={{ base: "3xl", md: "5xl" }}
+            fontFamily="heading"
+            textShadow={NEON_TEXT_GLOW.blue}
+          >
+            {t("pricing.title")}
+          </Heading>
+          <Text color="fg.muted" textStyle="lg" maxW="2xl">
+            {t("pricing.subtitle")}
+          </Text>
+        </VStack>
 
-      <SimpleGrid columns={{ base: 1, lg: 3 }} gap={8}>
-        {/* Open Source */}
-        <PricingCard
-          icon={LuGithub}
-          title={t("pricing.openSource.title")}
-          price={t("pricing.openSource.price")}
-          description={t("pricing.openSource.description")}
-          features={[
-            t("pricing.openSource.features.selfHosted"),
-            t("pricing.openSource.features.unlimited"),
-            t("pricing.openSource.features.basicFeatures"),
-            t("pricing.openSource.features.communitySupport"),
-          ]}
-          ctaLabel={t("pricing.openSource.cta")}
-          ctaLink="https://github.com/transi-store/transi-store#readme"
-        />
+        <SimpleGrid columns={{ base: 1, lg: 3 }} gap={8}>
+          <PricingCard
+            icon={LuGithub}
+            title={t("pricing.openSource.title")}
+            price={t("pricing.openSource.price")}
+            description={t("pricing.openSource.description")}
+            features={[
+              t("pricing.openSource.features.selfHosted"),
+              t("pricing.openSource.features.unlimited"),
+              t("pricing.openSource.features.basicFeatures"),
+              t("pricing.openSource.features.communitySupport"),
+            ]}
+            ctaLabel={t("pricing.openSource.cta")}
+            ctaLink="https://github.com/transi-store/transi-store#readme"
+            index={0}
+          />
 
-        {/* SaaS Free - Highlighted */}
-        <PricingCard
-          icon={LuCloud}
-          title={t("pricing.saas.free.title")}
-          price={t("pricing.saas.free.price")}
-          description={t("pricing.saas.free.description")}
-          features={[
-            t("pricing.saas.free.features.openSourceProjects"),
-            t("pricing.saas.free.features.limitedUsers"),
-            t("pricing.saas.free.features.hosted"),
-            t("pricing.saas.free.features.unlimited"),
-          ]}
-          ctaLabel={t("pricing.saas.free.cta")}
-          ctaLink="/auth/login"
-        />
+          <PricingCard
+            icon={LuCloud}
+            title={t("pricing.saas.free.title")}
+            price={t("pricing.saas.free.price")}
+            description={t("pricing.saas.free.description")}
+            features={[
+              t("pricing.saas.free.features.openSourceProjects"),
+              t("pricing.saas.free.features.limitedUsers"),
+              t("pricing.saas.free.features.hosted"),
+              t("pricing.saas.free.features.unlimited"),
+            ]}
+            ctaLabel={t("pricing.saas.free.cta")}
+            ctaLink="/auth/login"
+            index={1}
+          />
 
-        {/* SaaS Pro */}
-        <PricingCard
-          icon={LuRocket}
-          title={t("pricing.saas.paid.title")}
-          price={`${t("pricing.saas.paid.from")} 29\u00A0\u20AC${t("pricing.month")}`}
-          description={t("pricing.saas.paid.description")}
-          features={[
-            t("pricing.saas.paid.features.everything"),
-            t("pricing.saas.paid.features.unlimitedUsers"),
-            t("pricing.saas.paid.features.hosted"),
-            t("pricing.saas.paid.features.prioritySupport"),
-          ]}
-          ctaLabel={t("pricing.saas.paid.cta")}
-          ctaLink="/auth/login"
-          highlighted
-          payPlan
-        >
-          <Badge colorPalette="green" variant="subtle" w="fit-content" mt={2}>
-            {t("pricing.saas.paid.firstMonthFree")}
-          </Badge>
-          <PricingTierTable />
-        </PricingCard>
-      </SimpleGrid>
-    </Container>
+          <PricingCard
+            icon={LuRocket}
+            title={t("pricing.saas.paid.title")}
+            price={`${t("pricing.saas.paid.from")} 29\u00A0\u20AC${t("pricing.month")}`}
+            description={t("pricing.saas.paid.description")}
+            features={[
+              t("pricing.saas.paid.features.everything"),
+              t("pricing.saas.paid.features.unlimitedUsers"),
+              t("pricing.saas.paid.features.hosted"),
+              t("pricing.saas.paid.features.prioritySupport"),
+            ]}
+            ctaLabel={t("pricing.saas.paid.cta")}
+            ctaLink="/auth/login"
+            highlighted
+            payPlan
+            index={2}
+          >
+            <Badge colorPalette="green" variant="subtle" w="fit-content" mt={2}>
+              {t("pricing.saas.paid.firstMonthFree")}
+            </Badge>
+            <PricingTierTable />
+          </PricingCard>
+        </SimpleGrid>
+      </Container>
+    </Box>
   );
 }

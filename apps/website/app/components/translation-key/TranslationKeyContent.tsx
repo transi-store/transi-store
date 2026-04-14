@@ -153,9 +153,7 @@ export function TranslationKeyContent({
       {/* Translation editors */}
       {languages.length === 0 ? (
         <Box p={6} bg="yellow.50" borderRadius="md">
-          <Text color="yellow.700" fontWeight="medium">
-            {t("translations.noLanguages")}
-          </Text>
+          <Text color="yellow.700">{t("translations.noLanguages")}</Text>
           <Button asChild colorPalette="yellow" mt={4}>
             <Link
               to={`/orgs/${organization.slug}/projects/${project.slug}/settings`}

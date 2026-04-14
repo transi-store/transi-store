@@ -86,7 +86,7 @@ export const mdxComponents: MDXComponents = {
   pre: ({ children }) => <>{children}</>,
   blockquote: ({ children }) => (
     <Box
-      borderLeftWidth={4}
+      borderLeftWidth={3}
       borderColor="accent.solid"
       pl={4}
       py={1}
@@ -117,6 +117,7 @@ export const mdxComponents: MDXComponents = {
         borderWidth={1}
         borderColor="border"
         borderRadius="md"
+        overflow="hidden"
       >
         {children}
       </Box>

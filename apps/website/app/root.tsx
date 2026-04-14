@@ -25,6 +25,7 @@ import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
 import { Analytics } from "@vercel/analytics/react";
 import { ColorModeProvider } from "./components/ui/color-mode";
+import "./fonts.css";
 
 export const middleware = [queryCounterMiddleware, i18nextMiddleware];
 
@@ -108,7 +109,7 @@ export default function App() {
   }, [locale, i18n]);
 
   return (
-    <>
+    <Box minH="100vh" bg="surface.canvas">
       <title>{t("website.title")}</title>
       <meta name="description" content={t("website.description")} />
 
@@ -122,7 +123,7 @@ export default function App() {
       <Box as="main">
         <Outlet />
       </Box>
-    </>
+    </Box>
   );
 }
 

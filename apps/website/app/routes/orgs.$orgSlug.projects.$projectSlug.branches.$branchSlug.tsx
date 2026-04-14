@@ -503,9 +503,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                               <Checkbox.HiddenInput />
                               <Checkbox.Control />
                               <Checkbox.Label>
-                                <Text fontSize="sm" fontWeight="medium">
-                                  {key.keyName}
-                                </Text>
+                                <Text>{key.keyName}</Text>
                               </Checkbox.Label>
                             </Checkbox.Root>
                             {key.description && (

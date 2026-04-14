@@ -30,15 +30,13 @@ export default function ProjectLayout() {
 
   return (
     <Container maxW="container.xl" py={5}>
-      <Box></Box>
-
       <VStack gap={4} align="stretch">
-        {/* Navigation */}
         <Stack
           direction={{ base: "column", md: "row" }}
           gap={2}
           borderBottomWidth={1}
-          pb={2}
+          borderColor="surface.border"
+          pb={3}
           align={{ base: "stretch", md: "center" }}
         >
           <Box flex={{ base: "1", md: "auto" }} overflow="hidden">
@@ -62,7 +60,6 @@ export default function ProjectLayout() {
           </Box>
         )}
 
-        {/* Child route content */}
         <Outlet context={{ organization, project, languages }} />
       </VStack>
     </Container>

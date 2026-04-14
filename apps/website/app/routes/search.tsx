@@ -88,9 +88,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
             {/* Filtres optionnels */}
             <SimpleGrid columns={{ base: 1, md: 3 }} gap={3}>
               <Box>
-                <Text fontSize="sm" fontWeight="medium" mb={1}>
-                  {t("search.organization")}
-                </Text>
+                <Text mb={1}>{t("search.organization")}</Text>
                 <Select.Root collection={itemCollection} name="org">
                   <Select.HiddenSelect />
                   <Select.Control>
@@ -118,9 +116,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
               </Box>
 
               <Box>
-                <Text fontSize="sm" fontWeight="medium" mb={1}>
-                  {t("search.language")}
-                </Text>
+                <Text mb={1}>{t("search.language")}</Text>
                 <Input
                   name="locale"
                   placeholder={t("search.localePlaceholder")}
@@ -141,7 +137,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
         {hasQuery ? (
           <>
             <HStack justify="space-between" align="center">
-              <Text fontSize="lg" fontWeight="medium">
+              <Text fontSize="lg">
                 {results.length > 0
                   ? `${results.length} ${t("search.resultLabel", { count: results.length })}`
                   : t("search.noResults")}
@@ -183,12 +179,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
                               )}
                             </HStack>
 
-                            <Text
-                              fontFamily="mono"
-                              fontSize="lg"
-                              fontWeight="medium"
-                              mb={1}
-                            >
+                            <Text fontFamily="mono" fontSize="lg" mb={1}>
                               <TextHighlight
                                 text={result.keyName}
                                 query={query}

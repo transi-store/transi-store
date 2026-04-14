@@ -84,7 +84,7 @@ export function TranslationsSearchBar({
 
   return (
     <Form method="get" onSubmit={handleFormSubmit}>
-      <HStack align="end" flexWrap="wrap">
+      <HStack align="end" flexWrap="wrap" gap={3}>
         <Box flex="1">
           <InputGroup
             endElement={

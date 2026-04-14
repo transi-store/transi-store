@@ -80,9 +80,7 @@ export function AiTranslationConfigDialog({
               <DialogBody pb={6}>
                 <VStack align="stretch" gap={4}>
                   <Box>
-                    <Text fontSize="sm" fontWeight="medium" mb={2}>
-                      {t("settings.ai.apiKeyLabel")}
-                    </Text>
+                    <Text mb={2}>{t("settings.ai.apiKeyLabel")}</Text>
                     <Input
                       name="apiKey"
                       type="password"
@@ -111,9 +109,7 @@ export function AiTranslationConfigDialog({
                   </Box>
                   {availableModels.length > 0 && (
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" mb={2}>
-                        {t("settings.ai.modelLabel")}
-                      </Text>
+                      <Text mb={2}>{t("settings.ai.modelLabel")}</Text>
                       <NativeSelect.Root>
                         <NativeSelect.Field
                           name="model"

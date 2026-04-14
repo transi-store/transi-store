@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('build', { recursive: true, force: true })\"",
-    "dev": "react-router dev",
+    "dev": "react-router dev --port=5176",
     "build": "yarn workspace @transi-store/common build && react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "lint:types": "react-router typegen && tsc --noEmit",
