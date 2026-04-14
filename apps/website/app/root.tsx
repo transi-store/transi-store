@@ -25,6 +25,7 @@ import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
 import { Analytics } from "@vercel/analytics/react";
 import { ColorModeProvider } from "./components/ui/color-mode";
+import "./fonts.css";
 
 export const middleware = [queryCounterMiddleware, i18nextMiddleware];
 

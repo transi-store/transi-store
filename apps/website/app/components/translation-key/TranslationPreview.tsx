@@ -28,9 +28,7 @@ export function TranslationPreview({ value, locale }: Props): JSX.Element {
         onClick={() => setIsPreviewOpen(!isPreviewOpen)}
       >
         {isPreviewOpen ? <LuChevronDown /> : <LuChevronRight />}
-        <Text fontSize="sm" fontWeight="medium">
-          {t("icu.previewLabel")}
-        </Text>
+        <Text fontSize="sm">{t("icu.previewLabel")}</Text>
       </Box>
 
       <Collapsible.Root open={isPreviewOpen}>

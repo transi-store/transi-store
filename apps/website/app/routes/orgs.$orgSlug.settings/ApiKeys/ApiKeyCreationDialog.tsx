@@ -43,7 +43,7 @@ export function ApiKeyCreationDialog({
               <DialogBody pb={6}>
                 <VStack align="stretch" gap={4}>
                   <Box>
-                    <Text fontSize="sm" fontWeight="medium" mb={2}>
+                    <Text fontSize="sm" mb={2}>
                       {t("settings.apiKeys.nameLabel")}
                     </Text>
                     <Input

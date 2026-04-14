@@ -22,9 +22,7 @@ export function MemberItem({ member }: MemberItemProps) {
         <HStack justify="space-between">
           <Box flex="1">
             <HStack>
-              <Text fontWeight="medium">
-                {member.user.name || member.user.email}
-              </Text>
+              <Text>{member.user.name || member.user.email}</Text>
               {member.isCurrentUser && (
                 <Badge colorPalette="brand">{t("members.you")}</Badge>
               )}

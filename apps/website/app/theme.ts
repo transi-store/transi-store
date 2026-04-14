@@ -9,22 +9,38 @@ import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
  *   Teal  #43AECE  — connector accent
  *   Navy  #121B28  — transistor pins (dark)
  */
+const monoFontFamily = ["'Monaspace Krypton'", "monospace"].join(", ");
+
+const headingFontFamily =
+  "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+
 const config = defineConfig({
   cssVarsPrefix: "transi",
 
   globalCss: {
+    html: {
+      bg: "surface.canvas",
+      color: "fg",
+    },
     body: {
-      fontFamily: "JetBrains Mono, SF Mono, Fira Code, Menlo, monospace",
+      bg: "surface.canvas",
+      color: "fg",
+      fontFamily: monoFontFamily,
+      fontWeight: "normal",
     },
     "h1, h2, h3, h4, h5, h6": {
-      fontFamily:
-        "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+      fontFamily: headingFontFamily,
     },
   },
 
   theme: {
     keyframes: {},
     tokens: {
+      fonts: {
+        body: { value: monoFontFamily },
+        heading: { value: headingFontFamily },
+        mono: { value: monoFontFamily },
+      },
       colors: {
         brand: {
           50: { value: "#e8f0fd" },
@@ -82,6 +98,147 @@ const config = defineConfig({
     },
     semanticTokens: {
       colors: {
+        bg: {
+          DEFAULT: {
+            value: {
+              _light: "#ffffff",
+              _dark: "#0f1722",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "#fafbfc",
+              _dark: "#121b28",
+            },
+          },
+          muted: {
+            value: {
+              _light: "#f2f5f8",
+              _dark: "#182436",
+            },
+          },
+          emphasized: {
+            value: {
+              _light: "#e8ecf0",
+              _dark: "#22324a",
+            },
+          },
+          panel: {
+            value: {
+              _light: "rgba(255, 255, 255, 0.96)",
+              _dark: "rgba(18, 27, 40, 0.96)",
+            },
+          },
+          inverted: {
+            value: {
+              _light: "{colors.navy.800}",
+              _dark: "#f8fafc",
+            },
+          },
+        },
+        fg: {
+          DEFAULT: {
+            value: {
+              _light: "{colors.navy.800}",
+              _dark: "#f8fafc",
+            },
+          },
+          muted: {
+            value: {
+              _light: "{colors.navy.500}",
+              _dark: "rgba(248, 250, 252, 0.72)",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "{colors.navy.400}",
+              _dark: "rgba(248, 250, 252, 0.58)",
+            },
+          },
+          inverted: {
+            value: {
+              _light: "#ffffff",
+              _dark: "{colors.navy.800}",
+            },
+          },
+        },
+        border: {
+          DEFAULT: {
+            value: {
+              _light: "rgba(18, 27, 40, 0.12)",
+              _dark: "rgba(67, 174, 206, 0.18)",
+            },
+          },
+          muted: {
+            value: {
+              _light: "rgba(18, 27, 40, 0.08)",
+              _dark: "rgba(67, 174, 206, 0.12)",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "rgba(18, 27, 40, 0.06)",
+              _dark: "rgba(67, 174, 206, 0.1)",
+            },
+          },
+          emphasized: {
+            value: {
+              _light: "rgba(18, 27, 40, 0.18)",
+              _dark: "rgba(67, 174, 206, 0.28)",
+            },
+          },
+          inverted: {
+            value: {
+              _light: "rgba(255, 255, 255, 0.24)",
+              _dark: "rgba(18, 27, 40, 0.24)",
+            },
+          },
+        },
+        gray: {
+          contrast: { value: "#ffffff" },
+          fg: {
+            value: {
+              _light: "{colors.navy.700}",
+              _dark: "{colors.navy.200}",
+            },
+          },
+          muted: {
+            value: {
+              _light: "#edf1f5",
+              _dark: "{colors.navy.700}",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "#f7f9fb",
+              _dark: "{colors.navy.800}",
+            },
+          },
+          emphasized: {
+            value: {
+              _light: "#e4eaf0",
+              _dark: "{colors.navy.600}",
+            },
+          },
+          solid: {
+            value: {
+              _light: "{colors.navy.700}",
+              _dark: "{colors.navy.300}",
+            },
+          },
+          focusRing: {
+            value: {
+              _light: "{colors.brand.500}",
+              _dark: "{colors.brand.400}",
+            },
+          },
+          border: {
+            value: {
+              _light: "rgba(18, 27, 40, 0.12)",
+              _dark: "rgba(67, 174, 206, 0.18)",
+            },
+          },
+        },
         brand: {
           solid: {
             value: {
@@ -191,19 +348,19 @@ const config = defineConfig({
         surface: {
           canvas: {
             value: {
-              _light: "#f5f6f8",
+              _light: "#fafbfc",
               _dark: "#0a1018",
             },
           },
           panel: {
             value: {
-              _light: "rgba(255, 255, 255, 0.92)",
+              _light: "rgba(255, 255, 255, 0.96)",
               _dark: "rgba(18, 27, 40, 0.92)",
             },
           },
           panelMuted: {
             value: {
-              _light: "rgba(245, 246, 248, 0.95)",
+              _light: "rgba(247, 249, 251, 0.98)",
               _dark: "rgba(14, 21, 32, 0.95)",
             },
           },

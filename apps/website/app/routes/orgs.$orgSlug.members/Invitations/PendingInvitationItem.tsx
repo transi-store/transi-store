@@ -22,7 +22,7 @@ export function PendingInvitationItem({
           <Box flex="1">
             <HStack>
               <LuMail />
-              <Text fontWeight="medium">{invitation.invitedEmail}</Text>
+              <Text>{invitation.invitedEmail}</Text>
               <Badge colorPalette="yellow">{t("members.pending")}</Badge>
             </HStack>
             <Text fontSize="sm" color="fg.muted">

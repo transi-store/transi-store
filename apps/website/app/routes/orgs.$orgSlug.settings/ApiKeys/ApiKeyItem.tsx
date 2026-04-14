@@ -16,9 +16,7 @@ export function ApiKeyItem({ apiKey, onCopyKey }: ApiKeyItemProps) {
     <Box p={4} borderWidth={1} borderRadius="md">
       <HStack justify="space-between">
         <Box flex={1}>
-          <Text fontWeight="medium">
-            {apiKey.name || t("settings.apiKeys.unnamedKey")}
-          </Text>
+          <Text>{apiKey.name || t("settings.apiKeys.unnamedKey")}</Text>
 
           <HStack>
             <Code

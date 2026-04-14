@@ -83,9 +83,7 @@ export function OrganizationInviteLink({
           <Text fontSize="sm" color="fg.muted">
             {t("members.inviteLink.createDescription")}
           </Text>
-          <Text fontSize="sm" fontWeight="medium">
-            {t("members.inviteLink.differencesTitle")}
-          </Text>
+          <Text fontSize="sm">{t("members.inviteLink.differencesTitle")}</Text>
           <VStack align="stretch" gap={1} pl={4}>
             <Text fontSize="sm" color="fg.muted">
               • <strong>{t("members.inviteLink.orgLinkLabel")}</strong>{" "}

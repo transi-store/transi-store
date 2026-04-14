@@ -125,21 +125,21 @@ export default function ProjectSettings() {
         </Heading>
         <VStack gap={2} align="stretch">
           <Box>
-            <Text fontSize="sm" color="fg.muted" fontWeight="medium">
+            <Text fontSize="sm" color="fg.muted">
               {t("settings.projectName")}
             </Text>
             <Text>{project.name}</Text>
           </Box>
           {project.description && (
             <Box>
-              <Text fontSize="sm" color="fg.muted" fontWeight="medium">
+              <Text fontSize="sm" color="fg.muted">
                 {t("settings.projectDescription")}
               </Text>
               <Text>{project.description}</Text>
             </Box>
           )}
           <Box>
-            <Text fontSize="sm" color="fg.muted" fontWeight="medium">
+            <Text fontSize="sm" color="fg.muted">
               {t("settings.projectSlug")}
             </Text>
             <Text fontFamily="mono" fontSize="sm">
@@ -192,7 +192,7 @@ export default function ProjectSettings() {
                 <Card.Body>
                   <HStack justify="space-between">
                     <Box>
-                      <Text fontWeight="medium">{lang.locale}</Text>
+                      <Text>{lang.locale}</Text>
                       {lang.isDefault && (
                         <Badge colorPalette="brand" size="sm">
                           {t("settings.default")}

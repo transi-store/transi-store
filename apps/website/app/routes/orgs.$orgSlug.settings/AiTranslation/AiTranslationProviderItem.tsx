@@ -28,7 +28,7 @@ export function AiTranslationProviderItem({
     >
       <HStack justify="space-between">
         <HStack flex={1}>
-          <Text fontWeight="medium">{providerInfo.name}</Text>
+          <Text>{providerInfo.name}</Text>
           {configured ? (
             <>
               <Badge colorPalette="green">{t("settings.ai.configured")}</Badge>
