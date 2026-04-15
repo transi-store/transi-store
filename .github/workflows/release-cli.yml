@@ -23,14 +23,11 @@ jobs:
       - name: Init repository dependencies
         uses: ./.github/actions/setup-project
 
-      - name: Build CLI package
-        run: yarn build:cli
-
       - name: Publish to npm
         id: changesets
         uses: changesets/action@v1
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          publish: yarn changeset publish
+          publish: yarn release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

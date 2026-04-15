@@ -24,6 +24,7 @@
     "db:studio": "yarn workspace @transi-store/website db:studio",
     "db:setup-search": "./scripts/enable-fuzzy-search.sh",
     "test": "yarn workspace @transi-store/website test",
+    "release": "yarn build:cli && yarn changeset publish",
     "postinstall": "husky"
   },
   "devDependencies": {
