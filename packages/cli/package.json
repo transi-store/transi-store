@@ -3,7 +3,7 @@
   "version": "1.8.2",
   "type": "module",
   "repository": {
-    "url": "https://github.com/transi-store/transi-store"
+    "url": "git+https://github.com/transi-store/transi-store.git"
   },
   "exports": {
     ".": "./dist/cli.js",
