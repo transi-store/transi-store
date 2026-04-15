@@ -1,16 +1,11 @@
 # CHANGELOG
 
-## 1.7.1
+## Unreleased
 
 ### Fixed
 
 - Git optimization for `upload:config` now always compares the full branch against the default branch (main/master). Previously, the optimization only worked on feature branches with full git history available. Now it also fetches `origin/main` when not locally available (e.g. CI shallow clones).
-
-## 1.7.0
-
-### Added
-
-- Added `--project` option to `download:config` and `upload:config` commands to filter by a comma-separated list of project slugs. ([#110](https://github.com/transi-store/transi-store/pull/110))
+- fix: skip empty string translations during import [#111](https://github.com/transi-store/transi-store/pull/111)
 
 ## 1.6.0
 
