@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.8.1
+
+### Patch Changes
+
+- Fix cli repository url in package.json
+
 ## 1.8.0
 
 ### Minor Changes
