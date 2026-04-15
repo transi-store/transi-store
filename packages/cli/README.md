@@ -103,7 +103,7 @@ Review and commit the changes. Then publish the packages:
 
 ```sh
 # add modified files
-git add ".changeset/*.md" "packages/*/CHANGELOG.md" "packages/*/package.json" "apps/*/CHANGELOG.md" "apps/*/package.json"
+git add ".changeset/*.md" "packages/*/CHANGELOG.md" "packages/*/package.json" "apps/*/package.json"
 
 # commit release metadata
 git commit -m "chore: publish packages"

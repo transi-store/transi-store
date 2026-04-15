@@ -27,6 +27,7 @@
     "postinstall": "husky"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
     "@eslint/js": "^10.0.1",
     "@transi-store/cli": "workspace:^",

@@ -582,6 +582,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@changesets/changelog-github@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "@changesets/changelog-github@npm:0.6.0"
+  dependencies:
+    "@changesets/get-github-info": "npm:^0.8.0"
+    "@changesets/types": "npm:^6.1.0"
+    dotenv: "npm:^8.1.0"
+  checksum: 10c0/b2f20cfda2b663e2209b496de900469886afb4106b3a90ab39e2bcf6b8cd4c57f4870d50b60906a99116b1d444784db08c17f893eb2742094b376a336a94a5cf
+  languageName: node
+  linkType: hard
+
 "@changesets/cli@npm:^2.30.0":
   version: 2.30.0
   resolution: "@changesets/cli@npm:2.30.0"
@@ -652,6 +663,16 @@ __metadata:
     picocolors: "npm:^1.1.0"
     semver: "npm:^7.5.3"
   checksum: 10c0/b9d9992440b7e09dcaf22f57d28f1d8e0e31996e1bc44dbbfa1801e44f93fa49ebba6f9356c60f6ff0bd85cd0f0d0b8602f7e0f2addc5be647b686e6f8985f70
+  languageName: node
+  linkType: hard
+
+"@changesets/get-github-info@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@changesets/get-github-info@npm:0.8.0"
+  dependencies:
+    dataloader: "npm:^1.4.0"
+    node-fetch: "npm:^2.5.0"
+  checksum: 10c0/b7c53e368a1e77504a704de3080ee99c63e7610c3a69549ab6709089bdb3ae2faed33059852033440afe8225827504aae8124c464a65cd91a9ada1de1955cb9e
   languageName: node
   linkType: hard
 
@@ -6399,6 +6420,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dataloader@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "dataloader@npm:1.4.0"
+  checksum: 10c0/5fa4c843b9e60195092f1fc7e2acaff318ed46886dc670ddff683bc560f12d4079e6d1e77749501b7e111a8582d26a2aa2a2fbe6d7d5e1520cef64f4e1fd242d
+  languageName: node
+  linkType: hard
+
 "debug@npm:2.6.9":
   version: 2.6.9
   resolution: "debug@npm:2.6.9"
@@ -6550,6 +6578,13 @@ __metadata:
   version: 17.2.3
   resolution: "dotenv@npm:17.2.3"
   checksum: 10c0/c884403209f713214a1b64d4d1defa4934c2aa5b0002f5a670ae298a51e3c3ad3ba79dfee2f8df49f01ae74290fcd9acdb1ab1d09c7bfb42b539036108bb2ba0
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^8.1.0":
+  version: 8.6.0
+  resolution: "dotenv@npm:8.6.0"
+  checksum: 10c0/6750431dea8efbd54b9f2d9681b04e1ccc7989486461dcf058bb708d9e3d63b04115fcdf8840e38ad1e24a4a2e1e7c1560626c5e3ac7bc09371b127c49e2d45f
   languageName: node
   linkType: hard
 
@@ -10560,6 +10595,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-fetch@npm:^2.5.0":
+  version: 2.7.0
+  resolution: "node-fetch@npm:2.7.0"
+  dependencies:
+    whatwg-url: "npm:^5.0.0"
+  peerDependencies:
+    encoding: ^0.1.0
+  peerDependenciesMeta:
+    encoding:
+      optional: true
+  checksum: 10c0/b55786b6028208e6fbe594ccccc213cab67a72899c9234eb59dba51062a299ea853210fcf526998eaa2867b0963ad72338824450905679ff0fa304b8c5093ae8
+  languageName: node
+  linkType: hard
+
 "node-gyp@npm:latest":
   version: 12.1.0
   resolution: "node-gyp@npm:12.1.0"
@@ -12921,10 +12970,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tr46@npm:~0.0.3":
+  version: 0.0.3
+  resolution: "tr46@npm:0.0.3"
+  checksum: 10c0/047cb209a6b60c742f05c9d3ace8fa510bff609995c129a37ace03476a9b12db4dbf975e74600830ef0796e18882b2381fb5fb1f6b4f96b832c374de3ab91a11
+  languageName: node
+  linkType: hard
+
 "transi-store@workspace:.":
   version: 0.0.0-use.local
   resolution: "transi-store@workspace:."
   dependencies:
+    "@changesets/changelog-github": "npm:^0.6.0"
     "@changesets/cli": "npm:^2.30.0"
     "@eslint/js": "npm:^10.0.1"
     "@transi-store/cli": "workspace:^"
@@ -13741,10 +13798,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"webidl-conversions@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "webidl-conversions@npm:3.0.1"
+  checksum: 10c0/5612d5f3e54760a797052eb4927f0ddc01383550f542ccd33d5238cfd65aeed392a45ad38364970d0a0f4fea32e1f4d231b3d8dac4a3bdd385e5cf802ae097db
+  languageName: node
+  linkType: hard
+
 "whatwg-mimetype@npm:4.0.0":
   version: 4.0.0
   resolution: "whatwg-mimetype@npm:4.0.0"
   checksum: 10c0/a773cdc8126b514d790bdae7052e8bf242970cebd84af62fb2f35a33411e78e981f6c0ab9ed1fe6ec5071b09d5340ac9178e05b52d35a9c4bcf558ba1b1551df
+  languageName: node
+  linkType: hard
+
+"whatwg-url@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "whatwg-url@npm:5.0.0"
+  dependencies:
+    tr46: "npm:~0.0.3"
+    webidl-conversions: "npm:^3.0.0"
+  checksum: 10c0/1588bed84d10b72d5eec1d0faa0722ba1962f1821e7539c535558fb5398d223b0c50d8acab950b8c488b4ba69043fd833cc2697056b167d8ad46fac3995a55d5
   languageName: node
   linkType: hard
 
