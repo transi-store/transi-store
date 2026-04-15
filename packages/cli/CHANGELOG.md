@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.9.0
+
+### Minor Changes
+
+- [#116](https://github.com/transi-store/transi-store/pull/116) [`e5d9103`](https://github.com/transi-store/transi-store/commit/e5d9103108309014fb32d8e5fc8248557bdd4a3b) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - ### Added
+  - Support for YAML, CSV, PO, INI, and PHP translation formats in `download` and `upload` commands.
+
+  ### Fixed
+  - Fix export for non-JSON formats: raw server response is now written directly instead of being re-serialized through `JSON.stringify`.
+
 ## 1.8.4
 
 ### Patch Changes
