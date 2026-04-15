@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.7.0
+
 ### Added
 
 - `download`, `download:config`, `upload:config` commands now automatically detect and use the current git branch when `--branch` is not explicitly provided. If you are on a feature branch, translations will be fetched for that branch without any extra flags.
