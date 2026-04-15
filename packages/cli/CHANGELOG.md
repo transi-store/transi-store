@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.8.2
+
+### Patch Changes
+
+- Fix release script
+
 ## 1.8.1
 
 ### Patch Changes
