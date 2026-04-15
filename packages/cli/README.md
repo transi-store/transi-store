@@ -87,13 +87,33 @@ You must also provide the `TRANSI_STORE_API_KEY` environment variable with your 
 
 ### Publish package
 
-To publish a new version of the CLI package, follow these steps:
+Package publishing must be done from the `main` branch.
 
-1. Update the version number in `packages/cli/package.json` and in `packages/cli/CHANGELOG.md`.
-2. Commit the changes with a message like `chore(cli): publish version x.y.z`
-3. Run the publish script from the root of the monorepo:
+```sh
+git switch main && git pull
+```
 
-   ```bash
-   yarn build:cli
-   yarn workspace @transi-store/cli npm login && yarn workspace @transi-store/cli npm publish --access public
-   ```
+When you want to prepare a new version for publishing, run:
+
+```sh
+yarn changeset version
+```
+
+Review and commit the changes. Then publish the packages:
+
+```sh
+# add modified files
+git add ".changeset/*.md" "packages/*/CHANGELOG.md" "packages/*/package.json" "apps/*/CHANGELOG.md" "apps/*/package.json"
+
+# commit release metadata
+git commit -m "chore: publish packages"
+
+# publish packages
+make publish
+```
+
+Then remember to push the git tag created during publishing:
+
+```sh
+git push --follow-tags
+```
