@@ -37,7 +37,7 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { Switch } from "@chakra-ui/react/switch";
-import { Link, useFetcher, type FetcherWithComponents } from "react-router";
+import { Link, type FetcherWithComponents } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPencil, LuSparkles, LuCircleAlert } from "react-icons/lu";
 import { IcuEditorClient } from "~/components/icu-editor";
@@ -47,7 +47,7 @@ import {
   TRANSLATIONS_KEY_MODEL_MODE,
 } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationKeyModal";
 import { Tooltip } from "~/components/ui/tooltip";
-import { toaster } from "~/components/ui/toaster";
+import { useSaveTranslation } from "./useSaveTranslation";
 import { useTranslationKeyEditor } from "./useTranslationKeyEditor";
 import type {
   TranslationKey,
@@ -258,52 +258,22 @@ function LanguageDetail({
   hasAiProvider,
   actionUrl,
 }: LanguageDetailProps): JSX.Element {
-  const { t } = useTranslation();
-  const saveFetcher = useFetcher();
+  const { submitSave: saveTranslation, isSaving } = useSaveTranslation({
+    actionUrl,
+    keyName: translationKeyName,
+  });
 
   // Track the last saved value to detect unsaved changes on blur.
   // Initialised from the current `value` prop; auto-resets when the
   // parent remounts this component via `key` prop change.
   const [lastSavedValue, setLastSavedValue] = useState(value);
 
-  const isSaving = saveFetcher.state !== "idle";
-
   const submitSave = useCallback(
     (saveValue: string, saveFuzzy: boolean) => {
       setLastSavedValue(saveValue);
-      saveFetcher.submit(
-        {
-          _action: "saveTranslation",
-          locale: lang.locale,
-          value: saveValue || "",
-          isFuzzy: String(saveFuzzy),
-        },
-        {
-          method: "POST",
-          ...(actionUrl ? { action: actionUrl } : {}),
-        },
-      );
-      toaster.success({
-        title: t("common.saveInProgress"),
-        description: (
-          <VStack align="start" gap={1}>
-            <Text>
-              <strong>{t("key.save.key")} </strong>
-              {translationKeyName}
-            </Text>
-            <Text>
-              <strong>{t("key.save.locale")}</strong>
-              {lang.locale}
-            </Text>
-            <Text>
-              <strong>{t("key.save.value")}</strong>{" "}
-              {saveValue || t("key.save.empty")}
-            </Text>
-          </VStack>
-        ),
-      });
+      saveTranslation(lang.locale, saveValue, saveFuzzy);
     },
-    [saveFetcher, lang.locale, actionUrl, translationKeyName, t],
+    [saveTranslation, lang.locale],
   );
 
   const handleChange = useCallback(

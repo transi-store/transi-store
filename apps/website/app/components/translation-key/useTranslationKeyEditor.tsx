@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useFetcher, type FetcherWithComponents } from "react-router";
-import { useTranslation } from "react-i18next";
-import { VStack, Text } from "@chakra-ui/react";
-import { toaster } from "~/components/ui/toaster";
+import { useSaveTranslation } from "./useSaveTranslation";
 import type {
   ProjectLanguage,
   Translation,
@@ -53,10 +51,11 @@ export function useTranslationKeyEditor({
   project,
   actionUrl,
 }: UseTranslationKeyEditorParams): ReturnType {
-  const { t } = useTranslation();
-
-  // Fetcher for AI-triggered saves (AI suggestion selection)
-  const aiSaveFetcher = useFetcher();
+  // Hook for AI-triggered saves (AI suggestion selection)
+  const { submitSave: aiSubmitSave } = useSaveTranslation({
+    actionUrl,
+    keyName: translationKey.keyName,
+  });
 
   // Fetcher for editing key metadata
   const editKeyFetcher = useFetcher<{
@@ -162,50 +161,11 @@ export function useTranslationKeyEditor({
         handleTranslationChange(aiDialogLocale, text);
         setAiDialogLocale(null);
 
-        // Save the AI suggestion immediately via a dedicated fetcher
-        aiSaveFetcher.submit(
-          {
-            _action: "saveTranslation",
-            locale: aiDialogLocale,
-            value: text,
-            isFuzzy: String(fuzzyFlags[aiDialogLocale] || false),
-          },
-          {
-            method: "POST",
-            ...(actionUrl ? { action: actionUrl } : {}),
-          },
-        );
-
-        toaster.success({
-          title: t("common.saveInProgress"),
-          description: (
-            <VStack align="start" gap={1}>
-              <Text>
-                <strong>{t("key.save.key")} </strong>
-                {translationKey.keyName}
-              </Text>
-              <Text>
-                <strong>{t("key.save.locale")}</strong>
-                {aiDialogLocale}
-              </Text>
-              <Text>
-                <strong>{t("key.save.value")}</strong>{" "}
-                {text || t("key.save.empty")}
-              </Text>
-            </VStack>
-          ),
-        });
+        // Save the AI suggestion immediately
+        aiSubmitSave(aiDialogLocale, text, fuzzyFlags[aiDialogLocale] || false);
       }
     },
-    [
-      aiDialogLocale,
-      handleTranslationChange,
-      fuzzyFlags,
-      actionUrl,
-      aiSaveFetcher,
-      translationKey.keyName,
-      t,
-    ],
+    [aiDialogLocale, handleTranslationChange, fuzzyFlags, aiSubmitSave],
   );
 
   return {
