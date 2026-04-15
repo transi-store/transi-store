@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SupportedFormat } from "@transi-store/common";
 import * as schema from "../../drizzle/schema";
 import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug.translations";
 import { RouterContextProvider } from "react-router";
@@ -80,13 +81,13 @@ describe("Export Project Loader", () => {
     expect(response.status).toBe(400);
     const data = await response.json();
     expect(data.error).toEqual(
-      "locale: Invalid input: expected string, received undefined",
+      `format: Invalid option: expected one of "${Object.values(SupportedFormat).join('"|"')}"; locale: Invalid input: expected string, received undefined`,
     );
 
     // Locale provided but no languages configured
     const response2 = await loader({
       request: new Request(
-        "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=fr",
+        "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=fr&format=json",
       ),
       params: { orgSlug: "test-org", projectSlug: "test-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
@@ -102,7 +103,7 @@ describe("Export Project Loader", () => {
     // Locale provided but language not found in project
     const response3 = await loader({
       request: new Request(
-        "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=dk",
+        "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=dk&format=json",
       ),
       params: { orgSlug: "test-org", projectSlug: "test-project" },
       unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
@@ -120,7 +121,7 @@ describe("Export Project Loader", () => {
     await createTranslation(getTestDb(), 1, "en", "Test Value");
 
     const request = new Request(
-      "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=en",
+      "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=en&format=json",
     );
 
     const response = await loader({
@@ -163,7 +164,7 @@ describe("Export Project Loader", () => {
       await createTranslation(db, branchKey.id, "en", "Branch Value");
 
       const request = new Request(
-        `https://example.com/api/orgs/test-org/projects/test-project/translations?locale=en${branchParam ? `&branch=${branchParam}` : ""}`,
+        `https://example.com/api/orgs/test-org/projects/test-project/translations?locale=en&format=json${branchParam ? `&branch=${branchParam}` : ""}`,
       );
 
       const response = await loader({
