@@ -10,13 +10,10 @@ extendZodWithOpenApi(z);
 
 export const exportQuerySchema = (localeExample = "fr") =>
   z.object({
-    format: z
-      .enum(SupportedFormat)
-      .default(SupportedFormat.JSON)
-      .openapi({
-        description: `Output format. Supported formats: ${SUPPORTED_FORMATS_LIST}.`,
-        example: SupportedFormat.JSON,
-      }),
+    format: z.enum(SupportedFormat).openapi({
+      description: `Output format. Supported formats: ${SUPPORTED_FORMATS_LIST}.`,
+      example: SupportedFormat.JSON,
+    }),
     locale: z.string().openapi({
       description:
         "Language code to export (must match one of the project's configured languages).",

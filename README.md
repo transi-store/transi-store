@@ -24,6 +24,7 @@ Managing translations across multiple projects and teams is painful. Most tools 
 ## Features
 
 ### 🗂️ Translation management
+
 - **Multi-organisation** — one instance, multiple teams, fully isolated data
 - **Multi-project** — as many projects per organisation as you need
 - **Multi-language** — unlimited locales per project with configurable defaults
@@ -32,12 +33,14 @@ Managing translations across multiple projects and teams is painful. Most tools 
 - **Branch support** — work on translation changes in branches, just like code
 
 ### 🔌 Integrations
-- **Export API** — download translations in 7 formats: JSON, XLIFF, YAML, CSV, Gettext PO, INI, PHP
+
+- **Export API** — download translations in multiple formats: JSON, XLIFF, YAML, CSV, Gettext PO, INI, PHP
 - **Import API** — bulk-upload translations with `overwrite` or `skip` strategies
 - **API keys** — Bearer token auth for CI/CD pipelines, with usage tracking
 - **CLI** — `@transi-store/cli` package to sync translations in your build pipeline
 
 ### 👥 Collaboration
+
 - **Team management** — invite members by email with invitation codes
 - **Multi-user** — shared access to projects within an organisation
 - **OAuth2/OIDC** — sign in with Google, GitHub, or any OIDC provider
@@ -107,9 +110,9 @@ Create a `transi-store.config.json` in your project:
       "project": "my-app",
       "langs": ["en", "fr", "de"],
       "format": "json",
-      "output": "./locales/<lang>/translations.json"
-    }
-  ]
+      "output": "./locales/<lang>/translations.json",
+    },
+  ],
 }
 ```
 
