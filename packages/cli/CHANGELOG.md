@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.8.0
+
+### Minor Changes
+
+- [#130](https://github.com/transi-store/transi-store/pull/130) [`72eaf59`](https://github.com/transi-store/transi-store/commit/72eaf59deb19d936eaeff85c3be99e9fc0a6b2e9) Thanks [@jdeniau](https://github.com/jdeniau)! - Use changesets to release packages
+
 ## Unreleased
 
 ## 1.7.0

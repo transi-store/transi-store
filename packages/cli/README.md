@@ -108,8 +108,11 @@ git add ".changeset/*.md" "packages/*/CHANGELOG.md" "packages/*/package.json" "a
 # commit release metadata
 git commit -m "chore: publish packages"
 
-# publish packages
-make publish
+# get version
+VERSION=$(node -p "require('./packages/cli/package.json').version")
+
+# tag the release commit (use the same tag for all packages since they are released together)
+git tag cli@v$VERSION -m "cli@v$VERSION"
 ```
 
 Then remember to push the git tag created during publishing:
