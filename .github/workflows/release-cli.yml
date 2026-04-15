@@ -1,0 +1,50 @@
+name: Release CLI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write # Required for npm provenance
+  contents: read
+
+jobs:
+  publish:
+    name: Build & Publish @transi-store/cli to npm
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.release.tag_name, 'cli')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Init repository dependencies
+        uses: ./.github/actions/setup-project
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Build CLI package
+        run: yarn build:cli
+
+      - name: Determine npm tag
+        id: npm_tag
+        run: |
+          VERSION=$(node -p "require('./packages/cli/package.json').version")
+          if [[ $VERSION == *-* ]]; then
+            echo "TAG=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "TAG=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public --tag ${{ steps.npm_tag.outputs.TAG }}
+        working-directory: packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
