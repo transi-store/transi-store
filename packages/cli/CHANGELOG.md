@@ -4,10 +4,7 @@
 
 ### Added
 
-- `download` and `download:config` commands now automatically detect and use the current git branch when `--branch` is not explicitly provided. If you are on a feature branch, translations will be fetched for that branch without any extra flags. [#126](https://github.com/transi-store/transi-store/pull/126)
-  ||||||| parent of d200480 (refactor(cli): extract resolveGitBranch() shared helper; remove async from download action; update CHANGELOG)
-- `download` and `download:config` commands now automatically detect and use the current git branch when `--branch` is not explicitly provided. If you are on a feature branch, translations will be fetched for that branch without any extra flags.
-- `upload:config` command now automatically detects and uses the current git branch when `--branch` is not explicitly provided, matching the behaviour of the download commands.
+- `download`, `download:config`, `upload:config` commands now automatically detect and use the current git branch when `--branch` is not explicitly provided. If you are on a feature branch, translations will be fetched for that branch without any extra flags.
 
 ### Fixed
 
