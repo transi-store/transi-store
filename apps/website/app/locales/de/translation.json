@@ -174,7 +174,7 @@
   "landing.features.ai.title": "KI-gestützte Übersetzung",
   "landing.features.api.description": "Programmatischer Zugriff mit API-Schlüsseln für eine nahtlose CI/CD-Integration.",
   "landing.features.api.title": "API- & CI/CD-Integration",
-  "landing.features.export.description": "Exportieren Sie Ihre Übersetzungen in 7 Standardformaten, darunter JSON, XLIFF, YAML, CSV, Gettext PO, INI und PHP.",
+  "landing.features.export.description": "Exportieren Sie Ihre Übersetzungen in verschiedenen Standardformaten, darunter JSON, XLIFF, YAML, CSV, Gettext PO, INI und PHP.",
   "landing.features.export.title": "Multi-Format-Export",
   "landing.features.multiLang.description": "Verwalten Sie Übersetzungen in unbegrenzt vielen Sprachen mit vollständiger ICU-Unterstützung.",
   "landing.features.multiLang.title": "Mehrsprachige Unterstützung",
