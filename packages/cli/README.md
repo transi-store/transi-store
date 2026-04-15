@@ -113,10 +113,7 @@ VERSION=$(node -p "require('./packages/cli/package.json').version")
 
 # tag the release commit (use the same tag for all packages since they are released together)
 git tag cli@v$VERSION -m "cli@v$VERSION"
-```
 
-Then remember to push the git tag created during publishing:
-
-```sh
+# Then remember to push the git tag created during publishing:
 git push --follow-tags
 ```
