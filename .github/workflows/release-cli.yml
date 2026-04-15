@@ -8,7 +8,8 @@ on:
 
 permissions:
   id-token: write # Required for npm provenance
-  contents: write
+  contents: write # to create a release commit and tag
+  pull-requests: write # to create a release pull request if there are changesets
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -23,7 +24,7 @@ jobs:
       - name: Init repository dependencies
         uses: ./.github/actions/setup-project
 
-      - name: Publish to npm
+      - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
         with:
