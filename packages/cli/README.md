@@ -95,5 +95,5 @@ To publish a new version of the CLI package, follow these steps:
 
    ```bash
    yarn build:cli
-   yarn workspace @transi-store/cli npm publish --access public
+   yarn workspace @transi-store/cli npm login && yarn workspace @transi-store/cli npm publish --access public
    ```
