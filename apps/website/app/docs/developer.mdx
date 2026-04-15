@@ -166,27 +166,51 @@ Create a `transi-store.config.json` at the root of your project:
 
 ```json
 {
-  "apiUrl": "https://transi.example.com",
-  "apiKey": "YOUR_API_KEY",
-  "orgSlug": "acme",
-  "projectSlug": "webapp",
-  "localesDir": "./src/locales",
-  "defaultLocale": "en",
-  "format": "json"
+  "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+  "org": "acme",
+  "projects": [
+    {
+      "project": "webapp",
+      "langs": ["en", "fr", "de"],
+      "format": "json",
+      "output": "./src/locales/<lang>/translations.json"
+    }
+  ]
 }
 ```
 
-### Syncing translations
+Set the `TRANSI_STORE_API_KEY` environment variable with your API key, then run:
+
+### Downloading translations
 
 ```bash
-# Pull translations from the server to your local files
-transi-store pull
+# Download all translations using the config file
+transi-store download:config
 
-# Push local translations to the server
-transi-store push
+# Download for a specific branch
+transi-store download:config --branch feature/my-feature
 
-# Push with overwrite strategy (replaces server values)
-transi-store push --strategy overwrite
+# Download for a single project/locale without a config file
+transi-store download --org acme --project webapp --locale fr --output ./locales/fr.json
 ```
 
-This is ideal for integrating into CI/CD — pull translated strings at build time and push new source strings after developers add them.
+> **Git branch auto-detection:** when `--branch` is not provided, the CLI automatically detects the current git branch and uses it. On `main`/`master`, no branch filter is applied (main translations are fetched).
+
+### Uploading translations
+
+```bash
+# Upload all translation files using the config file
+transi-store upload:config
+
+# Upload for a specific branch
+transi-store upload:config --branch feature/my-feature
+
+# Upload a single file without a config file
+transi-store upload --org acme --project webapp --locale fr --input ./locales/fr.json
+```
+
+> **Git branch auto-detection:** when `--branch` is not provided, the CLI automatically detects the current git branch and uses it. On `main`/`master`, no branch filter is applied (keys are uploaded to the main project).
+
+> **Git optimization:** `upload:config` also skips files that have not changed compared to the default branch (`main`/`master`) when running in a git repository, to avoid unnecessary API calls.
+
+This is ideal for integrating into CI/CD — download translated strings at build time and upload new source strings after developers add them.

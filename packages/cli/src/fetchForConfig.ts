@@ -11,16 +11,24 @@ import {
   type Config,
   type FetchResult,
 } from "./fetchTranslations.ts";
+import { resolveGitBranch } from "./git.ts";
 
 export async function fetchTranslationsAndPrint(config: Config): Promise<void> {
-  const result = await fetchTranslations(config);
+  // Auto-detect branch if not explicitly provided
+  const { branch, wasAutoDetected } = await resolveGitBranch(config.branch);
+  if (wasAutoDetected && branch) {
+    console.log(pc.dim(`Git: auto-detected branch "${branch}"`));
+  }
+  const resolvedConfig = { ...config, branch };
+
+  const result = await fetchTranslations(resolvedConfig);
   if (result.success) {
     console.log(
-      `${pc.green("✓")} ${pc.bold(`${config.project} / ${config.locale}`)} ${pc.dim("→")} ${result.output}`,
+      `${pc.green("✓")} ${pc.bold(`${resolvedConfig.project} / ${resolvedConfig.locale}`)} ${pc.dim("→")} ${result.output}`,
     );
   } else {
     console.error(
-      `${pc.red("✗")} ${pc.bold(`${config.project} / ${config.locale}`)} — ${pc.red(result.error)}`,
+      `${pc.red("✗")} ${pc.bold(`${resolvedConfig.project} / ${resolvedConfig.locale}`)} — ${pc.red(result.error)}`,
     );
     process.exit(1);
   }
@@ -62,11 +70,24 @@ export async function fetchForConfig(
 
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
+  // Auto-detect current git branch if not explicitly provided
+  const { branch: resolvedBranch, wasAutoDetected } =
+    await resolveGitBranch(branch);
+
+  let branchLabel: string;
+  if (resolvedBranch) {
+    branchLabel = wasAutoDetected
+      ? `${resolvedBranch}${pc.italic(" (auto-detected)")}`
+      : resolvedBranch;
+  } else {
+    branchLabel = pc.italic("(main)");
+  }
+
   console.log();
   console.log(pc.bold(pc.cyan("↓ Downloading translations")));
   console.log(pc.dim(`  Domain : ${domainRoot}`));
   console.log(pc.dim(`  Org    : ${result.data.org}`));
-  console.log(pc.dim(`  Branch : ${branch ?? pc.italic("(main)")}`));
+  console.log(pc.dim(`  Branch : ${branchLabel}`));
   console.log();
 
   // Build tasks, preserving project and locale order from config
@@ -92,7 +113,7 @@ export async function fetchForConfig(
           .replace("<lang>", locale)
           .replace("<project>", configItem.project)
           .replace("<format>", configItem.format),
-        branch,
+        branch: resolvedBranch,
       });
     }
   }
