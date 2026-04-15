@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.8.4
+
+### Patch Changes
+
+- Test new release script
+
 ## 1.8.3
 
 ### Patch Changes
