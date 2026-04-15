@@ -1,34 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { XliffTranslationFormat } from "./xliff-format.server";
-import type { ProjectTranslations } from "./types";
-
-function buildProjectTranslations(
-  data: Record<string, string>,
-  locale: string,
-  descriptions?: Record<string, string>,
-): ProjectTranslations {
-  return Object.entries(data).map(([keyName, value], index) => ({
-    id: index + 1,
-    projectId: 1,
-    keyName,
-    description: descriptions?.[keyName] ?? null,
-    branchId: null,
-    deletedAt: null,
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
-    translations: [
-      {
-        id: index + 1,
-        keyId: index + 1,
-        locale,
-        value,
-        isFuzzy: false,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
-      },
-    ],
-  }));
-}
+import { buildProjectTranslations } from "./test-helpers";
 
 describe("XliffTranslationFormat", () => {
   const format = new XliffTranslationFormat();
@@ -332,49 +304,16 @@ describe("XliffTranslationFormat", () => {
       "fr",
     );
 
-    it("should return error when locale is missing", () => {
-      const result = format.handleExportRequest({
-        searchParams: new URLSearchParams(),
-        projectTranslations: translations,
-        projectName: "My Project",
-        availableLocales: ["en", "fr"],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          "Missing 'locale' parameter. Use ?format=xliff&locale=fr",
-        );
-      }
-    });
-
-    it("should return error when locale not in project", () => {
-      const result = format.handleExportRequest({
-        searchParams: new URLSearchParams("locale=de"),
-        projectTranslations: translations,
-        projectName: "My Project",
-        availableLocales: ["en", "fr"],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("Language 'de' not found in this project");
-      }
-    });
-
     it("should return XLIFF content with correct content-type", () => {
       const result = format.handleExportRequest({
-        searchParams: new URLSearchParams("locale=fr"),
+        locale: "fr",
         projectTranslations: translations,
         projectName: "My Project",
-        availableLocales: ["en", "fr"],
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.contentType).toBe("application/x-xliff+xml");
-        expect(result.fileExtension).toBe("xliff");
-        expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
+      expect(result.contentType).toBe("application/x-xliff+xml");
+      expect(result.fileExtension).toBe("xliff");
+      expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
   <file id="My Project">
     <unit id="home.title">
@@ -385,7 +324,6 @@ describe("XliffTranslationFormat", () => {
     </unit>
   </file>
 </xliff>`);
-      }
     });
   });
 });

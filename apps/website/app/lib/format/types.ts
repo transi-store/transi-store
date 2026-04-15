@@ -1,11 +1,8 @@
 import type { ProjectTranslations } from "~/lib/translation-keys.server";
+import { SupportedFormat } from "@transi-store/common";
 
 export type { ProjectTranslations };
-
-export enum SupportedFormat {
-  JSON = "json",
-  XLIFF = "xliff",
-}
+export { SupportedFormat };
 
 export type ParseResult = {
   success: boolean;
@@ -21,24 +18,16 @@ export type ExportOptions = {
 };
 
 export type ExportRequestParams = {
-  searchParams: URLSearchParams;
+  locale: string;
   projectTranslations: ProjectTranslations;
   projectName: string;
-  availableLocales: Array<string>;
 };
 
-export type ExportRequestResult =
-  | {
-      success: true;
-      content: string;
-      fileExtension: string;
-      contentType: string;
-    }
-  | { success: false; error: string };
-
-export function isSupportedFormat(format: string): format is SupportedFormat {
-  return Object.values(SupportedFormat).includes(format as SupportedFormat);
-}
+export type ExportRequestResult = {
+  content: string;
+  fileExtension: string;
+  contentType: string;
+};
 
 export interface TranslationFormat {
   /**
@@ -55,8 +44,10 @@ export interface TranslationFormat {
   ): string;
 
   /**
-   * Handle a full export request: validate URL params, export content,
-   * and build the response filename and content-type.
+   * Handle a full export request: export content and return
+   * the content string, filename extension, and content-type.
+   *
+   * Locale and format validation is done by the caller (route handler).
    */
   handleExportRequest(params: ExportRequestParams): ExportRequestResult;
 }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The export API lets you download project translations in JSON or XLIFF 2.0. It supports two authentication methods: user session or API key.
+The export API lets you download project translations in several formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, and PHP. It supports two authentication methods: user session or API key.
 
 ## Endpoint
 
@@ -48,11 +48,11 @@ Creating a key: via the web UI at `/orgs/:orgSlug/settings` (API Keys section). 
 
 ## Query parameters
 
-| Parameter | Values      | Required | Description                                                 |
-| --------- | ----------- | -------- | ----------------------------------------------------------- |
-| `format`  | json, xliff | Yes      | Output format                                               |
-| `locale`  | string      | Yes      | Language code (e.g. `fr`, `en`)                             |
-| `branch`  | string      | No       | Branch slug (defaults to main). Use `@all` for all branches |
+| Parameter | Values                               | Required | Description                                                 |
+| --------- | ------------------------------------ | -------- | ----------------------------------------------------------- |
+| `format`  | json, xliff, yaml, csv, po, ini, php | Yes      | Output format                                               |
+| `locale`  | string                               | Yes      | Language code (e.g. `fr`, `en`)                             |
+| `branch`  | string                               | No       | Branch slug (defaults to main). Use `@all` for all branches |
 
 ## JSON format
 
@@ -113,6 +113,130 @@ Notes:
 - XML special characters are automatically escaped
 - `srcLang` is always `"en"` (conventional placeholder, since the source text is the key name)
 
+## YAML format
+
+**Example**:
+
+```bash
+GET /api/orgs/my-org/projects/app/translations?format=yaml&locale=fr
+```
+
+**Response**:
+
+```yaml
+home.title: Accueil
+home.subtitle: Bienvenue sur notre site
+navbar.about: À propos
+navbar.contact: Contact
+```
+
+Notes:
+
+- Flat key-value format (keys are not nested)
+- On import, nested YAML structures are automatically flattened with dot-separated keys
+
+## CSV format
+
+**Example**:
+
+```bash
+GET /api/orgs/my-org/projects/app/translations?format=csv&locale=fr
+```
+
+**Response**:
+
+```csv
+home.title,Accueil
+home.subtitle,Bienvenue sur notre site
+navbar.about,À propos
+navbar.contact,Contact
+```
+
+Notes:
+
+- Two columns: key, value (no header row)
+- Values containing commas, quotes, or newlines are properly quoted (RFC 4180)
+
+## Gettext PO format
+
+**Example**:
+
+```bash
+GET /api/orgs/my-org/projects/app/translations?format=po&locale=fr
+```
+
+**Response**:
+
+```po
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+
+msgid "home.title"
+msgstr "Accueil"
+
+msgid "navbar.about"
+msgstr "À propos"
+```
+
+Notes:
+
+- Standard Gettext PO format
+- Header entry includes charset and language metadata
+- Special characters (quotes, newlines, backslashes) are properly escaped
+
+## INI format
+
+**Example**:
+
+```bash
+GET /api/orgs/my-org/projects/app/translations?format=ini&locale=fr
+```
+
+**Response**:
+
+```ini
+home.title=Accueil
+home.subtitle=Bienvenue sur notre site
+navbar.about=À propos
+navbar.contact=Contact
+```
+
+Notes:
+
+- Simple `key=value` format
+- Values with special characters (quotes, equals, semicolons) are automatically quoted
+- On import, comments (`;`, `#`) and section headers (`[section]`) are ignored
+
+## PHP format
+
+**Example**:
+
+```bash
+GET /api/orgs/my-org/projects/app/translations?format=php&locale=fr
+```
+
+**Response**:
+
+```php
+<?php
+
+return [
+    'home.title' => 'Accueil',
+    'home.subtitle' => 'Bienvenue sur notre site',
+    'navbar.about' => 'À propos',
+    'navbar.contact' => 'Contact',
+];
+```
+
+Notes:
+
+- Standard PHP translation array format (`return ['key' => 'value']`)
+- On import, both single-quoted and double-quoted strings are supported
+- Single quotes in values are properly escaped with backslash
+
 ## Response headers
 
 ### JSON
@@ -125,8 +249,43 @@ Content-Disposition: attachment; filename="project-slug-fr.json"
 ### XLIFF
 
 ```http
-Content-Type: application/xml; charset=utf-8
+Content-Type: application/x-xliff+xml; charset=utf-8
 Content-Disposition: attachment; filename="project-slug-fr.xliff"
+```
+
+### YAML
+
+```http
+Content-Type: text/yaml; charset=utf-8
+Content-Disposition: attachment; filename="project-slug-fr.yaml"
+```
+
+### CSV
+
+```http
+Content-Type: text/csv; charset=utf-8
+Content-Disposition: attachment; filename="project-slug-fr.csv"
+```
+
+### Gettext PO
+
+```http
+Content-Type: text/x-gettext-translation; charset=utf-8
+Content-Disposition: attachment; filename="project-slug-fr.po"
+```
+
+### INI
+
+```http
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: attachment; filename="project-slug-fr.ini"
+```
+
+### PHP
+
+```http
+Content-Type: text/x-php; charset=utf-8
+Content-Disposition: attachment; filename="project-slug-fr.php"
 ```
 
 ## Error handling
@@ -144,7 +303,7 @@ Content-Disposition: attachment; filename="project-slug-fr.xliff"
 
 - **Route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.translations.tsx`
 - **Zod schema** (validation + OpenAPI): `apps/website/app/lib/api-doc/schemas/export.ts`
-- **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`
+- **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`, `apps/website/app/lib/format/yaml-format.server.ts`, `apps/website/app/lib/format/csv-format.server.ts`, `apps/website/app/lib/format/po-format.server.ts`, `apps/website/app/lib/format/ini-format.server.ts`, `apps/website/app/lib/format/php-format.server.ts`
 - **Factory**: `apps/website/app/lib/format/format-factory.server.ts`
 - **Types/interface**: `apps/website/app/lib/format/types.ts`
 
@@ -164,7 +323,7 @@ const result = format.handleExportRequest({
 });
 ```
 
-Each format class (`JsonTranslationFormat`, `XliffTranslationFormat`) handles its own parameter validation, content generation, filename, and content-type. See [import-system.md](./import-system.md) for the full interface description.
+Each format class (`JsonTranslationFormat`, `XliffTranslationFormat`, `YamlTranslationFormat`, `CsvTranslationFormat`, `PoTranslationFormat`, `IniTranslationFormat`, `PhpTranslationFormat`) handles its own parameter validation, content generation, filename, and content-type. See [import-system.md](./import-system.md) for the full interface description.
 
 ### API key tracking
 

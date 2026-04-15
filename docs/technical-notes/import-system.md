@@ -2,7 +2,7 @@
 
 ## Overview
 
-The import system lets you bulk-load translations from JSON or XLIFF 2.0 files. It supports two strategies: overwrite existing translations or preserve them.
+The import system lets you bulk-load translations from files. Supported formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, and PHP. It supports two strategies: overwrite existing translations or preserve them.
 
 ## Supported formats
 
@@ -42,11 +42,67 @@ The `<source>` element is treated as the **key name** (used to match translation
 </xliff>
 ```
 
+### YAML
+
+Supports both flat and nested YAML. Nested keys are automatically flattened with dot-separated notation.
+
+```yaml
+home.title: Accueil
+home.subtitle: Bienvenue sur notre site
+navbar.about: À propos
+```
+
+### CSV
+
+Two columns: translation key and value, no header row.
+
+```csv
+home.title,Accueil
+home.subtitle,Bienvenue sur notre site
+navbar.about,À propos
+```
+
+### Gettext PO
+
+Standard Gettext Portable Object format. The `msgid` is the translation key and `msgstr` is the value.
+
+```po
+msgid "home.title"
+msgstr "Accueil"
+
+msgid "navbar.about"
+msgstr "À propos"
+```
+
+### INI
+
+Simple `key=value` format. Comments (`;`, `#`) and section headers (`[section]`) are ignored on import.
+
+```ini
+home.title=Accueil
+home.subtitle=Bienvenue sur notre site
+navbar.about=À propos
+```
+
+### PHP
+
+PHP translation array (`return ['key' => 'value']`). Both single-quoted and double-quoted strings are supported on import.
+
+```php
+<?php
+
+return [
+    'home.title' => 'Accueil',
+    'home.subtitle' => 'Bienvenue sur notre site',
+    'navbar.about' => 'À propos',
+];
+```
+
 ## User interface
 
 Route: `/orgs/:orgSlug/projects/:projectSlug/import-export`
 
-The import form accepts a file (JSON or XLIFF, detected automatically from extension), a target locale, and an import strategy.
+The import form accepts a file (auto-detected from extension: `.json`, `.xliff`, `.xlf`, `.yaml`, `.yml`, `.csv`, `.po`, `.ini`, `.php`), a target locale, and an import strategy.
 
 ## Import strategies
 
@@ -100,7 +156,7 @@ After:
 ### 1. Validation
 
 - File size: max 5 MB
-- Format detection: explicit `format` param, or inferred from file extension (`.json`, `.xliff`, `.xlf`)
+- Format detection: explicit `format` param, or inferred from file extension (`.json`, `.xliff`, `.xlf`, `.yaml`, `.yml`, `.csv`, `.po`, `.ini`, `.php`)
 - Parse file content
 - Structure: flat object only (JSON), or valid XLIFF 2.0
 - Keys: non-empty strings, max 500 chars
@@ -141,7 +197,7 @@ All operations run in a single transaction:
 - **Import orchestrator**: `apps/website/app/lib/import/process-import.server.ts`
 - **Validation**: `apps/website/app/lib/import/validate-import-data.server.ts`
 - **DB import logic**: `apps/website/app/lib/import/import-translations.server.ts`
-- **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`
+- **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`, `apps/website/app/lib/format/yaml-format.server.ts`, `apps/website/app/lib/format/csv-format.server.ts`, `apps/website/app/lib/format/po-format.server.ts`, `apps/website/app/lib/format/ini-format.server.ts`, `apps/website/app/lib/format/php-format.server.ts`
 - **Factory**: `apps/website/app/lib/format/format-factory.server.ts`
 
 ### Architecture
@@ -165,6 +221,11 @@ Defined in `apps/website/app/lib/format/types.ts`:
 export enum SupportedFormat {
   JSON = "json",
   XLIFF = "xliff",
+  YAML = "yaml",
+  CSV = "csv",
+  PO = "po",
+  INI = "ini",
+  PHP = "php",
 }
 
 export interface TranslationFormat {
@@ -189,16 +250,16 @@ To add a new format, implement this interface, register it in the factory (`form
 
 ## Error handling
 
-| Cause                  | Error message                                           |
-| ---------------------- | ------------------------------------------------------- |
-| Missing file field     | `"Missing 'file' field"`                                |
-| Missing locale field   | `"Missing 'locale' field"`                              |
-| Invalid strategy       | `"Invalid 'strategy' field. Use 'overwrite' or 'skip'"` |
-| Unknown file format    | `"Unsupported file format. Use JSON or XLIFF"`          |
-| Parse error            | Format-specific parse error message                     |
-| Invalid data structure | `"Invalid data"` + validation details                   |
-| Locale not in project  | `"Language '{locale}' not found in this project"`       |
-| DB error               | `"Import failed"` + error details                       |
+| Cause                  | Error message                                                            |
+| ---------------------- | ------------------------------------------------------------------------ |
+| Missing file field     | `"Missing 'file' field"`                                                 |
+| Missing locale field   | `"Missing 'locale' field"`                                               |
+| Invalid strategy       | `"Invalid 'strategy' field. Use 'overwrite' or 'skip'"`                  |
+| Unknown file format    | `"Unsupported file format. Use JSON, XLIFF, YAML, CSV, PO, INI, or PHP"` |
+| Parse error            | Format-specific parse error message                                      |
+| Invalid data structure | `"Invalid data"` + validation details                                    |
+| Locale not in project  | `"Language '{locale}' not found in this project"`                        |
+| DB error               | `"Import failed"` + error details                                        |
 
 ## Limitations
 

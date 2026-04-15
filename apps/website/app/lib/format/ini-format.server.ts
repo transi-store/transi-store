@@ -1,3 +1,4 @@
+import ini from "ini";
 import type {
   TranslationFormat,
   ParseResult,
@@ -7,40 +8,32 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-export class JsonTranslationFormat implements TranslationFormat {
+export class IniTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
-    if (fileContent.length > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: "Le fichier est trop volumineux (maximum 5 MB)",
-      };
-    }
-
     try {
-      const parsed = JSON.parse(fileContent);
+      const parsed = ini.parse(fileContent);
 
-      if (
-        typeof parsed !== "object" ||
-        parsed === null ||
-        Array.isArray(parsed)
-      ) {
+      const data: Record<string, string> = {};
+
+      for (const [key, value] of Object.entries(parsed)) {
+        if (typeof value === "string") {
+          data[key] = value;
+        }
+      }
+
+      if (Object.keys(data).length === 0) {
         return {
           success: false,
           error:
-            "Le fichier doit contenir un objet JSON avec des paires clé/valeur",
+            "No translations found in the INI file (expected format: key=value)",
         };
       }
 
-      return {
-        success: true,
-        data: parsed as Record<string, string>,
-      };
+      return { success: true, data };
     } catch (_error) {
       return {
         success: false,
-        error: "Format JSON invalide",
+        error: "Invalid INI format",
       };
     }
   }
@@ -49,7 +42,7 @@ export class JsonTranslationFormat implements TranslationFormat {
     projectTranslations: ProjectTranslations,
     options: ExportOptions,
   ): string {
-    const result: Record<string, string> = {};
+    const data: Record<string, string> = {};
 
     for (const key of projectTranslations) {
       const translation = key.translations.find(
@@ -57,11 +50,12 @@ export class JsonTranslationFormat implements TranslationFormat {
       );
 
       if (translation) {
-        result[key.keyName] = translation.value;
+        data[key.keyName] = translation.value;
       }
     }
 
-    return JSON.stringify(result, null, 2);
+    // ini.stringify adds a trailing newline; trim it for consistency
+    return ini.stringify(data).trimEnd();
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
@@ -71,8 +65,8 @@ export class JsonTranslationFormat implements TranslationFormat {
 
     return {
       content,
-      fileExtension: "json",
-      contentType: "application/json",
+      fileExtension: "ini",
+      contentType: "text/plain",
     };
   }
 }

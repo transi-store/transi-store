@@ -50,15 +50,15 @@ export async function fetchTranslations({
       };
     }
 
-    const data = await content.json();
-
     // create directory if not exists
     const dir = path.dirname(output);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(output, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+    const data = await content.text();
+    fs.writeFileSync(output, data, "utf-8");
+
     return { success: true, output };
   } catch (error) {
     return {

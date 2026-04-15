@@ -5,8 +5,14 @@ import { importTranslations } from "./import-translations.server";
 import type { ImportStats } from "./import-translations.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { BRANCH_STATUS } from "../branches";
-import { SupportedFormat } from "../format/types";
+import {
+  SupportedFormat,
+  SUPPORTED_FORMATS_LIST,
+  getFormatFromFilename,
+} from "@transi-store/common";
 import { importFieldsSchema } from "../api-doc/schemas/import";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 type ProcessImportResult =
   | { success: true; importStats: ImportStats }
@@ -32,6 +38,10 @@ export async function processImport({
   const file = formData.get("file");
   if (!file || !(file instanceof File)) {
     return { success: false, error: "Missing 'file' field" };
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return { success: false, error: "File is too large (maximum 5 MB)" };
   }
 
   // 2. Validate text fields with shared Zod schema
@@ -63,15 +73,19 @@ export async function processImport({
 
   if (formatParam) {
     format = formatParam;
-  } else if (file.name.endsWith(".xliff") || file.name.endsWith(".xlf")) {
-    format = SupportedFormat.XLIFF;
-  } else if (file.name.endsWith(".json") || file.type === "application/json") {
-    format = SupportedFormat.JSON;
   } else {
-    return {
-      success: false,
-      error: "Unsupported file format. Use JSON or XLIFF",
-    };
+    const detected =
+      getFormatFromFilename(file.name) ??
+      (file.type === "application/json" ? SupportedFormat.JSON : undefined);
+
+    if (!detected) {
+      return {
+        success: false,
+        error: `Unsupported file format. Use ${SUPPORTED_FORMATS_LIST}`,
+      };
+    }
+
+    format = detected;
   }
 
   // 5. Read file content

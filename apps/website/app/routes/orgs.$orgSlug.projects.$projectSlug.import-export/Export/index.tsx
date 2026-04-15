@@ -16,13 +16,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LuDownload } from "react-icons/lu";
 import type { ProjectLanguage } from "../../../../drizzle/schema";
-import { SupportedFormat } from "~/lib/format/types";
+import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
 
 const formatCollection = createListCollection({
-  items: [
-    { label: "JSON", value: SupportedFormat.JSON },
-    { label: "XLIFF", value: SupportedFormat.XLIFF },
-  ],
+  items: Object.values(SupportedFormat).map((value) => ({
+    label: FORMAT_LABELS[value],
+    value,
+  })),
 });
 
 type ExportSectionProps = {

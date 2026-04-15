@@ -1,3 +1,4 @@
+import YAML from "yaml";
 import type {
   TranslationFormat,
   ParseResult,
@@ -7,19 +8,10 @@ import type {
   ProjectTranslations,
 } from "./types";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-export class JsonTranslationFormat implements TranslationFormat {
+export class YamlTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
-    if (fileContent.length > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: "Le fichier est trop volumineux (maximum 5 MB)",
-      };
-    }
-
     try {
-      const parsed = JSON.parse(fileContent);
+      const parsed = YAML.parse(fileContent);
 
       if (
         typeof parsed !== "object" ||
@@ -28,19 +20,21 @@ export class JsonTranslationFormat implements TranslationFormat {
       ) {
         return {
           success: false,
-          error:
-            "Le fichier doit contenir un objet JSON avec des paires clé/valeur",
+          error: "File must contain a YAML object with key/value pairs",
         };
       }
 
+      // Flatten nested YAML structure into dot-separated keys
+      const data = flattenObject(parsed);
+
       return {
         success: true,
-        data: parsed as Record<string, string>,
+        data,
       };
     } catch (_error) {
       return {
         success: false,
-        error: "Format JSON invalide",
+        error: "Invalid YAML format",
       };
     }
   }
@@ -61,7 +55,7 @@ export class JsonTranslationFormat implements TranslationFormat {
       }
     }
 
-    return JSON.stringify(result, null, 2);
+    return YAML.stringify(result, { lineWidth: 0 }).trimEnd();
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
@@ -71,8 +65,32 @@ export class JsonTranslationFormat implements TranslationFormat {
 
     return {
       content,
-      fileExtension: "json",
-      contentType: "application/json",
+      fileExtension: "yaml",
+      contentType: "text/yaml",
     };
   }
+}
+
+function flattenObject(
+  obj: Record<string, unknown>,
+  prefix = "",
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    const fullKey = prefix ? `${prefix}.${key}` : key;
+
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      Object.assign(
+        result,
+        flattenObject(value as Record<string, unknown>, fullKey),
+      );
+    } else if (typeof value === "string") {
+      result[fullKey] = value;
+    } else if (value !== null && value !== undefined) {
+      result[fullKey] = String(value);
+    }
+  }
+
+  return result;
 }

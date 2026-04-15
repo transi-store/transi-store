@@ -1,35 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { JsonTranslationFormat } from "./json-format.server";
-import type { ProjectTranslations } from "./types";
-
-function buildProjectTranslations(
-  data: Record<string, string>,
-  locale: string,
-): ProjectTranslations {
-  return Object.entries(data).map(
-    ([keyName, value], index): ProjectTranslations[number] => ({
-      id: index + 1,
-      projectId: 1,
-      keyName,
-      description: null,
-      branchId: null,
-      deletedAt: null,
-      createdAt: new Date("2024-01-01"),
-      updatedAt: new Date("2024-01-01"),
-      translations: [
-        {
-          id: index + 1,
-          keyId: index + 1,
-          locale,
-          value,
-          isFuzzy: false,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2024-01-01"),
-        },
-      ],
-    }),
-  );
-}
+import { buildProjectTranslations } from "./test-helpers";
 
 describe("JsonTranslationFormat", () => {
   const format = new JsonTranslationFormat();
@@ -164,50 +135,18 @@ describe("JsonTranslationFormat", () => {
       "fr",
     );
 
-    it("should return error when locale is missing", () => {
-      const result = format.handleExportRequest({
-        searchParams: new URLSearchParams(),
-        projectTranslations: translations,
-        projectName: "My Project",
-        availableLocales: ["en", "fr"],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain("Missing 'locale' parameter");
-      }
-    });
-
-    it("should return error when locale not in project", () => {
-      const result = format.handleExportRequest({
-        searchParams: new URLSearchParams("locale=de"),
-        projectTranslations: translations,
-        projectName: "My Project",
-        availableLocales: ["en", "fr"],
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("Language 'de' not found in this project");
-      }
-    });
-
     it("should return JSON content with correct content-type", () => {
       const result = format.handleExportRequest({
-        searchParams: new URLSearchParams("locale=fr"),
+        locale: "fr",
         projectTranslations: translations,
         projectName: "My Project",
-        availableLocales: ["en", "fr"],
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.contentType).toBe("application/json");
-        expect(result.fileExtension).toBe("json");
-        expect(JSON.parse(result.content)).toEqual({
-          "home.title": "Accueil",
-        });
-      }
+      expect(result.contentType).toBe("application/json");
+      expect(result.fileExtension).toBe("json");
+      expect(JSON.parse(result.content)).toEqual({
+        "home.title": "Accueil",
+      });
     });
   });
 });

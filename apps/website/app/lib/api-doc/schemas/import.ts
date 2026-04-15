@@ -1,7 +1,10 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { ImportStrategy } from "@transi-store/common";
-import { SupportedFormat } from "~/lib/format/types";
+import {
+  ImportStrategy,
+  SupportedFormat,
+  SUPPORTED_FORMATS_LIST,
+} from "@transi-store/common";
 
 extendZodWithOpenApi(z);
 
@@ -17,11 +20,13 @@ export const importFieldsSchema = (localeExample = "fr") =>
         "Import strategy. 'overwrite' updates existing translations. 'skip' only creates missing translations and leaves existing ones untouched.",
       example: ImportStrategy.OVERWRITE,
     }),
-    format: z.enum(SupportedFormat).optional().openapi({
-      description:
-        "File format. Auto-detected from file extension if omitted (.json → json, .xliff/.xlf → xliff).",
-      example: SupportedFormat.JSON,
-    }),
+    format: z
+      .enum(SupportedFormat)
+      .optional()
+      .openapi({
+        description: `File format (${SUPPORTED_FORMATS_LIST}). Auto-detected from file extension if omitted.`,
+        example: SupportedFormat.JSON,
+      }),
     branch: z.string().optional().openapi({
       description:
         "Target branch slug. If the branch does not exist and has an open status, it will be created automatically. Omit to import into the main branch.",

@@ -116,24 +116,7 @@ export class XliffTranslationFormat implements TranslationFormat {
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
-    const { searchParams, projectTranslations, projectName, availableLocales } =
-      params;
-
-    const locale = searchParams.get("locale");
-
-    if (!locale) {
-      return {
-        success: false,
-        error: "Missing 'locale' parameter. Use ?format=xliff&locale=fr",
-      };
-    }
-
-    if (!availableLocales.includes(locale)) {
-      return {
-        success: false,
-        error: `Language '${locale}' not found in this project`,
-      };
-    }
+    const { locale, projectTranslations, projectName } = params;
 
     const content = this.exportSingleLocale(projectTranslations, {
       locale,
@@ -141,7 +124,6 @@ export class XliffTranslationFormat implements TranslationFormat {
     });
 
     return {
-      success: true,
       content,
       fileExtension: "xliff",
       contentType: "application/x-xliff+xml",
