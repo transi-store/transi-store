@@ -13,7 +13,7 @@ jobs:
   publish:
     name: Build & Publish @transi-store/cli to npm
     runs-on: ubuntu-latest
-    if: startsWith(github.event.release.tag_name, 'cli')
+    if: startsWith(github.event.release.tag_name, 'cli') || github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
