@@ -166,3 +166,10 @@ The `DATABASE_URL` is pre-configured for the Docker Compose setup and does not n
 ---
 
 **For detailed implementation guidance, always refer to the `docs/technical-notes/` folder.**
+
+### Handling changesets
+
+This packages uses [Changesets](https://github.com/changesets/changesets) to handle versions and changelogs.
+Do not change CHANGELOG.md file directly, but create a changeset with `yarn changeset` command and follow the instructions.
+
+This will create a markdown file in the `.changeset` folder, that will be handled by the maintainers when merging the PR.

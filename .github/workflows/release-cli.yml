@@ -44,7 +44,6 @@ jobs:
           fi
 
       - name: Publish to npm
-        run: npm publish --provenance --access public --tag ${{ steps.npm_tag.outputs.TAG }}
-        working-directory: packages/cli
+        run: yarn changeset publish --provenance --tag ${{ steps.npm_tag.outputs.TAG }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
