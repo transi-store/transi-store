@@ -126,12 +126,12 @@ export function TranslationKeyRow({
           </VStack>
         </LinkBox>
       </Table.Cell>
-      <Table.Cell>
+      <Table.Cell maxW="500px">
         <Text
           fontSize="sm"
           overflow="hidden"
           textOverflow="ellipsis"
-          whiteSpace="wrap"
+          whiteSpace="nowrap"
         >
           {isSearchTranlation(key) &&
           key.matchType === "translation" &&
