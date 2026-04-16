@@ -1,7 +1,6 @@
 ---
 name: add-api-endpoint
 description: Add or modify a website API endpoint with the repository's auth, validation, and OpenAPI patterns. Use this for import, export, or organization-scoped APIs.
-license: MIT
 ---
 
 Use this workflow when creating or changing an API endpoint:

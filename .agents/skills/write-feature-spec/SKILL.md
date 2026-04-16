@@ -1,7 +1,6 @@
 ---
 name: write-feature-spec
 description: Create or refresh an execution-oriented feature brief in specs/. Use this when asked to write a feature specification, implementation brief, or task-ready plan for agents.
-license: MIT
 ---
 
 Use this workflow when turning a request into a reusable repository spec:

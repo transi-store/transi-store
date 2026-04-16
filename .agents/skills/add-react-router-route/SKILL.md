@@ -1,7 +1,6 @@
 ---
 name: add-react-router-route
 description: Add or modify a React Router route in the website app. Use this when asked to create a page, loader, action, or layout route.
-license: MIT
 ---
 
 Follow this workflow when working on route creation or route restructuring in `apps/website`:

@@ -1,7 +1,6 @@
 ---
 name: update-database-schema
 description: Update the Drizzle schema and server-side data access safely. Use this when asked to change stored data, relations, or multi-tenant persistence rules.
-license: MIT
 ---
 
 Use this workflow for schema and persistence changes:
