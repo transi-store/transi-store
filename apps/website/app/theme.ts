@@ -10,6 +10,15 @@ import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
  *   Navy  #121B28  — transistor pins (dark)
  */
 const monoFontFamily = ["'Monaspace Krypton'", "monospace"].join(", ");
+const sansFontFamily = [
+  "'Space Grotesk'",
+  "-apple-system",
+  "BlinkMacSystemFont",
+  "'Segoe UI'",
+  "Helvetica",
+  "Arial",
+  "sans-serif",
+].join(", ");
 
 const headingFontFamily =
   "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
@@ -25,7 +34,7 @@ const config = defineConfig({
     body: {
       bg: "surface.canvas",
       color: "fg",
-      fontFamily: monoFontFamily,
+      fontFamily: sansFontFamily,
       fontWeight: "normal",
     },
     "h1, h2, h3, h4, h5, h6": {
@@ -37,7 +46,7 @@ const config = defineConfig({
     keyframes: {},
     tokens: {
       fonts: {
-        body: { value: monoFontFamily },
+        body: { value: sansFontFamily },
         heading: { value: headingFontFamily },
         mono: { value: monoFontFamily },
       },

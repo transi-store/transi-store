@@ -19,3 +19,7 @@
   font-display: swap;
   src: url("/fonts/inter/InterVariable-Italic.woff2") format("woff2");
 }
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk/SpaceGrotesk[wght].woff2") format("woff2");
+}
