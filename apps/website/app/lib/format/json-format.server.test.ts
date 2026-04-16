@@ -108,7 +108,7 @@ describe("JsonTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, { locale: "fr" });
 
-      expect(result).toBe(JSON.stringify(data, null, 2));
+      expect(result).toBe(JSON.stringify(data, null, 2) + "\n");
     });
 
     it("should preserve special characters in values", () => {
@@ -144,6 +144,10 @@ describe("JsonTranslationFormat", () => {
 
       expect(result.contentType).toBe("application/json");
       expect(result.fileExtension).toBe("json");
+      expect(result.content).toEqual(`{
+  "home.title": "Accueil"
+}
+`);
       expect(JSON.parse(result.content)).toEqual({
         "home.title": "Accueil",
       });
