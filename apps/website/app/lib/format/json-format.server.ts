@@ -61,7 +61,8 @@ export class JsonTranslationFormat implements TranslationFormat {
       }
     }
 
-    return JSON.stringify(result, null, 2);
+    // add an extra newline at the end to be compatible with prettier with no cost
+    return JSON.stringify(result, null, 2) + "\n";
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
