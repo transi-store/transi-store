@@ -23,7 +23,7 @@ export async function fetchProjectFiles(
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(
-      `Failed to fetch files for project "${projectSlug}": ${response.status} ${response.statusText}${body.error ? ` — ${body.error}` : ""}`,
+      `Failed to fetch files for project "${projectSlug}": ${response.status} ${response.statusText}${(body as { error?: string }).error ? ` — ${(body as { error?: string }).error}` : ""}`,
     );
   }
 
