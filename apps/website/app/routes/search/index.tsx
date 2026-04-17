@@ -16,10 +16,10 @@ import {
 } from "@chakra-ui/react";
 import { Link, Form, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import type { Route } from "./+types/search";
+import type { Route } from "./+types";
 import { userContext } from "~/middleware/auth";
 import { getUserOrganizations } from "~/lib/organizations.server";
-import { TextHighlight } from "../lib/highlight";
+import { TextHighlight } from "~/lib/highlight";
 import { globalSearch, type SearchResult } from "~/lib/search.server";
 import { getKeyUrl } from "~/lib/routes-helpers";
 
@@ -139,7 +139,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
             <HStack justify="space-between" align="center">
               <Text fontSize="lg">
                 {results.length > 0
-                  ? `${results.length} ${t("search.resultLabel", { count: results.length })}`
+                  ? t("search.resultLabel", { count: results.length })
                   : t("search.noResults")}
               </Text>
               {query && (
