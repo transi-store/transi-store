@@ -102,7 +102,6 @@ export function useTranslationKeyEditor({
       initial[lang.locale] = newMap.get(lang.locale) || "";
       initialFuzzy[lang.locale] = newFuzzyMap.get(lang.locale) || false;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTranslationValues(initial);
     setFuzzyFlags(initialFuzzy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,7 +117,6 @@ export function useTranslationKeyEditor({
       editKeyFetcher.state === "idle" &&
       isEditKeyModalOpen
     ) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsEditKeyModalOpen(false);
     }
   }, [editKeyFetcher.data, editKeyFetcher.state, isEditKeyModalOpen]);
