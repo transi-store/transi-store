@@ -43,4 +43,5 @@ Documentation technique détaillée de l'implémentation de transi-store.
 ## Voir aussi
 
 - **[Architecture Decision Records](../decisions/)** - Historique des décisions architecturales
+- **[Architecture IA-friendly](../ai/README.md)** - Structure des instructions, skills et specs pour les agents IA
 - **[README principal](../../README.md)** - Guide de démarrage rapide
