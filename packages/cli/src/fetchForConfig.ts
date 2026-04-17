@@ -11,10 +11,7 @@ import {
   type Config,
   type FetchResult,
 } from "./fetchTranslations.ts";
-import {
-  fetchProjectFiles,
-  assertSafePath,
-} from "./fetchProjectFiles.ts";
+import { fetchProjectInfo, assertSafePath } from "./fetchProjectFiles.ts";
 import { resolveGitBranch } from "./git.ts";
 
 export async function fetchTranslationsAndPrint(config: Config): Promise<void> {
@@ -45,29 +42,6 @@ function renderProgressBar(completed: number, total: number): string {
   const bar =
     pc.green("█".repeat(filled)) + pc.dim("░".repeat(barWidth - filled));
   return `  [${bar}] ${pc.bold(String(completed))}${pc.dim(`/${total}`)}`;
-}
-
-async function fetchProjectLanguages(
-  domainRoot: string,
-  apiKey: string,
-  org: string,
-  projectSlug: string,
-): Promise<string[]> {
-  const url = `${domainRoot}/api/orgs/${org}/projects/${projectSlug}/languages`;
-
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  });
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(
-      `Failed to fetch languages for "${projectSlug}": ${response.status} ${response.statusText}${(body as { error?: string }).error ? ` — ${(body as { error?: string }).error}` : ""}`,
-    );
-  }
-
-  const data = (await response.json()) as Array<{ locale: string }>;
-  return data.map((l) => l.locale);
 }
 
 type Task = Config & { fileLabel: string };
@@ -117,13 +91,14 @@ export async function fetchForConfig(
       labelsByProject.set(projectSlug, []);
     }
 
-    let files: Awaited<ReturnType<typeof fetchProjectFiles>>;
-    let langs: string[];
+    let projectInfo: Awaited<ReturnType<typeof fetchProjectInfo>>;
     try {
-      [files, langs] = await Promise.all([
-        fetchProjectFiles(domainRoot, apiKey, result.data.org, projectSlug),
-        fetchProjectLanguages(domainRoot, apiKey, result.data.org, projectSlug),
-      ]);
+      projectInfo = await fetchProjectInfo(
+        domainRoot,
+        apiKey,
+        result.data.org,
+        projectSlug,
+      );
     } catch (err) {
       console.error(
         pc.red(
@@ -133,6 +108,8 @@ export async function fetchForConfig(
       process.exit(1);
     }
 
+    const { files, languages } = projectInfo;
+
     if (files.length === 0) {
       console.warn(
         pc.yellow(`  ⚠ No files configured for project "${projectSlug}"`),
@@ -140,7 +117,7 @@ export async function fetchForConfig(
       continue;
     }
 
-    if (langs.length === 0) {
+    if (languages.length === 0) {
       console.warn(
         pc.yellow(
           `  ⚠ No languages configured for project "${projectSlug}"`,
@@ -150,8 +127,8 @@ export async function fetchForConfig(
     }
 
     for (const file of files) {
-      for (const locale of langs) {
-        const outputTemplate = file.output.replace("<lang>", locale);
+      for (const { locale } of languages) {
+        const outputTemplate = file.filePath.replace("<lang>", locale);
         const resolvedOutput = path.resolve(cwd, outputTemplate);
 
         // Security: prevent path traversal

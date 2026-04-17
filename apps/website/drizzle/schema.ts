@@ -193,14 +193,14 @@ export const projectFiles = pgTable(
       length: 20,
       enum: ensureOneItem(Object.values(SupportedFormat)),
     }).notNull(),
-    // Chemin relatif de sortie avec placeholder <lang>, ex: "locales/<lang>/common.json"
+    // Chemin relatif avec placeholder <lang>, ex: "locales/<lang>/common.json"
     // Ne peut pas contenir "../" (validé côté serveur et CLI)
-    output: varchar("output", { length: 500 }).notNull(),
+    filePath: varchar("file_path", { length: 500 }).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("unique_project_file_output").on(table.projectId, table.output),
+    uniqueIndex("unique_project_file_path").on(table.projectId, table.filePath),
   ],
 );
 

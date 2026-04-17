@@ -59,7 +59,7 @@ type ContextType = {
   organization: { id: string; slug: string; name: string };
   project: { id: string; slug: string; name: string };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
-  projectFiles: Array<{ id: number; name: string; format: string; output: string }>;
+  projectFiles: Array<{ id: number; name: string; format: string; filePath: string }>;
 };
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {

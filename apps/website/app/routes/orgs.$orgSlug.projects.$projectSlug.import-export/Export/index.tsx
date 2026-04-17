@@ -110,7 +110,7 @@ export default function ExportSection({
                       {file.name}
                     </Text>
                     <Text as="span" fontSize="sm" color="fg.muted" ml={2}>
-                      ({file.output})
+                      ({file.filePath})
                     </Text>
                   </Box>
                   <SimpleGrid columns={{ base: 2, md: 4 }} gap={2}>

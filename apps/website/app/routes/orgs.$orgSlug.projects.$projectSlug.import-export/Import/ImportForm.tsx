@@ -37,7 +37,7 @@ export function ImportForm({
                 <option value="">— Aucun fichier spécifique —</option>
                 {projectFiles.map((file) => (
                   <option key={file.id} value={String(file.id)}>
-                    {file.name} ({file.output})
+                    {file.name} ({file.filePath})
                   </option>
                 ))}
               </NativeSelect.Field>

@@ -3,23 +3,23 @@ import { and, eq } from "drizzle-orm";
 import type { SupportedFormat } from "@transi-store/common";
 
 /**
- * Validates that a file output path is safe:
+ * Validates that a file path is safe:
  * - Must not contain ".." segments (path traversal)
  * - Must not be an absolute path (starts with "/" or a drive letter on Windows)
  * - Must contain the "<lang>" placeholder
  */
-export function validateOutputPath(output: string): string | null {
-  if (!output.includes("<lang>")) {
-    return "output must contain the '<lang>' placeholder";
+export function validateOutputPath(filePath: string): string | null {
+  if (!filePath.includes("<lang>")) {
+    return "filePath must contain the '<lang>' placeholder";
   }
   // Reject absolute paths
-  if (/^[/\\]/.test(output) || /^[a-zA-Z]:/.test(output)) {
-    return "output must be a relative path";
+  if (/^[/\\]/.test(filePath) || /^[a-zA-Z]:/.test(filePath)) {
+    return "filePath must be a relative path";
   }
   // Reject path traversal sequences
-  const parts = output.replace(/\\/g, "/").split("/");
+  const parts = filePath.replace(/\\/g, "/").split("/");
   if (parts.some((p) => p === "..")) {
-    return "output must not contain '..' segments";
+    return "filePath must not contain '..' segments";
   }
   return null;
 }
@@ -41,7 +41,7 @@ type CreateProjectFileParams = {
   projectId: number;
   name: string;
   format: SupportedFormat;
-  output: string;
+  filePath: string;
 };
 
 export async function createProjectFile(params: CreateProjectFileParams) {
@@ -51,7 +51,7 @@ export async function createProjectFile(params: CreateProjectFileParams) {
       projectId: params.projectId,
       name: params.name,
       format: params.format,
-      output: params.output,
+      filePath: params.filePath,
     })
     .returning();
 
@@ -72,13 +72,13 @@ export async function deleteProjectFile(
     );
 }
 
-export async function isFileOutputAvailable(
+export async function isFilePathAvailable(
   projectId: number,
-  output: string,
+  filePath: string,
   excludeFileId?: number,
 ): Promise<boolean> {
   const existing = await db.query.projectFiles.findFirst({
-    where: { projectId, output },
+    where: { projectId, filePath },
   });
 
   if (!existing) return true;

@@ -5,33 +5,7 @@ import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
 import { ImportStrategy } from "@transi-store/common";
 import z from "zod";
 import { configSchema } from "@transi-store/common";
-import {
-  fetchProjectFiles,
-  assertSafePath,
-} from "./fetchProjectFiles.ts";
-
-async function fetchProjectLanguages(
-  domainRoot: string,
-  apiKey: string,
-  org: string,
-  projectSlug: string,
-): Promise<string[]> {
-  const url = `${domainRoot}/api/orgs/${org}/projects/${projectSlug}/languages`;
-
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  });
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(
-      `Failed to fetch languages for "${projectSlug}": ${response.status} ${response.statusText}${(body as { error?: string }).error ? ` — ${(body as { error?: string }).error}` : ""}`,
-    );
-  }
-
-  const data = (await response.json()) as Array<{ locale: string }>;
-  return data.map((l) => l.locale);
-}
+import { fetchProjectInfo, assertSafePath } from "./fetchProjectFiles.ts";
 
 export type UploadConfig = {
   domainRoot: string;
@@ -157,13 +131,14 @@ export async function uploadForConfig(
   for (const projectItem of result.data.projects) {
     const projectSlug = projectItem.slug;
 
-    let files: Awaited<ReturnType<typeof fetchProjectFiles>>;
-    let langs: string[];
+    let projectInfo: Awaited<ReturnType<typeof fetchProjectInfo>>;
     try {
-      [files, langs] = await Promise.all([
-        fetchProjectFiles(domainRoot, apiKey, result.data.org, projectSlug),
-        fetchProjectLanguages(domainRoot, apiKey, result.data.org, projectSlug),
-      ]);
+      projectInfo = await fetchProjectInfo(
+        domainRoot,
+        apiKey,
+        result.data.org,
+        projectSlug,
+      );
     } catch (err) {
       console.error(
         `Failed to fetch info for project "${projectSlug}": ${err instanceof Error ? err.message : String(err)}`,
@@ -171,16 +146,16 @@ export async function uploadForConfig(
       process.exit(1);
     }
 
+    const { files, languages } = projectInfo;
+
     if (files.length === 0) {
-      console.log(
-        `Skipping project "${projectSlug}": no files configured`,
-      );
+      console.log(`Skipping project "${projectSlug}": no files configured`);
       continue;
     }
 
     for (const file of files) {
-      for (const locale of langs) {
-        const input = file.output.replace("<lang>", locale);
+      for (const { locale } of languages) {
+        const input = file.filePath.replace("<lang>", locale);
         const resolvedInput = path.resolve(cwd, input);
 
         // Security: prevent path traversal

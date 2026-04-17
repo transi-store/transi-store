@@ -50,7 +50,7 @@ import {
   getProjectFiles,
   createProjectFile,
   deleteProjectFile,
-  isFileOutputAvailable,
+  isFilePathAvailable,
   validateOutputPath,
 } from "~/lib/project-files.server";
 import { useTranslation } from "react-i18next";
@@ -70,7 +70,7 @@ type ContextType = {
     id: number;
     name: string;
     format: string;
-    output: string;
+    filePath: string;
   }>;
 };
 
@@ -154,7 +154,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (action === "add_file") {
     const name = formData.get("fileName");
     const format = formData.get("fileFormat");
-    const output = formData.get("fileOutput");
+    const filePath = formData.get("fileOutput");
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       return { error: "Le nom du fichier est requis" };
@@ -162,19 +162,19 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!format || typeof format !== "string") {
       return { error: "Le format est requis" };
     }
-    if (!output || typeof output !== "string" || output.trim() === "") {
-      return { error: "Le chemin de sortie est requis" };
+    if (!filePath || typeof filePath !== "string" || filePath.trim() === "") {
+      return { error: "Le chemin est requis" };
     }
 
-    const pathError = validateOutputPath(output.trim());
+    const pathError = validateOutputPath(filePath.trim());
     if (pathError) {
       return { error: pathError };
     }
 
-    const available = await isFileOutputAvailable(project.id, output.trim());
+    const available = await isFilePathAvailable(project.id, filePath.trim());
     if (!available) {
       return {
-        error: `Un fichier avec le chemin "${output.trim()}" existe déjà dans ce projet`,
+        error: `Un fichier avec le chemin "${filePath.trim()}" existe déjà dans ce projet`,
       };
     }
 
@@ -182,7 +182,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       projectId: project.id,
       name: name.trim(),
       format: format as SupportedFormat,
-      output: output.trim(),
+      filePath: filePath.trim(),
     });
 
     return { success: true };
@@ -420,7 +420,7 @@ export default function ProjectSettings() {
                             </Badge>
                           </HStack>
                           <Code fontSize="xs" color="fg.muted">
-                            {file.output}
+                            {file.filePath}
                           </Code>
                         </Box>
                         <Form method="post">

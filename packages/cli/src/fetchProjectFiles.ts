@@ -2,19 +2,24 @@ export type ProjectFileInfo = {
   id: number;
   name: string;
   format: string;
-  output: string;
+  filePath: string;
+};
+
+export type ProjectInfo = {
+  files: ProjectFileInfo[];
+  languages: Array<{ locale: string; isDefault: boolean }>;
 };
 
 /**
- * Fetches the list of files configured for a project from the API.
+ * Fetches files and languages for a project from the combined API endpoint.
  */
-export async function fetchProjectFiles(
+export async function fetchProjectInfo(
   domainRoot: string,
   apiKey: string,
   org: string,
   projectSlug: string,
-): Promise<ProjectFileInfo[]> {
-  const url = `${domainRoot}/api/orgs/${org}/projects/${projectSlug}/files`;
+): Promise<ProjectInfo> {
+  const url = `${domainRoot}/api/orgs/${org}/projects/${projectSlug}`;
 
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${apiKey}` },
@@ -23,11 +28,11 @@ export async function fetchProjectFiles(
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(
-      `Failed to fetch files for project "${projectSlug}": ${response.status} ${response.statusText}${(body as { error?: string }).error ? ` — ${(body as { error?: string }).error}` : ""}`,
+      `Failed to fetch project info for "${projectSlug}": ${response.status} ${response.statusText}${(body as { error?: string }).error ? ` — ${(body as { error?: string }).error}` : ""}`,
     );
   }
 
-  return (await response.json()) as ProjectFileInfo[];
+  return (await response.json()) as ProjectInfo;
 }
 
 /**

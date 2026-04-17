@@ -75,6 +75,7 @@ export async function searchTranslationKeys(
   // Exclude soft-deleted keys
   const notDeleted = isNull(schema.translationKeys.deletedAt);
 
+  // TODO: remove this fileCondition fallback once all keys have been migrated to a file
   const fileCondition =
     options?.fileId !== undefined
       ? options.fileId === null
