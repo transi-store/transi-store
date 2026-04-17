@@ -102,7 +102,7 @@ export default [
     ),
 
     // Search
-    route("search", "routes/search.tsx"),
+    route("search", "routes/search/index.tsx"),
   ]),
 
   // Authenticated API routes (dual auth: API key or session via middleware)

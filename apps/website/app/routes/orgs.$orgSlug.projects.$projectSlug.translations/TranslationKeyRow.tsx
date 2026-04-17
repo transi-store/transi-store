@@ -7,9 +7,7 @@ import {
   LinkOverlay,
   VStack,
   Button,
-  IconButton,
 } from "@chakra-ui/react";
-import { toaster } from "~/components/ui/toaster";
 import { Link, Form, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuCopy, LuPanelRightOpen } from "react-icons/lu";
@@ -18,6 +16,7 @@ import { isSearchTranlation } from "~/lib/translation-helper";
 import { TranslationProgress } from "./TranslationProgress";
 import type { RegularDataRow, SearchDataRow } from "~/lib/translation-helper";
 import { getKeyUrl } from "~/lib/routes-helpers";
+import CopyButton from "~/components/copy-button";
 
 type TranslationKeyRowProps = {
   translationKey: RegularDataRow | SearchDataRow;
@@ -29,37 +28,6 @@ type TranslationKeyRowProps = {
   onEditInDrawer: (keyId: number) => void;
 };
 
-type CopyOptions = {
-  successTitle?: string;
-  successDescription?: string;
-  errorTitle?: string;
-  errorDescription?: string;
-};
-
-// TODO extract this "copy to clipboard" logic into a reusable hook
-function useHandleCopyText() {
-  const { t } = useTranslation();
-
-  const handleCopy = async (text: string, options?: CopyOptions) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toaster.success({
-        title: options?.successTitle ?? t("copy.success.title"),
-        description: options?.successDescription,
-        duration: 3000,
-      });
-    } catch (_error) {
-      toaster.error({
-        title: options?.errorTitle ?? t("copy.error.title"),
-        description: options?.errorDescription,
-        duration: 3000,
-      });
-    }
-  };
-
-  return handleCopy;
-}
-
 export function TranslationKeyRow({
   translationKey: key,
   search,
@@ -70,8 +38,6 @@ export function TranslationKeyRow({
   onEditInDrawer,
 }: TranslationKeyRowProps) {
   const { t } = useTranslation();
-  const handleCopyText = useHandleCopyText();
-
   const [searchParams] = useSearchParams();
 
   const highlight = searchParams.get("highlight");
@@ -100,13 +66,10 @@ export function TranslationKeyRow({
                 </Link>
               </LinkOverlay>
 
-              <IconButton
-                aria-label={t("translation.key.copy")}
-                variant="ghost"
-                onClick={() => handleCopyText(key.keyName)}
-              >
-                <LuCopy />
-              </IconButton>
+              <CopyButton
+                text={key.keyName}
+                ariaLabel={t("translation.key.copy")}
+              />
             </HStack>
 
             {key.description && (

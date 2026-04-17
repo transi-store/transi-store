@@ -33,6 +33,7 @@ app/routes/
 ├── orgs.$orgSlug.tsx                # Layout organisation
 ├── orgs.$orgSlug._index.tsx         # Dashboard organisation
 └── orgs.$orgSlug.projects.$projectSlug.tsx  # Layout projet
+└── complex-route.$orgSlug/index.tsx  # A route can be defined in a folder with an index.tsx as entry point. This is useful when we want to have multiple sub-components related under the same route.
 ```
 
 **Conventions** :

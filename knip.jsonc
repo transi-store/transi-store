@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreUnresolved": ["dotenv/config"],
   "workspaces": {
     "apps/website": {
       "entry": ["i18next.config.ts"],

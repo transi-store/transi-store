@@ -318,7 +318,7 @@
   "search.noResultsFor": "No results for \"{query}\"",
   "search.organization": "Organization",
   "search.placeholder": "Search in keys and translations...",
-  "search.resultLabel": "{count, plural, one {result found} other {results found}}",
+  "search.resultLabel": "{count, plural, \n  zero {no result found}\n  one {# result found} \n  other {# results found}\n}",
   "search.search": "Search",
   "search.searchInstructions": "Search is performed in key names, descriptions and translation values",
   "search.title": "Search",
