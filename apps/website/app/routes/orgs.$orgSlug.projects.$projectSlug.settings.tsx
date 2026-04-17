@@ -1,22 +1,36 @@
 import {
-  Heading,
-  VStack,
-  Button,
-  Box,
-  Text,
-  SimpleGrid,
-  Card,
-  HStack,
   Badge,
-  Input,
+  Box,
+  Button,
+  Card,
+  DialogBackdrop,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogPositioner,
+  DialogRoot,
+  DialogTitle,
   Field,
+  Heading,
+  HStack,
+  Input,
+  Portal,
+  SimpleGrid,
+  Spinner,
+  Text,
+  VStack,
 } from "@chakra-ui/react";
 import {
   Form,
   useActionData,
+  useFetcher,
   useNavigation,
   useOutletContext,
+  redirect,
 } from "react-router";
+import { useMemo, useState } from "react";
 import { LuPlus, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.settings";
 import { userContext } from "~/middleware/auth";
@@ -25,6 +39,8 @@ import {
   getProjectBySlug,
   getProjectLanguages,
   addLanguageToProject,
+  deleteProject,
+  getProjectDeletionSummary,
   removeLanguageFromProject,
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
@@ -41,7 +57,7 @@ type ContextType = {
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
 };
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
@@ -53,7 +69,14 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     throw createProjectNotFoundResponse(params.projectSlug);
   }
 
-  return {};
+  const url = new URL(request.url);
+  if (url.searchParams.get("dialog") === "delete-project") {
+    return {
+      deleteSummary: await getProjectDeletionSummary(project.id),
+    };
+  }
+
+  return { deleteSummary: null };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -105,16 +128,60 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true };
   }
 
+  if (action === "delete_project") {
+    await deleteProject(project.id);
+
+    return redirect(`/orgs/${params.orgSlug}`);
+  }
+
   return { error: "Action invalide" };
 }
 
 export default function ProjectSettings() {
   const { organization, project, languages } = useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
+  const deleteSummaryFetcher = useFetcher<typeof loader>();
   const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const { t } = useTranslation();
+  const submittedAction = navigation.formData?.get("_action");
+  const isSubmitting = navigation.state === "submitting";
+  const isLanguageSubmitting =
+    isSubmitting &&
+    (submittedAction === "add_language" ||
+      submittedAction === "remove_language");
+  const isDeleteSubmitting =
+    isSubmitting && submittedAction === "delete_project";
+  const expectedDeleteValue = `${organization.slug}/${project.slug}`;
+  const deleteSummaryUrl = useMemo(
+    () =>
+      `/orgs/${organization.slug}/projects/${project.slug}/settings?dialog=delete-project`,
+    [organization.slug, project.slug],
+  );
+  const deleteSummary = deleteSummaryFetcher.data?.deleteSummary;
+  const isDeleteSummaryLoading =
+    isDeleteDialogOpen &&
+    (deleteSummaryFetcher.state === "loading" ||
+      deleteSummaryFetcher.data === undefined);
+  const isDeleteConfirmationValid = deleteConfirmation === expectedDeleteValue;
+
+  function openDeleteDialog() {
+    setDeleteConfirmation("");
+    setIsDeleteDialogOpen(true);
+
+    if (deleteSummaryFetcher.data === undefined) {
+      deleteSummaryFetcher.load(deleteSummaryUrl);
+    }
+  }
+
+  function setDeleteDialogOpen(open: boolean) {
+    setIsDeleteDialogOpen(open);
+    if (!open) {
+      setDeleteConfirmation("");
+    }
+  }
 
   return (
     <VStack gap={8} align="stretch">
@@ -211,7 +278,7 @@ export default function ProjectSettings() {
                         size="xs"
                         variant="ghost"
                         colorPalette="red"
-                        disabled={isSubmitting}
+                        disabled={isLanguageSubmitting}
                       >
                         <LuTrash2 />
                       </Button>
@@ -230,15 +297,122 @@ export default function ProjectSettings() {
               <Input
                 name="locale"
                 placeholder="fr, en, de..."
-                disabled={isSubmitting}
+                disabled={isLanguageSubmitting}
               />
             </Field.Root>
-            <Button type="submit" colorPalette="brand" loading={isSubmitting}>
+            <Button
+              type="submit"
+              colorPalette="brand"
+              loading={isLanguageSubmitting}
+            >
               <LuPlus /> {t("settings.addLanguage")}
             </Button>
           </HStack>
         </Form>
       </Box>
+
+      <Box borderWidth={1} borderColor="red.subtle" borderRadius="lg" p={5}>
+        <Heading as="h2" size="lg" mb={2}>
+          {t("settings.deleteProject.title")}
+        </Heading>
+        <Text color="fg.muted" mb={4}>
+          {t("settings.deleteProject.description")}
+        </Text>
+        <Button colorPalette="red" onClick={openDeleteDialog}>
+          {t("settings.deleteProject.button")}
+        </Button>
+      </Box>
+
+      <DialogRoot
+        open={isDeleteDialogOpen}
+        onOpenChange={(event) => setDeleteDialogOpen(event.open)}
+      >
+        <Portal>
+          <DialogBackdrop />
+          <DialogPositioner>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {t("settings.deleteProject.dialogTitle")}
+                </DialogTitle>
+              </DialogHeader>
+              <DialogCloseTrigger />
+              <DialogBody pb={6}>
+                <VStack gap={4} align="stretch">
+                  <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md">
+                    <Text fontWeight="bold" mb={2}>
+                      {t("settings.deleteProject.warningTitle")}
+                    </Text>
+                    <Text>{t("settings.deleteProject.warning")}</Text>
+                    {isDeleteSummaryLoading ? (
+                      <HStack mt={3}>
+                        <Spinner size="sm" />
+                        <Text>
+                          {t("settings.deleteProject.loadingSummary")}
+                        </Text>
+                      </HStack>
+                    ) : (
+                      deleteSummary && (
+                        <Text mt={3}>
+                          {t("settings.deleteProject.summary", deleteSummary)}
+                        </Text>
+                      )
+                    )}
+                    <Text mt={3}>
+                      {t("settings.deleteProject.additionalWarning")}
+                    </Text>
+                  </Box>
+
+                  <Field.Root required>
+                    <Field.Label>
+                      {t("settings.deleteProject.confirmationLabel")}
+                    </Field.Label>
+                    <Field.HelperText>
+                      {t("settings.deleteProject.confirmationNote", {
+                        projectPath: expectedDeleteValue,
+                      })}
+                    </Field.HelperText>
+                    <Input
+                      value={deleteConfirmation}
+                      onChange={(event) =>
+                        setDeleteConfirmation(event.target.value)
+                      }
+                      placeholder={expectedDeleteValue}
+                      disabled={isDeleteSubmitting}
+                      fontFamily="mono"
+                    />
+                  </Field.Root>
+                </VStack>
+              </DialogBody>
+              <DialogFooter gap={3}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                  disabled={isDeleteSubmitting}
+                >
+                  {t("settings.cancel")}
+                </Button>
+                <Form method="post">
+                  <input type="hidden" name="_action" value="delete_project" />
+                  <Button
+                    type="submit"
+                    colorPalette="red"
+                    loading={isDeleteSubmitting}
+                    disabled={
+                      isDeleteSummaryLoading ||
+                      !deleteSummary ||
+                      !isDeleteConfirmationValid
+                    }
+                  >
+                    {t("settings.deleteProject.confirmButton")}
+                  </Button>
+                </Form>
+              </DialogFooter>
+            </DialogContent>
+          </DialogPositioner>
+        </Portal>
+      </DialogRoot>
     </VStack>
   );
 }
