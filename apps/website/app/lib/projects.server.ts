@@ -1,11 +1,17 @@
 import { db, schema } from "./db.server";
-import { count, eq, and, isNull } from "drizzle-orm";
+import { count, eq, and, inArray, isNull } from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
     where: { organizationId, slug },
   });
 }
+
+type ProjectDeletionSummary = {
+  keyCount: number;
+  translationCount: number;
+  branchCount: number;
+};
 
 type CreateProjectParams = {
   organizationId: number;
@@ -126,4 +132,75 @@ export async function removeLanguageFromProject(
         eq(schema.projectLanguages.locale, locale),
       ),
     );
+}
+
+export async function getProjectDeletionSummary(
+  projectId: number,
+): Promise<ProjectDeletionSummary> {
+  const keyCondition = and(
+    eq(schema.translationKeys.projectId, projectId),
+    isNull(schema.translationKeys.deletedAt),
+  );
+
+  const [translationResult] = await db
+    .select({ count: count() })
+    .from(schema.translations)
+    .innerJoin(
+      schema.translationKeys,
+      eq(schema.translations.keyId, schema.translationKeys.id),
+    )
+    .where(keyCondition);
+
+  const [keyCount, branchCount] = await Promise.all([
+    db.$count(schema.translationKeys, keyCondition),
+    db.$count(schema.branches, eq(schema.branches.projectId, projectId)),
+  ]);
+
+  return {
+    keyCount,
+    translationCount: Number(translationResult?.count ?? 0),
+    branchCount,
+  };
+}
+
+export async function deleteProject(projectId: number): Promise<void> {
+  await db.transaction(async (tx) => {
+    const branchIds = await tx
+      .select({ id: schema.branches.id })
+      .from(schema.branches)
+      .where(eq(schema.branches.projectId, projectId));
+    const translationKeyIds = await tx
+      .select({ id: schema.translationKeys.id })
+      .from(schema.translationKeys)
+      .where(eq(schema.translationKeys.projectId, projectId));
+
+    if (branchIds.length > 0) {
+      await tx.delete(schema.branchKeyDeletions).where(
+        inArray(
+          schema.branchKeyDeletions.branchId,
+          branchIds.map((branch) => branch.id),
+        ),
+      );
+    }
+
+    if (translationKeyIds.length > 0) {
+      await tx.delete(schema.translations).where(
+        inArray(
+          schema.translations.keyId,
+          translationKeyIds.map((key) => key.id),
+        ),
+      );
+    }
+
+    await tx
+      .delete(schema.translationKeys)
+      .where(eq(schema.translationKeys.projectId, projectId));
+    await tx
+      .delete(schema.branches)
+      .where(eq(schema.branches.projectId, projectId));
+    await tx
+      .delete(schema.projectLanguages)
+      .where(eq(schema.projectLanguages.projectId, projectId));
+    await tx.delete(schema.projects).where(eq(schema.projects.id, projectId));
+  });
 }
