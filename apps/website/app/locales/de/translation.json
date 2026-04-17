@@ -318,7 +318,7 @@
   "search.noResultsFor": "Keine Ergebnisse für \"{query}\"",
   "search.organization": "Organisation",
   "search.placeholder": "In Schlüsseln und Übersetzungen suchen...",
-  "search.resultLabel": "{count, plural, one {# Ergebnis gefunden} other {# Ergebnisse gefunden}}",
+  "search.resultLabel": "{count, plural, zero {keine Ergebnisse gefunden} one {# Ergebnis gefunden} other {# Ergebnisse gefunden}}",
   "search.search": "Suchen",
   "search.searchInstructions": "Die Suche erfolgt in Schlüsselnamen, Beschreibungen und Übersetzungswerten",
   "search.title": "Suche",
