@@ -8,6 +8,7 @@ type ImportParams = {
   data: Record<string, string>;
   strategy: ImportStrategy;
   branchId?: number;
+  fileId?: number | null;
 };
 
 export type ImportStats = {
@@ -38,6 +39,7 @@ export async function importTranslations({
   data,
   strategy,
   branchId,
+  fileId,
 }: ImportParams): Promise<ImportResult> {
   const stats: ImportStats = {
     total: 0,
@@ -89,6 +91,7 @@ export async function importTranslations({
                 projectId,
                 keyName,
                 branchId: branchId ?? null,
+                fileId: fileId ?? null,
               })),
             )
             .onConflictDoNothing({

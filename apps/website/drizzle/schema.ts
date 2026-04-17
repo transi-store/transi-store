@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { AI_PROVIDERS } from "~/lib/ai-providers";
 import { BRANCH_STATUS } from "~/lib/branches";
+import { SupportedFormat } from "@transi-store/common";
 
 function ensureOneItem<T>(arr: T[]): [T, ...T[]] {
   if (arr.length === 0) {
@@ -179,6 +180,30 @@ export const branches = pgTable(
   ],
 );
 
+// Fichiers de traduction (plusieurs fichiers par projet, ex: common.json, admin.yaml)
+export const projectFiles = pgTable(
+  "project_files",
+  {
+    id: serial("id").primaryKey(),
+    projectId: integer("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    format: varchar("format", {
+      length: 20,
+      enum: ensureOneItem(Object.values(SupportedFormat)),
+    }).notNull(),
+    // Chemin relatif de sortie avec placeholder <lang>, ex: "locales/<lang>/common.json"
+    // Ne peut pas contenir "../" (validé côté serveur et CLI)
+    output: varchar("output", { length: 500 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("unique_project_file_output").on(table.projectId, table.output),
+  ],
+);
+
 // Cles de traduction
 export const translationKeys = pgTable(
   "translation_keys",
@@ -189,6 +214,9 @@ export const translationKeys = pgTable(
       .references(() => projects.id, { onDelete: "cascade" }),
     branchId: integer("branch_id").references(() => branches.id, {
       onDelete: "cascade",
+    }),
+    fileId: integer("file_id").references(() => projectFiles.id, {
+      onDelete: "set null",
     }),
     keyName: varchar("key_name", { length: 500 }).notNull(),
     description: text("description"),
@@ -290,6 +318,9 @@ export type NewProject = typeof projects.$inferInsert;
 
 export type ProjectLanguage = typeof projectLanguages.$inferSelect;
 export type NewProjectLanguage = typeof projectLanguages.$inferInsert;
+
+export type ProjectFile = typeof projectFiles.$inferSelect;
+export type NewProjectFile = typeof projectFiles.$inferInsert;
 
 export type Branch = typeof branches.$inferSelect;
 export type NewBranch = typeof branches.$inferInsert;

@@ -116,6 +116,14 @@ export default [
         "projects/:projectSlug/translate",
         "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
       ),
+      route(
+        "projects/:projectSlug/files",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.files.tsx",
+      ),
+      route(
+        "projects/:projectSlug/languages",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.languages.tsx",
+      ),
     ]),
   ]),
 

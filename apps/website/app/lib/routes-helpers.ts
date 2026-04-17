@@ -29,9 +29,15 @@ export function getTranslationsUrl(
     page?: string | null;
     sort?: string | null;
     highlight?: string | null;
+    fileId?: number | null;
   },
 ): string {
-  const params = new URLSearchParams(removeUndefinedValues(queryParams));
+  const { fileId, ...rest } = queryParams ?? {};
+  const rawParams: Record<string, string | null | undefined> = { ...rest };
+  if (fileId != null) {
+    rawParams.fileId = String(fileId);
+  }
+  const params = new URLSearchParams(removeUndefinedValues(rawParams));
 
   const baseUrl = generatePath(
     `/orgs/:orgSlug/projects/:projectSlug/translations`,
