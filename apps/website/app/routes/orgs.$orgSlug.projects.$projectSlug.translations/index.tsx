@@ -1,4 +1,4 @@
-import { Heading, VStack, Button, Box, Text, Stack } from "@chakra-ui/react";
+import { Heading, VStack, Button, Box, Text, Stack, Tabs } from "@chakra-ui/react";
 import {
   Link,
   useOutletContext,
@@ -59,6 +59,7 @@ type ContextType = {
   organization: { id: string; slug: string; name: string };
   project: { id: string; slug: string; name: string };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
+  projectFiles: Array<{ id: number; name: string; format: string; filePath: string }>;
 };
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
@@ -80,15 +81,18 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const sort = resolveSort(url.searchParams.get("sort"), Boolean(search));
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const offset = (page - 1) * LIMIT;
+  const fileIdParam = url.searchParams.get("fileId");
+  const fileId = fileIdParam ? parseInt(fileIdParam, 10) : undefined;
 
   const keys = await getTranslationKeys(project.id, {
     search,
     limit: LIMIT,
     offset,
     sort,
+    fileId: fileId !== undefined && !isNaN(fileId) ? fileId : undefined,
   });
 
-  return { keys, search, highlight, page, sort };
+  return { keys, search, highlight, page, sort, fileId: fileId ?? null };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -173,8 +177,10 @@ export default function ProjectTranslations({
     highlight,
     page,
     sort,
+    fileId,
   } = loaderData;
-  const { organization, project, languages } = useOutletContext<ContextType>();
+  const { organization, project, languages, projectFiles } =
+    useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const navigate = useNavigate();
@@ -200,6 +206,7 @@ export default function ProjectTranslations({
     search,
     sort,
     highlight,
+    fileId: fileId ?? undefined,
   });
 
   // Close modal and navigate after successful creation
@@ -219,6 +226,7 @@ export default function ProjectTranslations({
           highlight: highlight
             ? `${highlight},${actionData.keyName}`
             : actionData.keyName,
+          fileId: fileId ?? undefined,
         }),
       );
     }
@@ -229,7 +237,10 @@ export default function ProjectTranslations({
     project.slug,
     navigate,
     highlight,
+    fileId,
   ]);
+
+  const activeFileTab = fileId != null ? String(fileId) : "all";
 
   return (
     <VStack gap={6} align="stretch">
@@ -258,11 +269,40 @@ export default function ProjectTranslations({
         )}
       </Stack>
 
+      {/* File tabs (si le projet a plusieurs fichiers) */}
+      {projectFiles.length > 0 && (
+        <Tabs.Root
+          value={activeFileTab}
+          onValueChange={(details) => {
+            const nextFileId =
+              details.value === "all" ? undefined : Number(details.value);
+            navigate(
+              getTranslationsUrl(organization.slug, project.slug, {
+                search,
+                sort,
+                fileId: nextFileId,
+              }),
+            );
+          }}
+          variant="line"
+        >
+          <Tabs.List>
+            <Tabs.Trigger value="all">Tous les fichiers</Tabs.Trigger>
+            {projectFiles.map((file) => (
+              <Tabs.Trigger key={file.id} value={String(file.id)}>
+                {file.name}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+        </Tabs.Root>
+      )}
+
       <TranslationsSearchBar
         search={search}
         sort={sort}
         organizationSlug={organization.slug}
         projectSlug={project.slug}
+        fileId={fileId ?? undefined}
       />
 
       {languages.length === 0 ? (
@@ -306,6 +346,7 @@ export default function ProjectTranslations({
             sort={sort}
             organizationSlug={organization.slug}
             projectSlug={project.slug}
+            fileId={fileId ?? undefined}
           />
         </>
       )}

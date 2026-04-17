@@ -13,6 +13,7 @@ type TranslationsPaginationProps = {
   organizationSlug: string;
   projectSlug: string;
   branchSlug?: string;
+  fileId?: number;
 };
 
 export function TranslationsPagination({
@@ -24,6 +25,7 @@ export function TranslationsPagination({
   organizationSlug,
   projectSlug,
   branchSlug,
+  fileId,
 }: TranslationsPaginationProps) {
   const buildUrl = (page: number) => {
     const params = { search, page: String(page), sort };
@@ -32,7 +34,10 @@ export function TranslationsPagination({
       return getBranchUrl(organizationSlug, projectSlug, branchSlug, params);
     }
 
-    return getTranslationsUrl(organizationSlug, projectSlug, params);
+    return getTranslationsUrl(organizationSlug, projectSlug, {
+      ...params,
+      fileId,
+    });
   };
 
   return (

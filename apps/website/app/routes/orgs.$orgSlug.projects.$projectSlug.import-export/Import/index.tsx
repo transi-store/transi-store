@@ -2,17 +2,19 @@ import { Box, Text, Heading, Card } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { ImportForm } from "./ImportForm";
 import { ImportResults } from "./ImportResults";
-import type { ProjectLanguage } from "../../../../drizzle/schema";
+import type { ProjectFile, ProjectLanguage } from "../../../../drizzle/schema";
 import type { ImportActionData } from "..";
 
 type ImportSectionProps = {
   languages: Array<ProjectLanguage>;
+  projectFiles: Array<ProjectFile>;
   isSubmitting: boolean;
   actionData?: ImportActionData;
 };
 
 export default function ImportSection({
   languages,
+  projectFiles,
   isSubmitting,
   actionData,
 }: ImportSectionProps) {
@@ -43,6 +45,7 @@ export default function ImportSection({
                 actionData?.success ? actionData?.actionTimestamp : undefined
               }
               languages={languages}
+              projectFiles={projectFiles}
               isSubmitting={isSubmitting}
             />
           </Card.Body>

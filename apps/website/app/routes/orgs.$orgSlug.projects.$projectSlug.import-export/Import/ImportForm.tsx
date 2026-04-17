@@ -6,15 +6,20 @@ import { Form } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuUpload } from "react-icons/lu";
 import { useState } from "react";
-import type { ProjectLanguage } from "../../../../drizzle/schema";
+import type { ProjectFile, ProjectLanguage } from "../../../../drizzle/schema";
 import { ImportStrategy } from "@transi-store/common";
 
 type ImportFormProps = {
   languages: Array<ProjectLanguage>;
+  projectFiles: Array<ProjectFile>;
   isSubmitting: boolean;
 };
 
-export function ImportForm({ languages, isSubmitting }: ImportFormProps) {
+export function ImportForm({
+  languages,
+  projectFiles,
+  isSubmitting,
+}: ImportFormProps) {
   const { t } = useTranslation();
   const [shouldOverwrite, setShouldOverwrite] = useState(false);
 
@@ -23,6 +28,26 @@ export function ImportForm({ languages, isSubmitting }: ImportFormProps) {
       <input type="hidden" name="_action" value="import" />
 
       <VStack gap={4} align="stretch">
+        {/* Sélecteur de fichier (si plusieurs fichiers dans le projet) */}
+        {projectFiles.length > 0 && (
+          <Field.Root>
+            <Field.Label>Fichier cible</Field.Label>
+            <NativeSelect.Root disabled={isSubmitting} maxW="300px">
+              <NativeSelect.Field name="fileId">
+                <option value="">— Aucun fichier spécifique —</option>
+                {projectFiles.map((file) => (
+                  <option key={file.id} value={String(file.id)}>
+                    {file.name} ({file.filePath})
+                  </option>
+                ))}
+              </NativeSelect.Field>
+            </NativeSelect.Root>
+            <Field.HelperText>
+              Les clés importées seront associées à ce fichier.
+            </Field.HelperText>
+          </Field.Root>
+        )}
+
         {/* File input */}
         <Field.Root required>
           <Field.Label>{t("import.fileLabel")}</Field.Label>

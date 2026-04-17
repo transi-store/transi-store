@@ -24,6 +24,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url);
+  const fileIdParam = url.searchParams.get("fileId");
+  const fileId = fileIdParam ? parseInt(fileIdParam, 10) : undefined;
+
   const queryParseResult = exportQuerySchema().safeParse({
     format: url.searchParams.get("format") ?? undefined,
     locale: url.searchParams.get("locale") ?? undefined,
@@ -91,6 +94,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const projectTranslations = await getProjectTranslations(project.id, {
     branchId,
     allBranches,
+    fileId: !isNaN(fileId as number) ? fileId : undefined,
   });
 
   const format = createTranslationFormat(formatName);
@@ -123,10 +127,17 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   // Parse multipart form data and process import
   const formData = await request.formData();
 
+  const fileIdRaw = formData.get("fileId");
+  const fileId =
+    fileIdRaw && typeof fileIdRaw === "string" && fileIdRaw !== ""
+      ? parseInt(fileIdRaw, 10)
+      : null;
+
   const result = await processImport({
     organizationId: organization.id,
     projectSlug: params.projectSlug,
     formData,
+    fileId: fileId !== null && !isNaN(fileId) ? fileId : null,
   });
 
   if (!result.success) {

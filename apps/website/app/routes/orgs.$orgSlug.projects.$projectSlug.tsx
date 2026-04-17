@@ -6,6 +6,7 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
+import { getProjectFiles } from "~/lib/project-files.server";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -20,13 +21,17 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     throw createProjectNotFoundResponse(params.projectSlug);
   }
 
-  const languages = await getProjectLanguages(project.id);
+  const [languages, projectFiles] = await Promise.all([
+    getProjectLanguages(project.id),
+    getProjectFiles(project.id),
+  ]);
 
-  return { organization, project, languages };
+  return { organization, project, languages, projectFiles };
 }
 
 export default function ProjectLayout() {
-  const { organization, project, languages } = useLoaderData<typeof loader>();
+  const { organization, project, languages, projectFiles } =
+    useLoaderData<typeof loader>();
 
   return (
     <Container maxW="container.xl" py={5}>
@@ -60,7 +65,7 @@ export default function ProjectLayout() {
           </Box>
         )}
 
-        <Outlet context={{ organization, project, languages }} />
+        <Outlet context={{ organization, project, languages, projectFiles }} />
       </VStack>
     </Container>
   );

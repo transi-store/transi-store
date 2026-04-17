@@ -11,6 +11,7 @@ import {
   type Config,
   type FetchResult,
 } from "./fetchTranslations.ts";
+import { fetchProjectInfo, assertSafePath } from "./fetchProjectFiles.ts";
 import { resolveGitBranch } from "./git.ts";
 
 export async function fetchTranslationsAndPrint(config: Config): Promise<void> {
@@ -43,6 +44,8 @@ function renderProgressBar(completed: number, total: number): string {
   return `  [${bar}] ${pc.bold(String(completed))}${pc.dim(`/${total}`)}`;
 }
 
+type Task = Config & { fileLabel: string };
+
 export async function fetchForConfig(
   configPath: string,
   apiKey: string,
@@ -70,59 +73,103 @@ export async function fetchForConfig(
 
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
-  // Auto-detect current git branch if not explicitly provided
-  const { branch: resolvedBranch, wasAutoDetected } =
-    await resolveGitBranch(branch);
-
-  let branchLabel: string;
-  if (resolvedBranch) {
-    branchLabel = wasAutoDetected
-      ? `${resolvedBranch}${pc.italic(" (auto-detected)")}`
-      : resolvedBranch;
-  } else {
-    branchLabel = pc.italic("(main)");
-  }
-
   console.log();
   console.log(pc.bold(pc.cyan("↓ Downloading translations")));
   console.log(pc.dim(`  Domain : ${domainRoot}`));
   console.log(pc.dim(`  Org    : ${result.data.org}`));
-  console.log(pc.dim(`  Branch : ${branchLabel}`));
+  console.log(pc.dim(`  Branch : ${branch ?? pc.italic("(main)")}`));
   console.log();
 
-  // Build tasks, preserving project and locale order from config
-  const tasks: Config[] = [];
+  const tasks: Task[] = [];
   const projectOrder: string[] = [];
-  const localesByProject = new Map<string, string[]>();
+  const labelsByProject = new Map<string, string[]>();
 
-  for (const configItem of result.data.projects) {
-    if (!localesByProject.has(configItem.project)) {
-      projectOrder.push(configItem.project);
-      localesByProject.set(configItem.project, []);
+  for (const projectItem of result.data.projects) {
+    const projectSlug = projectItem.slug;
+    if (!labelsByProject.has(projectSlug)) {
+      projectOrder.push(projectSlug);
+      labelsByProject.set(projectSlug, []);
     }
-    for (const locale of configItem.langs) {
-      localesByProject.get(configItem.project)!.push(locale);
-      tasks.push({
+
+    let projectInfo: Awaited<ReturnType<typeof fetchProjectInfo>>;
+    try {
+      projectInfo = await fetchProjectInfo(
         domainRoot,
         apiKey,
-        org: result.data.org,
-        project: configItem.project,
-        format: configItem.format,
-        locale,
-        output: configItem.output
-          .replace("<lang>", locale)
-          .replace("<project>", configItem.project)
-          .replace("<format>", configItem.format),
-        branch: resolvedBranch,
-      });
+        result.data.org,
+        projectSlug,
+      );
+    } catch (err) {
+      console.error(
+        pc.red(
+          `✗ ${projectSlug}: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
+      process.exit(1);
+    }
+
+    const { files, languages } = projectInfo;
+
+    if (files.length === 0) {
+      console.warn(
+        pc.yellow(`  ⚠ No files configured for project "${projectSlug}"`),
+      );
+      continue;
+    }
+
+    if (languages.length === 0) {
+      console.warn(
+        pc.yellow(
+          `  ⚠ No languages configured for project "${projectSlug}"`,
+        ),
+      );
+      continue;
+    }
+
+    for (const file of files) {
+      for (const { locale } of languages) {
+        const outputTemplate = file.filePath.replace("<lang>", locale);
+        const resolvedOutput = path.resolve(cwd, outputTemplate);
+
+        // Security: prevent path traversal
+        try {
+          assertSafePath(
+            resolvedOutput,
+            cwd,
+            `${projectSlug}/${file.name}/${locale}`,
+          );
+        } catch (err) {
+          console.error(pc.red(String(err)));
+          process.exit(1);
+        }
+
+        const fileLabel = `${projectSlug}/${file.name}/${locale}`;
+        labelsByProject.get(projectSlug)!.push(fileLabel);
+        tasks.push({
+          domainRoot,
+          apiKey,
+          org: result.data.org,
+          project: projectSlug,
+          format: file.format,
+          locale,
+          output: resolvedOutput,
+          branch,
+          fileId: file.id,
+          fileLabel,
+        });
+      }
     }
   }
 
   const total = tasks.length;
+  if (total === 0) {
+    console.log(pc.yellow("No translation files to download."));
+    return;
+  }
+
   let completed = 0;
   const isTTY = process.stdout.isTTY ?? false;
 
-  // results[project][locale] = FetchResult
   const resultsMap = new Map<string, Map<string, FetchResult>>();
   for (const project of projectOrder) {
     resultsMap.set(project, new Map());
@@ -132,26 +179,24 @@ export async function fetchForConfig(
     process.stdout.write(renderProgressBar(0, total) + "\r");
   }
 
-  // Limit concurrent HTTP requests to avoid overwhelming the server
   for (let i = 0; i < tasks.length; i += CONCURRENCY_CALLS) {
     await Promise.all(
       tasks.slice(i, i + CONCURRENCY_CALLS).map(async (task) => {
         const fetchResult = await fetchTranslations(task);
         completed++;
-        resultsMap.get(task.project)!.set(task.locale, fetchResult);
+        resultsMap.get(task.project)!.set(task.fileLabel, fetchResult);
 
         if (isTTY) {
           process.stdout.write(renderProgressBar(completed, total) + "\r");
         } else {
-          // Non-TTY (CI): print each result on its own line
           const counter = pc.dim(`[${completed}/${total}]`);
           if (fetchResult.success) {
             console.log(
-              `  ${counter} ${pc.green("✓")} ${pc.bold(`${task.project} / ${task.locale}`)}`,
+              `  ${counter} ${pc.green("✓")} ${pc.bold(task.fileLabel)}`,
             );
           } else {
             console.log(
-              `  ${counter} ${pc.red("✗")} ${pc.bold(`${task.project} / ${task.locale}`)} — ${pc.red(fetchResult.error)}`,
+              `  ${counter} ${pc.red("✗")} ${pc.bold(task.fileLabel)} — ${pc.red(fetchResult.error)}`,
             );
           }
         }
@@ -160,27 +205,26 @@ export async function fetchForConfig(
   }
 
   if (isTTY) {
-    // Clear the progress bar line
     process.stdout.write("\r\x1b[K");
   }
 
-  // Display grouped results table
   const projectNameLen = Math.max(...projectOrder.map((p) => p.length));
   const failures: Array<{ label: string; error: string }> = [];
 
   for (const project of projectOrder) {
-    const localeResults = resultsMap.get(project)!;
+    const labelResults = resultsMap.get(project)!;
     const name = pc.bold(project.padEnd(projectNameLen + 2));
     const statuses: string[] = [];
 
-    for (const locale of localesByProject.get(project)!) {
-      const res = localeResults.get(locale);
+    for (const label of labelsByProject.get(project) ?? []) {
+      const res = labelResults.get(label);
       if (!res) continue;
+      const shortLabel = label.replace(`${project}/`, "");
       if (res.success) {
-        statuses.push(pc.green(`✓ ${locale}`));
+        statuses.push(pc.green(`✓ ${shortLabel}`));
       } else {
-        statuses.push(pc.red(`✗ ${locale}`));
-        failures.push({ label: `${project} / ${locale}`, error: res.error });
+        statuses.push(pc.red(`✗ ${shortLabel}`));
+        failures.push({ label, error: res.error });
       }
     }
 
