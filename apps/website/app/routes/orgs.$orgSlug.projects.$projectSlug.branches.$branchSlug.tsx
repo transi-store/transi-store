@@ -176,9 +176,19 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       };
     }
 
+    const fileIdRaw = formData.get("fileId");
+    const fileId = parseInt(String(fileIdRaw), 10);
+    if (!fileIdRaw || isNaN(fileId)) {
+      return {
+        error: i18next.t("keys.errors.noFile"),
+        action: "createKey",
+      };
+    }
+
     await createTranslationKey({
       projectId: project.id,
       keyName,
+      fileId,
       description:
         description && typeof description === "string"
           ? description

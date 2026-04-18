@@ -1,4 +1,12 @@
-import { Heading, VStack, Button, Box, Text, Stack, Tabs } from "@chakra-ui/react";
+import {
+  Heading,
+  VStack,
+  Button,
+  Box,
+  Text,
+  Stack,
+  Tabs,
+} from "@chakra-ui/react";
 import {
   Link,
   useOutletContext,
@@ -59,7 +67,7 @@ type ContextType = {
   organization: { id: string; slug: string; name: string };
   project: { id: string; slug: string; name: string };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
-  projectFiles: Array<{ id: number; name: string; format: string; filePath: string }>;
+  projectFiles: Array<{ id: number; format: string; filePath: string }>;
 };
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
@@ -151,9 +159,19 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     }
 
     // Créer la clé
+    const fileIdRaw = formData.get("fileId");
+    const fileId = parseInt(String(fileIdRaw), 10);
+    if (!fileId || isNaN(fileId)) {
+      return {
+        error: i18next.t("keys.errors.noFile"),
+        action: "createKey",
+      };
+    }
+
     await createTranslationKey({
       projectId: project.id,
       keyName,
+      fileId,
       description:
         description && typeof description === "string"
           ? description
@@ -290,7 +308,7 @@ export default function ProjectTranslations({
             <Tabs.Trigger value="all">Tous les fichiers</Tabs.Trigger>
             {projectFiles.map((file) => (
               <Tabs.Trigger key={file.id} value={String(file.id)}>
-                {file.name}
+                {file.filePath}
               </Tabs.Trigger>
             ))}
           </Tabs.List>

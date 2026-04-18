@@ -1,11 +1,10 @@
-export type ProjectFileInfo = {
+type ProjectFileInfo = {
   id: number;
-  name: string;
   format: string;
   filePath: string;
 };
 
-export type ProjectInfo = {
+type ProjectInfo = {
   files: ProjectFileInfo[];
   languages: Array<{ locale: string; isDefault: boolean }>;
 };

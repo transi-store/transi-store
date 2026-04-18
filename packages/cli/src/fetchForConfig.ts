@@ -119,9 +119,7 @@ export async function fetchForConfig(
 
     if (languages.length === 0) {
       console.warn(
-        pc.yellow(
-          `  ⚠ No languages configured for project "${projectSlug}"`,
-        ),
+        pc.yellow(`  ⚠ No languages configured for project "${projectSlug}"`),
       );
       continue;
     }
@@ -136,14 +134,14 @@ export async function fetchForConfig(
           assertSafePath(
             resolvedOutput,
             cwd,
-            `${projectSlug}/${file.name}/${locale}`,
+            `${projectSlug}/${file.filePath}/${locale}`,
           );
         } catch (err) {
           console.error(pc.red(String(err)));
           process.exit(1);
         }
 
-        const fileLabel = `${projectSlug}/${file.name}/${locale}`;
+        const fileLabel = `${projectSlug}/${file.filePath}/${locale}`;
         labelsByProject.get(projectSlug)!.push(fileLabel);
         tasks.push({
           domainRoot,

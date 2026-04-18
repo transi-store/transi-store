@@ -44,7 +44,7 @@ export async function searchTranslationKeys(
     sort?: TranslationKeysSort;
     branchId?: number;
     branchOnly?: boolean;
-    fileId?: number | null;
+    fileId?: number;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit ?? 50;
@@ -75,12 +75,9 @@ export async function searchTranslationKeys(
   // Exclude soft-deleted keys
   const notDeleted = isNull(schema.translationKeys.deletedAt);
 
-  // TODO: remove this fileCondition fallback once all keys have been migrated to a file
   const fileCondition =
     options?.fileId !== undefined
-      ? options.fileId === null
-        ? isNull(schema.translationKeys.fileId)
-        : eq(schema.translationKeys.fileId, options.fileId)
+      ? eq(schema.translationKeys.fileId, options.fileId)
       : undefined;
 
   // Matches sur keyName et description

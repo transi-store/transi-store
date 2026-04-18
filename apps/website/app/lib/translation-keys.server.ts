@@ -67,7 +67,7 @@ export async function getTranslationKeys(
     sort?: TranslationKeysSort;
     branchId?: number;
     branchOnly?: boolean;
-    fileId?: number | null;
+    fileId?: number;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -90,12 +90,9 @@ export async function getTranslationKeys(
     branchOnly: options?.branchOnly,
   });
 
-  // TODO: remove this fileCondition fallback once all keys have been migrated to a file
   const fileCondition =
     options?.fileId !== undefined
-      ? options.fileId === null
-        ? isNull(schema.translationKeys.fileId)
-        : eq(schema.translationKeys.fileId, options.fileId)
+      ? eq(schema.translationKeys.fileId, options.fileId)
       : undefined;
 
   if (options?.search) {
@@ -214,7 +211,7 @@ type CreateTranslationKeyParams = {
   keyName: string;
   description?: string | null;
   branchId?: number | null;
-  fileId?: number | null;
+  fileId: number;
 };
 
 export async function createTranslationKey({
@@ -222,7 +219,7 @@ export async function createTranslationKey({
   keyName,
   description,
   branchId = null,
-  fileId = null,
+  fileId,
 }: CreateTranslationKeyParams): Promise<number> {
   const [key] = await db
     .insert(schema.translationKeys)
@@ -384,7 +381,6 @@ type ProjectTranslation = schema.TranslationKey & {
 
 export type ProjectTranslations = Array<ProjectTranslation>;
 
-// Get all translations for a project grouped by key
 export async function getProjectTranslations(
   projectId: number,
   options?: { branchId?: number; allBranches?: boolean; fileId?: number },
@@ -398,7 +394,7 @@ export async function getProjectTranslations(
     }),
   ];
 
-  // TODO: remove this fileId condition fallback once all keys have been migrated to a file
+  // Filter by file if provided
   if (options?.fileId !== undefined) {
     conditions.push(eq(schema.translationKeys.fileId, options.fileId));
   }

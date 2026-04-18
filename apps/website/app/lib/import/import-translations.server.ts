@@ -8,7 +8,7 @@ type ImportParams = {
   data: Record<string, string>;
   strategy: ImportStrategy;
   branchId?: number;
-  fileId?: number | null;
+  fileId: number;
 };
 
 export type ImportStats = {
@@ -91,7 +91,7 @@ export async function importTranslations({
                 projectId,
                 keyName,
                 branchId: branchId ?? null,
-                fileId: fileId ?? null,
+                fileId,
               })),
             )
             .onConflictDoNothing({

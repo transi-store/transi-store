@@ -9,7 +9,7 @@ function getGit(): SimpleGit {
   return gitInstance;
 }
 
-export async function isGitRepository(): Promise<boolean> {
+async function isGitRepository(): Promise<boolean> {
   try {
     return await getGit().checkIsRepo();
   } catch {

@@ -27,7 +27,6 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     JSON.stringify({
       files: files.map((f) => ({
         id: f.id,
-        name: f.name,
         format: f.format,
         filePath: f.filePath,
       })),

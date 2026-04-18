@@ -6,6 +6,7 @@ import { ImportStrategy } from "@transi-store/common";
 import z from "zod";
 import { configSchema } from "@transi-store/common";
 import { fetchProjectInfo, assertSafePath } from "./fetchProjectFiles.ts";
+import { resolveGitBranch, getDefaultBranch, getModifiedFiles } from "./git.ts";
 
 export type UploadConfig = {
   domainRoot: string;
@@ -76,7 +77,9 @@ export async function uploadTranslations({
       console.error(
         `Failed to import translations: ${response.status} ${response.statusText}\n`,
         (data as { error?: string }).error,
-        (data as { details?: string }).details ? `\nDetails: ${(data as { details?: string }).details}` : "",
+        (data as { details?: string }).details
+          ? `\nDetails: ${(data as { details?: string }).details}`
+          : "",
       );
       process.exit(1);
     }
@@ -84,7 +87,17 @@ export async function uploadTranslations({
     console.log(
       `Translations imported for project "${project}" locale "${locale}":`,
     );
-    const stats = (data as { stats: { total: number; keysCreated: number; translationsCreated: number; translationsUpdated: number; translationsSkipped: number } }).stats;
+    const stats = (
+      data as {
+        stats: {
+          total: number;
+          keysCreated: number;
+          translationsCreated: number;
+          translationsUpdated: number;
+          translationsSkipped: number;
+        };
+      }
+    ).stats;
     console.log(`  Total keys: ${stats.total}`);
     console.log(`  Keys created: ${stats.keysCreated}`);
     console.log(`  Translations created: ${stats.translationsCreated}`);
@@ -123,6 +136,25 @@ export async function uploadForConfig(
   }
 
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
+
+  // Auto-detect branch if not explicitly provided
+  const { branch: resolvedBranch, wasAutoDetected } =
+    await resolveGitBranch(branch);
+  if (wasAutoDetected && resolvedBranch) {
+    console.log(`Git: auto-detected branch "${resolvedBranch}"`);
+  }
+
+  // When on a feature branch, only upload files that changed vs the default branch
+  let modifiedFiles: Set<string> | undefined;
+  if (resolvedBranch) {
+    const defaultBranch = await getDefaultBranch();
+    if (defaultBranch) {
+      console.log(
+        `Git: comparing against "${defaultBranch}" to detect changed files`,
+      );
+      modifiedFiles = await getModifiedFiles(defaultBranch);
+    }
+  }
 
   console.log(
     `Uploading translations to domain "${domainRoot}" for org "${result.data.org}"...`,
@@ -163,7 +195,7 @@ export async function uploadForConfig(
           assertSafePath(
             resolvedInput,
             cwd,
-            `${projectSlug}/${file.name}/${locale}`,
+            `${projectSlug}/${file.filePath}/${locale}`,
           );
         } catch (err) {
           console.error(String(err));
@@ -172,7 +204,14 @@ export async function uploadForConfig(
 
         if (!fs.existsSync(resolvedInput)) {
           console.log(
-            `Skipping project "${projectSlug}" file "${file.name}" locale "${locale}": file not found "${input}"`,
+            `Skipping project "${projectSlug}" file "${file.filePath}" locale "${locale}": file not found "${input}"`,
+          );
+          continue;
+        }
+
+        if (modifiedFiles !== undefined && !modifiedFiles.has(resolvedInput)) {
+          console.log(
+            `Skipping project "${projectSlug}" file "${file.filePath}" locale "${locale}": not modified`,
           );
           continue;
         }
@@ -186,7 +225,7 @@ export async function uploadForConfig(
           locale,
           input: resolvedInput,
           strategy,
-          branch,
+          branch: resolvedBranch,
           fileId: file.id,
         });
       }

@@ -106,11 +106,8 @@ export default function ExportSection({
                       {FORMAT_LABELS[file.format as SupportedFormat] ??
                         file.format}
                     </Badge>
-                    <Text as="span" fontWeight="medium">
-                      {file.name}
-                    </Text>
-                    <Text as="span" fontSize="sm" color="fg.muted" ml={2}>
-                      ({file.filePath})
+                    <Text as="span" fontSize="sm" color="fg.muted">
+                      {file.filePath}
                     </Text>
                   </Box>
                   <SimpleGrid columns={{ base: 2, md: 4 }} gap={2}>

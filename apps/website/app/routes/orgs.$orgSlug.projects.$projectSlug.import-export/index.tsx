@@ -64,17 +64,25 @@ export async function action({
     return { success: false, error: i18next.t("import.errors.unknownAction") };
   }
 
+  // TODO create a method that handle all "formData.get and validation" in one place to avoid repeating
   const fileIdRaw = formData.get("fileId");
   const fileId =
     fileIdRaw && typeof fileIdRaw === "string" && fileIdRaw !== ""
       ? parseInt(fileIdRaw, 10)
       : null;
 
+  if (fileId === null || isNaN(fileId)) {
+    return {
+      success: false,
+      error: i18next.t("import.errors.noFile"),
+    };
+  }
+
   const result = await processImport({
     organizationId: organization.id,
     projectSlug: params.projectSlug,
     formData,
-    fileId: fileId !== null && !isNaN(fileId) ? fileId : null,
+    fileId,
   });
 
   if (!result.success) {

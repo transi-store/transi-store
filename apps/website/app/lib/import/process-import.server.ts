@@ -23,7 +23,7 @@ type ProcessImportParams = {
   projectSlug: string;
   formData: FormData;
   branchSlug?: string;
-  fileId?: number | null;
+  fileId: number;
 };
 
 /**

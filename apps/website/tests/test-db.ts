@@ -150,18 +150,42 @@ export async function createBranch(
   return branch;
 }
 
+async function createProjectFile(
+  db: TestDb,
+  projectId: number,
+  overrides: Partial<schema.NewProjectFile> = {},
+): Promise<schema.ProjectFile> {
+  const [file] = await db
+    .insert(schema.projectFiles)
+    .values({
+      projectId,
+      format: "json",
+      filePath: "<lang>.json",
+      ...overrides,
+    })
+    .returning();
+  return file;
+}
+
 export async function createTranslationKey(
   db: TestDb,
   projectId: number,
   keyName: string,
   overrides: Partial<schema.NewTranslationKey> = {},
 ): Promise<schema.TranslationKey> {
+  let fileId = overrides.fileId;
+  if (!fileId) {
+    // Auto-create a default project file so fileId NOT NULL is satisfied
+    const file = await createProjectFile(db, projectId);
+    fileId = file.id;
+  }
   const [key] = await db
     .insert(schema.translationKeys)
     .values({
       projectId,
       keyName,
       ...overrides,
+      fileId,
     })
     .returning();
   return key;

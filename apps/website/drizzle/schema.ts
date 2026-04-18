@@ -188,7 +188,6 @@ export const projectFiles = pgTable(
     projectId: integer("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
-    name: varchar("name", { length: 255 }).notNull(),
     format: varchar("format", {
       length: 20,
       enum: ensureOneItem(Object.values(SupportedFormat)),
@@ -215,9 +214,11 @@ export const translationKeys = pgTable(
     branchId: integer("branch_id").references(() => branches.id, {
       onDelete: "cascade",
     }),
-    fileId: integer("file_id").references(() => projectFiles.id, {
-      onDelete: "set null",
-    }),
+    fileId: integer("file_id")
+      .notNull()
+      .references(() => projectFiles.id, {
+        onDelete: "cascade",
+      }),
     keyName: varchar("key_name", { length: 500 }).notNull(),
     description: text("description"),
     deletedAt: timestamp("deleted_at"),

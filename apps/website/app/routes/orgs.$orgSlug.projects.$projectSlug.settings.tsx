@@ -47,12 +47,11 @@ import {
   removeLanguageFromProject,
 } from "~/lib/projects.server";
 import {
-  getProjectFiles,
   createProjectFile,
   deleteProjectFile,
   isFilePathAvailable,
-  validateOutputPath,
 } from "~/lib/project-files.server";
+import { validateOutputPath } from "~/lib/path-utils";
 import { useTranslation } from "react-i18next";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
@@ -68,7 +67,6 @@ type ContextType = {
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
   projectFiles: Array<{
     id: number;
-    name: string;
     format: string;
     filePath: string;
   }>;
@@ -152,13 +150,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   }
 
   if (action === "add_file") {
-    const name = formData.get("fileName");
     const format = formData.get("fileFormat");
     const filePath = formData.get("fileOutput");
 
-    if (!name || typeof name !== "string" || name.trim() === "") {
-      return { error: "Le nom du fichier est requis" };
-    }
     if (!format || typeof format !== "string") {
       return { error: "Le format est requis" };
     }
@@ -180,7 +174,6 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     await createProjectFile({
       projectId: project.id,
-      name: name.trim(),
       format: format as SupportedFormat,
       filePath: filePath.trim(),
     });
@@ -412,16 +405,13 @@ export default function ProjectSettings() {
                     <Card.Body>
                       <HStack justify="space-between" align="start">
                         <Box flex={1}>
-                          <HStack gap={2} mb={1}>
-                            <Text fontWeight="medium">{file.name}</Text>
+                          <HStack gap={2}>
                             <Badge colorPalette="gray" size="sm">
                               {FORMAT_LABELS[file.format as SupportedFormat] ??
                                 file.format}
                             </Badge>
+                            <Code fontSize="xs">{file.filePath}</Code>
                           </HStack>
-                          <Code fontSize="xs" color="fg.muted">
-                            {file.filePath}
-                          </Code>
                         </Box>
                         <Form method="post">
                           <input
@@ -455,14 +445,6 @@ export default function ProjectSettings() {
               <input type="hidden" name="_action" value="add_file" />
               <VStack align="stretch" gap={3}>
                 <HStack align="end">
-                  <Field.Root flex={1} required>
-                    <Field.Label>Nom</Field.Label>
-                    <Input
-                      name="fileName"
-                      placeholder="Common, Admin…"
-                      disabled={isFileSubmitting}
-                    />
-                  </Field.Root>
                   <Field.Root required>
                     <Field.Label>Format</Field.Label>
                     <Select.Root

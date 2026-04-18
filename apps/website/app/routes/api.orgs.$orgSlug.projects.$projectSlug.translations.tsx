@@ -133,11 +133,18 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       ? parseInt(fileIdRaw, 10)
       : null;
 
+  if (fileId === null || isNaN(fileId)) {
+    return new Response(
+      JSON.stringify({ error: "Missing or invalid 'fileId' field" }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   const result = await processImport({
     organizationId: organization.id,
     projectSlug: params.projectSlug,
     formData,
-    fileId: fileId !== null && !isNaN(fileId) ? fileId : null,
+    fileId,
   });
 
   if (!result.success) {
