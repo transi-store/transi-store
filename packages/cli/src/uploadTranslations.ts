@@ -85,7 +85,7 @@ export async function uploadTranslations({
     }
 
     console.log(
-      `Translations imported for project "${project}" locale "${locale}":`,
+      `Translations imported for project "${project}" file "${path.relative(process.cwd(), input)}" locale "${locale}":`,
     );
     const stats = (
       data as {
