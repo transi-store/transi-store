@@ -114,6 +114,7 @@ Utilisez le template suivant :
 | [ADR-016](./ADR-016-elimination-loaders-redondants.md)              | Élimination des loaders redondants via middleware de contexte         | 2026-03-18 | Proposé 🔄 |
 | [ADR-017](./ADR-017-openapi-documentation.md)                       | Auto-generated OpenAPI documentation with Scalar                      | 2026-03-20 | Accepté ✅ |
 | [ADR-018](./ADR-018-suppression-traductions-branches.md)            | Suppression de traductions dans les branches (soft-delete)            | 2026-03-21 | Accepté ✅ |
+| [ADR-019](./ADR-019-multi-file-projets.md)                          | Support multi-fichiers par projet                                     | 2026-04-19 | Accepté ✅ |
 
 ## Références
 

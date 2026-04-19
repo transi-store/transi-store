@@ -24,6 +24,17 @@ A project holds all the translation keys for a specific application or service.
 3. Choose the **source locale** (the language you write keys in, e.g. `en`).
 4. Add **target locales** — the languages you want to translate into (e.g. `fr`, `de`, `es`).
 
+### Create a translation file
+
+A project can have one or more **translation files**. Each file has a format (JSON, YAML, PO…) and a path template used by the CLI to write the output on disk.
+
+1. Open your project and go to the **Translations** tab.
+2. Click **Add file** (or the `+` button in the file tab bar).
+3. Enter a **file path** using the `<lang>` placeholder (e.g. `locales/<lang>/app.json`).
+4. Choose a **format** (e.g. JSON, YAML, PO, CSV…).
+
+You can add multiple files to a project — for example one JSON file for UI strings and one PO file for documentation. The CLI discovers all files automatically from the server, so adding a file does not require any change in your consumer repositories.
+
 ---
 
 ## Managing Translations
@@ -113,7 +124,7 @@ Once your translation work is ready:
 
 ### Exporting translations
 
-Go to **Import / Export** in your project and choose the format:
+Go to **Import / Export** in your project, choose a file and a locale, then download the file in the desired format:
 
 | Format | Extension | Notes |
 |--------|-----------|-------|

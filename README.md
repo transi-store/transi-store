@@ -106,20 +106,17 @@ Create a `transi-store.config.json` in your project:
   "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
   "org": "my-org",
   "projects": [
-    {
-      "project": "my-app",
-      "langs": ["en", "fr", "de"],
-      "format": "json",
-      "output": "./locales/<lang>/translations.json",
-    },
+    { "slug": "my-app" },
   ],
 }
 ```
 
+File configuration (format, path template, target locales) is managed in the Transi-Store UI and fetched automatically by the CLI at runtime — no need to repeat it in the config file.
+
 Download translations (set `TRANSI_STORE_API_KEY` in your environment):
 
 ```bash
-TRANSI_STORE_API_KEY=your-api-key transi-store
+TRANSI_STORE_API_KEY=your-api-key transi-store download:config
 ```
 
 ### REST API — fetch translations programmatically

@@ -169,15 +169,12 @@ Create a `transi-store.config.json` at the root of your project:
   "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
   "org": "acme",
   "projects": [
-    {
-      "project": "webapp",
-      "langs": ["en", "fr", "de"],
-      "format": "json",
-      "output": "./src/locales/<lang>/translations.json"
-    }
+    { "slug": "webapp" }
   ]
 }
 ```
+
+File configuration (format, path template, target locales) is managed in the Transi-Store UI. The CLI fetches this information from the server at runtime via `GET /api/orgs/:org/projects/:slug`, so adding a locale or a new file requires no change in your consumer repositories.
 
 Set the `TRANSI_STORE_API_KEY` environment variable with your API key, then run:
 
