@@ -13,6 +13,7 @@ import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
 import { TranslationKeysSort } from "./sort/keySort";
 import type { TranslationKey } from "../../drizzle/schema";
+import { getOrCreateDefaultProjectFile } from "./project-files.server";
 
 type TranslationKeysReturnType = {
   count: number;
@@ -185,9 +186,15 @@ export async function getTranslationKeyById(keyId: number) {
 export async function getTranslationKeyByName(
   projectId: number,
   keyName: string,
+  // TODO [PROJECT_FILE]: make fileId required once all callers have been
+  // migrated to pass it explicitly.
+  fileId?: number,
 ): Promise<TranslationKey | undefined> {
   return await db.query.translationKeys.findFirst({
-    where: { projectId, keyName },
+    where:
+      fileId !== undefined
+        ? { projectId, keyName, fileId }
+        : { projectId, keyName },
   });
 }
 
@@ -196,6 +203,9 @@ type CreateTranslationKeyParams = {
   keyName: string;
   description?: string | null;
   branchId?: number | null;
+  // TODO [PROJECT_FILE]: make fileId required once all callers have been
+  // migrated to pass it explicitly.
+  fileId?: number;
 };
 
 export async function createTranslationKey({
@@ -203,7 +213,12 @@ export async function createTranslationKey({
   keyName,
   description,
   branchId = null,
+  fileId,
 }: CreateTranslationKeyParams): Promise<number> {
+  // TODO [PROJECT_FILE]: drop this fallback once all callers pass fileId explicitly.
+  const resolvedFileId =
+    fileId ?? (await getOrCreateDefaultProjectFile(projectId)).id;
+
   const [key] = await db
     .insert(schema.translationKeys)
     .values({
@@ -211,6 +226,7 @@ export async function createTranslationKey({
       keyName,
       description,
       branchId,
+      fileId: resolvedFileId,
     })
     .returning();
 
@@ -280,7 +296,13 @@ export async function duplicateTranslationKey(keyId: number) {
   let counter = 2;
 
   // Check if the key name already exists and increment counter if needed
-  while (await getTranslationKeyByName(originalKey.projectId, newKeyName)) {
+  while (
+    await getTranslationKeyByName(
+      originalKey.projectId,
+      newKeyName,
+      originalKey.fileId,
+    )
+  ) {
     newKeyName = `${originalKey.keyName} (copy ${counter})`;
     counter++;
   }
@@ -290,6 +312,7 @@ export async function duplicateTranslationKey(keyId: number) {
     projectId: originalKey.projectId,
     keyName: newKeyName,
     description: originalKey.description,
+    fileId: originalKey.fileId,
   });
 
   // Copy all translations to the new key in parallel

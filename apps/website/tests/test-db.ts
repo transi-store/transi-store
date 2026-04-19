@@ -6,6 +6,7 @@ import { PgTable } from "drizzle-orm/pg-core";
 import * as schema from "../drizzle/schema";
 import { relations } from "../drizzle/relations";
 import { incrementQueryCount } from "../app/lib/query-counter.server";
+import { SupportedFormat } from "@transi-store/common";
 
 export type TestDb = Awaited<ReturnType<typeof initTestDb>>;
 
@@ -156,12 +157,36 @@ export async function createTranslationKey(
   keyName: string,
   overrides: Partial<schema.NewTranslationKey> = {},
 ): Promise<schema.TranslationKey> {
+  // TODO [PROJECT_FILE]: drop this fallback once all tests pass a fileId
+  // explicitly via overrides.
+  let fileId = overrides.fileId;
+  if (!fileId) {
+    // Reuse the project's first file if any, otherwise create a default one.
+    const existing = await db.query.projectFiles.findFirst({
+      where: { projectId },
+      orderBy: (t, { asc }) => [asc(t.createdAt), asc(t.id)],
+    });
+    if (existing) {
+      fileId = existing.id;
+    } else {
+      const [file] = await db
+        .insert(schema.projectFiles)
+        .values({
+          projectId,
+          format: SupportedFormat.JSON,
+          filePath: "<lang>.json",
+        })
+        .returning();
+      fileId = file.id;
+    }
+  }
   const [key] = await db
     .insert(schema.translationKeys)
     .values({
       projectId,
       keyName,
       ...overrides,
+      fileId,
     })
     .returning();
   return key;

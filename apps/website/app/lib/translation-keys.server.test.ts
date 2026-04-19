@@ -55,6 +55,7 @@ describe("getProjectTranslations", () => {
         deletedAt: null,
         id: key.id,
         projectId,
+        fileId: key.fileId,
         description: null,
         keyName: "hello.world",
         createdAt: NOW,
