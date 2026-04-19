@@ -212,7 +212,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         action: "edit_file",
       };
     }
-    const pathError = validateOutputPath(filePath);
+    const pathError = validateOutputPath(filePath, i18next.t);
     if (pathError) {
       return { error: pathError, action: "edit_file" };
     }
