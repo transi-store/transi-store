@@ -347,7 +347,7 @@ export default function ProjectTranslationsFile({
       actionData.action === "createKey" &&
       navigation.state === "idle"
     ) {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Close modal before navigating to the new key
       setIsCreateKeyModalOpen(false);
 
       navigate(

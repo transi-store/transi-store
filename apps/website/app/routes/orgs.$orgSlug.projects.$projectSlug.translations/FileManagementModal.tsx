@@ -22,6 +22,7 @@ import {
 } from "@chakra-ui/react";
 import { useFetcher } from "react-router";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
 
 type ProjectFile = { id: number; filePath: string; format: string };
@@ -48,6 +49,7 @@ export function FileManagementModal({
   onDeleted,
 }: FileManagementModalProps) {
   const fetcher = useFetcher<ActionData>();
+  const { t } = useTranslation();
   const isSubmitting = fetcher.state !== "idle";
 
   const formatCollection = createListCollection({
@@ -88,8 +90,8 @@ export function FileManagementModal({
               <DialogHeader>
                 <DialogTitle>
                   {mode === "create"
-                    ? "Ajouter un fichier"
-                    : "Modifier le fichier"}
+                    ? t("files.modal.titleCreate")
+                    : t("files.modal.titleEdit")}
                 </DialogTitle>
                 <DialogCloseTrigger />
               </DialogHeader>
@@ -99,7 +101,7 @@ export function FileManagementModal({
                     <Text color="fg.error">{fetcher.data.error}</Text>
                   )}
                   <Field.Root required>
-                    <Field.Label>Format</Field.Label>
+                    <Field.Label>{t("files.modal.formatLabel")}</Field.Label>
                     <Select.Root
                       collection={formatCollection}
                       name="fileFormat"
@@ -130,7 +132,7 @@ export function FileManagementModal({
                     </Select.Root>
                   </Field.Root>
                   <Field.Root required>
-                    <Field.Label>Chemin de sortie</Field.Label>
+                    <Field.Label>{t("files.modal.outputLabel")}</Field.Label>
                     <Input
                       name="fileOutput"
                       defaultValue={file?.filePath}
@@ -140,9 +142,9 @@ export function FileManagementModal({
                       disabled={isSubmitting}
                     />
                     <Field.HelperText>
-                      Chemin relatif avec{" "}
-                      <Code fontSize="xs">&lt;lang&gt;</Code> comme placeholder.
-                      Ne peut pas contenir "..".
+                      {t("files.modal.outputHelperPrefix")}{" "}
+                      <Code fontSize="xs">&lt;lang&gt;</Code>{" "}
+                      {t("files.modal.outputHelperSuffix")}
                     </Field.HelperText>
                   </Field.Root>
                 </VStack>
@@ -163,7 +165,7 @@ export function FileManagementModal({
                           );
                         }}
                       >
-                        Supprimer
+                        {t("keys.delete")}
                       </Button>
                     </Box>
                   )}
@@ -173,14 +175,16 @@ export function FileManagementModal({
                       disabled={isSubmitting}
                       onClick={() => onOpenChange(false)}
                     >
-                      Annuler
+                      {t("cancel")}
                     </Button>
                     <Button
                       type="submit"
                       colorPalette="brand"
                       loading={isSubmitting}
                     >
-                      {mode === "create" ? "Ajouter" : "Sauvegarder"}
+                      {mode === "create"
+                        ? t("files.modal.submit")
+                        : t("files.modal.save")}
                     </Button>
                   </HStack>
                 </HStack>

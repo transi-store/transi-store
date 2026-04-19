@@ -34,7 +34,7 @@ export function ImportForm({
             <Field.Label>Fichier cible</Field.Label>
             <NativeSelect.Root disabled={isSubmitting} maxW="300px">
               <NativeSelect.Field name="fileId">
-                <option value="">— Aucun fichier spécifique —</option>
+                <option value="">{t("import.noSpecificFile")}</option>
                 {projectFiles.map((file) => (
                   <option key={file.id} value={String(file.id)}>
                     {file.filePath}

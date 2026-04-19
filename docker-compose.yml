@@ -39,7 +39,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-5173}:5173"
+      - "${APP_PORT:-5174}:5173"
       - "${APP_PORT_PROD:-3000}:3000" # Pour le start en prod
     volumes:
       - .:/app

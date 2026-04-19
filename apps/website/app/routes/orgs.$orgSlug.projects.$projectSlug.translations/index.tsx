@@ -11,6 +11,7 @@ import {
 import { useOutletContext, redirect } from "react-router";
 import { LuPencil, LuPlus } from "react-icons/lu";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -202,6 +203,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 export default function ProjectTranslationsIndex() {
   const { organization, project, languages, projectFiles } =
     useOutletContext<ContextType>();
+  const { t } = useTranslation();
 
   const [modalState, setModalState] = useState<
     | { open: false }
@@ -230,11 +232,10 @@ export default function ProjectTranslationsIndex() {
       <HStack justify="space-between" align="center">
         <Box>
           <Heading as="h2" size="lg">
-            Fichiers de traduction
+            {t("files.title")}
           </Heading>
           <Text color="fg.muted" mt={1} fontSize="sm">
-            Chaque fichier regroupe des clés de traduction avec un format et un
-            chemin de sortie.
+            {t("files.description")}
           </Text>
         </Box>
         <Button
@@ -242,20 +243,20 @@ export default function ProjectTranslationsIndex() {
           onClick={openCreate}
           width={{ base: "full", sm: "auto" }}
         >
-          <LuPlus /> Ajouter un fichier
+          <LuPlus /> {t("files.add")}
         </Button>
       </HStack>
 
       {projectFiles.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
           <Text color="fg.muted" mb={2} fontWeight="medium">
-            Aucun fichier configuré
+            {t("files.empty")}
           </Text>
           <Text color="fg.muted" fontSize="sm" mb={4}>
-            Ajoutez un fichier pour commencer à gérer vos traductions.
+            {t("files.emptyDescription")}
           </Text>
           <Button colorPalette="brand" onClick={openCreate}>
-            <LuPlus /> Ajouter un fichier
+            <LuPlus /> {t("files.add")}
           </Button>
         </Box>
       ) : (
@@ -286,7 +287,7 @@ export default function ProjectTranslationsIndex() {
                     </a>
                   </Code>
                   <Text fontSize="sm" color="fg.muted" flexShrink={0}>
-                    {languages.length} langue{languages.length !== 1 ? "s" : ""}
+                    {t("files.languageCount", { count: languages.length })}
                   </Text>
                 </HStack>
                 <Button
