@@ -1,4 +1,4 @@
-import type { Branch, TranslationKey } from "../../drizzle/schema";
+import type { Branch, ProjectFile, TranslationKey } from "../../drizzle/schema";
 import { BRANCH_STATUS } from "./branches";
 import { db, schema } from "./db.server";
 import { and, eq, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
@@ -64,10 +64,11 @@ export async function deleteBranch(branchId: number): Promise<void> {
 
 export async function getBranchKeys(
   branchId: number,
-): Promise<Array<TranslationKey>> {
+): Promise<Array<TranslationKey & { file: ProjectFile | null }>> {
   return await db.query.translationKeys.findMany({
     where: { branchId },
     orderBy: { keyName: "asc" },
+    with: { file: true },
   });
 }
 
@@ -196,7 +197,7 @@ export async function removeKeyDeletionFromBranch(
 
 export async function getBranchKeyDeletions(
   branchId: number,
-): Promise<Array<TranslationKey>> {
+): Promise<Array<TranslationKey & { file: ProjectFile | null }>> {
   const deletions = await db
     .select({ translationKeyId: schema.branchKeyDeletions.translationKeyId })
     .from(schema.branchKeyDeletions)
@@ -209,6 +210,7 @@ export async function getBranchKeyDeletions(
       id: { in: deletions.map((d) => d.translationKeyId) },
     },
     orderBy: { keyName: "asc" },
+    with: { file: true },
   });
 }
 

@@ -32,15 +32,19 @@ transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
                                                        │                  │                    │
                                                        ▼                  ▼                    ▼
                                               ┌──────────────────┐ ┌──────────────┐ ┌────────────────────┐
-                                              │ project_         │ │  branches    │ │ translation_keys   │
-                                              │ languages        │ └──────────────┘ │ (deletedAt: soft)  │
-                                              └──────────────────┘        │         └────────────────────┘
-                                                                          │                    │
+                                              │ project_         │ │  branches    │ │  project_files     │
+                                              │ languages        │ └──────────────┘ └────────────────────┘
+                                              └──────────────────┘        │                    │
                                                                           ▼                    ▼
                                                                 ┌──────────────────┐ ┌────────────────────┐
-                                                                │ branch_key_      │ │  translations      │
-                                                                │ deletions        │ └────────────────────┘
-                                                                └──────────────────┘
+                                                                │ branch_key_      │ │  translation_keys  │
+                                                                │ deletions        │ │  (deletedAt: soft) │
+                                                                └──────────────────┘ └────────────────────┘
+                                                                                              │
+                                                                                              ▼
+                                                                                    ┌────────────────────┐
+                                                                                    │  translations      │
+                                                                                    └────────────────────┘
 ```
 
 ## Concepts clés
@@ -53,25 +57,41 @@ transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
 
 ### Contraintes d'unicité importantes
 
-| Table                      | Contrainte                                | Raison                                |
-| -------------------------- | ----------------------------------------- | ------------------------------------- |
-| `users`                    | `(oauth_provider, oauth_subject)` unique  | Un compte OAuth = un utilisateur      |
-| `organizations`            | `slug` unique global                      | URLs uniques                          |
-| `organization_members`     | `(organization_id, user_id)` unique       | Pas de doublons                       |
-| `organization_invitations` | `(organization_id, invited_email)` unique | Une seule invitation active par email |
-| `projects`                 | `(organization_id, slug)` unique          | Slug unique par org uniquement        |
-| `translation_keys`         | `(project_id, key_name)` unique           | Une seule clé par nom dans un projet  |
-| `translations`             | `(key_id, locale)` unique                 | Une seule traduction par clé-locale   |
-| `branch_key_deletions`     | `(branch_id, translation_key_id)` unique  | Une suppression par clé par branche   |
+| Table                      | Contrainte                                | Raison                                           |
+| -------------------------- | ----------------------------------------- | ------------------------------------------------ |
+| `users`                    | `(oauth_provider, oauth_subject)` unique  | Un compte OAuth = un utilisateur                 |
+| `organizations`            | `slug` unique global                      | URLs uniques                                     |
+| `organization_members`     | `(organization_id, user_id)` unique       | Pas de doublons                                  |
+| `organization_invitations` | `(organization_id, invited_email)` unique | Une seule invitation active par email            |
+| `projects`                 | `(organization_id, slug)` unique          | Slug unique par org uniquement                   |
+| `project_files`            | `(project_id, file_path)` unique          | Pas deux fichiers avec le même chemin            |
+| `translation_keys`         | `(project_id, file_id, key_name)` unique  | Une seule clé par nom par fichier dans un projet |
+| `translations`             | `(key_id, locale)` unique                 | Une seule traduction par clé-locale              |
+| `branch_key_deletions`     | `(branch_id, translation_key_id)` unique  | Une suppression par clé par branche              |
 
 ### Relations importantes
 
 - **Users** ↔ **Organizations** : N-N via `organization_members`
 - **Organizations** → **Projects** : 1-N (cascade delete)
-- **Projects** → **TranslationKeys** : 1-N (cascade delete)
+- **Projects** → **ProjectFiles** : 1-N (cascade delete)
+- **ProjectFiles** → **TranslationKeys** : 1-N (cascade delete)
+- **Projects** → **TranslationKeys** : 1-N (through file_id, cascade delete)
 - **Projects** → **Branches** : 1-N (cascade delete)
 - **TranslationKeys** → **Translations** : 1-N (cascade delete)
 - **Branches** → **BranchKeyDeletions** : 1-N (cascade delete)
+
+### Fichiers de traduction (`project_files`)
+
+Un projet peut contenir un ou plusieurs fichiers de traduction. Chaque fichier possède :
+
+- **`filePath`** : Chemin relatif avec le placeholder `<lang>` (ex. `locales/<lang>/app.json`). Unique par projet (`UNIQUE(project_id, file_path)`).
+- **`format`** : Format de sérialisation (`json`, `yaml`, `po`, `xliff`, `csv`, `ini`, `php`).
+
+L'unicité d'une clé de traduction est désormais `(project_id, file_id, key_name)` — la même clé peut exister dans deux fichiers différents du même projet.
+
+Le CLI résout les chemins en remplaçant `<lang>` par le code de locale lors du téléchargement/envoi.
+
+Voir [ADR-019](../decisions/ADR-019-multi-file-projets.md) pour les détails de conception.
 
 ### Branches de traduction
 

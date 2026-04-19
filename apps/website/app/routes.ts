@@ -67,6 +67,10 @@ export default [
           "routes/orgs.$orgSlug.projects.$projectSlug.translations/index.tsx",
         ),
         route(
+          "translations/:fileId",
+          "routes/orgs.$orgSlug.projects.$projectSlug.translations.$fileId.tsx",
+        ),
+        route(
           "settings",
           "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
         ),
@@ -108,6 +112,10 @@ export default [
   // Authenticated API routes (dual auth: API key or session via middleware)
   layout("routes/api-layout.tsx", [
     route("api/orgs/:orgSlug", "routes/api-org-layout.tsx", [
+      route(
+        "projects/:projectSlug",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.tsx",
+      ),
       route(
         "projects/:projectSlug/translations",
         "routes/api.orgs.$orgSlug.projects.$projectSlug.translations.tsx",

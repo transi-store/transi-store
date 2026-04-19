@@ -9,6 +9,7 @@ export function buildProjectTranslations(
     ([keyName, value], index): ProjectTranslations[number] => ({
       id: index + 1,
       projectId: 1,
+      fileId: 1,
       keyName,
       description: descriptions?.[keyName] ?? null,
       branchId: null,

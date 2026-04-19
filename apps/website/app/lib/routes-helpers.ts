@@ -31,13 +31,38 @@ export function getTranslationsUrl(
     highlight?: string | null;
   },
 ): string {
-  const params = new URLSearchParams(removeUndefinedValues(queryParams));
+  const params = new URLSearchParams(removeUndefinedValues(queryParams ?? {}));
 
   const baseUrl = generatePath(
     `/orgs/:orgSlug/projects/:projectSlug/translations`,
     {
       orgSlug,
       projectSlug,
+    },
+  );
+
+  return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
+}
+
+export function getTranslationsFileUrl(
+  orgSlug: string,
+  projectSlug: string,
+  fileId: number,
+  queryParams?: {
+    search?: string | null;
+    page?: string | null;
+    sort?: string | null;
+    highlight?: string | null;
+  },
+): string {
+  const params = new URLSearchParams(removeUndefinedValues(queryParams ?? {}));
+
+  const baseUrl = generatePath(
+    `/orgs/:orgSlug/projects/:projectSlug/translations/:fileId`,
+    {
+      orgSlug,
+      projectSlug,
+      fileId: String(fileId),
     },
   );
 

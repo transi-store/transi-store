@@ -134,7 +134,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     }
 
     // Vérifier que la clé n'existe pas déjà
-    const existing = await getTranslationKeyByName(project.id, keyName);
+    const existing = await getTranslationKeyByName(
+      project.id,
+      keyName,
+      key.fileId,
+    );
     if (existing && existing.id !== key.id) {
       return {
         error: i18next.t("keys.new.errors.alreadyExists", { keyName }),

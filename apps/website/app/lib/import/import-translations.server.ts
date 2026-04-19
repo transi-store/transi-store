@@ -8,6 +8,7 @@ type ImportParams = {
   data: Record<string, string>;
   strategy: ImportStrategy;
   branchId?: number;
+  fileId: number;
 };
 
 export type ImportStats = {
@@ -38,6 +39,7 @@ export async function importTranslations({
   data,
   strategy,
   branchId,
+  fileId,
 }: ImportParams): Promise<ImportResult> {
   const stats: ImportStats = {
     total: 0,
@@ -58,7 +60,7 @@ export async function importTranslations({
     await db.transaction(async (tx) => {
       const keyNames = entries.map(([keyName]) => keyName);
 
-      // 1. Fetch all existing keys for this project in one query
+      // 1. Fetch all existing keys for this project+file in one query
       const existingKeys = await tx
         .select({
           id: schema.translationKeys.id,
@@ -68,6 +70,7 @@ export async function importTranslations({
         .where(
           and(
             eq(schema.translationKeys.projectId, projectId),
+            eq(schema.translationKeys.fileId, fileId),
             inArray(schema.translationKeys.keyName, keyNames),
           ),
         );
@@ -89,11 +92,13 @@ export async function importTranslations({
                 projectId,
                 keyName,
                 branchId: branchId ?? null,
+                fileId,
               })),
             )
             .onConflictDoNothing({
               target: [
                 schema.translationKeys.projectId,
+                schema.translationKeys.fileId,
                 schema.translationKeys.keyName,
               ],
             })
@@ -124,6 +129,7 @@ export async function importTranslations({
           .where(
             and(
               eq(schema.translationKeys.projectId, projectId),
+              eq(schema.translationKeys.fileId, fileId),
               inArray(schema.translationKeys.keyName, missingKeys),
             ),
           );

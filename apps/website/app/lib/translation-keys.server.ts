@@ -67,6 +67,7 @@ export async function getTranslationKeys(
     sort?: TranslationKeysSort;
     branchId?: number;
     branchOnly?: boolean;
+    fileId?: number;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -89,6 +90,11 @@ export async function getTranslationKeys(
     branchOnly: options?.branchOnly,
   });
 
+  const fileCondition =
+    options?.fileId !== undefined
+      ? eq(schema.translationKeys.fileId, options.fileId)
+      : undefined;
+
   if (options?.search) {
     const searchQuery = options.search.trim();
     const keysWithSimilarity = await searchTranslationKeys(
@@ -100,6 +106,7 @@ export async function getTranslationKeys(
         sort: options?.sort ?? TranslationKeysSort.RELEVANCE,
         branchId: options?.branchId,
         branchOnly: options?.branchOnly,
+        fileId: options?.fileId,
       },
     );
     keys = keysWithSimilarity.map(
@@ -119,7 +126,11 @@ export async function getTranslationKeys(
       .select()
       .from(schema.translationKeys)
       .where(
-        and(eq(schema.translationKeys.projectId, projectId), branchCondition),
+        and(
+          eq(schema.translationKeys.projectId, projectId),
+          branchCondition,
+          fileCondition,
+        ),
       )
       .limit(options?.limit ?? 50)
       .offset(options?.offset ?? 0)
@@ -131,7 +142,11 @@ export async function getTranslationKeys(
 
     count = await db.$count(
       schema.translationKeys,
-      and(eq(schema.translationKeys.projectId, projectId), branchCondition),
+      and(
+        eq(schema.translationKeys.projectId, projectId),
+        branchCondition,
+        fileCondition,
+      ),
     );
   }
 
@@ -185,9 +200,10 @@ export async function getTranslationKeyById(keyId: number) {
 export async function getTranslationKeyByName(
   projectId: number,
   keyName: string,
+  fileId: number,
 ): Promise<TranslationKey | undefined> {
   return await db.query.translationKeys.findFirst({
-    where: { projectId, keyName },
+    where: { projectId, keyName, fileId },
   });
 }
 
@@ -196,6 +212,7 @@ type CreateTranslationKeyParams = {
   keyName: string;
   description?: string | null;
   branchId?: number | null;
+  fileId: number;
 };
 
 export async function createTranslationKey({
@@ -203,6 +220,7 @@ export async function createTranslationKey({
   keyName,
   description,
   branchId = null,
+  fileId,
 }: CreateTranslationKeyParams): Promise<number> {
   const [key] = await db
     .insert(schema.translationKeys)
@@ -211,6 +229,7 @@ export async function createTranslationKey({
       keyName,
       description,
       branchId,
+      fileId,
     })
     .returning();
 
@@ -280,7 +299,13 @@ export async function duplicateTranslationKey(keyId: number) {
   let counter = 2;
 
   // Check if the key name already exists and increment counter if needed
-  while (await getTranslationKeyByName(originalKey.projectId, newKeyName)) {
+  while (
+    await getTranslationKeyByName(
+      originalKey.projectId,
+      newKeyName,
+      originalKey.fileId,
+    )
+  ) {
     newKeyName = `${originalKey.keyName} (copy ${counter})`;
     counter++;
   }
@@ -290,6 +315,7 @@ export async function duplicateTranslationKey(keyId: number) {
     projectId: originalKey.projectId,
     keyName: newKeyName,
     description: originalKey.description,
+    fileId: originalKey.fileId,
   });
 
   // Copy all translations to the new key in parallel
@@ -363,19 +389,23 @@ type ProjectTranslation = schema.TranslationKey & {
 
 export type ProjectTranslations = Array<ProjectTranslation>;
 
-// Get all translations for a project grouped by key
 export async function getProjectTranslations(
   projectId: number,
-  options?: { branchId?: number; allBranches?: boolean },
+  options?: { branchId?: number; allBranches?: boolean; fileId?: number },
 ): Promise<ProjectTranslations> {
   // Get all keys for this project, sorted alphabetically by keyName
-  const conditions = [
+  const conditions: Array<SQL> = [
     eq(schema.translationKeys.projectId, projectId),
     branchFilter({
       branchId: options?.branchId,
       allBranches: options?.allBranches,
     }),
   ];
+
+  // Filter by file if provided
+  if (options?.fileId !== undefined) {
+    conditions.push(eq(schema.translationKeys.fileId, options.fileId));
+  }
 
   // When exporting with a branch, also exclude main keys marked for deletion in that branch
   if (options?.branchId !== undefined) {

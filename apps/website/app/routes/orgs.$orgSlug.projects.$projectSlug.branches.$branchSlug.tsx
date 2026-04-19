@@ -11,6 +11,7 @@ import {
   Tabs,
   Input,
   Checkbox,
+  NativeSelect,
 } from "@chakra-ui/react";
 import {
   Link,
@@ -48,6 +49,7 @@ import {
   createTranslationKey,
   getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
+import { getProjectFiles } from "~/lib/project-files.server";
 import { TranslationKeyDrawer } from "~/components/translation-key";
 import {
   TranslationKeyModal,
@@ -56,7 +58,7 @@ import {
 import { TranslationsTable } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsTable";
 import { TranslationsPagination } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsPagination";
 import { TranslationsSearchBar } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsSearchBar";
-import { resolveSort } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/index";
+import { resolveSort } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/utils";
 import { getInstance } from "~/middleware/i18next";
 import {
   getBranchesUrl,
@@ -90,6 +92,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const languages = await getProjectLanguages(project.id);
+  const projectFiles = await getProjectFiles(project.id);
 
   const url = new URL(request.url);
   const search = url.searchParams.get("search") || undefined;
@@ -124,6 +127,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     project,
     branch,
     languages,
+    projectFiles,
     keys,
     search,
     highlight,
@@ -168,7 +172,16 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       };
     }
 
-    const existing = await getTranslationKeyByName(project.id, keyName);
+    const fileIdRaw = formData.get("fileId");
+    const fileId = parseInt(String(fileIdRaw), 10);
+    if (!fileIdRaw || isNaN(fileId)) {
+      return {
+        error: i18next.t("keys.errors.noFile"),
+        action: "createKey",
+      };
+    }
+
+    const existing = await getTranslationKeyByName(project.id, keyName, fileId);
     if (existing) {
       return {
         error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
@@ -179,6 +192,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     await createTranslationKey({
       projectId: project.id,
       keyName,
+      fileId,
       description:
         description && typeof description === "string"
           ? description
@@ -225,6 +239,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
     project,
     branch,
     languages,
+    projectFiles,
     keys: { data, count },
     search,
     page,
@@ -242,6 +257,10 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
   const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
   const [drawerKeyId, setDrawerKeyId] = useState<number | null>(null);
   const [selectedKeyIds, setSelectedKeyIds] = useState<number[]>([]);
+  // Auto-select the single file if there's only one; otherwise, default to the first
+  const [selectedFileId, setSelectedFileId] = useState<number | undefined>(
+    projectFiles.length > 0 ? projectFiles[0].id : undefined,
+  );
 
   const handleEditInDrawer = useCallback((keyId: number) => {
     setDrawerKeyId(keyId);
@@ -378,15 +397,33 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                   projectSlug={project.slug}
                   branchSlug={branch.slug}
                 />
-                {languages.length > 0 && (
-                  <Button
-                    colorPalette="accent"
-                    onClick={() => setIsCreateKeyModalOpen(true)}
-                    size="sm"
-                    flexShrink={0}
-                  >
-                    <LuPlus /> {t("translations.newKey")}
-                  </Button>
+                {languages.length > 0 && projectFiles.length > 0 && (
+                  <HStack gap={2} flexShrink={0}>
+                    {projectFiles.length > 1 && (
+                      <NativeSelect.Root size="sm" minW="160px">
+                        <NativeSelect.Field
+                          value={selectedFileId ?? ""}
+                          onChange={(e) =>
+                            setSelectedFileId(Number(e.target.value))
+                          }
+                        >
+                          {projectFiles.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.filePath}
+                            </option>
+                          ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                      </NativeSelect.Root>
+                    )}
+                    <Button
+                      colorPalette="accent"
+                      onClick={() => setIsCreateKeyModalOpen(true)}
+                      size="sm"
+                    >
+                      <LuPlus /> {t("translations.newKey")}
+                    </Button>
+                  </HStack>
                 )}
               </HStack>
 
@@ -482,37 +519,52 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                       overflowY="auto"
                     >
                       <VStack align="stretch" gap={2}>
-                        {mainKeysResult.data.map((key) => (
-                          <HStack key={key.id}>
-                            <Checkbox.Root
-                              size="sm"
-                              checked={selectedKeyIds.includes(key.id)}
-                              onCheckedChange={(e) => {
-                                if (e.checked) {
-                                  setSelectedKeyIds((prev) => [
-                                    ...prev,
-                                    key.id,
-                                  ]);
-                                } else {
-                                  setSelectedKeyIds((prev) =>
-                                    prev.filter((id) => id !== key.id),
-                                  );
-                                }
-                              }}
-                            >
-                              <Checkbox.HiddenInput />
-                              <Checkbox.Control />
-                              <Checkbox.Label>
-                                <Text>{key.keyName}</Text>
-                              </Checkbox.Label>
-                            </Checkbox.Root>
-                            {key.description && (
-                              <Text fontSize="xs" color="fg.muted" truncate>
-                                {key.description}
-                              </Text>
-                            )}
-                          </HStack>
-                        ))}
+                        {mainKeysResult.data.map((key) => {
+                          const keyFile = projectFiles.find(
+                            (f) => f.id === key.fileId,
+                          );
+                          return (
+                            <HStack key={key.id}>
+                              <Checkbox.Root
+                                size="sm"
+                                checked={selectedKeyIds.includes(key.id)}
+                                onCheckedChange={(e) => {
+                                  if (e.checked) {
+                                    setSelectedKeyIds((prev) => [
+                                      ...prev,
+                                      key.id,
+                                    ]);
+                                  } else {
+                                    setSelectedKeyIds((prev) =>
+                                      prev.filter((id) => id !== key.id),
+                                    );
+                                  }
+                                }}
+                              >
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                                <Checkbox.Label>
+                                  <Text>{key.keyName}</Text>
+                                </Checkbox.Label>
+                              </Checkbox.Root>
+                              {keyFile && projectFiles.length > 1 && (
+                                <Badge
+                                  size="sm"
+                                  variant="subtle"
+                                  colorPalette="gray"
+                                  flexShrink={0}
+                                >
+                                  {keyFile.filePath}
+                                </Badge>
+                              )}
+                              {key.description && (
+                                <Text fontSize="xs" color="fg.muted" truncate>
+                                  {key.description}
+                                </Text>
+                              )}
+                            </HStack>
+                          );
+                        })}
                       </VStack>
                     </Box>
                     <Button
@@ -562,49 +614,66 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                   </Box>
                 ) : (
                   <VStack align="stretch" gap={2}>
-                    {keyDeletions.map((key) => (
-                      <HStack
-                        key={key.id}
-                        justify="space-between"
-                        p={2}
-                        borderWidth={1}
-                        // borderRadius="md"
-                        // borderColor="red.muted"
-                        // bg="red.subtle"
-                      >
-                        <VStack align="start" gap={0}>
-                          <Badge size="sm" variant="outline" colorPalette="red">
-                            {key.keyName}
-                          </Badge>
-                          {key.description && (
-                            <Text fontSize="xs" color="fg.muted">
-                              {key.description}
-                            </Text>
-                          )}
-                        </VStack>
-                        <Form method="post">
-                          <input
-                            type="hidden"
-                            name="_action"
-                            value="removeDeletion"
-                          />
-                          <input
-                            type="hidden"
-                            name="keyId"
-                            value={String(key.id)}
-                          />
-                          <Button
-                            type="submit"
-                            size="xs"
-                            variant="ghost"
-                            colorPalette="accent"
-                            loading={isSubmitting}
-                          >
-                            <LuUndo2 /> {t("branches.deletions.restore")}
-                          </Button>
-                        </Form>
-                      </HStack>
-                    ))}
+                    {keyDeletions.map((key) => {
+                      const keyFile = projectFiles.find(
+                        (f) => f.id === key.fileId,
+                      );
+                      return (
+                        <HStack
+                          key={key.id}
+                          justify="space-between"
+                          p={2}
+                          borderWidth={1}
+                        >
+                          <VStack align="start" gap={0}>
+                            <HStack>
+                              <Badge
+                                size="sm"
+                                variant="outline"
+                                colorPalette="red"
+                              >
+                                {key.keyName}
+                              </Badge>
+                              {keyFile && projectFiles.length > 1 && (
+                                <Badge
+                                  size="sm"
+                                  variant="subtle"
+                                  colorPalette="gray"
+                                >
+                                  {keyFile.filePath}
+                                </Badge>
+                              )}
+                            </HStack>
+                            {key.description && (
+                              <Text fontSize="xs" color="fg.muted">
+                                {key.description}
+                              </Text>
+                            )}
+                          </VStack>
+                          <Form method="post">
+                            <input
+                              type="hidden"
+                              name="_action"
+                              value="removeDeletion"
+                            />
+                            <input
+                              type="hidden"
+                              name="keyId"
+                              value={String(key.id)}
+                            />
+                            <Button
+                              type="submit"
+                              size="xs"
+                              variant="ghost"
+                              colorPalette="accent"
+                              loading={isSubmitting}
+                            >
+                              <LuUndo2 /> {t("branches.deletions.restore")}
+                            </Button>
+                          </Form>
+                        </HStack>
+                      );
+                    })}
                   </VStack>
                 )}
               </Box>
@@ -631,6 +700,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
               : undefined
           }
           isSubmitting={isSubmitting}
+          fileId={selectedFileId}
         />
       </VStack>
     </Container>

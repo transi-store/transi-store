@@ -7,6 +7,7 @@ const SAMPLE_KEYS: RegularDataRow[] = [
   {
     id: 1,
     projectId: 1,
+    fileId: 1,
     branchId: null,
     keyName: "common.save",
     description: null,
@@ -19,6 +20,7 @@ const SAMPLE_KEYS: RegularDataRow[] = [
   {
     id: 2,
     projectId: 1,
+    fileId: 1,
     branchId: null,
     keyName: "common.cancel",
     description: null,
@@ -31,6 +33,7 @@ const SAMPLE_KEYS: RegularDataRow[] = [
   {
     id: 3,
     projectId: 1,
+    fileId: 1,
     branchId: null,
     keyName: "checkout.title",
     description: null,
@@ -43,6 +46,7 @@ const SAMPLE_KEYS: RegularDataRow[] = [
   {
     id: 4,
     projectId: 1,
+    fileId: 1,
     branchId: null,
     keyName: "checkout.confirm_button",
     description: null,

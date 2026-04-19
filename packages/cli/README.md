@@ -32,14 +32,7 @@ transi-store --help
 {
   "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
   "org": "my-org",
-  "projects": [
-    {
-      "project": "my-project",
-      "langs": ["en", "fr", "de"],
-      "format": "json",
-      "output": "./locales/<lang>/translations.json",
-    },
-  ],
+  "projects": [{ "slug": "my-project" }],
 }
 ```
 
@@ -47,7 +40,7 @@ You can define multiple projects in the `projects` array.
 
 The `"$schema"` field is optional but recommended for editor autocompletion and validation.
 
-The `output` must include the `<lang>` placeholder, which will be replaced by the actual locale code during the download process. It can also include other placeholders like `<format>` and `<project>`.
+File configuration (format, path template, target locales) is managed in the Transi-Store UI and stored server-side. The CLI fetches this information automatically at runtime via the project API — no `langs`, `format`, or `output` fields are needed in the config file.
 
 You must also provide the `TRANSI_STORE_API_KEY` environment variable with your Transi-Store API key to authenticate the requests.
 

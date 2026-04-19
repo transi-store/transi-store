@@ -12,6 +12,7 @@ import ExportSection from "./Export";
 import type {
   Organization,
   Project,
+  ProjectFile,
   ProjectLanguage,
 } from "../../../drizzle/schema";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
@@ -20,6 +21,7 @@ type ContextType = {
   organization: Organization;
   project: Project;
   languages: Array<ProjectLanguage>;
+  projectFiles: Array<ProjectFile>;
 };
 
 export type ImportActionData =
@@ -62,10 +64,25 @@ export async function action({
     return { success: false, error: i18next.t("import.errors.unknownAction") };
   }
 
+  // TODO create a method that handle all "formData.get and validation" in one place to avoid repeating
+  const fileIdRaw = formData.get("fileId");
+  const fileId =
+    fileIdRaw && typeof fileIdRaw === "string" && fileIdRaw !== ""
+      ? parseInt(fileIdRaw, 10)
+      : null;
+
+  if (fileId === null || isNaN(fileId)) {
+    return {
+      success: false,
+      error: i18next.t("import.errors.noFile"),
+    };
+  }
+
   const result = await processImport({
     organizationId: organization.id,
     projectSlug: params.projectSlug,
     formData,
+    fileId,
   });
 
   if (!result.success) {
@@ -84,7 +101,8 @@ export async function action({
 }
 
 export default function ProjectImportExport() {
-  const { organization, project, languages } = useOutletContext<ContextType>();
+  const { organization, project, languages, projectFiles } =
+    useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -93,12 +111,14 @@ export default function ProjectImportExport() {
     <VStack gap={6} align="stretch">
       <ImportSection
         languages={languages}
+        projectFiles={projectFiles}
         isSubmitting={isSubmitting}
         actionData={actionData}
       />
 
       <ExportSection
         languages={languages}
+        projectFiles={projectFiles}
         organizationSlug={organization.slug}
         projectSlug={project.slug}
       />

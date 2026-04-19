@@ -12,6 +12,7 @@ export type Config = {
   locale: string;
   output: string;
   branch?: string | undefined;
+  fileId?: number | undefined;
 };
 
 export type FetchResult =
@@ -27,10 +28,14 @@ export async function fetchTranslations({
   locale,
   output,
   branch,
+  fileId,
 }: Config): Promise<FetchResult> {
   const params = new URLSearchParams({ format, locale });
   if (branch) {
     params.set("branch", branch);
+  }
+  if (fileId !== undefined) {
+    params.set("fileId", String(fileId));
   }
   const url = `${domainRoot}/api/orgs/${org}/projects/${project}/translations?${params.toString()}`;
 

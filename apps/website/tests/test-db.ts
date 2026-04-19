@@ -6,6 +6,7 @@ import { PgTable } from "drizzle-orm/pg-core";
 import * as schema from "../drizzle/schema";
 import { relations } from "../drizzle/relations";
 import { incrementQueryCount } from "../app/lib/query-counter.server";
+import { SupportedFormat } from "@transi-store/common";
 
 export type TestDb = Awaited<ReturnType<typeof initTestDb>>;
 
@@ -150,18 +151,50 @@ export async function createBranch(
   return branch;
 }
 
+export async function createProjectFile(
+  db: TestDb,
+  projectId: number,
+  overrides: { filePath: string } & Partial<schema.NewProjectFile>,
+): Promise<schema.ProjectFile> {
+  const [file] = await db
+    .insert(schema.projectFiles)
+    .values({
+      format: SupportedFormat.JSON,
+      ...overrides,
+      projectId,
+    })
+    .returning();
+  return file;
+}
+
 export async function createTranslationKey(
   db: TestDb,
   projectId: number,
   keyName: string,
   overrides: Partial<schema.NewTranslationKey> = {},
 ): Promise<schema.TranslationKey> {
+  let fileId = overrides.fileId;
+  if (!fileId) {
+    // Reuse existing project file if one exists, otherwise create a default one
+    const existing = await db.query.projectFiles.findFirst({
+      where: { projectId },
+    });
+    if (existing) {
+      fileId = existing.id;
+    } else {
+      const file = await createProjectFile(db, projectId, {
+        filePath: "<lang>.json",
+      });
+      fileId = file.id;
+    }
+  }
   const [key] = await db
     .insert(schema.translationKeys)
     .values({
       projectId,
       keyName,
       ...overrides,
+      fileId,
     })
     .returning();
   return key;

@@ -44,6 +44,7 @@ export async function searchTranslationKeys(
     sort?: TranslationKeysSort;
     branchId?: number;
     branchOnly?: boolean;
+    fileId?: number;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit ?? 50;
@@ -74,6 +75,11 @@ export async function searchTranslationKeys(
   // Exclude soft-deleted keys
   const notDeleted = isNull(schema.translationKeys.deletedAt);
 
+  const fileCondition =
+    options?.fileId !== undefined
+      ? eq(schema.translationKeys.fileId, options.fileId)
+      : undefined;
+
   // Matches sur keyName et description
   const keyResults = await db
     .select({
@@ -89,6 +95,7 @@ export async function searchTranslationKeys(
         inArray(schema.translationKeys.projectId, projectIds),
         branchCondition,
         notDeleted,
+        fileCondition,
         or(
           sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
           sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
@@ -104,6 +111,7 @@ export async function searchTranslationKeys(
     inArray(schema.translationKeys.projectId, projectIds),
     branchCondition,
     notDeleted,
+    fileCondition,
     sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
   ];
   if (options?.locale) {

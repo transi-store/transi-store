@@ -53,6 +53,7 @@ describe("getProjectTranslations", () => {
       {
         branchId: null,
         deletedAt: null,
+        fileId: key.fileId,
         id: key.id,
         projectId,
         description: null,
