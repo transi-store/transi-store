@@ -1,4 +1,16 @@
-import { Heading, VStack, Button, Box, Text, Stack } from "@chakra-ui/react";
+import {
+  Heading,
+  VStack,
+  Button,
+  Box,
+  Text,
+  Stack,
+  Tabs,
+  HStack,
+  IconButton,
+  Badge,
+  Code,
+} from "@chakra-ui/react";
 import {
   Link,
   useOutletContext,
@@ -8,8 +20,13 @@ import {
   useNavigate,
 } from "react-router";
 import { useTranslation } from "react-i18next";
-import { LuPlus } from "react-icons/lu";
+import { LuPlus, LuPencil } from "react-icons/lu";
 import { useState, useEffect, useCallback } from "react";
+import {
+  FORMAT_LABELS,
+  SupportedFormat,
+  isSupportedFormat,
+} from "@transi-store/common";
 import type { Route } from "./+types/index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -21,6 +38,12 @@ import {
   createTranslationKey,
   getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
+import {
+  getProjectFiles,
+  updateProjectFile,
+  DuplicateFilePathError,
+} from "~/lib/project-files.server";
+import { validateOutputPath } from "~/lib/path-utils";
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
 import { TranslationsTable } from "./TranslationsTable";
 import { TranslationsPagination } from "./TranslationsPagination";
@@ -28,6 +51,7 @@ import {
   TranslationKeyModal,
   TRANSLATIONS_KEY_MODEL_MODE,
 } from "./TranslationKeyModal";
+import { FileEditModal } from "./FileEditModal";
 import { getInstance } from "~/middleware/i18next";
 import { getKeyUrl, getTranslationsUrl } from "~/lib/routes-helpers";
 import { TranslationKeysSort } from "~/lib/sort/keySort";
@@ -81,14 +105,17 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const offset = (page - 1) * LIMIT;
 
-  const keys = await getTranslationKeys(project.id, {
-    search,
-    limit: LIMIT,
-    offset,
-    sort,
-  });
+  const [keys, projectFiles] = await Promise.all([
+    getTranslationKeys(project.id, {
+      search,
+      limit: LIMIT,
+      offset,
+      sort,
+    }),
+    getProjectFiles(project.id),
+  ]);
 
-  return { keys, search, highlight, page, sort };
+  return { keys, projectFiles, search, highlight, page, sort };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -160,6 +187,65 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true, keyName, search: keyName, action: "createKey" };
   }
 
+  if (action === "edit_file") {
+    const fileId = formData.get("fileId");
+    const filePath = formData.get("filePath");
+    const fileFormat = formData.get("fileFormat");
+
+    if (!fileId || typeof fileId !== "string") {
+      return {
+        error: i18next.t("files.errors.missingFileId"),
+        action: "edit_file",
+      };
+    }
+    const parsedFileId = parseInt(fileId, 10);
+    if (isNaN(parsedFileId)) {
+      return {
+        error: i18next.t("files.errors.invalidFileId"),
+        action: "edit_file",
+      };
+    }
+
+    if (!filePath || typeof filePath !== "string") {
+      return {
+        error: i18next.t("files.errors.pathRequired"),
+        action: "edit_file",
+      };
+    }
+    const pathError = validateOutputPath(filePath);
+    if (pathError) {
+      return { error: pathError, action: "edit_file" };
+    }
+
+    if (
+      !fileFormat ||
+      typeof fileFormat !== "string" ||
+      !isSupportedFormat(fileFormat)
+    ) {
+      return {
+        error: i18next.t("files.errors.invalidFormat"),
+        action: "edit_file",
+      };
+    }
+
+    try {
+      await updateProjectFile(project.id, parsedFileId, {
+        filePath,
+        format: fileFormat as SupportedFormat,
+      });
+    } catch (error) {
+      if (error instanceof DuplicateFilePathError) {
+        return {
+          error: i18next.t("files.errors.duplicatePath", { filePath }),
+          action: "edit_file",
+        };
+      }
+      throw error;
+    }
+
+    return { success: true, action: "edit_file" };
+  }
+
   throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });
 }
 
@@ -169,6 +255,7 @@ export default function ProjectTranslations({
   const { t } = useTranslation();
   const {
     keys: { data, count },
+    projectFiles,
     search,
     highlight,
     page,
@@ -181,6 +268,8 @@ export default function ProjectTranslations({
   const isSubmitting = navigation.state === "submitting";
 
   const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
+  const [editingFileId, setEditingFileId] = useState<number | null>(null);
+  const editingFile = projectFiles.find((f) => f.id === editingFileId) ?? null;
 
   // Drawer state for inline editing
   const [drawerKeyId, setDrawerKeyId] = useState<number | null>(null);
@@ -258,6 +347,36 @@ export default function ProjectTranslations({
         )}
       </Stack>
 
+      {projectFiles.length > 0 && (
+        <Tabs.Root value={String(projectFiles[0].id)} variant="line" size="sm">
+          <HStack align="center" gap={2} wrap="wrap">
+            <Tabs.List flex="1" minW={0}>
+              {projectFiles.map((file) => (
+                <Tabs.Trigger
+                  key={file.id}
+                  value={String(file.id)}
+                  cursor="default"
+                >
+                  <Code fontSize="xs">{file.filePath}</Code>
+                  <Badge size="xs" ml={2}>
+                    {FORMAT_LABELS[file.format as SupportedFormat] ??
+                      file.format}
+                  </Badge>
+                </Tabs.Trigger>
+              ))}
+            </Tabs.List>
+            <IconButton
+              aria-label={t("files.editFile")}
+              size="xs"
+              variant="ghost"
+              onClick={() => setEditingFileId(projectFiles[0].id)}
+            >
+              <LuPencil />
+            </IconButton>
+          </HStack>
+        </Tabs.Root>
+      )}
+
       <TranslationsSearchBar
         search={search}
         sort={sort}
@@ -332,6 +451,16 @@ export default function ProjectTranslations({
         }
         isSubmitting={isSubmitting}
       />
+
+      {editingFile && (
+        <FileEditModal
+          isOpen={true}
+          onOpenChange={(open) => {
+            if (!open) setEditingFileId(null);
+          }}
+          file={editingFile}
+        />
+      )}
     </VStack>
   );
 }
