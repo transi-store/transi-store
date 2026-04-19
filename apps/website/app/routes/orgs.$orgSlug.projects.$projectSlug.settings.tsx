@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Card,
-  Code,
   DialogBackdrop,
   DialogBody,
   DialogCloseTrigger,
@@ -18,12 +17,10 @@ import {
   HStack,
   Input,
   Portal,
-  Select,
   SimpleGrid,
   Spinner,
   Text,
   VStack,
-  createListCollection,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -46,15 +43,8 @@ import {
   getProjectDeletionSummary,
   removeLanguageFromProject,
 } from "~/lib/projects.server";
-import {
-  createProjectFile,
-  deleteProjectFile,
-  isFilePathAvailable,
-} from "~/lib/project-files.server";
-import { validateOutputPath } from "~/lib/path-utils";
 import { useTranslation } from "react-i18next";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
-import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -65,11 +55,6 @@ type ContextType = {
     description: string | null;
   };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
-  projectFiles: Array<{
-    id: number;
-    format: string;
-    filePath: string;
-  }>;
 };
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
@@ -149,61 +134,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return redirect(`/orgs/${params.orgSlug}`);
   }
 
-  if (action === "add_file") {
-    const format = formData.get("fileFormat");
-    const filePath = formData.get("fileOutput");
-
-    if (!format || typeof format !== "string") {
-      return { error: "Le format est requis" };
-    }
-    if (!filePath || typeof filePath !== "string" || filePath.trim() === "") {
-      return { error: "Le chemin est requis" };
-    }
-
-    const pathError = validateOutputPath(filePath.trim());
-    if (pathError) {
-      return { error: pathError };
-    }
-
-    const available = await isFilePathAvailable(project.id, filePath.trim());
-    if (!available) {
-      return {
-        error: `Un fichier avec le chemin "${filePath.trim()}" existe déjà dans ce projet`,
-      };
-    }
-
-    await createProjectFile({
-      projectId: project.id,
-      format: format as SupportedFormat,
-      filePath: filePath.trim(),
-    });
-
-    return { success: true };
-  }
-
-  if (action === "remove_file") {
-    const fileId = formData.get("fileId");
-
-    if (!fileId || typeof fileId !== "string") {
-      return { error: "L'identifiant du fichier est requis" };
-    }
-
-    const parsedFileId = parseInt(fileId, 10);
-    if (isNaN(parsedFileId)) {
-      return { error: "Identifiant de fichier invalide" };
-    }
-
-    await deleteProjectFile(project.id, parsedFileId);
-
-    return { success: true };
-  }
-
   return { error: "Action invalide" };
 }
 
 export default function ProjectSettings() {
-  const { organization, project, languages, projectFiles } =
-    useOutletContext<ContextType>();
+  const { organization, project, languages } = useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
   const deleteSummaryFetcher = useFetcher<typeof loader>();
   const navigation = useNavigation();
@@ -375,136 +310,6 @@ export default function ProjectSettings() {
           </HStack>
         </Form>
       </Box>
-
-      {/* Fichiers de traduction */}
-      {(() => {
-        const formatCollection = createListCollection({
-          items: Object.values(SupportedFormat).map((value) => ({
-            label: FORMAT_LABELS[value],
-            value,
-          })),
-        });
-        const isFileSubmitting =
-          isSubmitting &&
-          (submittedAction === "add_file" || submittedAction === "remove_file");
-
-        return (
-          <Box>
-            <Heading as="h2" size="lg" mb={1}>
-              Fichiers ({projectFiles.length})
-            </Heading>
-            <Text color="fg.muted" fontSize="sm" mb={4}>
-              Chaque fichier regroupe des clés de traduction et définit son
-              format et chemin de sortie (utilisé par le CLI).
-            </Text>
-
-            {projectFiles.length > 0 && (
-              <VStack align="stretch" gap={2} mb={4}>
-                {projectFiles.map((file) => (
-                  <Card.Root key={file.id}>
-                    <Card.Body>
-                      <HStack justify="space-between" align="start">
-                        <Box flex={1}>
-                          <HStack gap={2}>
-                            <Badge colorPalette="gray" size="sm">
-                              {FORMAT_LABELS[file.format as SupportedFormat] ??
-                                file.format}
-                            </Badge>
-                            <Code fontSize="xs">{file.filePath}</Code>
-                          </HStack>
-                        </Box>
-                        <Form method="post">
-                          <input
-                            type="hidden"
-                            name="_action"
-                            value="remove_file"
-                          />
-                          <input
-                            type="hidden"
-                            name="fileId"
-                            value={String(file.id)}
-                          />
-                          <Button
-                            type="submit"
-                            size="xs"
-                            variant="ghost"
-                            colorPalette="red"
-                            disabled={isFileSubmitting}
-                          >
-                            <LuTrash2 />
-                          </Button>
-                        </Form>
-                      </HStack>
-                    </Card.Body>
-                  </Card.Root>
-                ))}
-              </VStack>
-            )}
-
-            <Form method="post">
-              <input type="hidden" name="_action" value="add_file" />
-              <VStack align="stretch" gap={3}>
-                <HStack align="end">
-                  <Field.Root required>
-                    <Field.Label>Format</Field.Label>
-                    <Select.Root
-                      collection={formatCollection}
-                      name="fileFormat"
-                      defaultValue={[SupportedFormat.JSON]}
-                      disabled={isFileSubmitting}
-                    >
-                      <Select.HiddenSelect />
-                      <Select.Control>
-                        <Select.Trigger minW="140px">
-                          <Select.ValueText />
-                        </Select.Trigger>
-                        <Select.IndicatorGroup>
-                          <Select.Indicator />
-                        </Select.IndicatorGroup>
-                      </Select.Control>
-                      <Portal>
-                        <Select.Positioner>
-                          <Select.Content>
-                            {formatCollection.items.map((item) => (
-                              <Select.Item item={item} key={item.value}>
-                                {item.label}
-                                <Select.ItemIndicator />
-                              </Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Positioner>
-                      </Portal>
-                    </Select.Root>
-                  </Field.Root>
-                </HStack>
-                <Field.Root flex={1} required>
-                  <Field.Label>Chemin de sortie</Field.Label>
-                  <Input
-                    name="fileOutput"
-                    placeholder="locales/<lang>/common.json"
-                    fontFamily="mono"
-                    fontSize="sm"
-                    disabled={isFileSubmitting}
-                  />
-                  <Field.HelperText>
-                    Chemin relatif avec <Code fontSize="xs">&lt;lang&gt;</Code>{" "}
-                    comme placeholder. Ne peut pas contenir "..".
-                  </Field.HelperText>
-                </Field.Root>
-                <Box>
-                  <Button
-                    type="submit"
-                    colorPalette="brand"
-                    loading={isFileSubmitting}
-                  >
-                    <LuPlus /> Ajouter un fichier
-                  </Button>
-                </Box>
-              </VStack>
-            </Form>
-          </Box>
-        );
-      })()}
 
       <Box borderWidth={1} borderColor="red.subtle" borderRadius="lg" p={5}>
         <Heading as="h2" size="lg" mb={2}>

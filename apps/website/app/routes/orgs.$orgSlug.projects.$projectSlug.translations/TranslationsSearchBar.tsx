@@ -13,7 +13,7 @@ import { Form, useNavigate, useSubmit } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   getBranchUrl,
-  getTranslationsUrl,
+  getTranslationsFileUrl,
   removeUndefinedValues,
 } from "~/lib/routes-helpers";
 import { TranslationKeysSort } from "~/lib/sort/keySort";
@@ -24,9 +24,10 @@ type TranslationsSearchBarProps = {
   sort: TranslationKeysSort;
   organizationSlug: string;
   projectSlug: string;
-  branchSlug?: string;
-  fileId?: number;
-};
+} & (
+  | { branchSlug: string; fileId?: never }
+  | { fileId: number; branchSlug?: never }
+);
 
 export function TranslationsSearchBar({
   search,
@@ -53,10 +54,12 @@ export function TranslationsSearchBar({
       );
     }
 
-    return getTranslationsUrl(organizationSlug, projectSlug, {
-      ...queryParams,
-      fileId,
-    });
+    return getTranslationsFileUrl(
+      organizationSlug,
+      projectSlug,
+      fileId!,
+      queryParams,
+    );
   };
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -130,13 +133,16 @@ export function TranslationsSearchBar({
                 removeUndefinedValues({
                   search,
                   sort: e.value[0],
-                  ...(fileId != null ? { fileId: String(fileId) } : {}),
                 }),
                 {
                   method: "get",
                   action: branchSlug
                     ? getBranchUrl(organizationSlug, projectSlug, branchSlug)
-                    : getTranslationsUrl(organizationSlug, projectSlug),
+                    : getTranslationsFileUrl(
+                        organizationSlug,
+                        projectSlug,
+                        fileId!,
+                      ),
                 },
               );
             }}

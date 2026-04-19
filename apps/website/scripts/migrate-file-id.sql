@@ -19,11 +19,22 @@ CREATE TABLE IF NOT EXISTS project_files (
   updated_at TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
--- 2. Ajouter file_id sur translation_keys si elle n'existe pas encore
+-- 2. Supprimer la colonne name si elle existe (ancienne version du schema)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'project_files' AND column_name = 'name'
+  ) THEN
+    ALTER TABLE project_files DROP COLUMN name;
+  END IF;
+END $$;
+
+-- 3. Ajouter file_id sur translation_keys si elle n'existe pas encore
 ALTER TABLE translation_keys
   ADD COLUMN IF NOT EXISTS file_id INTEGER REFERENCES project_files(id) ON DELETE CASCADE;
 
--- 3. Pour chaque projet sans fichier, créer un fichier par défaut
+-- 4. Pour chaque projet sans fichier, créer un fichier par défaut
 INSERT INTO project_files (project_id, format, file_path)
 SELECT p.id, 'json', '<lang>.json'
 FROM projects p
@@ -31,7 +42,7 @@ WHERE NOT EXISTS (
   SELECT 1 FROM project_files pf WHERE pf.project_id = p.id
 );
 
--- 4. Backfill file_id sur les clés de traduction qui n'en ont pas
+-- 5. Backfill file_id sur les clés de traduction qui n'en ont pas
 UPDATE translation_keys tk
 SET file_id = (
   SELECT pf.id
@@ -42,10 +53,10 @@ SET file_id = (
 )
 WHERE tk.file_id IS NULL;
 
--- 5. Rendre file_id NOT NULL
+-- 6. Rendre file_id NOT NULL
 ALTER TABLE translation_keys ALTER COLUMN file_id SET NOT NULL;
 
--- 6. Créer l'index unique sur (project_id, file_path) si absent
+-- 7. Créer l'index unique sur (project_id, file_path) si absent
 CREATE UNIQUE INDEX IF NOT EXISTS unique_project_file_path
   ON project_files (project_id, file_path);
 

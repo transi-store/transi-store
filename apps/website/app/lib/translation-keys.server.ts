@@ -200,9 +200,10 @@ export async function getTranslationKeyById(keyId: number) {
 export async function getTranslationKeyByName(
   projectId: number,
   keyName: string,
+  fileId: number,
 ): Promise<TranslationKey | undefined> {
   return await db.query.translationKeys.findFirst({
-    where: { projectId, keyName },
+    where: { projectId, keyName, fileId },
   });
 }
 
@@ -298,7 +299,13 @@ export async function duplicateTranslationKey(keyId: number) {
   let counter = 2;
 
   // Check if the key name already exists and increment counter if needed
-  while (await getTranslationKeyByName(originalKey.projectId, newKeyName)) {
+  while (
+    await getTranslationKeyByName(
+      originalKey.projectId,
+      newKeyName,
+      originalKey.fileId,
+    )
+  ) {
     newKeyName = `${originalKey.keyName} (copy ${counter})`;
     counter++;
   }
@@ -308,6 +315,7 @@ export async function duplicateTranslationKey(keyId: number) {
     projectId: originalKey.projectId,
     keyName: newKeyName,
     description: originalKey.description,
+    fileId: originalKey.fileId,
   });
 
   // Copy all translations to the new key in parallel

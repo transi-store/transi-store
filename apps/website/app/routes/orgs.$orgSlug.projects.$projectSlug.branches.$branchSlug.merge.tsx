@@ -29,6 +29,7 @@ import {
   getBranchKeyDeletions,
   mergeBranch,
 } from "~/lib/branches.server";
+import { getProjectFiles } from "~/lib/project-files.server";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
@@ -60,7 +61,16 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   // Get keys that would be deleted
   const keyDeletions = await getBranchKeyDeletions(branch.id);
 
-  return { organization, project, branch, branchKeys, keyDeletions };
+  const projectFiles = await getProjectFiles(project.id);
+
+  return {
+    organization,
+    project,
+    branch,
+    branchKeys,
+    keyDeletions,
+    projectFiles,
+  };
 }
 
 export async function action({ params, context }: Route.ActionArgs) {
@@ -90,13 +100,20 @@ export async function action({ params, context }: Route.ActionArgs) {
 }
 
 export default function MergeBranch({ loaderData }: Route.ComponentProps) {
-  const { organization, project, branch, branchKeys, keyDeletions } =
-    loaderData;
+  const {
+    organization,
+    project,
+    branch,
+    branchKeys,
+    keyDeletions,
+    projectFiles,
+  } = loaderData;
   const { t } = useTranslation();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
+  const showFileBadge = projectFiles.length > 1;
   const hasChanges = branchKeys.length > 0 || keyDeletions.length > 0;
 
   return (
@@ -164,6 +181,15 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
                               <Badge size="sm" variant="outline">
                                 {key.keyName}
                               </Badge>
+                              {showFileBadge && (
+                                <Badge
+                                  size="sm"
+                                  colorPalette="gray"
+                                  variant="surface"
+                                >
+                                  {key.file?.filePath}
+                                </Badge>
+                              )}
                             </HStack>
                           ))}
                         </VStack>
@@ -196,6 +222,15 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
                               >
                                 {key.keyName}
                               </Badge>
+                              {showFileBadge && (
+                                <Badge
+                                  size="sm"
+                                  colorPalette="gray"
+                                  variant="surface"
+                                >
+                                  {key.file?.filePath}
+                                </Badge>
+                              )}
                             </HStack>
                           ))}
                         </VStack>

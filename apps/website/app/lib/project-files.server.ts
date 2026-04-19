@@ -15,17 +15,34 @@ type CreateProjectFileParams = {
   filePath: string;
 };
 
-export async function createProjectFile(params: CreateProjectFileParams) {
-  const [file] = await db
-    .insert(schema.projectFiles)
-    .values({
-      projectId: params.projectId,
-      format: params.format,
-      filePath: params.filePath,
-    })
-    .returning();
+export class DuplicateFilePathError extends Error {
+  constructor(filePath: string) {
+    super(`A file with path "${filePath}" already exists in this project`);
+    this.name = "DuplicateFilePathError";
+  }
+}
 
-  return file;
+export async function createProjectFile(params: CreateProjectFileParams) {
+  try {
+    const [file] = await db
+      .insert(schema.projectFiles)
+      .values({
+        projectId: params.projectId,
+        format: params.format,
+        filePath: params.filePath,
+      })
+      .returning();
+
+    return file;
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("unique_project_file_path")
+    ) {
+      throw new DuplicateFilePathError(params.filePath);
+    }
+    throw error;
+  }
 }
 
 export async function deleteProjectFile(
@@ -40,6 +57,42 @@ export async function deleteProjectFile(
         eq(schema.projectFiles.projectId, projectId),
       ),
     );
+}
+
+export async function getProjectFileById(projectId: number, fileId: number) {
+  return await db.query.projectFiles.findFirst({
+    where: {
+      id: fileId,
+      projectId,
+    },
+  });
+}
+
+type UpdateProjectFileParams = {
+  format?: SupportedFormat;
+  filePath?: string;
+};
+
+export async function updateProjectFile(
+  projectId: number,
+  fileId: number,
+  params: UpdateProjectFileParams,
+) {
+  const [file] = await db
+    .update(schema.projectFiles)
+    .set({
+      ...(params.format !== undefined ? { format: params.format } : {}),
+      ...(params.filePath !== undefined ? { filePath: params.filePath } : {}),
+    })
+    .where(
+      and(
+        eq(schema.projectFiles.id, fileId),
+        eq(schema.projectFiles.projectId, projectId),
+      ),
+    )
+    .returning();
+
+  return file;
 }
 
 export async function isFilePathAvailable(

@@ -226,7 +226,11 @@ export const translationKeys = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("unique_project_key").on(table.projectId, table.keyName),
+    uniqueIndex("unique_project_file_key").on(
+      table.projectId,
+      table.fileId,
+      table.keyName,
+    ),
     index("idx_keys_name").on(table.keyName),
     // Index GIN pour la recherche floue seront créés via SQL (voir scripts/enable-fuzzy-search.sh)
   ],

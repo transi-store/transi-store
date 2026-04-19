@@ -60,7 +60,7 @@ export async function importTranslations({
     await db.transaction(async (tx) => {
       const keyNames = entries.map(([keyName]) => keyName);
 
-      // 1. Fetch all existing keys for this project in one query
+      // 1. Fetch all existing keys for this project+file in one query
       const existingKeys = await tx
         .select({
           id: schema.translationKeys.id,
@@ -70,6 +70,7 @@ export async function importTranslations({
         .where(
           and(
             eq(schema.translationKeys.projectId, projectId),
+            eq(schema.translationKeys.fileId, fileId),
             inArray(schema.translationKeys.keyName, keyNames),
           ),
         );
@@ -97,6 +98,7 @@ export async function importTranslations({
             .onConflictDoNothing({
               target: [
                 schema.translationKeys.projectId,
+                schema.translationKeys.fileId,
                 schema.translationKeys.keyName,
               ],
             })
@@ -127,6 +129,7 @@ export async function importTranslations({
           .where(
             and(
               eq(schema.translationKeys.projectId, projectId),
+              eq(schema.translationKeys.fileId, fileId),
               inArray(schema.translationKeys.keyName, missingKeys),
             ),
           );
