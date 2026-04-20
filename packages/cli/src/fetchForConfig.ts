@@ -11,11 +11,8 @@ import {
   type Config,
   type FetchResult,
 } from "./fetchTranslations.ts";
-import {
-  fetchProjectMetadata,
-  pickFile,
-  resolveFilePath,
-} from "./fetchProjectMetadata.ts";
+import { fetchProjectMetadata } from "./fetchProjectMetadata.ts";
+import { pickFile, resolveFilePath } from "./fileHelper.ts";
 import { resolveGitBranch } from "./git.ts";
 
 export type DownloadOneOptions = {

@@ -14,9 +14,8 @@ import { configSchema } from "@transi-store/common";
 import {
   describeFetchError,
   fetchProjectMetadata,
-  pickFile,
-  resolveFilePath,
 } from "./fetchProjectMetadata.ts";
+import { pickFile, resolveFilePath } from "./fileHelper.ts";
 
 export type UploadOneOptions = {
   domainRoot: string;
@@ -50,7 +49,7 @@ function logLabel({
   locale,
 }: {
   project: string;
-  fileName?: string | undefined;
+  fileName: string | undefined;
   locale: string;
 }): string {
   return fileName
@@ -70,18 +69,11 @@ export async function uploadOne(options: UploadOneOptions): Promise<void> {
   const file = pickFile(metadata.files, options.fileId, options.project);
 
   await uploadTranslations({
-    domainRoot: options.domainRoot,
-    apiKey: options.apiKey,
-    org: options.org,
-    project: options.project,
+    ...options,
     fileId: file.id,
     format: file.format,
-    locale: options.locale,
-    input: options.input,
-    strategy: options.strategy,
-    branch: options.branch,
     fileName: path.basename(file.filePath),
-  });
+  } satisfies UploadConfig);
 }
 
 async function uploadTranslations({
@@ -96,7 +88,7 @@ async function uploadTranslations({
   format,
   branch,
   fileName,
-}: UploadConfig) {
+}: UploadConfig): Promise<void> {
   const url = `${domainRoot}/api/orgs/${org}/projects/${project}/files/${fileId}/translations`;
 
   const filePath = path.resolve(input);
