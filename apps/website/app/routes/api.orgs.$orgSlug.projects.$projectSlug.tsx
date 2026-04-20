@@ -1,7 +1,7 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFiles } from "~/lib/project-files.server";
 import { orgContext } from "~/middleware/api-auth";
-import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug._index_detail";
+import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const organization = context.get(orgContext);
