@@ -185,8 +185,11 @@ export async function uploadForConfig(
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
   // Auto-detect current git branch if not explicitly provided
-  const { branch: resolvedBranch, wasAutoDetected } =
-    await resolveGitBranch(branch);
+  const {
+    branch: resolvedBranch,
+    wasAutoDetected,
+    isMainBranch,
+  } = await resolveGitBranch(branch);
 
   if (wasAutoDetected && resolvedBranch) {
     console.log(`Git: auto-detected branch "${resolvedBranch}"`);
@@ -202,8 +205,11 @@ export async function uploadForConfig(
   if (await isGitRepository()) {
     const defaultBranch = await getDefaultBranch();
 
-    if (defaultBranch) {
+    if (isMainBranch) {
+      console.log(`On "${resolvedBranch}" branch, uploading all files.`);
+    } else if (defaultBranch) {
       modifiedFiles = await getModifiedFiles(defaultBranch);
+
       console.log(
         `Git optimization enabled: only uploading files modified compared to "${defaultBranch}"`,
       );
@@ -273,7 +279,7 @@ export async function uploadForConfig(
           locale,
           input,
           strategy,
-          branch: resolvedBranch,
+          branch: isMainBranch ? undefined : resolvedBranch,
           fileName,
         });
       }
