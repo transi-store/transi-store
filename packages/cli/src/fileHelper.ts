@@ -1,4 +1,4 @@
-import pc from "picocolors";
+import { styleText } from "node:util";
 import type { ProjectFile } from "@transi-store/common";
 
 /**
@@ -19,7 +19,9 @@ export function pickFile(
   projectName: string,
 ): ProjectFile {
   if (files.length === 0) {
-    console.error(pc.red(`Project "${projectName}" has no files configured`));
+    console.error(
+      styleText("red", `Project "${projectName}" has no files configured`),
+    );
     process.exit(1);
   }
 
@@ -29,12 +31,15 @@ export function pickFile(
       return firstFile;
     }
     console.error(
-      pc.red(
+      styleText(
+        "red",
         `Project "${projectName}" has ${files.length} files — use --file <id> to pick one.`,
       ),
     );
     for (const f of files) {
-      console.error(pc.dim(`  ${f.id}\t${f.filePath}\t(${f.format})`));
+      console.error(
+        styleText("dim", `  ${f.id}\t${f.filePath}\t(${f.format})`),
+      );
     }
     process.exit(1);
   }
@@ -43,7 +48,10 @@ export function pickFile(
   const found = files.find((f) => f.id === id);
   if (!found) {
     console.error(
-      pc.red(`File id "${fileIdArg}" not found in project "${projectName}".`),
+      styleText(
+        "red",
+        `File id "${fileIdArg}" not found in project "${projectName}".`,
+      ),
     );
     process.exit(1);
   }
