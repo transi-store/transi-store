@@ -199,7 +199,7 @@ export async function uploadForConfig(
     }
 
     for (const file of metadata.files) {
-      const fileName = path.basename(file.filePath).replace("<lang>", "<lang>");
+      const fileName = path.basename(file.filePath);
 
       for (const lang of metadata.languages) {
         const locale = lang.locale;

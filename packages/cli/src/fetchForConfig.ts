@@ -24,7 +24,7 @@ type TaskLabel = {
 };
 
 function fileNameOf(filePath: string): string {
-  return path.basename(filePath).replace("<lang>", "<lang>");
+  return path.basename(filePath);
 }
 
 export async function fetchTranslationsAndPrint(
