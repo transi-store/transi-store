@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.1.0
+
+### Minor Changes
+
+- [#148](https://github.com/transi-store/transi-store/pull/148) [`397d433`](https://github.com/transi-store/transi-store/commit/397d433b177db9e136ad2a760f445030b99d88af) Thanks [@jdeniau](https://github.com/jdeniau)! - Handle master/main branch differently : on upload, push all keys
+
 ## 2.0.0
 
 ### Major Changes
