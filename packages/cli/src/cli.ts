@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 import { Command, Option } from "@commander-js/extra-typings";
-import { fetchTranslationsAndPrint, fetchForConfig } from "./fetchForConfig.ts";
-import { type Config } from "./fetchTranslations.ts";
+import {
+  downloadOne,
+  fetchForConfig,
+  type DownloadOneOptions,
+} from "./fetchForConfig.ts";
 import {
   uploadForConfig,
-  uploadTranslations,
-  type UploadConfig,
+  uploadOne,
+  type UploadOneOptions,
 } from "./uploadTranslations.ts";
 import {
   DEFAULT_DOMAIN_ROOT,
   ALL_BRANCHES_VALUE,
   ImportStrategy,
-  SUPPORTED_FORMATS_LIST,
 } from "@transi-store/common";
 
 const program = new Command();
@@ -22,6 +24,19 @@ const apiKeyOption = new Option(
 )
   .env("TRANSI_STORE_API_KEY")
   .makeOptionMandatory();
+
+function validateStrategy(strategy: string): ImportStrategy {
+  if (
+    strategy !== ImportStrategy.OVERWRITE &&
+    strategy !== ImportStrategy.SKIP
+  ) {
+    console.error(
+      `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
+    );
+    process.exit(1);
+  }
+  return strategy;
+}
 
 program
   .command("download")
@@ -35,18 +50,24 @@ program
   .requiredOption("-o, --org <org>", "Organization slug")
   .requiredOption("-p, --project <project>", "Project slug")
   .requiredOption("-l, --locale <locale>", "Locale to export")
-  .requiredOption("-O, --output <output>", "Output file path")
   .option(
-    "-f, --format <format>",
-    `Export format (${SUPPORTED_FORMATS_LIST})`,
-    "json",
+    "-F, --file <fileId>",
+    "Project file id (required when the project has more than one file)",
   )
   .option(
     "-b, --branch <branch>",
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
   )
   .action((options) => {
-    fetchTranslationsAndPrint(options satisfies Config);
+    downloadOne({
+      domainRoot: options.domainRoot,
+      apiKey: options.apiKey,
+      org: options.org,
+      project: options.project,
+      locale: options.locale,
+      fileId: options.file,
+      branch: options.branch,
+    } satisfies DownloadOneOptions);
   });
 
 program
@@ -63,34 +84,24 @@ program
   .requiredOption("-l, --locale <locale>", "Target locale")
   .requiredOption("-I, --input <input>", "Input file path")
   .option(
+    "-F, --file <fileId>",
+    "Project file id (required when the project has more than one file)",
+  )
+  .option(
     "-s, --strategy <strategy>",
     `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
     ImportStrategy.SKIP,
-  )
-  .option(
-    "-f, --format <format>",
-    `File format (${SUPPORTED_FORMATS_LIST}). Auto-detected from extension if omitted`,
   )
   .option(
     "-b, --branch <branch>",
     "Branch slug (new keys will be created on this branch)",
   )
   .action((options) => {
-    const strategy = options.strategy;
-    if (
-      strategy !== ImportStrategy.OVERWRITE &&
-      strategy !== ImportStrategy.SKIP
-    ) {
-      console.error(
-        `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
-      );
-      process.exit(1);
-    }
-
-    uploadTranslations({
+    uploadOne({
       ...options,
-      strategy,
-    } satisfies UploadConfig);
+      fileId: options.file,
+      strategy: validateStrategy(options.strategy),
+    } satisfies UploadOneOptions);
   });
 
 program
@@ -129,18 +140,12 @@ program
   )
   .addOption(apiKeyOption)
   .action((options) => {
-    const strategy = options.strategy;
-    if (
-      strategy !== ImportStrategy.OVERWRITE &&
-      strategy !== ImportStrategy.SKIP
-    ) {
-      console.error(
-        `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
-      );
-      process.exit(1);
-    }
-
-    uploadForConfig(options.config, options.apiKey, strategy, options.branch);
+    uploadForConfig(
+      options.config,
+      options.apiKey,
+      validateStrategy(options.strategy),
+      options.branch,
+    );
   });
 
 program.parse();

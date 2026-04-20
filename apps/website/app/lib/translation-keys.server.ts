@@ -389,7 +389,8 @@ export type ProjectTranslations = Array<ProjectTranslation>;
 // Get all translations for a project grouped by key
 export async function getProjectTranslations(
   projectId: number,
-  options?: { branchId?: number; allBranches?: boolean },
+  // TODO [PROJECT_FILE]: make fileId required once all callers have been migrated to pass it explicitly.
+  options?: { branchId?: number; allBranches?: boolean; fileId?: number },
 ): Promise<ProjectTranslations> {
   // Get all keys for this project, sorted alphabetically by keyName
   const conditions = [
@@ -399,6 +400,10 @@ export async function getProjectTranslations(
       allBranches: options?.allBranches,
     }),
   ];
+
+  if (options?.fileId !== undefined) {
+    conditions.push(eq(schema.translationKeys.fileId, options.fileId));
+  }
 
   // When exporting with a branch, also exclude main keys marked for deletion in that branch
   if (options?.branchId !== undefined) {

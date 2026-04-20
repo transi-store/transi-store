@@ -23,6 +23,10 @@ type ProcessImportParams = {
   projectSlug: string;
   formData: FormData;
   branchSlug?: string;
+  // When set, import is scoped to this specific file. Skips the default-file
+  // fallback in importTranslations.
+  // TODO [PROJECT_FILE]: make fileId required once all callers have been migrated
+  fileId?: number;
 };
 
 /**
@@ -33,6 +37,7 @@ export async function processImport({
   organizationId,
   projectSlug,
   formData,
+  fileId,
 }: ProcessImportParams): Promise<ProcessImportResult> {
   // 1. Validate file input
   const file = formData.get("file");
@@ -167,6 +172,7 @@ export async function processImport({
     data: parseResult.data!,
     strategy,
     branchId,
+    fileId,
   });
 
   if (!result.success) {

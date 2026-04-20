@@ -12,6 +12,15 @@ export async function getProjectFiles(
   });
 }
 
+export async function getProjectFileById(
+  projectId: number,
+  fileId: number,
+): Promise<ProjectFile | undefined> {
+  return await db.query.projectFiles.findFirst({
+    where: { projectId, id: fileId },
+  });
+}
+
 export class DuplicateFilePathError extends Error {
   constructor(filePath: string) {
     super(`A file with path "${filePath}" already exists in this project`);

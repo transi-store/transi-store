@@ -151,6 +151,17 @@ export async function createBranch(
   return branch;
 }
 
+export async function createProjectFile(
+  db: TestDb,
+  projectFile: schema.NewProjectFile,
+): Promise<schema.ProjectFile> {
+  const [file] = await db
+    .insert(schema.projectFiles)
+    .values(projectFile)
+    .returning();
+  return file;
+}
+
 export async function createTranslationKey(
   db: TestDb,
   projectId: number,

@@ -11,31 +11,85 @@ import {
   resolveGitBranch,
 } from "./git.ts";
 import { configSchema } from "@transi-store/common";
+import {
+  describeFetchError,
+  fetchProjectMetadata,
+} from "./fetchProjectMetadata.ts";
+import { pickFile, resolveFilePath } from "./fileHelper.ts";
 
-export type UploadConfig = {
+export type UploadOneOptions = {
+  domainRoot: string;
+  apiKey: string;
+  org: string;
+  project: string;
+  locale: string;
+  input: string;
+  strategy: ImportStrategy;
+  fileId?: string | undefined;
+  branch?: string | undefined;
+};
+
+type UploadConfig = {
   domainRoot: string;
   org: string;
   project: string;
   apiKey: string;
+  fileId: number;
   locale: string;
   input: string;
   strategy: ImportStrategy;
   format?: string | undefined;
   branch?: string | undefined;
+  fileName?: string;
 };
 
-export async function uploadTranslations({
+function logLabel({
+  project,
+  fileName,
+  locale,
+}: {
+  project: string;
+  fileName: string | undefined;
+  locale: string;
+}): string {
+  return fileName
+    ? `project "${project}" file "${fileName}" locale "${locale}"`
+    : `project "${project}" locale "${locale}"`;
+}
+
+// Direct upload flow used by the `upload` CLI command. Fetches project
+// metadata, selects the target file, then delegates to uploadTranslations.
+export async function uploadOne(options: UploadOneOptions): Promise<void> {
+  const metadata = await fetchProjectMetadata({
+    domainRoot: options.domainRoot,
+    apiKey: options.apiKey,
+    org: options.org,
+    project: options.project,
+  });
+  const file = pickFile(metadata.files, options.fileId, options.project);
+
+  await uploadTranslations({
+    ...options,
+    fileId: file.id,
+    format: file.format,
+    fileName: path.basename(file.filePath),
+  } satisfies UploadConfig);
+}
+
+async function uploadTranslations({
   domainRoot,
   apiKey,
   org,
   project,
+  fileId,
   locale,
   input,
   strategy,
   format,
   branch,
-}: UploadConfig) {
-  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/translations`;
+  fileName,
+}: UploadConfig): Promise<void> {
+  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/files/${fileId}/translations`;
 
   const filePath = path.resolve(input);
 
@@ -45,10 +99,10 @@ export async function uploadTranslations({
   }
 
   const fileContent = fs.readFileSync(filePath);
-  const fileName = path.basename(filePath);
+  const uploadFileName = path.basename(filePath);
 
   const formData = new FormData();
-  formData.append("file", new Blob([fileContent]), fileName);
+  formData.append("file", new Blob([fileContent]), uploadFileName);
   formData.append("locale", locale);
   formData.append("strategy", strategy);
 
@@ -60,15 +114,23 @@ export async function uploadTranslations({
     formData.append("branch", branch);
   }
 
+  let response: Response;
   try {
-    const response = await fetch(url, {
+    response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
       body: formData,
     });
+  } catch (error) {
+    console.error(
+      `Failed to import translations at ${url}: ${describeFetchError(error)}`,
+    );
+    process.exit(1);
+  }
 
+  try {
     const data = await response.json();
 
     if (!response.ok) {
@@ -81,7 +143,7 @@ export async function uploadTranslations({
     }
 
     console.log(
-      `Translations imported for project "${project}" locale "${locale}":`,
+      `Translations imported for ${logLabel({ project, fileName, locale })}:`,
     );
     console.log(`  Total keys: ${data.stats.total}`);
     console.log(`  Keys created: ${data.stats.keysCreated}`);
@@ -125,6 +187,7 @@ export async function uploadForConfig(
   // Auto-detect current git branch if not explicitly provided
   const { branch: resolvedBranch, wasAutoDetected } =
     await resolveGitBranch(branch);
+
   if (wasAutoDetected && resolvedBranch) {
     console.log(`Git: auto-detected branch "${resolvedBranch}"`);
   }
@@ -148,39 +211,72 @@ export async function uploadForConfig(
   }
 
   for (const configItem of result.data.projects) {
-    for (const locale of configItem.langs) {
-      const input = configItem.output
-        .replace("<lang>", locale)
-        .replace("<project>", configItem.project)
-        .replace("<format>", configItem.format);
-
-      const resolvedInput = path.resolve(cwd, input);
-
-      if (!fs.existsSync(resolvedInput)) {
-        console.log(
-          `Skipping project "${configItem.project}" locale "${locale}": file not found "${input}"`,
-        );
-        continue;
-      }
-
-      if (modifiedFiles && !modifiedFiles.has(resolvedInput)) {
-        console.log(
-          `Skipping project "${configItem.project}" locale "${locale}": file not modified`,
-        );
-        continue;
-      }
-
-      await uploadTranslations({
+    let metadata;
+    try {
+      metadata = await fetchProjectMetadata({
         domainRoot,
         apiKey,
         org: result.data.org,
         project: configItem.project,
-        format: configItem.format,
-        locale,
-        input,
-        strategy,
-        branch: resolvedBranch,
       });
+    } catch (error) {
+      console.error(
+        `Failed to fetch metadata for project "${configItem.project}": ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      process.exit(1);
+    }
+
+    if (metadata.files.length === 0) {
+      console.log(
+        `Skipping project "${configItem.project}": no files configured on the server`,
+      );
+      continue;
+    }
+    if (metadata.languages.length === 0) {
+      console.log(
+        `Skipping project "${configItem.project}": no languages configured on the server`,
+      );
+      continue;
+    }
+
+    for (const file of metadata.files) {
+      const fileName = path.basename(file.filePath);
+
+      for (const lang of metadata.languages) {
+        const locale = lang.locale;
+        const input = resolveFilePath(file.filePath, locale);
+        const resolvedInput = path.resolve(cwd, input);
+
+        if (!fs.existsSync(resolvedInput)) {
+          console.log(
+            `Skipping ${logLabel({ project: configItem.project, fileName, locale })}: file not found "${input}"`,
+          );
+          continue;
+        }
+
+        if (modifiedFiles && !modifiedFiles.has(resolvedInput)) {
+          console.log(
+            `Skipping ${logLabel({ project: configItem.project, fileName, locale })}: file not modified`,
+          );
+          continue;
+        }
+
+        await uploadTranslations({
+          domainRoot,
+          apiKey,
+          org: result.data.org,
+          project: configItem.project,
+          fileId: file.id,
+          format: file.format,
+          locale,
+          input,
+          strategy,
+          branch: resolvedBranch,
+          fileName,
+        });
+      }
     }
   }
 }
