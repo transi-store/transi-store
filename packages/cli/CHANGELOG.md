@@ -8,15 +8,40 @@
 
   CLI config drops output, format, langs; the CLI fetches project metadata, iterates files × languages, and logs the file name alongside project/locale. Direct download/upload drop --output/--format and gain --file <id> for multi-file projects.
 
+### Upgrading
+
+Just remove the `output`, `format` and `languages` options from your CLI config file. Be sure to update your project configuration in the Transi Store dashboard though to have the same languages and file paths.
+
+```diff
+  {
+    "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+    "org": "transi-store",
+    "projects": [
+      {
+        "project": "website",
+-       "langs": ["en", "fr", "es", "de"],
+-       "format": "json",
+-       "output": "apps/website/app/locales/<lang>/translation.json"
+      }
+    ]
+  }
+```
+
+Example in the transi-store repository migration: https://github.com/transi-store/transi-store/commit/db38bf2b60b6475f56af0ad0a346444a3c2ab973#diff-13a08b445488fcd0c1005324ddd43e08dd3147a7a9bd82938721bb66aec7d0c9
+
 ## 1.9.0
 
 ### Minor Changes
 
-- [#116](https://github.com/transi-store/transi-store/pull/116) [`e5d9103`](https://github.com/transi-store/transi-store/commit/e5d9103108309014fb32d8e5fc8248557bdd4a3b) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - ### Added
-  - Support for YAML, CSV, PO, INI, and PHP translation formats in `download` and `upload` commands.
+- [#116](https://github.com/transi-store/transi-store/pull/116) [`e5d9103`](https://github.com/transi-store/transi-store/commit/e5d9103108309014fb32d8e5fc8248557bdd4a3b) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)!
 
-  ### Fixed
-  - Fix export for non-JSON formats: raw server response is now written directly instead of being re-serialized through `JSON.stringify`.
+### Added
+
+- Support for YAML, CSV, PO, INI, and PHP translation formats in `download` and `upload` commands.
+
+### Fixed
+
+- Fix export for non-JSON formats: raw server response is now written directly instead of being re-serialized through `JSON.stringify`.
 
 ## 1.8.4
 
