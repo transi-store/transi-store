@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.0.0
+
+### Major Changes
+
+- [`d170fd5`](https://github.com/transi-store/transi-store/commit/d170fd59239c7bc62045cddf233f53488ec4d35b) Thanks [@jdeniau](https://github.com/jdeniau)! - Handle multiple files per project
+
+  CLI config drops output, format, langs; the CLI fetches project metadata, iterates files × languages, and logs the file name alongside project/locale. Direct download/upload drop --output/--format and gain --file <id> for multi-file projects.
+
 ## 1.9.0
 
 ### Minor Changes
