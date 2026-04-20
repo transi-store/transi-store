@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 import { Command, Option } from "@commander-js/extra-typings";
-import { downloadOne, fetchForConfig } from "./fetchForConfig.ts";
-import { uploadForConfig, uploadOne } from "./uploadTranslations.ts";
+import {
+  downloadOne,
+  fetchForConfig,
+  type DownloadOneOptions,
+} from "./fetchForConfig.ts";
+import {
+  uploadForConfig,
+  uploadOne,
+  type UploadOneOptions,
+} from "./uploadTranslations.ts";
 import {
   DEFAULT_DOMAIN_ROOT,
   ALL_BRANCHES_VALUE,
@@ -57,9 +65,9 @@ program
       org: options.org,
       project: options.project,
       locale: options.locale,
-      fileIdArg: options.file,
+      fileId: options.file,
       branch: options.branch,
-    });
+    } satisfies DownloadOneOptions);
   });
 
 program
@@ -90,16 +98,10 @@ program
   )
   .action((options) => {
     uploadOne({
-      domainRoot: options.domainRoot,
-      apiKey: options.apiKey,
-      org: options.org,
-      project: options.project,
-      locale: options.locale,
-      input: options.input,
+      ...options,
+      fileId: options.file,
       strategy: validateStrategy(options.strategy),
-      fileIdArg: options.file,
-      branch: options.branch,
-    });
+    } satisfies UploadOneOptions);
   });
 
 program

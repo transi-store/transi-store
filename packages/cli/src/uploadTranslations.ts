@@ -18,7 +18,7 @@ import {
   resolveFilePath,
 } from "./fetchProjectMetadata.ts";
 
-type UploadOneOptions = {
+export type UploadOneOptions = {
   domainRoot: string;
   apiKey: string;
   org: string;
@@ -26,7 +26,7 @@ type UploadOneOptions = {
   locale: string;
   input: string;
   strategy: ImportStrategy;
-  fileIdArg?: string | undefined;
+  fileId?: string | undefined;
   branch?: string | undefined;
 };
 
@@ -67,7 +67,7 @@ export async function uploadOne(options: UploadOneOptions): Promise<void> {
     org: options.org,
     project: options.project,
   });
-  const file = pickFile(metadata.files, options.fileIdArg, options.project);
+  const file = pickFile(metadata.files, options.fileId, options.project);
 
   await uploadTranslations({
     domainRoot: options.domainRoot,

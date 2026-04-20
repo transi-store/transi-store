@@ -18,13 +18,13 @@ import {
 } from "./fetchProjectMetadata.ts";
 import { resolveGitBranch } from "./git.ts";
 
-type DownloadOneOptions = {
+export type DownloadOneOptions = {
   domainRoot: string;
   apiKey: string;
   org: string;
   project: string;
   locale: string;
-  fileIdArg?: string | undefined;
+  fileId?: string | undefined;
   branch?: string | undefined;
 };
 
@@ -48,7 +48,7 @@ export async function downloadOne(options: DownloadOneOptions): Promise<void> {
     org: options.org,
     project: options.project,
   });
-  const file = pickFile(metadata.files, options.fileIdArg, options.project);
+  const file = pickFile(metadata.files, options.fileId, options.project);
 
   await fetchTranslationsAndPrint(
     {
