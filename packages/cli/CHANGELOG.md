@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.2.0
+
+### Minor Changes
+
+- [#150](https://github.com/transi-store/transi-store/pull/150) [`b9745bc`](https://github.com/transi-store/transi-store/commit/b9745bc8d60275ce377c6700a4e1f3ab57c4202d) Thanks [@jdeniau](https://github.com/jdeniau)! - Fix colors and better filepath display
+
 ## 2.1.0
 
 ### Minor Changes
