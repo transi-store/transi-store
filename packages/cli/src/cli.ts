@@ -1,18 +1,7 @@
 #!/usr/bin/env node
-import path from "node:path";
 import { Command, Option } from "@commander-js/extra-typings";
-import pc from "picocolors";
-import { fetchTranslationsAndPrint, fetchForConfig } from "./fetchForConfig.ts";
-import {
-  fetchProjectMetadata,
-  resolveFilePath,
-  type ProjectFileMetadata,
-} from "./fetchProjectMetadata.ts";
-import {
-  uploadForConfig,
-  uploadTranslations,
-  type UploadConfig,
-} from "./uploadTranslations.ts";
+import { downloadOne, fetchForConfig } from "./fetchForConfig.ts";
+import { uploadForConfig, uploadOne } from "./uploadTranslations.ts";
 import {
   DEFAULT_DOMAIN_ROOT,
   ALL_BRANCHES_VALUE,
@@ -28,41 +17,17 @@ const apiKeyOption = new Option(
   .env("TRANSI_STORE_API_KEY")
   .makeOptionMandatory();
 
-function pickFile(
-  files: ProjectFileMetadata[],
-  fileIdArg: string | undefined,
-  projectName: string,
-): ProjectFileMetadata {
-  if (files.length === 0) {
-    console.error(pc.red(`Project "${projectName}" has no files configured`));
-    process.exit(1);
-  }
-
-  const firstFile = files[0]!;
-  if (fileIdArg === undefined) {
-    if (files.length === 1) {
-      return firstFile;
-    }
+function validateStrategy(strategy: string): ImportStrategy {
+  if (
+    strategy !== ImportStrategy.OVERWRITE &&
+    strategy !== ImportStrategy.SKIP
+  ) {
     console.error(
-      pc.red(
-        `Project "${projectName}" has ${files.length} files — use --file <id> to pick one.`,
-      ),
-    );
-    for (const f of files) {
-      console.error(pc.dim(`  ${f.id}\t${f.filePath}\t(${f.format})`));
-    }
-    process.exit(1);
-  }
-
-  const id = Number.parseInt(fileIdArg, 10);
-  const found = files.find((f) => f.id === id);
-  if (!found) {
-    console.error(
-      pc.red(`File id "${fileIdArg}" not found in project "${projectName}".`),
+      `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
     );
     process.exit(1);
   }
-  return found;
+  return strategy;
 }
 
 program
@@ -85,33 +50,16 @@ program
     "-b, --branch <branch>",
     `Branch slug (exports main + branch keys). Use "${ALL_BRANCHES_VALUE}" to export all branches`,
   )
-  .action(async (options) => {
-    const metadata = await fetchProjectMetadata({
+  .action((options) => {
+    downloadOne({
       domainRoot: options.domainRoot,
       apiKey: options.apiKey,
       org: options.org,
       project: options.project,
+      locale: options.locale,
+      fileIdArg: options.file,
+      branch: options.branch,
     });
-    const file = pickFile(metadata.files, options.file, options.project);
-
-    fetchTranslationsAndPrint(
-      {
-        domainRoot: options.domainRoot,
-        apiKey: options.apiKey,
-        org: options.org,
-        project: options.project,
-        fileId: file.id,
-        format: file.format,
-        locale: options.locale,
-        output: resolveFilePath(file.filePath, options.locale),
-        branch: options.branch,
-      },
-      {
-        project: options.project,
-        fileName: path.basename(file.filePath),
-        locale: options.locale,
-      },
-    );
   });
 
 program
@@ -140,39 +88,18 @@ program
     "-b, --branch <branch>",
     "Branch slug (new keys will be created on this branch)",
   )
-  .action(async (options) => {
-    const strategy = options.strategy;
-    if (
-      strategy !== ImportStrategy.OVERWRITE &&
-      strategy !== ImportStrategy.SKIP
-    ) {
-      console.error(
-        `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
-      );
-      process.exit(1);
-    }
-
-    const metadata = await fetchProjectMetadata({
+  .action((options) => {
+    uploadOne({
       domainRoot: options.domainRoot,
       apiKey: options.apiKey,
       org: options.org,
       project: options.project,
-    });
-    const file = pickFile(metadata.files, options.file, options.project);
-
-    uploadTranslations({
-      domainRoot: options.domainRoot,
-      apiKey: options.apiKey,
-      org: options.org,
-      project: options.project,
-      fileId: file.id,
-      format: file.format,
       locale: options.locale,
       input: options.input,
-      strategy,
+      strategy: validateStrategy(options.strategy),
+      fileIdArg: options.file,
       branch: options.branch,
-      fileName: path.basename(file.filePath),
-    } satisfies UploadConfig);
+    });
   });
 
 program
@@ -211,18 +138,12 @@ program
   )
   .addOption(apiKeyOption)
   .action((options) => {
-    const strategy = options.strategy;
-    if (
-      strategy !== ImportStrategy.OVERWRITE &&
-      strategy !== ImportStrategy.SKIP
-    ) {
-      console.error(
-        `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
-      );
-      process.exit(1);
-    }
-
-    uploadForConfig(options.config, options.apiKey, strategy, options.branch);
+    uploadForConfig(
+      options.config,
+      options.apiKey,
+      validateStrategy(options.strategy),
+      options.branch,
+    );
   });
 
 program.parse();

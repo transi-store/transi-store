@@ -13,9 +13,20 @@ import {
 } from "./fetchTranslations.ts";
 import {
   fetchProjectMetadata,
+  pickFile,
   resolveFilePath,
 } from "./fetchProjectMetadata.ts";
 import { resolveGitBranch } from "./git.ts";
+
+type DownloadOneOptions = {
+  domainRoot: string;
+  apiKey: string;
+  org: string;
+  project: string;
+  locale: string;
+  fileIdArg?: string | undefined;
+  branch?: string | undefined;
+};
 
 type TaskLabel = {
   project: string;
@@ -27,7 +38,39 @@ function fileNameOf(filePath: string): string {
   return path.basename(filePath);
 }
 
-export async function fetchTranslationsAndPrint(
+// Direct download flow used by the `download` CLI command. Fetches the
+// project's metadata, selects the file to download, then delegates to
+// fetchTranslationsAndPrint.
+export async function downloadOne(options: DownloadOneOptions): Promise<void> {
+  const metadata = await fetchProjectMetadata({
+    domainRoot: options.domainRoot,
+    apiKey: options.apiKey,
+    org: options.org,
+    project: options.project,
+  });
+  const file = pickFile(metadata.files, options.fileIdArg, options.project);
+
+  await fetchTranslationsAndPrint(
+    {
+      domainRoot: options.domainRoot,
+      apiKey: options.apiKey,
+      org: options.org,
+      project: options.project,
+      fileId: file.id,
+      format: file.format,
+      locale: options.locale,
+      output: resolveFilePath(file.filePath, options.locale),
+      branch: options.branch,
+    },
+    {
+      project: options.project,
+      fileName: fileNameOf(file.filePath),
+      locale: options.locale,
+    },
+  );
+}
+
+async function fetchTranslationsAndPrint(
   config: Config,
   label?: TaskLabel,
 ): Promise<void> {

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { SupportedFormat } from "@transi-store/common";
 import * as schema from "../../drizzle/schema";
-import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug._index_detail";
+import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug";
 import { orgContext } from "~/middleware/api-auth";
 import {
   cleanupDb,
@@ -57,11 +57,13 @@ describe("Project detail loader", () => {
     const project = await createProject(getTestDb(), org.id, {
       slug: "my-project",
     });
-    const file1 = await createProjectFile(getTestDb(), project.id, {
+    const file1 = await createProjectFile(getTestDb(), {
+      projectId: project.id,
       format: SupportedFormat.JSON,
       filePath: "locales/<lang>/common.json",
     });
-    const file2 = await createProjectFile(getTestDb(), project.id, {
+    const file2 = await createProjectFile(getTestDb(), {
+      projectId: project.id,
       format: SupportedFormat.YAML,
       filePath: "locales/<lang>/admin.yaml",
     });
@@ -86,13 +88,19 @@ describe("Project detail loader", () => {
 
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.files).toEqual([
-      { id: file1.id, format: "json", filePath: "locales/<lang>/common.json" },
-      { id: file2.id, format: "yaml", filePath: "locales/<lang>/admin.yaml" },
-    ]);
-    expect(body.languages).toEqual([
-      { locale: "en", isDefault: true },
-      { locale: "fr", isDefault: false },
-    ]);
+    expect(body).toEqual({
+      files: [
+        {
+          id: file1.id,
+          format: "json",
+          filePath: "locales/<lang>/common.json",
+        },
+        { id: file2.id, format: "yaml", filePath: "locales/<lang>/admin.yaml" },
+      ],
+      languages: [
+        { locale: "en", isDefault: true },
+        { locale: "fr", isDefault: false },
+      ],
+    });
   });
 });

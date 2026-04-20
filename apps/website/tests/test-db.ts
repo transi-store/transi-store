@@ -153,17 +153,11 @@ export async function createBranch(
 
 export async function createProjectFile(
   db: TestDb,
-  projectId: number,
-  overrides: Partial<schema.NewProjectFile> = {},
+  projectFile: schema.NewProjectFile,
 ): Promise<schema.ProjectFile> {
   const [file] = await db
     .insert(schema.projectFiles)
-    .values({
-      projectId,
-      format: SupportedFormat.JSON,
-      filePath: "<lang>.json",
-      ...overrides,
-    })
+    .values(projectFile)
     .returning();
   return file;
 }

@@ -13,10 +13,23 @@ import {
 import { configSchema } from "@transi-store/common";
 import {
   fetchProjectMetadata,
+  pickFile,
   resolveFilePath,
 } from "./fetchProjectMetadata.ts";
 
-export type UploadConfig = {
+type UploadOneOptions = {
+  domainRoot: string;
+  apiKey: string;
+  org: string;
+  project: string;
+  locale: string;
+  input: string;
+  strategy: ImportStrategy;
+  fileIdArg?: string | undefined;
+  branch?: string | undefined;
+};
+
+type UploadConfig = {
   domainRoot: string;
   org: string;
   project: string;
@@ -44,7 +57,33 @@ function logLabel({
     : `project "${project}" locale "${locale}"`;
 }
 
-export async function uploadTranslations({
+// Direct upload flow used by the `upload` CLI command. Fetches project
+// metadata, selects the target file, then delegates to uploadTranslations.
+export async function uploadOne(options: UploadOneOptions): Promise<void> {
+  const metadata = await fetchProjectMetadata({
+    domainRoot: options.domainRoot,
+    apiKey: options.apiKey,
+    org: options.org,
+    project: options.project,
+  });
+  const file = pickFile(metadata.files, options.fileIdArg, options.project);
+
+  await uploadTranslations({
+    domainRoot: options.domainRoot,
+    apiKey: options.apiKey,
+    org: options.org,
+    project: options.project,
+    fileId: file.id,
+    format: file.format,
+    locale: options.locale,
+    input: options.input,
+    strategy: options.strategy,
+    branch: options.branch,
+    fileName: path.basename(file.filePath),
+  });
+}
+
+async function uploadTranslations({
   domainRoot,
   apiKey,
   org,
