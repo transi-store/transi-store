@@ -2,6 +2,11 @@ import { simpleGit, type SimpleGit } from "simple-git";
 
 let gitInstance: SimpleGit | undefined;
 
+enum MainBranch {
+  MAIN = "main",
+  MASTER = "master",
+}
+
 function getGit(): SimpleGit {
   if (!gitInstance) {
     gitInstance = simpleGit();
@@ -28,14 +33,18 @@ export async function getDefaultBranch(): Promise<string | null> {
   // Check remote branches
   try {
     const branches = await git.branch(["-r"]);
-    if (branches.all.includes("origin/main")) return "origin/main";
-    if (branches.all.includes("origin/master")) return "origin/master";
+    if (branches.all.includes(`origin/${MainBranch.MAIN}`)) {
+      return `origin/${MainBranch.MAIN}`;
+    }
+    if (branches.all.includes(`origin/${MainBranch.MASTER}`)) {
+      return `origin/${MainBranch.MASTER}`;
+    }
   } catch {
     // ignore
   }
 
   // Remote refs not available (e.g. shallow clone in CI) — try to fetch
-  for (const branch of ["main", "master"]) {
+  for (const branch of [MainBranch.MAIN, MainBranch.MASTER]) {
     try {
       await git.fetch(["origin", branch]);
       return `origin/${branch}`;
@@ -47,8 +56,12 @@ export async function getDefaultBranch(): Promise<string | null> {
   // Fallback to local branches
   try {
     const branches = await git.branchLocal();
-    if (branches.all.includes("main")) return "main";
-    if (branches.all.includes("master")) return "master";
+    if (branches.all.includes(MainBranch.MAIN)) {
+      return MainBranch.MAIN;
+    }
+    if (branches.all.includes(MainBranch.MASTER)) {
+      return MainBranch.MASTER;
+    }
   } catch {
     // ignore
   }
@@ -61,17 +74,13 @@ export async function getDefaultBranch(): Promise<string | null> {
  * - in detached HEAD state
  * - on the default branch (main/master) — no branch slug needed for download
  */
-async function getCurrentBranch(): Promise<string | null> {
+async function getCurrentBranch(): Promise<MainBranch | string | null> {
   try {
     const git = getGit();
     const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
     const name = branch.trim();
 
     if (!name || name === "HEAD") {
-      return null;
-    }
-
-    if (name === "main" || name === "master") {
       return null;
     }
 
@@ -86,7 +95,15 @@ type ResolvedBranch = {
   branch: string | undefined;
   /** True when the branch was resolved automatically (not explicitly provided by the caller). */
   wasAutoDetected: boolean;
+  /** True when the branch is the main branch (main/master). */
+  isMainBranch?: boolean;
 };
+
+function isMainBranch(branch: string | undefined): branch is MainBranch {
+  return (Object.values(MainBranch) as Array<string | undefined>).includes(
+    branch,
+  );
+}
 
 /**
  * Resolves the branch to use for API calls.
@@ -97,17 +114,26 @@ export async function resolveGitBranch(
   explicitBranch?: string,
 ): Promise<ResolvedBranch> {
   if (explicitBranch) {
-    return { branch: explicitBranch, wasAutoDetected: false };
+    return {
+      branch: explicitBranch,
+      wasAutoDetected: false,
+      isMainBranch: isMainBranch(explicitBranch),
+    };
   }
 
   if (await isGitRepository()) {
     const currentBranch = await getCurrentBranch();
+
     if (currentBranch) {
-      return { branch: currentBranch, wasAutoDetected: true };
+      return {
+        branch: currentBranch,
+        wasAutoDetected: true,
+        isMainBranch: isMainBranch(currentBranch),
+      };
     }
   }
 
-  return { branch: undefined, wasAutoDetected: false };
+  return { branch: undefined, wasAutoDetected: false, isMainBranch: false };
 }
 
 /**
