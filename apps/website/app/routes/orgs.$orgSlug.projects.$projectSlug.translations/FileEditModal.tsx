@@ -1,0 +1,163 @@
+import {
+  Box,
+  Button,
+  Code,
+  DialogBackdrop,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogPositioner,
+  DialogRoot,
+  DialogTitle,
+  Field,
+  Input,
+  Portal,
+  Select,
+  Text,
+  VStack,
+  createListCollection,
+} from "@chakra-ui/react";
+import { useFetcher } from "react-router";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
+
+type ProjectFile = { id: number; filePath: string; format: string };
+
+type FileEditModalProps = {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  file: ProjectFile;
+};
+
+type ActionData = {
+  success?: boolean;
+  error?: string;
+  action?: string;
+};
+
+export function FileEditModal({
+  isOpen,
+  onOpenChange,
+  file,
+}: FileEditModalProps) {
+  const fetcher = useFetcher<ActionData>();
+  const { t } = useTranslation();
+  const isSubmitting = fetcher.state !== "idle";
+
+  const formatCollection = createListCollection({
+    items: Object.values(SupportedFormat).map((value) => ({
+      label: FORMAT_LABELS[value],
+      value,
+    })),
+  });
+
+  const defaultFormat =
+    (file.format as SupportedFormat) ?? SupportedFormat.JSON;
+
+  useEffect(() => {
+    if (
+      fetcher.state === "idle" &&
+      fetcher.data?.success &&
+      fetcher.data.action === "edit_file"
+    ) {
+      onOpenChange(false);
+    }
+  }, [fetcher.state, fetcher.data, onOpenChange]);
+
+  return (
+    <DialogRoot open={isOpen} onOpenChange={(e) => onOpenChange(e.open)}>
+      <Portal>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent>
+            <fetcher.Form method="post">
+              <input type="hidden" name="_action" value="edit_file" />
+              <input type="hidden" name="fileId" value={String(file.id)} />
+              <DialogHeader>
+                <DialogTitle>{t("files.modal.titleEdit")}</DialogTitle>
+                <DialogCloseTrigger />
+              </DialogHeader>
+              <DialogBody>
+                <VStack align="stretch" gap={4}>
+                  {fetcher.data?.error && (
+                    <Box p={3} bg="red.subtle" color="red.fg" borderRadius="md">
+                      <Text>{fetcher.data.error}</Text>
+                    </Box>
+                  )}
+                  <Field.Root required>
+                    <Field.Label>{t("files.modal.formatLabel")}</Field.Label>
+                    <Select.Root
+                      collection={formatCollection}
+                      name="fileFormat"
+                      defaultValue={[defaultFormat]}
+                      disabled={isSubmitting}
+                    >
+                      <Select.HiddenSelect />
+                      <Select.Control>
+                        <Select.Trigger>
+                          <Select.ValueText />
+                        </Select.Trigger>
+                        <Select.IndicatorGroup>
+                          <Select.Indicator />
+                        </Select.IndicatorGroup>
+                      </Select.Control>
+                      <Portal>
+                        <Select.Positioner>
+                          <Select.Content>
+                            {formatCollection.items.map((item) => (
+                              <Select.Item item={item} key={item.value}>
+                                {item.label}
+                                <Select.ItemIndicator />
+                              </Select.Item>
+                            ))}
+                          </Select.Content>
+                        </Select.Positioner>
+                      </Portal>
+                    </Select.Root>
+                  </Field.Root>
+                  <Field.Root required>
+                    <Field.Label>{t("files.modal.pathLabel")}</Field.Label>
+                    <Input
+                      name="filePath"
+                      defaultValue={file.filePath}
+                      placeholder="locales/<lang>/common.json"
+                      fontFamily="mono"
+                      fontSize="sm"
+                      disabled={isSubmitting}
+                      required
+                    />
+                    <Field.HelperText>
+                      {t("files.modal.pathHelperPrefix")}{" "}
+                      <Code fontSize="xs">&lt;lang&gt;</Code>{" "}
+                      {t("files.modal.pathHelperSuffix")}
+                    </Field.HelperText>
+                  </Field.Root>
+                </VStack>
+              </DialogBody>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  {t("settings.cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  colorPalette="brand"
+                  loading={isSubmitting}
+                >
+                  {t("files.modal.save")}
+                </Button>
+              </DialogFooter>
+            </fetcher.Form>
+          </DialogContent>
+        </DialogPositioner>
+      </Portal>
+    </DialogRoot>
+  );
+}
