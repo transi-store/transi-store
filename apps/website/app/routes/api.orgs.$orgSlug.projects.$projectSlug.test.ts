@@ -12,7 +12,6 @@ import {
   createProjectLanguage,
   getTestDb,
 } from "../../tests/test-db";
-
 vi.mock("~/lib/db.server", () => ({
   get db() {
     return getTestDb();
