@@ -31,10 +31,6 @@ type TaskLabel = {
   locale: string;
 };
 
-function fileNameOf(filePath: string): string {
-  return path.basename(filePath);
-}
-
 // Direct download flow used by the `download` CLI command. Fetches the
 // project's metadata, selects the file to download, then delegates to
 // fetchTranslationsAndPrint.
@@ -61,7 +57,7 @@ export async function downloadOne(options: DownloadOneOptions): Promise<void> {
     },
     {
       project: options.project,
-      fileName: fileNameOf(file.filePath),
+      fileName: file.filePath,
       locale: options.locale,
     },
   );
@@ -81,6 +77,7 @@ async function fetchTranslationsAndPrint(
   const name = label
     ? `${label.project} / ${label.fileName} / ${label.locale}`
     : `${config.project} / ${config.locale}`;
+
   if (result.success) {
     console.log(
       `${pc.green("✓")} ${pc.bold(name)} ${pc.dim("→")} ${result.output}`,
@@ -193,9 +190,8 @@ export async function fetchForConfig(
     localesByProjectFile.set(configItem.project, fileMap);
 
     for (const file of metadata.files) {
-      const fileName = fileNameOf(file.filePath);
       const localesForFile: string[] = [];
-      fileMap.set(fileName, localesForFile);
+      fileMap.set(file.filePath, localesForFile);
 
       for (const lang of metadata.languages) {
         localesForFile.push(lang.locale);
@@ -209,7 +205,7 @@ export async function fetchForConfig(
           locale: lang.locale,
           output: resolveFilePath(file.filePath, lang.locale),
           branch: resolvedBranch,
-          fileName,
+          fileName: file.filePath,
         });
       }
     }
@@ -248,6 +244,7 @@ export async function fetchForConfig(
         } else {
           const counter = pc.dim(`[${completed}/${total}]`);
           const label = `${task.project} / ${task.fileName} / ${task.locale}`;
+
           if (fetchResult.success) {
             console.log(`  ${counter} ${pc.green("✓")} ${pc.bold(label)}`);
           } else {
@@ -288,7 +285,7 @@ export async function fetchForConfig(
         }
       }
       console.log(
-        `    ${pc.dim(fileName.padEnd(28))}${statuses.join(pc.dim("  "))}`,
+        `    ${pc.dim(fileName.padEnd(26))}: ${statuses.join(pc.dim("  "))}`,
       );
     }
   }
