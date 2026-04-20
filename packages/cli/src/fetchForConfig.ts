@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { styleText } from "node:util";
 import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
 import z from "zod";
 import { configSchema } from "@transi-store/common";
-import pc from "picocolors";
 import {
   fetchTranslations,
   CONCURRENCY_CALLS,
@@ -30,10 +30,6 @@ type TaskLabel = {
   fileName: string;
   locale: string;
 };
-
-function fileNameOf(filePath: string): string {
-  return path.basename(filePath);
-}
 
 // Direct download flow used by the `download` CLI command. Fetches the
 // project's metadata, selects the file to download, then delegates to
@@ -61,7 +57,7 @@ export async function downloadOne(options: DownloadOneOptions): Promise<void> {
     },
     {
       project: options.project,
-      fileName: fileNameOf(file.filePath),
+      fileName: file.filePath,
       locale: options.locale,
     },
   );
@@ -73,7 +69,7 @@ async function fetchTranslationsAndPrint(
 ): Promise<void> {
   const { branch, wasAutoDetected } = await resolveGitBranch(config.branch);
   if (wasAutoDetected && branch) {
-    console.log(pc.dim(`Git: auto-detected branch "${branch}"`));
+    console.log(styleText("dim", `Git: auto-detected branch "${branch}"`));
   }
   const resolvedConfig = { ...config, branch };
 
@@ -81,12 +77,15 @@ async function fetchTranslationsAndPrint(
   const name = label
     ? `${label.project} / ${label.fileName} / ${label.locale}`
     : `${config.project} / ${config.locale}`;
+
   if (result.success) {
     console.log(
-      `${pc.green("✓")} ${pc.bold(name)} ${pc.dim("→")} ${result.output}`,
+      `${styleText("green", "✓")} ${styleText("bold", name)} ${styleText("dim", "→")} ${result.output}`,
     );
   } else {
-    console.error(`${pc.red("✗")} ${pc.bold(name)} — ${pc.red(result.error)}`);
+    console.error(
+      `${styleText("red", "✗")} ${styleText("bold", name)} — ${styleText("red", result.error)}`,
+    );
     process.exit(1);
   }
 }
@@ -96,8 +95,9 @@ function renderProgressBar(completed: number, total: number): string {
   const filled =
     total === 0 ? barWidth : Math.round((completed / total) * barWidth);
   const bar =
-    pc.green("█".repeat(filled)) + pc.dim("░".repeat(barWidth - filled));
-  return `  [${bar}] ${pc.bold(String(completed))}${pc.dim(`/${total}`)}`;
+    styleText("green", "█".repeat(filled)) +
+    styleText("dim", "░".repeat(barWidth - filled));
+  return `  [${bar}] ${styleText("bold", String(completed))}${styleText("dim", `/${total}`)}`;
 }
 
 type Task = Config & { fileName: string };
@@ -112,7 +112,7 @@ export async function fetchForConfig(
   const fullPath = path.resolve(cwd, configPath);
 
   if (!fs.existsSync(fullPath)) {
-    console.error(pc.red(`Config file not found: ${configPath}`));
+    console.error(styleText("red", `Config file not found: ${configPath}`));
     process.exit(1);
   }
 
@@ -123,7 +123,7 @@ export async function fetchForConfig(
 
   if (!result.success) {
     const pretty = z.prettifyError(result.error);
-    console.error(pc.red("Config validation error:"), pretty);
+    console.error(styleText("red", "Config validation error:"), pretty);
     process.exit(1);
   }
 
@@ -135,17 +135,17 @@ export async function fetchForConfig(
   let branchLabel: string;
   if (resolvedBranch) {
     branchLabel = wasAutoDetected
-      ? `${resolvedBranch}${pc.italic(" (auto-detected)")}`
+      ? `${resolvedBranch}${styleText("italic", " (auto-detected)")}`
       : resolvedBranch;
   } else {
-    branchLabel = pc.italic("(main)");
+    branchLabel = styleText("italic", "(main)");
   }
 
   console.log();
-  console.log(pc.bold(pc.cyan("↓ Downloading translations")));
-  console.log(pc.dim(`  Domain : ${domainRoot}`));
-  console.log(pc.dim(`  Org    : ${result.data.org}`));
-  console.log(pc.dim(`  Branch : ${branchLabel}`));
+  console.log(styleText(["bold", "cyan"], "↓ Downloading translations"));
+  console.log(styleText("dim", `  Domain : ${domainRoot}`));
+  console.log(styleText("dim", `  Org    : ${result.data.org}`));
+  console.log(styleText("dim", `  Branch : ${branchLabel}`));
   console.log();
 
   // Build tasks by fetching metadata for each project.
@@ -164,7 +164,8 @@ export async function fetchForConfig(
       });
     } catch (error) {
       console.error(
-        pc.red(
+        styleText(
+          "red",
           `✗ ${configItem.project} — ${error instanceof Error ? error.message : String(error)}`,
         ),
       );
@@ -173,7 +174,8 @@ export async function fetchForConfig(
 
     if (metadata.files.length === 0) {
       console.warn(
-        pc.yellow(
+        styleText(
+          "yellow",
           `  ${configItem.project}: no files configured on the server, skipping`,
         ),
       );
@@ -181,7 +183,8 @@ export async function fetchForConfig(
     }
     if (metadata.languages.length === 0) {
       console.warn(
-        pc.yellow(
+        styleText(
+          "yellow",
           `  ${configItem.project}: no languages configured on the server, skipping`,
         ),
       );
@@ -193,9 +196,8 @@ export async function fetchForConfig(
     localesByProjectFile.set(configItem.project, fileMap);
 
     for (const file of metadata.files) {
-      const fileName = fileNameOf(file.filePath);
       const localesForFile: string[] = [];
-      fileMap.set(fileName, localesForFile);
+      fileMap.set(file.filePath, localesForFile);
 
       for (const lang of metadata.languages) {
         localesForFile.push(lang.locale);
@@ -209,7 +211,7 @@ export async function fetchForConfig(
           locale: lang.locale,
           output: resolveFilePath(file.filePath, lang.locale),
           branch: resolvedBranch,
-          fileName,
+          fileName: file.filePath,
         });
       }
     }
@@ -246,13 +248,16 @@ export async function fetchForConfig(
         if (isTTY) {
           process.stdout.write(renderProgressBar(completed, total) + "\r");
         } else {
-          const counter = pc.dim(`[${completed}/${total}]`);
+          const counter = styleText("dim", `[${completed}/${total}]`);
           const label = `${task.project} / ${task.fileName} / ${task.locale}`;
+
           if (fetchResult.success) {
-            console.log(`  ${counter} ${pc.green("✓")} ${pc.bold(label)}`);
+            console.log(
+              `  ${counter} ${styleText("green", "✓")} ${styleText("bold", label)}`,
+            );
           } else {
             console.log(
-              `  ${counter} ${pc.red("✗")} ${pc.bold(label)} — ${pc.red(fetchResult.error)}`,
+              `  ${counter} ${styleText("red", "✗")} ${styleText("bold", label)} — ${styleText("red", fetchResult.error)}`,
             );
           }
         }
@@ -270,7 +275,7 @@ export async function fetchForConfig(
     const fileResults = resultsMap.get(project)!;
     const projectFiles = localesByProjectFile.get(project)!;
 
-    console.log(`  ${pc.bold(project)}`);
+    console.log(`  ${styleText("bold", project)}`);
     for (const [fileName, locales] of projectFiles.entries()) {
       const localeResults = fileResults.get(fileName)!;
       const statuses: string[] = [];
@@ -278,9 +283,9 @@ export async function fetchForConfig(
         const res = localeResults.get(locale);
         if (!res) continue;
         if (res.success) {
-          statuses.push(pc.green(`✓ ${locale}`));
+          statuses.push(styleText("green", `✓ ${locale}`));
         } else {
-          statuses.push(pc.red(`✗ ${locale}`));
+          statuses.push(styleText("red", `✗ ${locale}`));
           failures.push({
             label: `${project} / ${fileName} / ${locale}`,
             error: res.error,
@@ -288,7 +293,7 @@ export async function fetchForConfig(
         }
       }
       console.log(
-        `    ${pc.dim(fileName.padEnd(28))}${statuses.join(pc.dim("  "))}`,
+        `    ${styleText("dim", fileName.padEnd(26))}: ${statuses.join(styleText("dim", "  "))}`,
       );
     }
   }
@@ -298,23 +303,23 @@ export async function fetchForConfig(
   const succeeded = total - failures.length;
   if (failures.length === 0) {
     console.log(
-      pc.green(
-        pc.bold(
-          `✓ All ${total} translation${total > 1 ? "s" : ""} downloaded successfully`,
-        ),
+      styleText(
+        ["green", "bold"],
+        `✓ All ${total} translation${total > 1 ? "s" : ""} downloaded successfully`,
       ),
     );
   } else {
     if (succeeded > 0) {
       console.log(
-        pc.green(
+        styleText(
+          "green",
           `✓ ${succeeded} translation${succeeded > 1 ? "s" : ""} downloaded`,
         ),
       );
     }
-    console.log(pc.red(pc.bold(`✗ ${failures.length} failed:`)));
+    console.log(styleText(["red", "bold"], `✗ ${failures.length} failed:`));
     for (const failure of failures) {
-      console.log(pc.red(`    · ${failure.label}: ${failure.error}`));
+      console.log(styleText("red", `    · ${failure.label}: ${failure.error}`));
     }
     console.log();
     process.exit(1);
