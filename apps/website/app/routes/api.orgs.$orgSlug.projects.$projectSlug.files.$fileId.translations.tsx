@@ -8,6 +8,7 @@ import { orgContext } from "~/middleware/api-auth";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
 import { processImport } from "~/lib/import/process-import.server";
+import { getInstance } from "~/middleware/i18next";
 
 function jsonError(status: number, error: string): Response {
   return new Response(JSON.stringify({ error }), {
@@ -22,23 +23,35 @@ function parseFileId(raw: string): number | undefined {
 }
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const i18next = getInstance(context);
   const organization = context.get(orgContext);
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    return jsonError(404, `Project "${params.projectSlug}" not found`);
+    return jsonError(
+      404,
+      i18next.t("projects.errors.notFound", {
+        projectSlug: params.projectSlug,
+      }),
+    );
   }
 
   const fileId = parseFileId(params.fileId);
   if (fileId === undefined) {
-    return jsonError(400, `Invalid file id "${params.fileId}"`);
+    return jsonError(
+      400,
+      i18next.t("files.errors.invalidFileId", { fileId: params.fileId }),
+    );
   }
 
   const file = await getProjectFileById(project.id, fileId);
   if (!file) {
     return jsonError(
       404,
-      `File "${params.fileId}" not found in project "${params.projectSlug}"`,
+      i18next.t("files.errors.fileNotFound", {
+        fileId: params.fileId,
+        projectSlug: params.projectSlug,
+      }),
     );
   }
 
@@ -66,12 +79,15 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const languages = await getProjectLanguages(project.id);
   if (languages.length === 0) {
-    return jsonError(400, "No languages configured for this project");
+    return jsonError(400, i18next.t("import.errors.noLanguagesConfigured"));
   }
 
   const availableLocales = languages.map((l) => l.locale);
   if (!availableLocales.includes(locale)) {
-    return jsonError(400, `Language '${locale}' not found in this project`);
+    return jsonError(
+      400,
+      i18next.t("import.errors.localeNotInProject", { locale }),
+    );
   }
 
   let branchId: number | undefined;
@@ -107,27 +123,39 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
   if (request.method !== "POST") {
-    return jsonError(405, "Method not allowed");
+    return jsonError(405, i18next.t("api.methodNotAllowed"));
   }
 
   const organization = context.get(orgContext);
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    return jsonError(404, `Project "${params.projectSlug}" not found`);
+    return jsonError(
+      404,
+      i18next.t("projects.errors.notFound", {
+        projectSlug: params.projectSlug,
+      }),
+    );
   }
 
   const fileId = parseFileId(params.fileId);
   if (fileId === undefined) {
-    return jsonError(400, `Invalid file id "${params.fileId}"`);
+    return jsonError(
+      400,
+      i18next.t("files.errors.invalidFileId", { fileId: params.fileId }),
+    );
   }
 
   const file = await getProjectFileById(project.id, fileId);
   if (!file) {
     return jsonError(
       404,
-      `File "${params.fileId}" not found in project "${params.projectSlug}"`,
+      i18next.t("files.errors.fileNotFound", {
+        fileId: params.fileId,
+        projectSlug: params.projectSlug,
+      }),
     );
   }
 

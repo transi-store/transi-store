@@ -201,7 +201,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const parsedFileId = parseInt(fileId, 10);
     if (isNaN(parsedFileId)) {
       return {
-        error: i18next.t("files.errors.invalidFileId"),
+        error: i18next.t("files.errors.invalidFileId", { fileId }),
         action: "edit_file",
       };
     }

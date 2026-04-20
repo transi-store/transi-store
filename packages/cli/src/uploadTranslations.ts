@@ -192,8 +192,10 @@ export async function uploadForConfig(
 
   const domainRoot = result.data.domainRoot ?? DEFAULT_DOMAIN_ROOT;
 
+  // Auto-detect current git branch if not explicitly provided
   const { branch: resolvedBranch, wasAutoDetected } =
     await resolveGitBranch(branch);
+
   if (wasAutoDetected && resolvedBranch) {
     console.log(`Git: auto-detected branch "${resolvedBranch}"`);
   }
@@ -202,6 +204,7 @@ export async function uploadForConfig(
     `Uploading translations to domain "${domainRoot}" for org "${result.data.org}"...`,
   );
 
+  // Determine if we can use git to skip unchanged files
   let modifiedFiles: Set<string> | null = null;
 
   if (await isGitRepository()) {

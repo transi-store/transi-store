@@ -2,15 +2,22 @@ import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFiles } from "~/lib/project-files.server";
 import { orgContext } from "~/middleware/api-auth";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug";
+import { getInstance } from "~/middleware/i18next";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
+  const i18next = getInstance(context);
+
   const organization = context.get(orgContext);
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
   if (!project) {
     return new Response(
-      JSON.stringify({ error: `Project "${params.projectSlug}" not found` }),
+      JSON.stringify({
+        error: i18next.t("api.translate.projectNotFound", {
+          projectSlug: params.projectSlug,
+        }),
+      }),
       {
         status: 404,
         headers: { "Content-Type": "application/json" },
