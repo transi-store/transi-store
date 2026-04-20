@@ -1,21 +1,9 @@
 import pc from "picocolors";
-import type { SupportedFormat } from "@transi-store/common";
-
-type ProjectFileMetadata = {
-  id: number;
-  format: SupportedFormat;
-  filePath: string;
-};
-
-type ProjectLanguageMetadata = {
-  locale: string;
-  isDefault: boolean;
-};
-
-type ProjectMetadata = {
-  files: ProjectFileMetadata[];
-  languages: ProjectLanguageMetadata[];
-};
+import {
+  projectDetailSchema,
+  type ProjectDetail,
+  type ProjectFile,
+} from "@transi-store/common";
 
 // Extract the useful part of a network-level fetch error. `fetch failed` on
 // its own hides the actual reason (connection refused, DNS error, TLS) —
@@ -44,7 +32,7 @@ export async function fetchProjectMetadata({
   apiKey: string;
   org: string;
   project: string;
-}): Promise<ProjectMetadata> {
+}): Promise<ProjectDetail> {
   const url = `${domainRoot}/api/orgs/${org}/projects/${project}`;
 
   let response: Response;
@@ -57,6 +45,7 @@ export async function fetchProjectMetadata({
   } catch (error) {
     throw new Error(
       `Failed to fetch project metadata at ${url}: ${describeFetchError(error)}`,
+      { cause: error },
     );
   }
 
@@ -67,7 +56,13 @@ export async function fetchProjectMetadata({
     );
   }
 
-  return (await response.json()) as ProjectMetadata;
+  const parsed = projectDetailSchema.safeParse(await response.json());
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid project metadata response from ${url}: ${parsed.error.message}`,
+    );
+  }
+  return parsed.data;
 }
 
 // Replace the <lang> placeholder in a file path with an actual locale.
@@ -79,10 +74,10 @@ export function resolveFilePath(filePath: string, locale: string): string {
 // project has exactly one file, that file is returned. Otherwise the CLI must
 // exit with a helpful message, so this function calls process.exit on error.
 export function pickFile(
-  files: Array<ProjectFileMetadata>,
+  files: Array<ProjectFile>,
   fileIdArg: string | undefined,
   projectName: string,
-): ProjectFileMetadata {
+): ProjectFile {
   if (files.length === 0) {
     console.error(pc.red(`Project "${projectName}" has no files configured`));
     process.exit(1);
