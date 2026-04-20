@@ -4,10 +4,7 @@
   "org": "transi-store",
   "projects": [
     {
-      "project": "website",
-      "langs": ["en", "fr", "es", "de"],
-      "format": "json",
-      "output": "apps/website/app/locales/<lang>/translation.json"
+      "project": "website"
     }
   ]
 }

@@ -8,6 +8,7 @@ export type Config = {
   org: string;
   project: string;
   apiKey: string;
+  fileId: number;
   format: string;
   locale: string;
   output: string;
@@ -23,6 +24,7 @@ export async function fetchTranslations({
   apiKey,
   org,
   project,
+  fileId,
   format,
   locale,
   output,
@@ -32,7 +34,7 @@ export async function fetchTranslations({
   if (branch) {
     params.set("branch", branch);
   }
-  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/translations?${params.toString()}`;
+  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/files/${fileId}/translations?${params.toString()}`;
 
   try {
     const content = await fetch(url, {
@@ -50,7 +52,6 @@ export async function fetchTranslations({
       };
     }
 
-    // create directory if not exists
     const dir = path.dirname(output);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });

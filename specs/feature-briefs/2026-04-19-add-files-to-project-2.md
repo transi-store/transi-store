@@ -2,7 +2,7 @@
 
 **Etape 2** : Léger changement de UI : pouvoir renommer le nom du fichier.
 
-Cette étape est la suite de @2027-04-19-add-files-to-project-1.md
+Cette étape est la suite de @2026-04-19-add-files-to-project-1.md
 
 On va reprendre https://github.com/transi-store/transi-store/pull/141 mais on va faire plusieurs PR pour ajouter les fonctionnalités une par une.
 

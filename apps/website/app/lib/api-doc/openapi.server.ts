@@ -11,6 +11,10 @@ import {
   importErrorResponseSchema,
 } from "./schemas/import";
 import {
+  projectDetailResponseSchema,
+  projectDetailErrorResponseSchema,
+} from "./schemas/project-detail";
+import {
   getProjectLanguages,
   getProjectsForOrganization,
 } from "../projects.server";
@@ -52,6 +56,56 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
     param: { name: "projectSlug", in: "path" },
     description: "Project slug.",
     example: defaultProject?.slug ?? "my-project",
+  });
+
+  const fileIdParam = z.string().openapi({
+    param: { name: "fileId", in: "path" },
+    description: "Project file identifier.",
+    example: "1",
+  });
+
+  // -- Project detail endpoint --
+  registry.registerPath({
+    method: "get",
+    path: "/api/orgs/{orgSlug}/projects/{projectSlug}",
+    summary: "Get project metadata",
+    description:
+      "Return the list of translation files and languages configured for a project. " +
+      "Used by the CLI to discover which files to download or upload.",
+    tags: ["Projects"],
+    security: [{ BearerApiKey: [] }],
+    request: {
+      params: z.object({
+        orgSlug: orgSlugParam,
+        projectSlug: projectSlugParam,
+      }),
+    },
+    responses: {
+      200: {
+        description: "Project metadata (files and languages).",
+        content: {
+          "application/json": { schema: projectDetailResponseSchema },
+        },
+      },
+      401: {
+        description: "Missing or invalid API key.",
+        content: {
+          "application/json": { schema: projectDetailErrorResponseSchema },
+        },
+      },
+      403: {
+        description: "The API key does not belong to this organization.",
+        content: {
+          "application/json": { schema: projectDetailErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Project not found.",
+        content: {
+          "application/json": { schema: projectDetailErrorResponseSchema },
+        },
+      },
+    },
   });
 
   // -- Export endpoint --
@@ -188,6 +242,143 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
       },
       404: {
         description: "Project not found.",
+        content: {
+          "application/json": { schema: importErrorResponseSchema },
+        },
+      },
+      405: {
+        description: "Method not allowed (only POST is accepted).",
+        content: {
+          "application/json": { schema: importErrorResponseSchema },
+        },
+      },
+    },
+  });
+
+  // -- File-scoped export endpoint --
+  registry.registerPath({
+    method: "get",
+    path: "/api/orgs/{orgSlug}/projects/{projectSlug}/files/{fileId}/translations",
+    summary: "Export translations for a specific file",
+    description:
+      "Download translations for a single locale, scoped to one project file. " +
+      "The file's stored format is used by default; pass `format` to override. " +
+      "The response is returned as a file attachment.",
+    tags: ["Translations"],
+    security: [{ BearerApiKey: [] }],
+    request: {
+      params: z.object({
+        orgSlug: orgSlugParam,
+        projectSlug: projectSlugParam,
+        fileId: fileIdParam,
+      }),
+      query: exportQuerySchema(localeExample).partial({ format: true }),
+    },
+    responses: {
+      200: {
+        description: "Translation file for the given project file + locale.",
+        headers: z.object({
+          "Content-Disposition": z.string().openapi({
+            description: "Suggested filename for the downloaded file.",
+            example: 'attachment; filename="my-project-1-fr.json"',
+          }),
+        }),
+        content: {
+          "application/json": {
+            schema: z.record(z.string(), z.string()).openapi({
+              description: "Flat key → translation object.",
+              example: {
+                "home.title": "Accueil",
+              },
+            }),
+          },
+          "application/xml": {
+            schema: z.string().openapi({
+              description: "XLIFF 2.0 XML document.",
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Invalid parameters.",
+        content: {
+          "application/json": { schema: exportErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Missing or invalid API key.",
+        content: {
+          "application/json": { schema: exportErrorResponseSchema },
+        },
+      },
+      403: {
+        description: "The API key does not belong to this organization.",
+        content: {
+          "application/json": { schema: exportErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Project or file not found.",
+        content: {
+          "application/json": { schema: exportErrorResponseSchema },
+        },
+      },
+    },
+  });
+
+  // -- File-scoped import endpoint --
+  registry.registerPath({
+    method: "post",
+    path: "/api/orgs/{orgSlug}/projects/{projectSlug}/files/{fileId}/translations",
+    summary: "Import translations into a specific file",
+    description:
+      "Upload a translation file for a single locale, scoped to one project file. " +
+      "New keys are created under that file. " +
+      "Use the `strategy` field to control whether existing translations are updated or skipped.",
+    tags: ["Translations"],
+    security: [{ BearerApiKey: [] }],
+    request: {
+      params: z.object({
+        orgSlug: orgSlugParam,
+        projectSlug: projectSlugParam,
+        fileId: fileIdParam,
+      }),
+      body: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: importFormSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Import completed successfully.",
+        content: {
+          "application/json": { schema: importSuccessResponseSchema },
+        },
+      },
+      400: {
+        description: "Validation error.",
+        content: {
+          "application/json": { schema: importErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Missing or invalid API key.",
+        content: {
+          "application/json": { schema: importErrorResponseSchema },
+        },
+      },
+      403: {
+        description: "The API key does not belong to this organization.",
+        content: {
+          "application/json": { schema: importErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Project or file not found.",
         content: {
           "application/json": { schema: importErrorResponseSchema },
         },
