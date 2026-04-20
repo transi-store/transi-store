@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { describeFetchError } from "./fetchProjectMetadata.ts";
 
 export const CONCURRENCY_CALLS = 5;
 
@@ -36,22 +37,31 @@ export async function fetchTranslations({
   }
   const url = `${domainRoot}/api/orgs/${org}/projects/${project}/files/${fileId}/translations?${params.toString()}`;
 
+  let content: Response;
   try {
-    const content = await fetch(url, {
+    content = await fetch(url, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
     });
+  } catch (error) {
+    return {
+      success: false,
+      error: `${describeFetchError(error)} (${url})`,
+      output,
+    };
+  }
 
-    if (!content.ok) {
-      const errorData = await content.text();
-      return {
-        success: false,
-        error: `${content.status} ${content.statusText} — ${errorData.trim()}`,
-        output,
-      };
-    }
+  if (!content.ok) {
+    const errorData = await content.text();
+    return {
+      success: false,
+      error: `${content.status} ${content.statusText} — ${errorData.trim()}`,
+      output,
+    };
+  }
 
+  try {
     const dir = path.dirname(output);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });

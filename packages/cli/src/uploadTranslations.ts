@@ -12,6 +12,7 @@ import {
 } from "./git.ts";
 import { configSchema } from "@transi-store/common";
 import {
+  describeFetchError,
   fetchProjectMetadata,
   pickFile,
   resolveFilePath,
@@ -121,15 +122,23 @@ async function uploadTranslations({
     formData.append("branch", branch);
   }
 
+  let response: Response;
   try {
-    const response = await fetch(url, {
+    response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
       body: formData,
     });
+  } catch (error) {
+    console.error(
+      `Failed to import translations at ${url}: ${describeFetchError(error)}`,
+    );
+    process.exit(1);
+  }
 
+  try {
     const data = await response.json();
 
     if (!response.ok) {
