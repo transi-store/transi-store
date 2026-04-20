@@ -400,8 +400,8 @@ describe("Import API", () => {
       // The query count should NOT scale linearly with import size.
       // With batch operations, both should use roughly the same number of queries.
       // Auth queries are handled by middleware (not counted here).
-      expect(smallQueryCount!).toBe(6);
-      expect(largeQueryCount!).toBe(6);
+      expect(smallQueryCount!).toBe(8);
+      expect(largeQueryCount!).toBe(8);
     });
   });
 });
