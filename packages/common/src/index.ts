@@ -9,9 +9,9 @@ export {
 export { DEFAULT_DOMAIN_ROOT, ALL_BRANCHES_VALUE } from "./constants.ts";
 export { default as configSchema } from "./config-schema.ts";
 export {
-  projectFileSchema,
-  projectLanguageSchema,
-  projectDetailSchema,
+  createProjectFileSchema,
+  createProjectLanguageSchema,
+  createProjectDetailSchema,
   type ProjectFile,
   type ProjectLanguage,
   type ProjectDetail,

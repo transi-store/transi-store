@@ -1,26 +1,25 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import {
-  projectDetailSchema,
-  projectFileSchema,
-  projectLanguageSchema,
+  createProjectDetailSchema,
+  createProjectFileSchema,
+  createProjectLanguageSchema,
 } from "@transi-store/common";
 
+// `.openapi()` is added to ZodType.prototype here, and schemas are instantiated
+// AFTER the patch so the method is available on them.
 extendZodWithOpenApi(z);
 
-// Register the shared zod schemas as named OpenAPI components. The shape and
-// field descriptions come from @transi-store/common; this file only adds the
-// OpenAPI-specific component names and examples.
-projectFileSchema.openapi("ProjectFile", {
+createProjectFileSchema().openapi("ProjectFile", {
   example: { id: 42, format: "json", filePath: "locales/<lang>/common.json" },
 });
 
-projectLanguageSchema.openapi("ProjectLanguage", {
+createProjectLanguageSchema().openapi("ProjectLanguage", {
   example: { locale: "fr", isDefault: true },
 });
 
 export const projectDetailResponseSchema =
-  projectDetailSchema.openapi("ProjectDetail");
+  createProjectDetailSchema().openapi("ProjectDetail");
 
 export const projectDetailErrorResponseSchema = z
   .object({

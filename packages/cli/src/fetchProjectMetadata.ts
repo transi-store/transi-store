@@ -1,4 +1,9 @@
-import { projectDetailSchema, type ProjectDetail } from "@transi-store/common";
+import {
+  createProjectDetailSchema,
+  type ProjectDetail,
+} from "@transi-store/common";
+
+const projectDetailSchema = createProjectDetailSchema();
 
 // Extract the useful part of a network-level fetch error. `fetch failed` on
 // its own hides the actual reason (connection refused, DNS error, TLS) —
