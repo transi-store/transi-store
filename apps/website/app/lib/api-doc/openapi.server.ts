@@ -429,7 +429,12 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         "| Format | Content-Type | Extension | Description |\n" +
         "|--------|-------------|-----------|-------------|\n" +
         "| `json` | `application/json` | `.json` | Flat key → value object |\n" +
-        "| `xliff` | `application/xml` | `.xliff` | XLIFF 2.0 XML document |\n",
+        "| `xliff` | `application/xml` | `.xliff` | XLIFF 2.0 XML document |\n" +
+        "| `csv` | `text/csv` | `.csv` | CSV with columns `key`, `translation` |\n\n" +
+        "| `yaml` | `application/x-yaml` | `.yaml` | Flat key → value object in YAML format |\n" +
+        "| `po` | `text/plain` | `.po` | Gettext PO file |\n" +
+        "| `ini` | `text/plain` | `.ini` | INI file with flat key → value pairs |\n" +
+        "| `php` | `text/plain` | `.php` | PHP file returning an array of key → value pairs |\n\n",
     },
     servers: [{ url: "/", description: "Current server" }],
   });
