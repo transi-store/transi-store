@@ -105,7 +105,7 @@ home.subtitle,Bienvenue`;
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        projectName: "My Project",
+        fileId: "my-project-id",
       });
 
       expect(result.content).toBe("home.title,Accueil");

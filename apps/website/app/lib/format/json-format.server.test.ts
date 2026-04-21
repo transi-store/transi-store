@@ -139,7 +139,7 @@ describe("JsonTranslationFormat", () => {
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        projectName: "My Project",
+        fileId: "my-project-id",
       });
 
       expect(result.contentType).toBe("application/json");

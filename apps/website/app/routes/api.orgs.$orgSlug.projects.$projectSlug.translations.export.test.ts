@@ -180,4 +180,31 @@ describe("Export Project Loader", () => {
       expect(data).toEqual(expectedData);
     },
   );
+
+  it("fileId should be sanitized and included in XLIFF export", async () => {
+    const db = getTestDb();
+    await createProjectLanguage(db, 1);
+    await createTranslationKey(db, 1, "home.title");
+    await createTranslation(db, 1, "en", "Home");
+
+    const request = new Request(
+      `https://example.com/api/orgs/test-org/projects/test-project/translations?locale=en&format=xliff`,
+    );
+
+    const response = await loader({
+      request,
+      params: { orgSlug: "test-org", projectSlug: "test-project" },
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
+      context: createOrgContext(),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe(
+      "application/x-xliff+xml",
+    );
+
+    const text = await response.text();
+
+    expect(text).toContain('<file id="test-project">');
+  });
 });
