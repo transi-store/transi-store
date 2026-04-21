@@ -113,10 +113,6 @@ export default [
         "routes/api.orgs.$orgSlug.projects.$projectSlug.tsx",
       ),
       route(
-        "projects/:projectSlug/translations",
-        "routes/api.orgs.$orgSlug.projects.$projectSlug.translations.tsx",
-      ),
-      route(
         "projects/:projectSlug/files/:fileId/translations",
         "routes/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations.tsx",
       ),
