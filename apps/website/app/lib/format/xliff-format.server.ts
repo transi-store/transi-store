@@ -27,6 +27,17 @@ function unescapeXml(str: string): string {
     .replace(/&apos;/g, "'");
 }
 
+function toNmtoken(str: string): string {
+  // xs:NMTOKEN allows only: letters, digits, '.', '-', '_', ':'
+  const sanitized = str.replace(/[^a-zA-Z0-9.\-_:]/g, "_");
+  return sanitized || "_";
+}
+
+function extractAttr(attrsStr: string, name: string): string | null {
+  const match = new RegExp(`\\b${name}="([^"]*)"`, "i").exec(attrsStr);
+  return match ? unescapeXml(match[1]) : null;
+}
+
 export class XliffTranslationFormat implements TranslationFormat {
   parseImport(fileContent: string): ParseResult {
     if (fileContent.length > MAX_FILE_SIZE) {
@@ -39,12 +50,14 @@ export class XliffTranslationFormat implements TranslationFormat {
     try {
       const data: Record<string, string> = {};
 
-      const unitRegex = /<unit\s[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/unit>/g;
+      const unitRegex = /<unit\s([^>]*?)>([\s\S]*?)<\/unit>/g;
       let unitMatch;
 
       while ((unitMatch = unitRegex.exec(fileContent)) !== null) {
-        const keyName = unescapeXml(unitMatch[1]);
+        const attrsStr = unitMatch[1];
         const unitContent = unitMatch[2];
+        const keyName =
+          extractAttr(attrsStr, "name") ?? extractAttr(attrsStr, "id") ?? "";
 
         const targetMatch = /<target>([\s\S]*?)<\/target>/.exec(unitContent);
 
@@ -87,12 +100,29 @@ export class XliffTranslationFormat implements TranslationFormat {
         escapeXml(locale) +
         '">',
     );
-    xml.push('  <file id="' + escapeXml(fileId) + '">');
+    xml.push(
+      '  <file id="' +
+        toNmtoken(fileId) +
+        '" original="' +
+        escapeXml(fileId) +
+        '">',
+    );
 
+    const usedIds = new Set<string>();
     for (const key of projectTranslations) {
       const translation = key.translations.find((t) => t.locale === locale);
 
-      xml.push('    <unit id="' + escapeXml(key.keyName) + '">');
+      const baseId = toNmtoken(key.keyName);
+      let unitId = baseId;
+      let counter = 1;
+      while (usedIds.has(unitId)) {
+        unitId = `${baseId}_${counter++}`;
+      }
+      usedIds.add(unitId);
+
+      xml.push(
+        '    <unit id="' + unitId + '" name="' + escapeXml(key.keyName) + '">',
+      );
 
       if (key.description) {
         xml.push("      <notes>");
