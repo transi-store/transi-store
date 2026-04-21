@@ -145,12 +145,12 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        projectName: "my-project",
+        fileId: "my-project-id",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="my-project">
+  <file id="my-project-id">
     <unit id="home.title">
       <segment>
         <source>home.title</source>
@@ -175,7 +175,7 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        projectName: "test",
+        fileId: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
@@ -200,7 +200,7 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        projectName: "test",
+        fileId: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
@@ -227,7 +227,7 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        projectName: "test",
+        fileId: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
@@ -248,7 +248,7 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        projectName: "test",
+        fileId: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
@@ -266,7 +266,7 @@ describe("XliffTranslationFormat", () => {
     it("should handle empty translations list", () => {
       const result = format.exportSingleLocale([], {
         locale: "fr",
-        projectName: "test",
+        fileId: "test",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
@@ -281,7 +281,7 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        projectName: 'Project "Special" & <test>',
+        fileId: 'Project "Special" & <test>',
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
@@ -308,14 +308,14 @@ describe("XliffTranslationFormat", () => {
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        projectName: "My Project",
+        fileId: "my-project-id",
       });
 
       expect(result.contentType).toBe("application/x-xliff+xml");
       expect(result.fileExtension).toBe("xliff");
       expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="My Project">
+  <file id="my-project-id">
     <unit id="home.title">
       <segment>
         <source>home.title</source>

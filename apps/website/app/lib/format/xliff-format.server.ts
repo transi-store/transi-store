@@ -74,8 +74,12 @@ export class XliffTranslationFormat implements TranslationFormat {
     projectTranslations: ProjectTranslations,
     options: ExportOptions,
   ): string {
-    const { locale, projectName } = options;
+    const { locale, fileId } = options;
     const xml: Array<string> = [];
+
+    if (!fileId) {
+      throw new Error("fileId is required for XLIFF export");
+    }
 
     xml.push('<?xml version="1.0" encoding="UTF-8"?>');
     xml.push(
@@ -83,7 +87,7 @@ export class XliffTranslationFormat implements TranslationFormat {
         escapeXml(locale) +
         '">',
     );
-    xml.push('  <file id="' + escapeXml(projectName!) + '">');
+    xml.push('  <file id="' + escapeXml(fileId) + '">');
 
     for (const key of projectTranslations) {
       const translation = key.translations.find((t) => t.locale === locale);
@@ -116,11 +120,11 @@ export class XliffTranslationFormat implements TranslationFormat {
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
-    const { locale, projectTranslations, projectName } = params;
+    const { locale, projectTranslations, fileId } = params;
 
     const content = this.exportSingleLocale(projectTranslations, {
       locale,
-      projectName,
+      fileId,
     });
 
     return {

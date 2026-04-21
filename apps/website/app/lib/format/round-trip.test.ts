@@ -69,6 +69,7 @@ describe("Round-trip: export → import for each format", () => {
 
       const exported = format.exportSingleLocale(translations, {
         locale: "fr",
+        fileId: "test-file", // Required by XLIFF export
         ...config.exportOptions,
       });
       const imported = format.parseImport(exported);
@@ -87,6 +88,7 @@ describe("Round-trip: export → import for each format", () => {
       // First export
       const exported1 = format.exportSingleLocale(translations, {
         locale: "fr",
+        fileId: "test-file", // Required by XLIFF export
         ...config.exportOptions,
       });
 
@@ -98,6 +100,7 @@ describe("Round-trip: export → import for each format", () => {
       const translations2 = buildProjectTranslations(imported1.data!, "fr");
       const exported2 = format.exportSingleLocale(translations2, {
         locale: "fr",
+        fileId: "test-file", // Required by XLIFF export
         ...config.exportOptions,
       });
 
@@ -127,6 +130,7 @@ describe("Round-trip: export → import for each format", () => {
 
       const exported = format.exportSingleLocale(translations, {
         locale: "en",
+        fileId: "test-file", // Required by XLIFF export
         ...config.exportOptions,
       });
       const imported = format.parseImport(exported);
@@ -162,6 +166,7 @@ describe("Cross-format round-trip", () => {
       const translations = buildProjectTranslations(baseTranslations, "fr");
       const sourceExported = sourceFormat.exportSingleLocale(translations, {
         locale: "fr",
+        fileId: "test-file", // Required by XLIFF export
         ...source.exportOptions,
       });
 
@@ -178,6 +183,7 @@ describe("Cross-format round-trip", () => {
         targetTranslations,
         {
           locale: "fr",
+          fileId: "test-file", // Required by XLIFF export
           ...target.exportOptions,
         },
       );
