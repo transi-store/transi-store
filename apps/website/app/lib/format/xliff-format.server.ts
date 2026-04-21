@@ -27,15 +27,13 @@ function unescapeXml(str: string): string {
     .replace(/&apos;/g, "'");
 }
 
-function toNmtoken(str: string): string {
-  // xs:NMTOKEN allows only: letters, digits, '.', '-', '_', ':'
-  const sanitized = str.replace(/[^a-zA-Z0-9.\-_:]/g, "_");
-  return sanitized || "_";
-}
-
 function extractAttr(attrsStr: string, name: string): string | null {
   const match = new RegExp(`\\b${name}="([^"]*)"`, "i").exec(attrsStr);
   return match ? unescapeXml(match[1]) : null;
+}
+
+function resolveFilePath(filePath: string, locale: string): string {
+  return filePath.replace("<lang>", locale);
 }
 
 export class XliffTranslationFormat implements TranslationFormat {
@@ -87,11 +85,15 @@ export class XliffTranslationFormat implements TranslationFormat {
     projectTranslations: ProjectTranslations,
     options: ExportOptions,
   ): string {
-    const { locale, fileId } = options;
+    const { locale, fileId, filePath } = options;
     const xml: Array<string> = [];
 
-    if (!fileId) {
+    if (fileId === undefined) {
       throw new Error("fileId is required for XLIFF export");
+    }
+
+    if (filePath === undefined) {
+      throw new Error("filePath is required for XLIFF export");
     }
 
     xml.push('<?xml version="1.0" encoding="UTF-8"?>');
@@ -102,26 +104,17 @@ export class XliffTranslationFormat implements TranslationFormat {
     );
     xml.push(
       '  <file id="' +
-        toNmtoken(fileId) +
+        fileId +
         '" original="' +
-        escapeXml(fileId) +
+        escapeXml(resolveFilePath(filePath, locale)) +
         '">',
     );
 
-    const usedIds = new Set<string>();
     for (const key of projectTranslations) {
       const translation = key.translations.find((t) => t.locale === locale);
 
-      const baseId = toNmtoken(key.keyName);
-      let unitId = baseId;
-      let counter = 1;
-      while (usedIds.has(unitId)) {
-        unitId = `${baseId}_${counter++}`;
-      }
-      usedIds.add(unitId);
-
       xml.push(
-        '    <unit id="' + unitId + '" name="' + escapeXml(key.keyName) + '">',
+        '    <unit id="' + key.id + '" name="' + escapeXml(key.keyName) + '">',
       );
 
       if (key.description) {
@@ -150,11 +143,12 @@ export class XliffTranslationFormat implements TranslationFormat {
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {
-    const { locale, projectTranslations, fileId } = params;
+    const { locale, projectTranslations, fileId, filePath } = params;
 
     const content = this.exportSingleLocale(projectTranslations, {
       locale,
       fileId,
+      filePath,
     });
 
     return {

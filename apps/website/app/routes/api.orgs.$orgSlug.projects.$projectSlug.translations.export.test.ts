@@ -205,6 +205,6 @@ describe("Export Project Loader", () => {
 
     const text = await response.text();
 
-    expect(text).toContain('<file id="test-project" original="test-project">');
+    expect(text).toContain('<file id="0" original="">');
   });
 });

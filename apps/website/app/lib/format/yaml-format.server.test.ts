@@ -93,7 +93,8 @@ unicode: "Émojis: 🎉🚀"`;
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        fileId: "my-file",
+        fileId: 1,
+        filePath: "translations/<lang>.yaml",
       });
 
       expect(result.content).toBe("home.title: Accueil");

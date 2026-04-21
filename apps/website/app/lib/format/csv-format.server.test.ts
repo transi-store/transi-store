@@ -105,7 +105,8 @@ home.subtitle,Bienvenue`;
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        fileId: "my-project-id",
+        fileId: 1,
+        filePath: "translations/<lang>.csv",
       });
 
       expect(result.content).toBe("home.title,Accueil");

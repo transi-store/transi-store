@@ -180,7 +180,8 @@ msgstr ""
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        fileId: "my-project-id",
+        fileId: 1,
+        filePath: "translations/<lang>.po",
       });
 
       expect(result.content).toEqual(`msgid ""

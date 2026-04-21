@@ -97,7 +97,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const result = format.handleExportRequest({
     locale,
     projectTranslations,
-    fileId: project.slug,
+    fileId: 0,
+    filePath: "",
   });
 
   const filename = `${project.slug}-${locale}.${result.fileExtension}`;

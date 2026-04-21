@@ -13,14 +13,19 @@ export type ParseResult = {
 export type ExportOptions = {
   /** The locale to export */
   locale: string;
-  /** XLIFF only: file name used as XLIFF file id */
-  fileId?: string;
+  /** XLIFF only: database ID of the file record, used as XLIFF <file id> */
+  fileId?: number;
+  /** XLIFF only: file path used as XLIFF <file original> */
+  filePath?: string;
 };
 
 export type ExportRequestParams = {
   locale: string;
   projectTranslations: ProjectTranslations;
-  fileId: string;
+  /** XLIFF only: database ID of the file record, used as XLIFF <file id> */
+  fileId: number;
+  /** XLIFF only: file path used as XLIFF <file original> */
+  filePath: string;
 };
 
 export type ExportRequestResult = {

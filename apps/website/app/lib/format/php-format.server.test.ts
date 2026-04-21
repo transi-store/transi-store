@@ -129,7 +129,8 @@ return [
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        fileId: "my-project-id",
+        fileId: 1,
+        filePath: "translations/<lang>.php",
       });
 
       expect(result.content).toBe(`<?php

@@ -177,7 +177,7 @@ describe("XliffTranslationFormat", () => {
   });
 
   describe("exportSingleLocale", () => {
-    it("should export valid XLIFF 2.0 with key as source", () => {
+    it("should export valid XLIFF 2.0 with DB ids and key names", () => {
       const translations = buildProjectTranslations(
         { "home.title": "Accueil", "home.subtitle": "Bienvenue" },
         "fr",
@@ -185,19 +185,20 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        fileId: "my-project-id",
+        fileId: 7,
+        filePath: "locales/<lang>/common.xlf",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="my-project-id" original="my-project-id">
-    <unit id="home.title" name="home.title">
+  <file id="7" original="locales/fr/common.xlf">
+    <unit id="1" name="home.title">
       <segment>
         <source>home.title</source>
         <target>Accueil</target>
       </segment>
     </unit>
-    <unit id="home.subtitle" name="home.subtitle">
+    <unit id="2" name="home.subtitle">
       <segment>
         <source>home.subtitle</source>
         <target>Bienvenue</target>
@@ -215,13 +216,14 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        fileId: "test",
+        fileId: 1,
+        filePath: "translations/<lang>.xlf",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test" original="test">
-    <unit id="key.with._special" name="key.with.&amp;special">
+  <file id="1" original="translations/fr.xlf">
+    <unit id="1" name="key.with.&amp;special">
       <segment>
         <source>key.with.&amp;special</source>
         <target>Value with &lt;html&gt; &amp; &quot;quotes&quot;</target>
@@ -240,13 +242,14 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        fileId: "test",
+        fileId: 1,
+        filePath: "translations/<lang>.xlf",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test" original="test">
-    <unit id="greeting" name="greeting">
+  <file id="1" original="translations/fr.xlf">
+    <unit id="1" name="greeting">
       <notes>
         <note>Used on the homepage</note>
       </notes>
@@ -267,13 +270,14 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        fileId: "test",
+        fileId: 1,
+        filePath: "translations/<lang>.xlf",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test" original="test">
-    <unit id="greeting" name="greeting">
+  <file id="1" original="translations/fr.xlf">
+    <unit id="1" name="greeting">
       <segment>
         <source>greeting</source>
         <target>Bonjour</target>
@@ -288,13 +292,14 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        fileId: "test",
+        fileId: 1,
+        filePath: "translations/<lang>.xlf",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test" original="test">
-    <unit id="key" name="key">
+  <file id="1" original="translations/fr.xlf">
+    <unit id="1" name="key">
       <segment>
         <source>key</source>
       </segment>
@@ -303,7 +308,7 @@ describe("XliffTranslationFormat", () => {
 </xliff>`);
     });
 
-    it("should produce a valid NMTOKEN id when key contains spaces", () => {
+    it("should handle keys with spaces: DB id is valid NMTOKEN, key in name attribute", () => {
       const translations = buildProjectTranslations(
         { "Access Denied.": "Accès refusé." },
         "fr",
@@ -311,13 +316,14 @@ describe("XliffTranslationFormat", () => {
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        fileId: "test",
+        fileId: 1,
+        filePath: "translations/<lang>.xlf",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test" original="test">
-    <unit id="Access_Denied." name="Access Denied.">
+  <file id="1" original="translations/fr.xlf">
+    <unit id="1" name="Access Denied.">
       <segment>
         <source>Access Denied.</source>
         <target>Accès refusé.</target>
@@ -327,61 +333,33 @@ describe("XliffTranslationFormat", () => {
 </xliff>`);
     });
 
-    it("should handle id collision when sanitized keys are identical", () => {
-      const translations = buildProjectTranslations(
-        { "foo bar": "valeur 1", foo_bar: "valeur 2" },
-        "fr",
-      );
-
-      const result = format.exportSingleLocale(translations, {
-        locale: "fr",
-        fileId: "test",
-      });
-
-      expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test" original="test">
-    <unit id="foo_bar" name="foo bar">
-      <segment>
-        <source>foo bar</source>
-        <target>valeur 1</target>
-      </segment>
-    </unit>
-    <unit id="foo_bar_1" name="foo_bar">
-      <segment>
-        <source>foo_bar</source>
-        <target>valeur 2</target>
-      </segment>
-    </unit>
-  </file>
-</xliff>`);
-    });
-
     it("should handle empty translations list", () => {
       const result = format.exportSingleLocale([], {
         locale: "fr",
-        fileId: "test",
+        fileId: 1,
+        filePath: "translations/<lang>.xlf",
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="test" original="test">
+  <file id="1" original="translations/fr.xlf">
   </file>
 </xliff>`);
     });
 
-    it("should produce a valid NMTOKEN file id and store the original in the original attribute", () => {
+    it("should escape special characters in filePath into the original attribute", () => {
       const translations = buildProjectTranslations({ key: "value" }, "fr");
 
       const result = format.exportSingleLocale(translations, {
         locale: "fr",
-        fileId: 'Project "Special" & <test>',
+        fileId: 42,
+        filePath: 'Project "Special" & <test>',
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="Project__Special_____test_" original="Project &quot;Special&quot; &amp; &lt;test&gt;">
-    <unit id="key" name="key">
+  <file id="42" original="Project &quot;Special&quot; &amp; &lt;test&gt;">
+    <unit id="1" name="key">
       <segment>
         <source>key</source>
         <target>value</target>
@@ -402,15 +380,16 @@ describe("XliffTranslationFormat", () => {
       const result = format.handleExportRequest({
         locale: "fr",
         projectTranslations: translations,
-        fileId: "my-project-id",
+        fileId: 5,
+        filePath: "locales/<lang>/common.xlf",
       });
 
       expect(result.contentType).toBe("application/x-xliff+xml");
       expect(result.fileExtension).toBe("xliff");
       expect(result.content).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="my-project-id" original="my-project-id">
-    <unit id="home.title" name="home.title">
+  <file id="5" original="locales/fr/common.xlf">
+    <unit id="1" name="home.title">
       <segment>
         <source>home.title</source>
         <target>Accueil</target>
