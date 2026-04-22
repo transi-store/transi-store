@@ -105,6 +105,22 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     fileId: file.id,
   });
 
+  const hasTranslationsForLocale = projectTranslations.some((key) =>
+    key.translations.some((translation) => translation.locale === locale),
+  );
+
+  if (!hasTranslationsForLocale) {
+    return new Response(
+      JSON.stringify({
+        error: `No translations found for locale '${locale}'`,
+      }),
+      {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+
   const format = createTranslationFormat(formatName);
   const result = format.handleExportRequest({
     locale,
