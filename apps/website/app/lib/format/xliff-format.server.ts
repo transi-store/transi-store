@@ -1,3 +1,5 @@
+import XMLBuilder from "fast-xml-builder";
+import { XMLParser } from "fast-xml-parser";
 import type {
   TranslationFormat,
   ParseResult,
@@ -9,27 +11,55 @@ import type {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-function escapeXml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_",
+  parseAttributeValue: false,
+  parseTagValue: false,
+  trimValues: true,
+  processEntities: true,
+  isArray: (name) => name === "file" || name === "unit" || name === "note",
+});
 
-function unescapeXml(str: string): string {
-  return str
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'");
-}
+const builder = new XMLBuilder({
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_",
+  format: true,
+  indentBy: "  ",
+  suppressEmptyNode: false,
+  processEntities: true,
+});
 
-function extractAttr(attrsStr: string, name: string): string | null {
-  const match = new RegExp(`\\b${name}="([^"]*)"`, "i").exec(attrsStr);
-  return match ? unescapeXml(match[1]) : null;
+type XliffUnit = {
+  "@_id"?: string;
+  "@_name"?: string;
+  notes?: { note?: Array<string | { "#text"?: string }> };
+  segment?: {
+    source?: string | { "#text"?: string };
+    target?: string | { "#text"?: string };
+  };
+};
+
+type XliffFile = {
+  "@_id"?: string;
+  "@_original"?: string;
+  unit?: Array<XliffUnit>;
+};
+
+type XliffDoc = {
+  xliff?: {
+    file?: Array<XliffFile>;
+  };
+};
+
+function textOf(node: string | { "#text"?: string } | undefined): string {
+  if (node === undefined) {
+    return "";
+  }
+  if (typeof node === "string") {
+    return node;
+  }
+  return node["#text"] ?? "";
 }
 
 function resolveFilePath(filePath: string, locale: string): string {
@@ -45,25 +75,30 @@ export class XliffTranslationFormat implements TranslationFormat {
       };
     }
 
+    let parsed: XliffDoc;
     try {
-      const data: Record<string, string> = {};
+      parsed = parser.parse(fileContent) as XliffDoc;
+    } catch (_error) {
+      return {
+        success: false,
+        error: "Format XLIFF invalide",
+      };
+    }
 
-      const unitRegex = /<unit\s([^>]*?)>([\s\S]*?)<\/unit>/g;
-      let unitMatch;
+    const files = parsed.xliff?.file ?? [];
+    const data: Record<string, string> = {};
 
-      while ((unitMatch = unitRegex.exec(fileContent)) !== null) {
-        const attrsStr = unitMatch[1];
-        const unitContent = unitMatch[2];
+    for (const file of files) {
+      for (const unit of file.unit ?? []) {
+        let keyName = unit["@_name"];
 
-        let keyName = extractAttr(attrsStr, "name");
-
-        // if not key "name", take the "<source>" content
-        // Mainly because Symfony does not add "name" for sources that are more that 80 characters long
+        // if no "name" attribute, take the <source> content
+        // Mainly because Symfony does not add "name" for sources longer than 80 characters
         // https://github.com/symfony/symfony/pull/26661
         if (!keyName) {
-          const sourceMatch = /<source>([\s\S]*?)<\/source>/.exec(unitContent);
-          if (sourceMatch) {
-            keyName = unescapeXml(sourceMatch[1]);
+          const source = textOf(unit.segment?.source);
+          if (source) {
+            keyName = source;
           }
         }
 
@@ -75,28 +110,22 @@ export class XliffTranslationFormat implements TranslationFormat {
           };
         }
 
-        const targetMatch = /<target>([\s\S]*?)<\/target>/.exec(unitContent);
-
-        if (targetMatch) {
-          data[keyName] = unescapeXml(targetMatch[1]);
+        const target = unit.segment?.target;
+        if (target !== undefined) {
+          data[keyName] = textOf(target);
         }
       }
+    }
 
-      if (Object.keys(data).length === 0) {
-        return {
-          success: false,
-          error:
-            "Aucune traduction cible trouvée dans le fichier XLIFF (pas de balises <target>)",
-        };
-      }
-
-      return { success: true, data };
-    } catch (_error) {
+    if (Object.keys(data).length === 0) {
       return {
         success: false,
-        error: "Format XLIFF invalide",
+        error:
+          "Aucune traduction cible trouvée dans le fichier XLIFF (pas de balises <target>)",
       };
     }
+
+    return { success: true, data };
   }
 
   exportSingleLocale(
@@ -104,7 +133,6 @@ export class XliffTranslationFormat implements TranslationFormat {
     options: ExportOptions,
   ): string {
     const { locale, fileId, filePath } = options;
-    const xml: Array<string> = [];
 
     if (fileId === undefined) {
       throw new Error("fileId is required for XLIFF export");
@@ -114,58 +142,52 @@ export class XliffTranslationFormat implements TranslationFormat {
       throw new Error("filePath is required for XLIFF export");
     }
 
-    xml.push('<?xml version="1.0" encoding="UTF-8"?>');
-    xml.push(
-      '<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="' +
-        escapeXml(locale) +
-        '">',
-    );
+    const xliff: Record<string, unknown> = {
+      "@_xmlns": "urn:oasis:names:tc:xliff:document:2.0",
+      "@_version": "2.0",
+      "@_srcLang": "en",
+      "@_trgLang": locale,
+    };
 
     if (projectTranslations.length > 0) {
-      xml.push(
-        '  <file id="' +
-          fileId +
-          '" original="' +
-          escapeXml(resolveFilePath(filePath, locale)) +
-          '">',
-      );
-
-      for (const key of projectTranslations) {
+      const units: Array<XliffUnit> = projectTranslations.map((key) => {
         const translation = key.translations.find((t) => t.locale === locale);
 
-        xml.push(
-          '    <unit id="' +
-            key.id +
-            '" name="' +
-            escapeXml(key.keyName) +
-            '">',
-        );
+        const unit: XliffUnit = {
+          "@_id": String(key.id),
+          "@_name": key.keyName,
+        };
 
         if (key.description) {
-          xml.push("      <notes>");
-          xml.push("        <note>" + escapeXml(key.description) + "</note>");
-          xml.push("      </notes>");
+          unit.notes = { note: [key.description] };
         }
 
-        xml.push("      <segment>");
-        xml.push("        <source>" + escapeXml(key.keyName) + "</source>");
-
+        const segment: { source: string; target?: string } = {
+          source: key.keyName,
+        };
         if (translation) {
-          xml.push(
-            "        <target>" + escapeXml(translation.value) + "</target>",
-          );
+          segment.target = translation.value;
         }
+        unit.segment = segment;
 
-        xml.push("      </segment>");
-        xml.push("    </unit>");
-      }
+        return unit;
+      });
 
-      xml.push("  </file>");
+      xliff.file = [
+        {
+          "@_id": String(fileId),
+          "@_original": resolveFilePath(filePath, locale),
+          unit: units,
+        },
+      ];
     }
 
-    xml.push("</xliff>");
+    const doc = {
+      "?xml": { "@_version": "1.0", "@_encoding": "UTF-8" },
+      xliff,
+    };
 
-    return xml.join("\n");
+    return builder.build(doc).trimEnd();
   }
 
   handleExportRequest(params: ExportRequestParams): ExportRequestResult {

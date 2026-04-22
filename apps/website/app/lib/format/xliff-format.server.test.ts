@@ -202,6 +202,27 @@ describe("XliffTranslationFormat", () => {
         "home.subtitle": "Bienvenue",
       });
     });
+
+    it("should unwrap CDATA sections in target content", () => {
+      const xliff = `<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+  <file id="my-project">
+    <unit id="1" name="error.id">
+      <segment>
+        <source>error.id</source>
+        <target><![CDATA[An id can not contain the following characters : spaces, brackets and "/ \\ # ? & % + = @ | ~\`"]]></target>
+      </segment>
+    </unit>
+  </file>
+</xliff>`;
+
+      const result = format.parseImport(xliff);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({
+        "error.id": `An id can not contain the following characters : spaces, brackets and "/ \\ # ? & % + = @ | ~\`"`,
+      });
+    });
   });
 
   describe("exportSingleLocale", () => {
@@ -369,8 +390,7 @@ describe("XliffTranslationFormat", () => {
       });
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-</xliff>`);
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr"></xliff>`);
     });
 
     it("should escape special characters in filePath into the original attribute", () => {
