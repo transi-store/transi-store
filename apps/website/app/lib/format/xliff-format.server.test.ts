@@ -174,6 +174,34 @@ describe("XliffTranslationFormat", () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain("trop volumineux");
     });
+
+    it('should use "source" if name is not defined', () => {
+      const xliff = `<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
+  <file id="my-project">
+    <unit id="1">
+      <segment>
+        <source>home.title</source>
+        <target>Accueil</target>
+      </segment>
+    </unit>
+    <unit id="2">
+      <segment>
+        <source>home.subtitle</source>
+        <target>Bienvenue</target>
+      </segment>
+    </unit>
+  </file>
+</xliff>`;
+
+      const result = format.parseImport(xliff);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({
+        "home.title": "Accueil",
+        "home.subtitle": "Bienvenue",
+      });
+    });
   });
 
   describe("exportSingleLocale", () => {

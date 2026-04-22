@@ -54,8 +54,26 @@ export class XliffTranslationFormat implements TranslationFormat {
       while ((unitMatch = unitRegex.exec(fileContent)) !== null) {
         const attrsStr = unitMatch[1];
         const unitContent = unitMatch[2];
-        const keyName =
-          extractAttr(attrsStr, "name") ?? extractAttr(attrsStr, "id") ?? "";
+
+        let keyName = extractAttr(attrsStr, "name");
+
+        // if not key "name", take the "<source>" content
+        // Mainly because Symfony does not add "name" for sources that are more that 80 characters long
+        // https://github.com/symfony/symfony/pull/26661
+        if (!keyName) {
+          const sourceMatch = /<source>([\s\S]*?)<\/source>/.exec(unitContent);
+          if (sourceMatch) {
+            keyName = unescapeXml(sourceMatch[1]);
+          }
+        }
+
+        if (!keyName) {
+          return {
+            success: false,
+            error:
+              'No key name found for a <unit> (missing "name" attribute and <source> tag)',
+          };
+        }
 
         const targetMatch = /<target>([\s\S]*?)<\/target>/.exec(unitContent);
 
