@@ -120,41 +120,49 @@ export class XliffTranslationFormat implements TranslationFormat {
         escapeXml(locale) +
         '">',
     );
-    xml.push(
-      '  <file id="' +
-        fileId +
-        '" original="' +
-        escapeXml(resolveFilePath(filePath, locale)) +
-        '">',
-    );
 
-    for (const key of projectTranslations) {
-      const translation = key.translations.find((t) => t.locale === locale);
-
+    if (projectTranslations.length > 0) {
       xml.push(
-        '    <unit id="' + key.id + '" name="' + escapeXml(key.keyName) + '">',
+        '  <file id="' +
+          fileId +
+          '" original="' +
+          escapeXml(resolveFilePath(filePath, locale)) +
+          '">',
       );
 
-      if (key.description) {
-        xml.push("      <notes>");
-        xml.push("        <note>" + escapeXml(key.description) + "</note>");
-        xml.push("      </notes>");
-      }
+      for (const key of projectTranslations) {
+        const translation = key.translations.find((t) => t.locale === locale);
 
-      xml.push("      <segment>");
-      xml.push("        <source>" + escapeXml(key.keyName) + "</source>");
-
-      if (translation) {
         xml.push(
-          "        <target>" + escapeXml(translation.value) + "</target>",
+          '    <unit id="' +
+            key.id +
+            '" name="' +
+            escapeXml(key.keyName) +
+            '">',
         );
+
+        if (key.description) {
+          xml.push("      <notes>");
+          xml.push("        <note>" + escapeXml(key.description) + "</note>");
+          xml.push("      </notes>");
+        }
+
+        xml.push("      <segment>");
+        xml.push("        <source>" + escapeXml(key.keyName) + "</source>");
+
+        if (translation) {
+          xml.push(
+            "        <target>" + escapeXml(translation.value) + "</target>",
+          );
+        }
+
+        xml.push("      </segment>");
+        xml.push("    </unit>");
       }
 
-      xml.push("      </segment>");
-      xml.push("    </unit>");
+      xml.push("  </file>");
     }
 
-    xml.push("  </file>");
     xml.push("</xliff>");
 
     return xml.join("\n");
