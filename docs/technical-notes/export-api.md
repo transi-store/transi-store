@@ -295,7 +295,7 @@ Content-Disposition: attachment; filename="project-slug-fr.php"
 | 400    | Missing/invalid parameters, unsupported format, unknown locale |
 | 401    | No valid session or API key                                    |
 | 403    | User is not a member of the organization                       |
-| 404    | Project not found                                              |
+| 404    | Project not found, or no translations for the requested locale |
 
 ## Implementation
 

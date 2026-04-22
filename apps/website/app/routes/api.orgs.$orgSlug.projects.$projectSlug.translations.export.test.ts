@@ -140,6 +140,27 @@ describe("Export Project Loader", () => {
     });
   });
 
+  it("should return 404 when locale exists but has no translations", async () => {
+    const db = getTestDb();
+    await createProjectLanguage(db, 1, { locale: "en", isDefault: true });
+    await createProjectLanguage(db, 1, { locale: "de", isDefault: false });
+    await createTranslationKey(db, 1, "error.unknown");
+    await createTranslation(db, 1, "en", "Unknown error");
+
+    const response = await loader({
+      request: new Request(
+        "https://example.com/api/orgs/test-org/projects/test-project/translations?locale=de&format=json",
+      ),
+      params: { orgSlug: "test-org", projectSlug: "test-project" },
+      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
+      context: createOrgContext(),
+    });
+
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.error).toBe("No translations found for locale 'de'");
+  });
+
   it.each([
     ["no branch param", undefined, { "main.key": "Main Value" }],
     [
