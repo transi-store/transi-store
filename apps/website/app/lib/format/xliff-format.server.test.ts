@@ -336,7 +336,7 @@ describe("XliffTranslationFormat", () => {
 </xliff>`);
     });
 
-    it("should omit <target> when translation is missing for locale", () => {
+    it("should omit <unit> when translation is missing for locale", () => {
       const translations = buildProjectTranslations({ key: "Value" }, "en");
 
       const result = format.exportSingleLocale(translations, {
@@ -347,13 +347,7 @@ describe("XliffTranslationFormat", () => {
 
       expect(result).toEqual(`<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:2.0" version="2.0" srcLang="en" trgLang="fr">
-  <file id="1" original="translations/fr.xlf">
-    <unit id="1" name="key">
-      <segment>
-        <source>key</source>
-      </segment>
-    </unit>
-  </file>
+  <file id="1" original="translations/fr.xlf"></file>
 </xliff>`);
     });
 

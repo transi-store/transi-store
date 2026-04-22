@@ -168,6 +168,21 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\\n"
 "Language: fr\\n"`);
     });
+
+    it("should not export data without translations in the target locale", () => {
+      const translations = buildProjectTranslations(
+        { "home.title": "Accueil", "home.subtitle": "Bienvenue" },
+        "fr",
+      );
+
+      const result = format.exportSingleLocale(translations, { locale: "de" });
+
+      expect(result).toEqual(`msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Language: de\\n"`);
+    });
   });
 
   describe("handleExportRequest", () => {

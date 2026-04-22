@@ -150,28 +150,34 @@ export class XliffTranslationFormat implements TranslationFormat {
     };
 
     if (projectTranslations.length > 0) {
-      const units: Array<XliffUnit> = projectTranslations.map((key) => {
-        const translation = key.translations.find((t) => t.locale === locale);
+      const units: Array<XliffUnit> = projectTranslations
+        .map((key): XliffUnit | null => {
+          const translation = key.translations.find((t) => t.locale === locale);
 
-        const unit: XliffUnit = {
-          "@_id": String(key.id),
-          "@_name": key.keyName,
-        };
+          if (!translation) {
+            return null; // skip keys without translation in the target locale
+          }
 
-        if (key.description) {
-          unit.notes = { note: [key.description] };
-        }
+          const unit: XliffUnit = {
+            "@_id": String(key.id),
+            "@_name": key.keyName,
+          };
 
-        const segment: { source: string; target?: string } = {
-          source: key.keyName,
-        };
-        if (translation) {
-          segment.target = translation.value;
-        }
-        unit.segment = segment;
+          if (key.description) {
+            unit.notes = { note: [key.description] };
+          }
 
-        return unit;
-      });
+          const segment: { source: string; target?: string } = {
+            source: key.keyName,
+          };
+          if (translation) {
+            segment.target = translation.value;
+          }
+          unit.segment = segment;
+
+          return unit;
+        })
+        .filter((unit): unit is XliffUnit => unit !== null);
 
       xliff.file = [
         {
