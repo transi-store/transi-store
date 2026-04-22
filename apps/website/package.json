@@ -38,6 +38,8 @@
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.7.0",
     "drizzle-orm": "1.0.0-beta.12-a5629fb",
+    "fast-xml-builder": "^1.1.5",
+    "fast-xml-parser": "^5.7.1",
     "gettext-parser": "^9.0.2",
     "i18next": "^25.8.0",
     "i18next-browser-languagedetector": "^8.2.0",
