@@ -81,6 +81,21 @@ unicode: "Émojis: 🎉🚀"`;
 
       expect(result).toBe("{}");
     });
+
+    it("should not export data without translations in the target locale", () => {
+      const translations = buildProjectTranslations(
+        { "home.title": "Accueil", "home.subtitle": "Bienvenue" },
+        "fr",
+      );
+
+      const result = format.exportSingleLocale(translations, {
+        locale: "de",
+        fileId: 1,
+        filePath: "translations/<lang>.xlf",
+      });
+
+      expect(result).toEqual("{}");
+    });
   });
 
   describe("handleExportRequest", () => {
