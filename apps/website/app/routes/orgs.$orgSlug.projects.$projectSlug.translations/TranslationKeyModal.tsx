@@ -33,6 +33,8 @@ type TranslationKeyModalProps = {
   actionUrl?: string;
   /** Optional fetcher for non-navigating submissions (e.g. edit mode in drawer). */
   fetcher?: FetcherWithComponents<unknown>;
+  /** Project file the key belongs to. Required when mode === CREATE. */
+  fileId?: number;
 };
 
 export const TRANSLATIONS_KEY_MODEL_MODE = {
@@ -51,6 +53,7 @@ export function TranslationKeyModal({
   isSubmitting = false,
   actionUrl,
   fetcher,
+  fileId,
 }: TranslationKeyModalProps) {
   const { t } = useTranslation();
   const isCreate = mode === TRANSLATIONS_KEY_MODEL_MODE.CREATE;
@@ -68,6 +71,9 @@ export function TranslationKeyModal({
                 name="_action"
                 value={isCreate ? "createKey" : "editKey"}
               />
+              {isCreate && fileId !== undefined && (
+                <input type="hidden" name="fileId" value={String(fileId)} />
+              )}
               <DialogHeader>
                 <DialogTitle>
                   {isCreate ? t("keys.new.title") : t("keys.edit.title")}

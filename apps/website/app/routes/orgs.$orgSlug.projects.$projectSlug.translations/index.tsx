@@ -156,6 +156,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (action === "createKey") {
     const keyName = formData.get("keyName");
     const description = formData.get("description");
+    const fileIdRaw = formData.get("fileId");
 
     if (!keyName || typeof keyName !== "string") {
       return {
@@ -164,8 +165,22 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       };
     }
 
+    if (!fileIdRaw || typeof fileIdRaw !== "string") {
+      return {
+        error: i18next.t("files.errors.missingFileId"),
+        action: "createKey",
+      };
+    }
+    const fileId = parseInt(fileIdRaw, 10);
+    if (isNaN(fileId)) {
+      return {
+        error: i18next.t("files.errors.invalidFileId", { fileId: fileIdRaw }),
+        action: "createKey",
+      };
+    }
+
     // Vérifier que la clé n'existe pas déjà
-    const existing = await getTranslationKeyByName(project.id, keyName);
+    const existing = await getTranslationKeyByName(project.id, keyName, fileId);
     if (existing) {
       return {
         error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
@@ -181,6 +196,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         description && typeof description === "string"
           ? description
           : undefined,
+      fileId,
     });
 
     // Retourner le succès avec le nom de la clé (la navigation se fera côté client)
@@ -336,7 +352,7 @@ export default function ProjectTranslations({
             {t("translations.count", { count })}
           </Text>
         </Box>
-        {languages.length > 0 && (
+        {languages.length > 0 && projectFiles.length > 0 && (
           <Button
             colorPalette="accent"
             onClick={() => setIsCreateKeyModalOpen(true)}
@@ -348,6 +364,7 @@ export default function ProjectTranslations({
       </Stack>
 
       {projectFiles.length > 0 && (
+        // TODO [PROJECT FILES] add project file selection
         <Tabs.Root value={String(projectFiles[0].id)} variant="line" size="sm">
           <HStack align="center" gap={2} wrap="wrap">
             <Tabs.List flex="1" minW={0}>
@@ -369,6 +386,7 @@ export default function ProjectTranslations({
               aria-label={t("files.editFile")}
               size="xs"
               variant="ghost"
+              // TODO [PROJECT FILES] add project file selection
               onClick={() => setEditingFileId(projectFiles[0].id)}
             >
               <LuPencil />
@@ -440,17 +458,21 @@ export default function ProjectTranslations({
       )}
 
       {/* Modale de création de clé */}
-      <TranslationKeyModal
-        isOpen={isCreateKeyModalOpen}
-        onOpenChange={setIsCreateKeyModalOpen}
-        mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
-        error={
-          actionData?.error && actionData.action === "createKey"
-            ? actionData.error
-            : undefined
-        }
-        isSubmitting={isSubmitting}
-      />
+      {projectFiles.length > 0 && (
+        <TranslationKeyModal
+          isOpen={isCreateKeyModalOpen}
+          onOpenChange={setIsCreateKeyModalOpen}
+          mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
+          error={
+            actionData?.error && actionData.action === "createKey"
+              ? actionData.error
+              : undefined
+          }
+          isSubmitting={isSubmitting}
+          // TODO [PROJECT FILES] add project file selection
+          fileId={projectFiles[0].id}
+        />
+      )}
 
       {editingFile && (
         <FileEditModal

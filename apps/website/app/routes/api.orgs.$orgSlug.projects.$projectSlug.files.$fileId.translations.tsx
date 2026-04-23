@@ -99,11 +99,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     }
   }
 
-  const projectTranslations = await getProjectTranslations(project.id, {
-    branchId,
-    allBranches,
-    fileId: file.id,
-  });
+  const projectTranslations = await getProjectTranslations(
+    project.id,
+    file.id,
+    {
+      branchId,
+      allBranches,
+    },
+  );
 
   const hasTranslationsForLocale = projectTranslations.some((key) =>
     key.translations.some((translation) => translation.locale === locale),

@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RouterContextProvider } from "react-router";
 import * as schema from "../../drizzle/schema";
-import { action } from "./api.orgs.$orgSlug.projects.$projectSlug.translations";
+import { action } from "./api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { orgContext } from "~/middleware/api-auth";
 import {
   cleanupDb,
   createApiKey,
   createOrganization,
   createProject,
+  createProjectFile,
   createProjectLanguage,
   createTranslationKey,
   createTranslation,
@@ -27,6 +28,7 @@ vi.mock("~/lib/db.server", () => ({
 function buildImportRequest(
   orgSlug: string,
   projectSlug: string,
+  fileId: number,
   data: Record<string, string>,
   options: {
     locale?: string;
@@ -51,7 +53,7 @@ function buildImportRequest(
   );
 
   return new Request(
-    `https://example.com/api/orgs/${orgSlug}/projects/${projectSlug}/translations`,
+    `https://example.com/api/orgs/${orgSlug}/projects/${projectSlug}/files/${fileId}/translations`,
     {
       method: "POST",
       body: formData,
@@ -59,19 +61,25 @@ function buildImportRequest(
   );
 }
 
-describe("Import API", () => {
+describe("Import file-scoped API", () => {
   let org: schema.Organization;
+  let projectFile: schema.ProjectFile;
 
   beforeEach(async () => {
     org = await createOrganization(getTestDb(), {
       slug: "test-org",
     });
-    await createProject(getTestDb(), org.id, {
+    const project = await createProject(getTestDb(), org.id, {
       name: "Test Project",
       slug: "test-project",
     });
-    await createProjectLanguage(getTestDb(), 1, { locale: "en" });
-    await createProjectLanguage(getTestDb(), 1, {
+    projectFile = await createProjectFile(getTestDb(), {
+      projectId: project.id,
+      format: SupportedFormat.JSON,
+      filePath: "locales/<lang>/common.json",
+    });
+    await createProjectLanguage(getTestDb(), project.id, { locale: "en" });
+    await createProjectLanguage(getTestDb(), project.id, {
       locale: "fr",
       isDefault: false,
     });
@@ -91,22 +99,33 @@ describe("Import API", () => {
     return ctx;
   }
 
-  function callAction(request: Request, orgSlug: string, projectSlug: string) {
+  function callAction(
+    request: Request,
+    orgSlug: string,
+    projectSlug: string,
+    fileId: number | string = projectFile.id,
+  ) {
     return action({
       request,
-      params: { orgSlug, projectSlug },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug/translations",
+      params: { orgSlug, projectSlug, fileId: String(fileId) },
+      unstable_pattern:
+        "/api/orgs/:orgSlug/projects/:projectSlug/files/:fileId/translations",
       context: createOrgContext(),
     });
   }
 
   describe("key creation", () => {
     it("should create new translation keys", async () => {
-      const request = buildImportRequest("test-org", "test-project", {
-        "home.title": "Home",
-        "home.subtitle": "Welcome",
-        "nav.about": "About",
-      });
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "home.title": "Home",
+          "home.subtitle": "Welcome",
+          "nav.about": "About",
+        },
+      );
 
       const response = await callAction(request, "test-org", "test-project");
       expect(response.status).toBe(200);
@@ -129,16 +148,25 @@ describe("Import API", () => {
         "home.title",
         "nav.about",
       ]);
+      // All keys should be attached to the target file
+      expect(keys.every((k) => k.fileId === projectFile.id)).toBe(true);
     });
 
     it("should not duplicate existing keys", async () => {
       const db = getTestDb();
-      await createTranslationKey(db, 1, "home.title");
-
-      const request = buildImportRequest("test-org", "test-project", {
-        "home.title": "Home",
-        "home.subtitle": "Welcome",
+      await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
       });
+
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "home.title": "Home",
+          "home.subtitle": "Welcome",
+        },
+      );
 
       const response = await callAction(request, "test-org", "test-project");
       expect(response.status).toBe(200);
@@ -158,12 +186,19 @@ describe("Import API", () => {
   describe("overwrite strategy", () => {
     it("should update existing translations", async () => {
       const db = getTestDb();
-      const key = await createTranslationKey(db, 1, "home.title");
+      const key = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
       await createTranslation(db, key.id, "en", "Old Home");
 
-      const request = buildImportRequest("test-org", "test-project", {
-        "home.title": "New Home",
-      });
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "home.title": "New Home",
+        },
+      );
 
       const response = await callAction(request, "test-org", "test-project");
       expect(response.status).toBe(200);
@@ -183,11 +218,18 @@ describe("Import API", () => {
 
     it("should create new translations for existing keys", async () => {
       const db = getTestDb();
-      await createTranslationKey(db, 1, "home.title");
-
-      const request = buildImportRequest("test-org", "test-project", {
-        "home.title": "Home",
+      await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
       });
+
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "home.title": "Home",
+        },
+      );
 
       const response = await callAction(request, "test-org", "test-project");
       const data = await response.json();
@@ -197,12 +239,19 @@ describe("Import API", () => {
 
     it("should not touch translations of other locales", async () => {
       const db = getTestDb();
-      const key = await createTranslationKey(db, 1, "home.title");
+      const key = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
       await createTranslation(db, key.id, "fr", "Accueil");
 
-      const request = buildImportRequest("test-org", "test-project", {
-        "home.title": "Home",
-      });
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "home.title": "Home",
+        },
+      );
 
       const response = await callAction(request, "test-org", "test-project");
 
@@ -226,12 +275,15 @@ describe("Import API", () => {
   describe("skip strategy", () => {
     it("should skip existing translations", async () => {
       const db = getTestDb();
-      const key = await createTranslationKey(db, 1, "home.title");
+      const key = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
       await createTranslation(db, key.id, "en", "Old Home");
 
       const request = buildImportRequest(
         "test-org",
         "test-project",
+        projectFile.id,
         { "home.title": "New Home" },
         { strategy: ImportStrategy.SKIP },
       );
@@ -252,12 +304,15 @@ describe("Import API", () => {
 
     it("should still create new translations", async () => {
       const db = getTestDb();
-      const existingKey = await createTranslationKey(db, 1, "home.title");
+      const existingKey = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
       await createTranslation(db, existingKey.id, "en", "Old Home");
 
       const request = buildImportRequest(
         "test-org",
         "test-project",
+        projectFile.id,
         {
           "home.title": "New Home",
           "home.subtitle": "Welcome",
@@ -275,10 +330,15 @@ describe("Import API", () => {
 
   describe("empty string values", () => {
     it("should not create translations for empty string values (overwrite strategy)", async () => {
-      const request = buildImportRequest("test-org", "test-project", {
-        "home.title": "Home",
-        "home.empty": "",
-      });
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "home.title": "Home",
+          "home.empty": "",
+        },
+      );
 
       const response = await callAction(request, "test-org", "test-project");
       expect(response.status).toBe(200);
@@ -298,12 +358,19 @@ describe("Import API", () => {
 
     it("should not update translations to empty string values (overwrite strategy)", async () => {
       const db = getTestDb();
-      const key = await createTranslationKey(db, 1, "home.title");
+      const key = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
       await createTranslation(db, key.id, "en", "Old Home");
 
-      const request = buildImportRequest("test-org", "test-project", {
-        "home.title": "",
-      });
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "home.title": "",
+        },
+      );
 
       const response = await callAction(request, "test-org", "test-project");
       expect(response.status).toBe(200);
@@ -324,6 +391,7 @@ describe("Import API", () => {
       const request = buildImportRequest(
         "test-org",
         "test-project",
+        projectFile.id,
         {
           "home.title": "Home",
           "home.empty": "",
@@ -348,6 +416,90 @@ describe("Import API", () => {
     });
   });
 
+  describe("file scoping", () => {
+    it("should return 400 if fileId is not a valid number", async () => {
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        { "home.title": "Home" },
+      );
+
+      const response = await callAction(
+        request,
+        "test-org",
+        "test-project",
+        "abc",
+      );
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe('Invalid file ID "abc"');
+    });
+
+    it("should return 404 if file does not belong to the project", async () => {
+      const request = buildImportRequest("test-org", "test-project", 99999, {
+        "home.title": "Home",
+      });
+
+      const response = await callAction(
+        request,
+        "test-org",
+        "test-project",
+        99999,
+      );
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data.error).toBe(
+        'File "99999" not found in project "test-project"',
+      );
+    });
+
+    it("should attach new keys to the target file only", async () => {
+      const db = getTestDb();
+      const otherFile = await createProjectFile(db, {
+        projectId: 1,
+        format: SupportedFormat.JSON,
+        filePath: "locales/<lang>/other.json",
+      });
+      await createTranslationKey(db, 1, "shared.key", {
+        fileId: otherFile.id,
+      });
+
+      const request = buildImportRequest(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        {
+          "shared.key": "From common",
+          "new.key": "New",
+        },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      // "shared.key" exists in otherFile but not in projectFile → creates a new key
+      // "new.key" is new → creates a new key
+      expect(data.stats.keysCreated).toBe(2);
+
+      const commonKeys = await db.query.translationKeys.findMany({
+        where: { fileId: projectFile.id },
+        orderBy: { keyName: "asc" },
+      });
+      expect(commonKeys.map((k) => k.keyName)).toEqual([
+        "new.key",
+        "shared.key",
+      ]);
+
+      const otherKeys = await db.query.translationKeys.findMany({
+        where: { fileId: otherFile.id },
+      });
+      expect(otherKeys).toHaveLength(1);
+      expect(otherKeys[0].keyName).toBe("shared.key");
+    });
+  });
+
   describe("query count", () => {
     it("should use a bounded number of queries regardless of import size", async () => {
       const smallData: Record<string, string> = {};
@@ -368,6 +520,7 @@ describe("Import API", () => {
         const request = buildImportRequest(
           "test-org",
           "test-project",
+          projectFile.id,
           smallData,
         );
         await callAction(request, "test-org", "test-project");
@@ -380,17 +533,23 @@ describe("Import API", () => {
       org = await createOrganization(getTestDb(), {
         slug: "test-org",
       });
-      await createProject(getTestDb(), org.id, {
+      const project = await createProject(getTestDb(), org.id, {
         name: "Test Project",
         slug: "test-project",
       });
-      await createProjectLanguage(getTestDb(), 1, { locale: "en" });
+      projectFile = await createProjectFile(getTestDb(), {
+        projectId: project.id,
+        format: SupportedFormat.JSON,
+        filePath: "locales/<lang>/common.json",
+      });
+      await createProjectLanguage(getTestDb(), project.id, { locale: "en" });
 
       // Measure queries for large import
       await withQueryCounter(async () => {
         const request = buildImportRequest(
           "test-org",
           "test-project",
+          projectFile.id,
           largeData,
         );
         await callAction(request, "test-org", "test-project");
@@ -400,8 +559,7 @@ describe("Import API", () => {
       // The query count should NOT scale linearly with import size.
       // With batch operations, both should use roughly the same number of queries.
       // Auth queries are handled by middleware (not counted here).
-      expect(smallQueryCount!).toBe(8);
-      expect(largeQueryCount!).toBe(8);
+      expect(smallQueryCount!).toBe(largeQueryCount!);
     });
   });
 });

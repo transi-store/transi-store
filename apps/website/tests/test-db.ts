@@ -162,17 +162,17 @@ export async function createProjectFile(
   return file;
 }
 
+// Test convenience: resolves/creates a project file so tests that don't care
+// about file scoping can still create translation keys. Production code
+// requires callers to pass fileId explicitly.
 export async function createTranslationKey(
   db: TestDb,
   projectId: number,
   keyName: string,
   overrides: Partial<schema.NewTranslationKey> = {},
 ): Promise<schema.TranslationKey> {
-  // TODO [PROJECT_FILE]: drop this fallback once all tests pass a fileId
-  // explicitly via overrides.
   let fileId = overrides.fileId;
   if (!fileId) {
-    // Reuse the project's first file if any, otherwise create a default one.
     const existing = await db.query.projectFiles.findFirst({
       where: { projectId },
       orderBy: (t, { asc }) => [asc(t.createdAt), asc(t.id)],

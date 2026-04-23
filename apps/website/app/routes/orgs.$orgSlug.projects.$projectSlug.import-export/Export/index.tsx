@@ -15,7 +15,7 @@ import { Link } from "react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LuDownload } from "react-icons/lu";
-import type { ProjectLanguage } from "../../../../drizzle/schema";
+import type { ProjectFile, ProjectLanguage } from "../../../../drizzle/schema";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
 
 const formatCollection = createListCollection({
@@ -27,23 +27,27 @@ const formatCollection = createListCollection({
 
 type ExportSectionProps = {
   languages: Array<ProjectLanguage>;
+  projectFiles: Array<ProjectFile>;
   organizationSlug: string;
   projectSlug: string;
 };
 
 export default function ExportSection({
   languages,
+  projectFiles,
   organizationSlug,
   projectSlug,
 }: ExportSectionProps) {
   const { t } = useTranslation();
   const [format, setFormat] = useState<string[]>([SupportedFormat.JSON]);
 
-  if (languages.length === 0) {
+  if (languages.length === 0 || projectFiles.length === 0) {
     return null;
   }
 
   const selectedFormat = format[0] ?? SupportedFormat.JSON;
+  // TODO [PROJECT FILES] add project file selection
+  const fileId = projectFiles[0].id;
 
   return (
     <>
@@ -94,7 +98,7 @@ export default function ExportSection({
               <Button key={lang.id} asChild size="sm" variant="outline">
                 <Link
                   reloadDocument
-                  to={`/api/orgs/${organizationSlug}/projects/${projectSlug}/translations?format=${selectedFormat}&locale=${lang.locale}`}
+                  to={`/api/orgs/${organizationSlug}/projects/${projectSlug}/files/${fileId}/translations?format=${selectedFormat}&locale=${lang.locale}`}
                 >
                   <LuDownload />
                   {lang.locale.toUpperCase()}

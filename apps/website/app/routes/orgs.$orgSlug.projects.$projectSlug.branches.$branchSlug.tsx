@@ -48,6 +48,7 @@ import {
   createTranslationKey,
   getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
+import { getProjectFiles } from "~/lib/project-files.server";
 import { TranslationKeyDrawer } from "~/components/translation-key";
 import {
   TranslationKeyModal,
@@ -107,6 +108,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     branchOnly: true,
   });
 
+  const projectFiles = await getProjectFiles(project.id);
+
   const deletionCount = await getBranchKeyDeletionCount(branch.id);
   const keyDeletions = await getBranchKeyDeletions(branch.id);
 
@@ -125,6 +128,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     branch,
     languages,
     keys,
+    projectFiles,
     search,
     highlight,
     page,
@@ -160,6 +164,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (action === "createKey") {
     const keyName = formData.get("keyName");
     const description = formData.get("description");
+    const fileIdRaw = formData.get("fileId");
 
     if (!keyName || typeof keyName !== "string") {
       return {
@@ -168,7 +173,21 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       };
     }
 
-    const existing = await getTranslationKeyByName(project.id, keyName);
+    if (!fileIdRaw || typeof fileIdRaw !== "string") {
+      return {
+        error: i18next.t("files.errors.missingFileId"),
+        action: "createKey",
+      };
+    }
+    const fileId = parseInt(fileIdRaw, 10);
+    if (isNaN(fileId)) {
+      return {
+        error: i18next.t("files.errors.invalidFileId", { fileId: fileIdRaw }),
+        action: "createKey",
+      };
+    }
+
+    const existing = await getTranslationKeyByName(project.id, keyName, fileId);
     if (existing) {
       return {
         error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
@@ -184,6 +203,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
           ? description
           : undefined,
       branchId: branch.id,
+      fileId,
     });
 
     return { success: true, keyName, search: keyName, action: "createKey" };
@@ -226,6 +246,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
     branch,
     languages,
     keys: { data, count },
+    projectFiles,
     search,
     page,
     sort,
@@ -378,7 +399,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                   projectSlug={project.slug}
                   branchSlug={branch.slug}
                 />
-                {languages.length > 0 && (
+                {languages.length > 0 && projectFiles.length > 0 && (
                   <Button
                     colorPalette="accent"
                     onClick={() => setIsCreateKeyModalOpen(true)}
@@ -621,17 +642,21 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
           />
         )}
 
-        <TranslationKeyModal
-          isOpen={isCreateKeyModalOpen}
-          onOpenChange={setIsCreateKeyModalOpen}
-          mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
-          error={
-            actionData?.error && actionData.action === "createKey"
-              ? actionData.error
-              : undefined
-          }
-          isSubmitting={isSubmitting}
-        />
+        {projectFiles.length > 0 && (
+          <TranslationKeyModal
+            isOpen={isCreateKeyModalOpen}
+            onOpenChange={setIsCreateKeyModalOpen}
+            mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
+            error={
+              actionData?.error && actionData.action === "createKey"
+                ? actionData.error
+                : undefined
+            }
+            isSubmitting={isSubmitting}
+            // TODO [PROJECT FILES] add project file selection
+            fileId={projectFiles[0].id}
+          />
+        )}
       </VStack>
     </Container>
   );

@@ -13,7 +13,6 @@ import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
 import { TranslationKeysSort } from "./sort/keySort";
 import type { TranslationKey } from "../../drizzle/schema";
-import { getOrCreateDefaultProjectFile } from "./project-files.server";
 
 type TranslationKeysReturnType = {
   count: number;
@@ -186,15 +185,10 @@ export async function getTranslationKeyById(keyId: number) {
 export async function getTranslationKeyByName(
   projectId: number,
   keyName: string,
-  // TODO [PROJECT_FILE]: make fileId required once all callers have been
-  // migrated to pass it explicitly.
-  fileId?: number,
+  fileId: number,
 ): Promise<TranslationKey | undefined> {
   return await db.query.translationKeys.findFirst({
-    where:
-      fileId !== undefined
-        ? { projectId, keyName, fileId }
-        : { projectId, keyName },
+    where: { projectId, keyName, fileId },
   });
 }
 
@@ -203,9 +197,7 @@ type CreateTranslationKeyParams = {
   keyName: string;
   description?: string | null;
   branchId?: number | null;
-  // TODO [PROJECT_FILE]: make fileId required once all callers have been
-  // migrated to pass it explicitly.
-  fileId?: number;
+  fileId: number;
 };
 
 export async function createTranslationKey({
@@ -215,10 +207,6 @@ export async function createTranslationKey({
   branchId = null,
   fileId,
 }: CreateTranslationKeyParams): Promise<number> {
-  // TODO [PROJECT_FILE]: drop this fallback once all callers pass fileId explicitly.
-  const resolvedFileId =
-    fileId ?? (await getOrCreateDefaultProjectFile(projectId)).id;
-
   const [key] = await db
     .insert(schema.translationKeys)
     .values({
@@ -226,7 +214,7 @@ export async function createTranslationKey({
       keyName,
       description,
       branchId,
-      fileId: resolvedFileId,
+      fileId,
     })
     .returning();
 
@@ -389,21 +377,18 @@ export type ProjectTranslations = Array<ProjectTranslation>;
 // Get all translations for a project grouped by key
 export async function getProjectTranslations(
   projectId: number,
-  // TODO [PROJECT_FILE]: make fileId required once all callers have been migrated to pass it explicitly.
-  options?: { branchId?: number; allBranches?: boolean; fileId?: number },
+  fileId: number,
+  options?: { branchId?: number; allBranches?: boolean },
 ): Promise<ProjectTranslations> {
   // Get all keys for this project, sorted alphabetically by keyName
   const conditions = [
     eq(schema.translationKeys.projectId, projectId),
+    eq(schema.translationKeys.fileId, fileId),
     branchFilter({
       branchId: options?.branchId,
       allBranches: options?.allBranches,
     }),
   ];
-
-  if (options?.fileId !== undefined) {
-    conditions.push(eq(schema.translationKeys.fileId, options.fileId));
-  }
 
   // When exporting with a branch, also exclude main keys marked for deletion in that branch
   if (options?.branchId !== undefined) {

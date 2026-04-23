@@ -4,16 +4,18 @@
 
 The export API lets you download project translations in several formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, and PHP. It supports two authentication methods: user session or API key.
 
+Translations are scoped to a single project file (see `project_files` table). The list of files for a project is available via `GET /api/orgs/:orgSlug/projects/:projectSlug`.
+
 ## Endpoint
 
 ```
-GET /api/orgs/:orgSlug/projects/:projectSlug/translations
+GET /api/orgs/:orgSlug/projects/:projectSlug/files/:fileId/translations
 ```
 
 **Example**:
 
 ```
-GET /api/orgs/mapado/projects/website/translations?format=json&locale=fr
+GET /api/orgs/mapado/projects/website/files/1/translations?format=json&locale=fr
 ```
 
 ## Authentication
@@ -24,7 +26,7 @@ Standard session-cookie authentication:
 
 ```bash
 curl -b cookies.txt \
-  "http://localhost:5173/api/orgs/my-org/projects/app/translations?format=json&locale=fr"
+  "http://localhost:5173/api/orgs/my-org/projects/app/files/1/translations?format=json&locale=fr"
 ```
 
 The `session` cookie must be present and valid.
@@ -35,7 +37,7 @@ Programmatic authentication via the `Authorization` header:
 
 ```bash
 curl -H "Authorization: Bearer <api-key>" \
-  "http://localhost:5173/api/orgs/my-org/projects/app/translations?format=json&locale=fr"
+  "http://localhost:5173/api/orgs/my-org/projects/app/files/1/translations?format=json&locale=fr"
 ```
 
 Benefits:
@@ -59,7 +61,7 @@ Creating a key: via the web UI at `/orgs/:orgSlug/settings` (API Keys section). 
 **Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/translations?format=json&locale=fr
+GET /api/orgs/my-org/projects/app/files/1/translations?format=json&locale=fr
 ```
 
 **Response**:
@@ -78,7 +80,7 @@ GET /api/orgs/my-org/projects/app/translations?format=json&locale=fr
 **Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/translations?format=xliff&locale=fr
+GET /api/orgs/my-org/projects/app/files/1/translations?format=xliff&locale=fr
 ```
 
 **Response**:
@@ -118,7 +120,7 @@ Notes:
 **Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/translations?format=yaml&locale=fr
+GET /api/orgs/my-org/projects/app/files/1/translations?format=yaml&locale=fr
 ```
 
 **Response**:
@@ -140,7 +142,7 @@ Notes:
 **Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/translations?format=csv&locale=fr
+GET /api/orgs/my-org/projects/app/files/1/translations?format=csv&locale=fr
 ```
 
 **Response**:
@@ -162,7 +164,7 @@ Notes:
 **Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/translations?format=po&locale=fr
+GET /api/orgs/my-org/projects/app/files/1/translations?format=po&locale=fr
 ```
 
 **Response**:
@@ -192,7 +194,7 @@ Notes:
 **Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/translations?format=ini&locale=fr
+GET /api/orgs/my-org/projects/app/files/1/translations?format=ini&locale=fr
 ```
 
 **Response**:
@@ -215,7 +217,7 @@ Notes:
 **Example**:
 
 ```bash
-GET /api/orgs/my-org/projects/app/translations?format=php&locale=fr
+GET /api/orgs/my-org/projects/app/files/1/translations?format=php&locale=fr
 ```
 
 **Response**:
@@ -301,7 +303,7 @@ Content-Disposition: attachment; filename="project-slug-fr.php"
 
 ### Source files
 
-- **Route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.translations.tsx`
+- **Route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations.tsx`
 - **Zod schema** (validation + OpenAPI): `apps/website/app/lib/api-doc/schemas/export.ts`
 - **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`, `apps/website/app/lib/format/yaml-format.server.ts`, `apps/website/app/lib/format/csv-format.server.ts`, `apps/website/app/lib/format/po-format.server.ts`, `apps/website/app/lib/format/ini-format.server.ts`, `apps/website/app/lib/format/php-format.server.ts`
 - **Factory**: `apps/website/app/lib/format/format-factory.server.ts`
@@ -338,7 +340,7 @@ The `last_used_at` field is updated on every call (asynchronous, non-blocking).
   run: |
     curl -H "Authorization: Bearer ${{ secrets.TRANSI_STORE_API_KEY }}" \
       -o translations.json \
-      "https://transi-store.com/api/orgs/my-org/projects/app/translations?format=json&locale=fr"
+      "https://transi-store.com/api/orgs/my-org/projects/app/files/1/translations?format=json&locale=fr"
 ```
 
 ### Node.js script
@@ -346,7 +348,7 @@ The `last_used_at` field is updated on every call (asynchronous, non-blocking).
 ```javascript
 async function downloadTranslations(locale) {
   const response = await fetch(
-    `https://transi-store.com/api/orgs/my-org/projects/app/translations?format=json&locale=${locale}`,
+    `https://transi-store.com/api/orgs/my-org/projects/app/files/1/translations?format=json&locale=${locale}`,
     { headers: { Authorization: `Bearer ${process.env.API_KEY}` } },
   );
   if (!response.ok) throw new Error(`HTTP ${response.status}`);

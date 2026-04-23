@@ -4,6 +4,7 @@ import type { Route } from "./+types/index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
+import { getProjectFiles } from "~/lib/project-files.server";
 import type { ImportStats } from "~/lib/import/import-translations.server";
 import { processImport } from "~/lib/import/process-import.server";
 import { getInstance } from "~/middleware/i18next";
@@ -39,7 +40,9 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     throw createProjectNotFoundResponse(params.projectSlug);
   }
 
-  return {};
+  const projectFiles = await getProjectFiles(project.id);
+
+  return { projectFiles };
 }
 
 export async function action({
@@ -62,10 +65,23 @@ export async function action({
     return { success: false, error: i18next.t("import.errors.unknownAction") };
   }
 
+  const fileIdRaw = formData.get("fileId");
+  if (!fileIdRaw || typeof fileIdRaw !== "string") {
+    return { success: false, error: i18next.t("files.errors.missingFileId") };
+  }
+  const fileId = parseInt(fileIdRaw, 10);
+  if (isNaN(fileId)) {
+    return {
+      success: false,
+      error: i18next.t("files.errors.invalidFileId", { fileId: fileIdRaw }),
+    };
+  }
+
   const result = await processImport({
     organizationId: organization.id,
     projectSlug: params.projectSlug,
     formData,
+    fileId,
   });
 
   if (!result.success) {
@@ -83,7 +99,10 @@ export async function action({
   };
 }
 
-export default function ProjectImportExport() {
+export default function ProjectImportExport({
+  loaderData,
+}: Route.ComponentProps) {
+  const { projectFiles } = loaderData;
   const { organization, project, languages } = useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
@@ -93,12 +112,14 @@ export default function ProjectImportExport() {
     <VStack gap={6} align="stretch">
       <ImportSection
         languages={languages}
+        projectFiles={projectFiles}
         isSubmitting={isSubmitting}
         actionData={actionData}
       />
 
       <ExportSection
         languages={languages}
+        projectFiles={projectFiles}
         organizationSlug={organization.slug}
         projectSlug={project.slug}
       />
