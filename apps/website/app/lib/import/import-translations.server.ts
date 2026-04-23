@@ -1,7 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { ImportStrategy } from "@transi-store/common";
 import { db, schema } from "~/lib/db.server";
-import { getOrCreateDefaultProjectFile } from "~/lib/project-files.server";
 
 type ImportParams = {
   projectId: number;
@@ -9,9 +8,7 @@ type ImportParams = {
   data: Record<string, string>;
   strategy: ImportStrategy;
   branchId?: number;
-  // TODO [PROJECT_FILE]: make fileId required once all callers (UI and import
-  // API) have been migrated to pass it explicitly.
-  fileId?: number;
+  fileId: number;
 };
 
 export type ImportStats = {
@@ -60,10 +57,6 @@ export async function importTranslations({
       return { success: true, stats, errors: [] };
     }
 
-    // TODO [PROJECT_FILE]: drop this fallback once all callers pass fileId explicitly.
-    const resolvedFileId =
-      fileId ?? (await getOrCreateDefaultProjectFile(projectId)).id;
-
     await db.transaction(async (tx) => {
       const keyNames = entries.map(([keyName]) => keyName);
 
@@ -77,7 +70,7 @@ export async function importTranslations({
         .where(
           and(
             eq(schema.translationKeys.projectId, projectId),
-            eq(schema.translationKeys.fileId, resolvedFileId),
+            eq(schema.translationKeys.fileId, fileId),
             inArray(schema.translationKeys.keyName, keyNames),
           ),
         );
@@ -99,7 +92,7 @@ export async function importTranslations({
                 projectId,
                 keyName,
                 branchId: branchId ?? null,
-                fileId: resolvedFileId,
+                fileId,
               })),
             )
             .onConflictDoNothing({
@@ -136,7 +129,7 @@ export async function importTranslations({
           .where(
             and(
               eq(schema.translationKeys.projectId, projectId),
-              eq(schema.translationKeys.fileId, resolvedFileId),
+              eq(schema.translationKeys.fileId, fileId),
               inArray(schema.translationKeys.keyName, missingKeys),
             ),
           );

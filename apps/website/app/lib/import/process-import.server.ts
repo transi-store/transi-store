@@ -23,10 +23,7 @@ type ProcessImportParams = {
   projectSlug: string;
   formData: FormData;
   branchSlug?: string;
-  // When set, import is scoped to this specific file. Skips the default-file
-  // fallback in importTranslations.
-  // TODO [PROJECT_FILE]: make fileId required once all callers have been migrated
-  fileId?: number;
+  fileId: number;
 };
 
 /**

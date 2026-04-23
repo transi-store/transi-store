@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { SupportedFormat } from "@transi-store/common";
 import * as schema from "../../drizzle/schema";
 import {
   getTestDb,
   createOrganization,
   createProject,
+  createProjectFile,
   createBranch,
   createTranslationKey,
   createTranslation,
@@ -27,6 +29,7 @@ describe("getProjectTranslations", () => {
   let db: TestDb;
   let projectId: number;
   let orgId: number;
+  let fileId: number;
 
   beforeEach(async () => {
     db = getTestDb();
@@ -35,10 +38,16 @@ describe("getProjectTranslations", () => {
     orgId = org.id;
     const project = await createProject(db, orgId);
     projectId = project.id;
+    const file = await createProjectFile(db, {
+      projectId,
+      format: SupportedFormat.JSON,
+      filePath: "<lang>.json",
+    });
+    fileId = file.id;
   });
 
   it("returns empty array when project has no keys", async () => {
-    const result = await getProjectTranslations(projectId);
+    const result = await getProjectTranslations(projectId, fileId);
     expect(result).toEqual([]);
   });
 
@@ -47,7 +56,7 @@ describe("getProjectTranslations", () => {
     await createTranslation(db, key.id, "fr", "Bonjour le monde");
     await createTranslation(db, key.id, "en", "Hello world");
 
-    const result = await getProjectTranslations(projectId);
+    const result = await getProjectTranslations(projectId, fileId);
 
     expect(result).toEqual([
       {
@@ -89,7 +98,7 @@ describe("getProjectTranslations", () => {
     await createTranslationKey(db, projectId, "apple");
     await createTranslationKey(db, projectId, "mango");
 
-    const result = await getProjectTranslations(projectId);
+    const result = await getProjectTranslations(projectId, fileId);
 
     expect(result.map((r) => r.keyName)).toEqual(["apple", "mango", "zebra"]);
   });
@@ -101,7 +110,7 @@ describe("getProjectTranslations", () => {
       branchId: branch.id,
     });
 
-    const result = await getProjectTranslations(projectId);
+    const result = await getProjectTranslations(projectId, fileId);
 
     expect(result).toHaveLength(1);
     expect(result[0].keyName).toBe("main.key");
@@ -114,7 +123,7 @@ describe("getProjectTranslations", () => {
       branchId: branch.id,
     });
 
-    const result = await getProjectTranslations(projectId, {
+    const result = await getProjectTranslations(projectId, fileId, {
       branchId: branch.id,
     });
 
@@ -125,7 +134,7 @@ describe("getProjectTranslations", () => {
   it("returns only main key when branchId is unknown", async () => {
     await createTranslationKey(db, projectId, "main.key");
 
-    const result = await getProjectTranslations(projectId, {
+    const result = await getProjectTranslations(projectId, fileId, {
       branchId: 9999,
     });
 
@@ -138,7 +147,7 @@ describe("getProjectTranslations", () => {
     await createTranslationKey(db, projectId, "my.key");
     await createTranslationKey(db, otherProject.id, "other.key");
 
-    const result = await getProjectTranslations(projectId);
+    const result = await getProjectTranslations(projectId, fileId);
 
     expect(result).toHaveLength(1);
     expect(result[0].keyName).toBe("my.key");
@@ -151,7 +160,7 @@ describe("getProjectTranslations", () => {
     await createTranslation(db, key2.id, "fr", "Valeur 2");
     await createTranslation(db, key2.id, "en", "Value 2");
 
-    const result = await getProjectTranslations(projectId);
+    const result = await getProjectTranslations(projectId, fileId);
 
     const r1 = result.find((r) => r.keyName === "key1")!;
     const r2 = result.find((r) => r.keyName === "key2")!;
@@ -170,7 +179,7 @@ describe("getProjectTranslations", () => {
         deletedAt: new Date(),
       });
 
-      const result = await getProjectTranslations(projectId);
+      const result = await getProjectTranslations(projectId, fileId);
 
       expect(result).toHaveLength(1);
       expect(result[0].keyName).toBe("alive.key");
@@ -186,7 +195,7 @@ describe("getProjectTranslations", () => {
         branchId: branch.id,
       });
 
-      const result = await getProjectTranslations(projectId, {
+      const result = await getProjectTranslations(projectId, fileId, {
         branchId: branch.id,
       });
 
@@ -216,7 +225,7 @@ describe("getProjectTranslations", () => {
         branchId: branch2.id,
       });
 
-      const result = await getProjectTranslations(projectId, {
+      const result = await getProjectTranslations(projectId, fileId, {
         allBranches: true,
       });
 
@@ -242,7 +251,7 @@ describe("getProjectTranslations", () => {
         deletedAt: new Date(),
       });
 
-      const result = await getProjectTranslations(projectId, {
+      const result = await getProjectTranslations(projectId, fileId, {
         allBranches: true,
       });
 
@@ -258,7 +267,7 @@ describe("getProjectTranslations", () => {
       const key = await createTranslationKey(db, projectId, "some.key");
       await addKeyDeletionsToBranch(branch.id, [key.id]);
 
-      const result = await getProjectTranslations(projectId, {
+      const result = await getProjectTranslations(projectId, fileId, {
         allBranches: true,
       });
 
@@ -278,7 +287,7 @@ describe("getProjectTranslations", () => {
       );
       await addKeyDeletionsToBranch(branch.id, [key2.id]);
 
-      const result = await getProjectTranslations(projectId, {
+      const result = await getProjectTranslations(projectId, fileId, {
         branchId: branch.id,
       });
 
@@ -292,7 +301,7 @@ describe("getProjectTranslations", () => {
       await addKeyDeletionsToBranch(branch.id, [key.id]);
 
       // Without branchId, the deletion markers are not applied
-      const result = await getProjectTranslations(projectId);
+      const result = await getProjectTranslations(projectId, fileId);
 
       expect(result).toHaveLength(1);
       expect(result[0].keyName).toBe("some.key");

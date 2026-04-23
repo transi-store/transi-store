@@ -191,7 +191,7 @@ All operations run in a single transaction:
 
 ### Source files
 
-- **API route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.translations.tsx`
+- **API route**: `apps/website/app/routes/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations.tsx`
 - **UI route**: `apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx`
 - **Zod schema** (validation + OpenAPI): `apps/website/app/lib/api-doc/schemas/import.ts`
 - **Import orchestrator**: `apps/website/app/lib/import/process-import.server.ts`
@@ -279,7 +279,7 @@ curl -X POST \
   -F "locale=fr" \
   -F "strategy=overwrite" \
   -F "file=@translations.json" \
-  "http://localhost:5173/api/orgs/my-org/projects/app/translations"
+  "http://localhost:5173/api/orgs/my-org/projects/app/files/1/translations"
 ```
 
 ### Via the CLI package

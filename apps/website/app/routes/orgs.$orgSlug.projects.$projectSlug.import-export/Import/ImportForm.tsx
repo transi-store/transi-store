@@ -11,16 +11,22 @@ import { ImportStrategy } from "@transi-store/common";
 
 type ImportFormProps = {
   languages: Array<ProjectLanguage>;
+  fileId: number;
   isSubmitting: boolean;
 };
 
-export function ImportForm({ languages, isSubmitting }: ImportFormProps) {
+export function ImportForm({
+  languages,
+  fileId,
+  isSubmitting,
+}: ImportFormProps) {
   const { t } = useTranslation();
   const [shouldOverwrite, setShouldOverwrite] = useState(false);
 
   return (
     <Form method="post" encType="multipart/form-data">
       <input type="hidden" name="_action" value="import" />
+      <input type="hidden" name="fileId" value={String(fileId)} />
 
       <VStack gap={4} align="stretch">
         {/* File input */}

@@ -123,11 +123,19 @@ Go to **Import / Export** in your project and choose the format:
 | CSV | `.csv` | Spreadsheet-friendly |
 | PO | `.po` | GNU gettext format |
 
-You can also export via the **REST API** using your organization's API key:
+You can also export via the **REST API** using your organization's API key.
+First, list the project's files to get their IDs:
 
 ```bash
 curl -H "Authorization: Bearer YOUR_API_KEY" \
-  "https://transi-store.com/api/orgs/acme/projects/webapp/translations?locale=fr&format=json"
+  "https://transi-store.com/api/orgs/acme/projects/webapp"
+```
+
+Then export a given file for a given locale:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp/files/1/translations?locale=fr&format=json"
 ```
 
 ### Importing translations
