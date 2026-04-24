@@ -29,7 +29,8 @@ type ProjectFile = { id: number; filePath: string; format: string };
 type FileEditModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  file: ProjectFile;
+  /** When provided, the modal opens in edit mode for that file. When undefined, it opens in create mode. */
+  file?: ProjectFile;
 };
 
 type ActionData = {
@@ -46,6 +47,8 @@ export function FileEditModal({
   const fetcher = useFetcher<ActionData>();
   const { t } = useTranslation();
   const isSubmitting = fetcher.state !== "idle";
+  const isEditMode = file !== undefined;
+  const formAction = isEditMode ? "edit_file" : "create_file";
 
   const formatCollection = createListCollection({
     items: Object.values(SupportedFormat).map((value) => ({
@@ -55,17 +58,17 @@ export function FileEditModal({
   });
 
   const defaultFormat =
-    (file.format as SupportedFormat) ?? SupportedFormat.JSON;
+    (file?.format as SupportedFormat | undefined) ?? SupportedFormat.JSON;
 
   useEffect(() => {
     if (
       fetcher.state === "idle" &&
       fetcher.data?.success &&
-      fetcher.data.action === "edit_file"
+      fetcher.data.action === formAction
     ) {
       onOpenChange(false);
     }
-  }, [fetcher.state, fetcher.data, onOpenChange]);
+  }, [fetcher.state, fetcher.data, onOpenChange, formAction]);
 
   return (
     <DialogRoot open={isOpen} onOpenChange={(e) => onOpenChange(e.open)}>
@@ -74,10 +77,16 @@ export function FileEditModal({
         <DialogPositioner>
           <DialogContent>
             <fetcher.Form method="post">
-              <input type="hidden" name="_action" value="edit_file" />
-              <input type="hidden" name="fileId" value={String(file.id)} />
+              <input type="hidden" name="_action" value={formAction} />
+              {isEditMode && (
+                <input type="hidden" name="fileId" value={String(file.id)} />
+              )}
               <DialogHeader>
-                <DialogTitle>{t("files.modal.titleEdit")}</DialogTitle>
+                <DialogTitle>
+                  {isEditMode
+                    ? t("files.modal.titleEdit")
+                    : t("files.modal.titleCreate")}
+                </DialogTitle>
                 <DialogCloseTrigger />
               </DialogHeader>
               <DialogBody>
@@ -122,7 +131,7 @@ export function FileEditModal({
                     <Field.Label>{t("files.modal.pathLabel")}</Field.Label>
                     <Input
                       name="filePath"
-                      defaultValue={file.filePath}
+                      defaultValue={file?.filePath ?? ""}
                       placeholder="locales/<lang>/common.json"
                       fontFamily="mono"
                       fontSize="sm"
@@ -151,7 +160,7 @@ export function FileEditModal({
                   colorPalette="brand"
                   loading={isSubmitting}
                 >
-                  {t("files.modal.save")}
+                  {isEditMode ? t("files.modal.save") : t("files.modal.create")}
                 </Button>
               </DialogFooter>
             </fetcher.Form>

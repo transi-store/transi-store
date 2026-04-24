@@ -41,6 +41,7 @@ import {
 import {
   getProjectFiles,
   updateProjectFile,
+  createProjectFile,
   DuplicateFilePathError,
 } from "~/lib/project-files.server";
 import { validateOutputPath } from "~/lib/path-utils";
@@ -105,17 +106,54 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const offset = (page - 1) * LIMIT;
 
-  const [keys, projectFiles] = await Promise.all([
-    getTranslationKeys(project.id, {
-      search,
-      limit: LIMIT,
-      offset,
-      sort,
-    }),
-    getProjectFiles(project.id),
-  ]);
+  const projectFiles = await getProjectFiles(project.id);
 
-  return { keys, projectFiles, search, highlight, page, sort };
+  if (projectFiles.length === 0) {
+    return {
+      keys: { data: [], count: 0 },
+      projectFiles,
+      selectedFileId: null,
+      search,
+      highlight,
+      page,
+      sort,
+    };
+  }
+
+  const fileIdParam = url.searchParams.get("fileId");
+  const parsedFileId = fileIdParam ? parseInt(fileIdParam, 10) : NaN;
+  const selectedFile =
+    !isNaN(parsedFileId) && projectFiles.find((f) => f.id === parsedFileId);
+
+  if (!selectedFile) {
+    throw redirect(
+      getTranslationsUrl(params.orgSlug, params.projectSlug, {
+        fileId: projectFiles[0].id,
+        search,
+        sort,
+        highlight,
+        page: page > 1 ? String(page) : undefined,
+      }),
+    );
+  }
+
+  const keys = await getTranslationKeys(project.id, {
+    search,
+    limit: LIMIT,
+    offset,
+    sort,
+    fileId: selectedFile.id,
+  });
+
+  return {
+    keys,
+    projectFiles,
+    selectedFileId: selectedFile.id,
+    search,
+    highlight,
+    page,
+    sort,
+  };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -203,6 +241,53 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true, keyName, search: keyName, action: "createKey" };
   }
 
+  if (action === "create_file") {
+    const filePath = formData.get("filePath");
+    const fileFormat = formData.get("fileFormat");
+
+    if (!filePath || typeof filePath !== "string") {
+      return {
+        error: i18next.t("files.errors.pathRequired"),
+        action: "create_file",
+      };
+    }
+    const pathError = validateOutputPath(filePath, i18next.t);
+    if (pathError) {
+      return { error: pathError, action: "create_file" };
+    }
+
+    if (
+      !fileFormat ||
+      typeof fileFormat !== "string" ||
+      !isSupportedFormat(fileFormat)
+    ) {
+      return {
+        error: i18next.t("files.errors.invalidFormat"),
+        action: "create_file",
+      };
+    }
+
+    try {
+      const created = await createProjectFile(project.id, {
+        filePath,
+        format: fileFormat as SupportedFormat,
+      });
+      return redirect(
+        getTranslationsUrl(params.orgSlug, params.projectSlug, {
+          fileId: created.id,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof DuplicateFilePathError) {
+        return {
+          error: i18next.t("files.errors.duplicatePath", { filePath }),
+          action: "create_file",
+        };
+      }
+      throw error;
+    }
+  }
+
   if (action === "edit_file") {
     const fileId = formData.get("fileId");
     const filePath = formData.get("filePath");
@@ -272,6 +357,7 @@ export default function ProjectTranslations({
   const {
     keys: { data, count },
     projectFiles,
+    selectedFileId,
     search,
     highlight,
     page,
@@ -284,6 +370,7 @@ export default function ProjectTranslations({
   const isSubmitting = navigation.state === "submitting";
 
   const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
+  const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
   const editingFile = projectFiles.find((f) => f.id === editingFileId) ?? null;
 
@@ -305,6 +392,7 @@ export default function ProjectTranslations({
     search,
     sort,
     highlight,
+    fileId: selectedFileId,
   });
 
   // Close modal and navigate after successful creation
@@ -363,46 +451,89 @@ export default function ProjectTranslations({
         )}
       </Stack>
 
-      {projectFiles.length > 0 && (
-        // TODO [PROJECT FILES] add project file selection
-        <Tabs.Root value={String(projectFiles[0].id)} variant="line" size="sm">
+      {projectFiles.length === 0 ? (
+        <Box
+          p={10}
+          textAlign="center"
+          borderWidth={1}
+          borderRadius="lg"
+          bg="bg.subtle"
+        >
+          <Text color="fg.muted" mb={4}>
+            {t("files.noFiles")}
+          </Text>
+          <Button
+            colorPalette="accent"
+            onClick={() => setIsCreateFileModalOpen(true)}
+          >
+            <LuPlus /> {t("files.addFile")}
+          </Button>
+        </Box>
+      ) : (
+        <Tabs.Root
+          value={selectedFileId !== null ? String(selectedFileId) : undefined}
+          variant="line"
+          size="sm"
+        >
           <HStack align="center" gap={2} wrap="wrap">
             <Tabs.List flex="1" minW={0}>
               {projectFiles.map((file) => (
-                <Tabs.Trigger
-                  key={file.id}
-                  value={String(file.id)}
-                  cursor="default"
-                >
-                  <Code fontSize="xs">{file.filePath}</Code>
-                  <Badge size="xs" ml={2}>
-                    {FORMAT_LABELS[file.format as SupportedFormat] ??
-                      file.format}
-                  </Badge>
-                </Tabs.Trigger>
+                <HStack key={file.id} gap={0} align="center">
+                  <Tabs.Trigger
+                    value={String(file.id)}
+                    cursor="pointer"
+                    onClick={() => {
+                      if (file.id === selectedFileId) return;
+                      navigate(
+                        getTranslationsUrl(organization.slug, project.slug, {
+                          fileId: file.id,
+                          search,
+                          sort,
+                          highlight,
+                        }),
+                      );
+                    }}
+                  >
+                    <Code fontSize="xs">{file.filePath}</Code>
+                    <Badge size="xs" ml={2}>
+                      {FORMAT_LABELS[file.format as SupportedFormat] ??
+                        file.format}
+                    </Badge>
+                  </Tabs.Trigger>
+                  <IconButton
+                    aria-label={t("files.editFile")}
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => setEditingFileId(file.id)}
+                  >
+                    <LuPencil />
+                  </IconButton>
+                </HStack>
               ))}
             </Tabs.List>
             <IconButton
-              aria-label={t("files.editFile")}
+              aria-label={t("files.addFile")}
               size="xs"
               variant="ghost"
-              // TODO [PROJECT FILES] add project file selection
-              onClick={() => setEditingFileId(projectFiles[0].id)}
+              onClick={() => setIsCreateFileModalOpen(true)}
             >
-              <LuPencil />
+              <LuPlus />
             </IconButton>
           </HStack>
         </Tabs.Root>
       )}
 
-      <TranslationsSearchBar
-        search={search}
-        sort={sort}
-        organizationSlug={organization.slug}
-        projectSlug={project.slug}
-      />
+      {projectFiles.length > 0 && (
+        <TranslationsSearchBar
+          search={search}
+          sort={sort}
+          organizationSlug={organization.slug}
+          projectSlug={project.slug}
+          fileId={selectedFileId ?? undefined}
+        />
+      )}
 
-      {languages.length === 0 ? (
+      {projectFiles.length === 0 ? null : languages.length === 0 ? (
         <Box p={10} textAlign="center" borderWidth={1} borderRadius="lg">
           <Text color="fg.muted" mb={4}>
             {t("translations.noLanguages")}
@@ -443,6 +574,7 @@ export default function ProjectTranslations({
             sort={sort}
             organizationSlug={organization.slug}
             projectSlug={project.slug}
+            fileId={selectedFileId ?? undefined}
           />
         </>
       )}
@@ -458,7 +590,7 @@ export default function ProjectTranslations({
       )}
 
       {/* Modale de création de clé */}
-      {projectFiles.length > 0 && (
+      {selectedFileId !== null && (
         <TranslationKeyModal
           isOpen={isCreateKeyModalOpen}
           onOpenChange={setIsCreateKeyModalOpen}
@@ -469,8 +601,7 @@ export default function ProjectTranslations({
               : undefined
           }
           isSubmitting={isSubmitting}
-          // TODO [PROJECT FILES] add project file selection
-          fileId={projectFiles[0].id}
+          fileId={selectedFileId}
         />
       )}
 
@@ -483,6 +614,11 @@ export default function ProjectTranslations({
           file={editingFile}
         />
       )}
+
+      <FileEditModal
+        isOpen={isCreateFileModalOpen}
+        onOpenChange={setIsCreateFileModalOpen}
+      />
     </VStack>
   );
 }

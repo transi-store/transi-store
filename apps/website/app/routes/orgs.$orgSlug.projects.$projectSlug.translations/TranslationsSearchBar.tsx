@@ -25,6 +25,7 @@ type TranslationsSearchBarProps = {
   organizationSlug: string;
   projectSlug: string;
   branchSlug?: string;
+  fileId?: number;
 };
 
 export function TranslationsSearchBar({
@@ -33,6 +34,7 @@ export function TranslationsSearchBar({
   organizationSlug,
   projectSlug,
   branchSlug,
+  fileId,
 }: TranslationsSearchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -42,16 +44,12 @@ export function TranslationsSearchBar({
     search?: string | null;
     sort?: string | null;
   }) => {
+    const params = { ...queryParams, fileId };
     if (branchSlug) {
-      return getBranchUrl(
-        organizationSlug,
-        projectSlug,
-        branchSlug,
-        queryParams,
-      );
+      return getBranchUrl(organizationSlug, projectSlug, branchSlug, params);
     }
 
-    return getTranslationsUrl(organizationSlug, projectSlug, queryParams);
+    return getTranslationsUrl(organizationSlug, projectSlug, params);
   };
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -125,6 +123,7 @@ export function TranslationsSearchBar({
                 removeUndefinedValues({
                   search,
                   sort: e.value[0],
+                  fileId,
                 }),
                 {
                   method: "get",
