@@ -13,7 +13,7 @@
     "build": "turbo run build --filter=@transi-store/website",
     "build:common": "turbo run build --filter=@transi-store/common",
     "build:cli": "turbo run build --filter=@transi-store/cli",
-    "start": "turbo run start --filter=@transi-store/website",
+    "start": "yarn workspace @transi-store/website start",
     "download-translations": "NODE_OPTIONS='--require dotenv/config' yarn transi-store",
     "upload-translations": "NODE_OPTIONS='--require dotenv/config' yarn transi-store upload:config",
     "lint:eslint": "eslint .",
