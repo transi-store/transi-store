@@ -8,6 +8,7 @@ import {
   HStack,
   Badge,
   Card,
+  Code,
   List,
 } from "@chakra-ui/react";
 import {
@@ -164,6 +165,7 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
                               <Badge size="sm" variant="outline">
                                 {key.keyName}
                               </Badge>
+                              <Code fontSize="xs">{key.filePath}</Code>
                             </HStack>
                           ))}
                         </VStack>
@@ -196,6 +198,7 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
                               >
                                 {key.keyName}
                               </Badge>
+                              <Code fontSize="xs">{key.filePath}</Code>
                             </HStack>
                           ))}
                         </VStack>
