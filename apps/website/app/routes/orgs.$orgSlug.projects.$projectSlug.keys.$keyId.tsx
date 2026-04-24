@@ -166,7 +166,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         await upsertTranslation({
           keyId: key.id,
           locale: locale,
-          value: value.trim(),
+          value,
           isFuzzy: isFuzzy === "true",
         });
       } else {
