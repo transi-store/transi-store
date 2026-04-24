@@ -78,13 +78,13 @@ async function fetchTranslationsAndPrint(
     ? `${label.project} / ${label.fileName} / ${label.locale}`
     : `${config.project} / ${config.locale}`;
 
-  if (result.success) {
-    console.log(
-      `${styleText("green", "✓")} ${styleText("bold", name)} ${styleText("dim", "→")} ${result.output}`,
-    );
-  } else if ("skipped" in result) {
+  if ("skipped" in result) {
     console.log(
       `${styleText("dim", "-")} ${styleText("bold", name)} — ${styleText("dim", "no translations")}`,
+    );
+  } else if (result.success) {
+    console.log(
+      `${styleText("green", "✓")} ${styleText("bold", name)} ${styleText("dim", "→")} ${result.output}`,
     );
   } else {
     console.error(
@@ -255,13 +255,13 @@ export async function fetchForConfig(
           const counter = styleText("dim", `[${completed}/${total}]`);
           const label = `${task.project} / ${task.fileName} / ${task.locale}`;
 
-          if (fetchResult.success) {
-            console.log(
-              `  ${counter} ${styleText("green", "✓")} ${styleText("bold", label)}`,
-            );
-          } else if ("skipped" in fetchResult) {
+          if ("skipped" in fetchResult) {
             console.log(
               `  ${counter} ${styleText("dim", "-")} ${styleText("bold", label)}`,
+            );
+          } else if (fetchResult.success) {
+            console.log(
+              `  ${counter} ${styleText("green", "✓")} ${styleText("bold", label)}`,
             );
           } else {
             console.log(
@@ -291,11 +291,11 @@ export async function fetchForConfig(
       for (const locale of locales) {
         const res = localeResults.get(locale);
         if (!res) continue;
-        if (res.success) {
-          statuses.push(styleText("green", `✓ ${locale}`));
-        } else if ("skipped" in res) {
+        if ("skipped" in res) {
           statuses.push(styleText("dim", `- ${locale}`));
           skippedCount++;
+        } else if (res.success) {
+          statuses.push(styleText("green", `✓ ${locale}`));
         } else {
           statuses.push(styleText("red", `✗ ${locale}`));
           failures.push({
