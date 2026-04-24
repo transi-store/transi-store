@@ -18,7 +18,8 @@ export type Config = {
 
 export type FetchResult =
   | { success: true; output: string }
-  | { success: false; error: string; output: string };
+  | { success: false; error: string; output: string }
+  | { skipped: true; output: string };
 
 export async function fetchTranslations({
   domainRoot,
@@ -50,6 +51,10 @@ export async function fetchTranslations({
       error: `${describeFetchError(error)} (${url})`,
       output,
     };
+  }
+
+  if (content.status === 404) {
+    return { skipped: true, output };
   }
 
   if (!content.ok) {
