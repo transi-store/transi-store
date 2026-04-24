@@ -25,7 +25,7 @@
     "db:setup-search": "./scripts/enable-fuzzy-search.sh",
     "test": "yarn workspace @transi-store/website test",
     "release": "yarn build:cli && yarn changeset publish",
-    "postinstall": "husky"
+    "postinstall": "[ \"$NODE_ENV\" = \"production\" ] || husky"
   },
   "engines": {
     "node": "24"
