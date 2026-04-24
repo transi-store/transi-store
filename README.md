@@ -64,7 +64,7 @@ Open `.env` and configure at minimum:
 
 ```bash
 SESSION_SECRET=a-long-random-secret-string
-ENCRYPTION_KEY=a-64-character-hexadecimal-key
+ENCRYPTION_KEY=a-64-character-hexadecimal-key # generate one with `openssl rand -hex 32`
 
 # At least one OAuth provider is required for authentication.
 # Google OAuth — https://console.cloud.google.com/apis/credentials
