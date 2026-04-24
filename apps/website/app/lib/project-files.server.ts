@@ -28,6 +28,46 @@ export class DuplicateFilePathError extends Error {
   }
 }
 
+function isDuplicateFilePathError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.message.includes("unique_project_file_path")) return true;
+  const cause = (error as Error & { cause?: unknown }).cause;
+  if (
+    cause instanceof Error &&
+    cause.message.includes("unique_project_file_path")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+type CreateProjectFileParams = {
+  format: SupportedFormat;
+  filePath: string;
+};
+
+export async function createProjectFile(
+  projectId: number,
+  params: CreateProjectFileParams,
+): Promise<ProjectFile> {
+  try {
+    const [file] = await db
+      .insert(schema.projectFiles)
+      .values({
+        projectId,
+        format: params.format,
+        filePath: params.filePath,
+      })
+      .returning();
+    return file;
+  } catch (error) {
+    if (isDuplicateFilePathError(error)) {
+      throw new DuplicateFilePathError(params.filePath);
+    }
+    throw error;
+  }
+}
+
 type UpdateProjectFileParams = {
   format?: SupportedFormat;
   filePath?: string;
@@ -55,11 +95,7 @@ export async function updateProjectFile(
       .returning();
     return file;
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes("unique_project_file_path") &&
-      params.filePath !== undefined
-    ) {
+    if (params.filePath !== undefined && isDuplicateFilePathError(error)) {
       throw new DuplicateFilePathError(params.filePath);
     }
     throw error;

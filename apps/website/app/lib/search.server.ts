@@ -12,6 +12,8 @@ export type SearchResult = {
   organizationId: number;
   organizationName: string;
   organizationSlug: string;
+  fileId: number;
+  filePath: string;
   translationLocale?: string;
   translationValue?: string;
   matchType: "key" | "translation";
@@ -103,6 +105,8 @@ export async function globalSearch(
       organizationId: org.id,
       organizationName: org.name,
       organizationSlug: org.slug,
+      fileId: key.fileId,
+      filePath: row.filePath,
       matchType: row.matchType,
       translationLocale: row.translationLocale,
       translationValue: row.translationValue,

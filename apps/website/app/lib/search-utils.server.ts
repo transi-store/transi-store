@@ -27,6 +27,7 @@ function maxSimilarity(field: any, query: string) {
 
 type SearchTranslationKeyResult = {
   key: typeof schema.translationKeys.$inferSelect;
+  filePath: string;
   matchType: "key" | "translation";
   similarity: number;
   translationLocale?: string;
@@ -44,6 +45,7 @@ export async function searchTranslationKeys(
     sort?: TranslationKeysSort;
     branchId?: number;
     branchOnly?: boolean;
+    fileId?: number;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit ?? 50;
@@ -74,21 +76,33 @@ export async function searchTranslationKeys(
   // Exclude soft-deleted keys
   const notDeleted = isNull(schema.translationKeys.deletedAt);
 
+  // File filter
+  const fileCondition =
+    options?.fileId !== undefined
+      ? eq(schema.translationKeys.fileId, options.fileId)
+      : undefined;
+
   // Matches sur keyName et description
   const keyResults = await db
     .select({
       key: schema.translationKeys,
+      filePath: schema.projectFiles.filePath,
       similarity: maxSimilarity(schema.translationKeys.keyName, searchQuery).as(
         "similarity",
       ),
       matchType: sql<"key">`'key'`.as("matchType"),
     })
     .from(schema.translationKeys)
+    .innerJoin(
+      schema.projectFiles,
+      eq(schema.translationKeys.fileId, schema.projectFiles.id),
+    )
     .where(
       and(
         inArray(schema.translationKeys.projectId, projectIds),
         branchCondition,
         notDeleted,
+        fileCondition,
         or(
           sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
           sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
@@ -104,6 +118,7 @@ export async function searchTranslationKeys(
     inArray(schema.translationKeys.projectId, projectIds),
     branchCondition,
     notDeleted,
+    fileCondition,
     sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
   ];
   if (options?.locale) {
@@ -112,6 +127,7 @@ export async function searchTranslationKeys(
   const translationResults = await db
     .select({
       key: schema.translationKeys,
+      filePath: schema.projectFiles.filePath,
       similarity: maxSimilarity(schema.translations.value, searchQuery).as(
         "similarity",
       ),
@@ -123,6 +139,10 @@ export async function searchTranslationKeys(
     .innerJoin(
       schema.translations,
       eq(schema.translationKeys.id, schema.translations.keyId),
+    )
+    .innerJoin(
+      schema.projectFiles,
+      eq(schema.translationKeys.fileId, schema.projectFiles.id),
     )
     .where(and(...translationWhere))
     .orderBy(orderBy)

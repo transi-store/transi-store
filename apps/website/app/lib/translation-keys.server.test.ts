@@ -11,7 +11,10 @@ import {
   createTranslation,
   type TestDb,
 } from "../../tests/test-db";
-import { getProjectTranslations } from "./translation-keys.server";
+import {
+  getProjectTranslations,
+  getTranslationKeys,
+} from "./translation-keys.server";
 import { addKeyDeletionsToBranch } from "./branches.server";
 
 vi.mock("~/lib/db.server", () => ({
@@ -306,5 +309,44 @@ describe("getProjectTranslations", () => {
       expect(result).toHaveLength(1);
       expect(result[0].keyName).toBe("some.key");
     });
+  });
+});
+
+describe("getTranslationKeys fileId filter", () => {
+  let db: TestDb;
+  let projectId: number;
+  let fileA: number;
+  let fileB: number;
+
+  beforeEach(async () => {
+    db = getTestDb();
+    const org = await createOrganization(db);
+    const project = await createProject(db, org.id);
+    projectId = project.id;
+    const a = await createProjectFile(db, {
+      projectId,
+      format: SupportedFormat.JSON,
+      filePath: "locales/<lang>/a.json",
+    });
+    const b = await createProjectFile(db, {
+      projectId,
+      format: SupportedFormat.JSON,
+      filePath: "locales/<lang>/b.json",
+    });
+    fileA = a.id;
+    fileB = b.id;
+  });
+
+  it("returns only keys from the given fileId", async () => {
+    await createTranslationKey(db, projectId, "a.key", { fileId: fileA });
+    await createTranslationKey(db, projectId, "b.key", { fileId: fileB });
+
+    const resultA = await getTranslationKeys(projectId, { fileId: fileA });
+    const resultB = await getTranslationKeys(projectId, { fileId: fileB });
+
+    expect(resultA.count).toBe(1);
+    expect(resultA.data[0].keyName).toBe("a.key");
+    expect(resultB.count).toBe(1);
+    expect(resultB.data[0].keyName).toBe("b.key");
   });
 });

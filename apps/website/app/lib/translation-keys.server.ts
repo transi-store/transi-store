@@ -67,6 +67,7 @@ export async function getTranslationKeys(
     sort?: TranslationKeysSort;
     branchId?: number;
     branchOnly?: boolean;
+    fileId?: number;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -100,6 +101,7 @@ export async function getTranslationKeys(
         sort: options?.sort ?? TranslationKeysSort.RELEVANCE,
         branchId: options?.branchId,
         branchOnly: options?.branchOnly,
+        fileId: options?.fileId,
       },
     );
     keys = keysWithSimilarity.map(
@@ -115,12 +117,18 @@ export async function getTranslationKeys(
     count = keysWithSimilarity.length;
   } else {
     // No search query - use regular query ordered by selected sort
+    const whereCondition = and(
+      eq(schema.translationKeys.projectId, projectId),
+      branchCondition,
+      options?.fileId !== undefined
+        ? eq(schema.translationKeys.fileId, options.fileId)
+        : undefined,
+    );
+
     keys = await db
       .select()
       .from(schema.translationKeys)
-      .where(
-        and(eq(schema.translationKeys.projectId, projectId), branchCondition),
-      )
+      .where(whereCondition)
       .limit(options?.limit ?? 50)
       .offset(options?.offset ?? 0)
       .orderBy(
@@ -129,10 +137,7 @@ export async function getTranslationKeys(
           : schema.translationKeys.keyName,
       );
 
-    count = await db.$count(
-      schema.translationKeys,
-      and(eq(schema.translationKeys.projectId, projectId), branchCondition),
-    );
+    count = await db.$count(schema.translationKeys, whereCondition);
   }
 
   if (keys.length === 0) {

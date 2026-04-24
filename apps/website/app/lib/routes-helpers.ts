@@ -1,17 +1,17 @@
 import { generatePath } from "react-router";
 
 export function removeUndefinedValues<
-  T extends Record<string, string | undefined | null>,
+  T extends Record<string, string | number | undefined | null>,
 >(obj: T | undefined): Record<string, string> {
   if (!obj) {
     return {};
   }
 
   return Object.fromEntries(
-    Object.entries(obj).filter(
-      ([_, value]) => value !== undefined && value !== null,
-    ),
-  ) as Record<string, string>;
+    Object.entries(obj)
+      .filter(([_, value]) => value !== undefined && value !== null)
+      .map(([key, value]) => [key, String(value)]),
+  );
 }
 
 export function getProjectUrl(orgSlug: string, projectSlug: string): string {
@@ -29,6 +29,7 @@ export function getTranslationsUrl(
     page?: string | null;
     sort?: string | null;
     highlight?: string | null;
+    fileId?: string | number | null;
   },
 ): string {
   const params = new URLSearchParams(removeUndefinedValues(queryParams));
@@ -90,6 +91,7 @@ export function getBranchUrl(
     page?: string | null;
     sort?: string | null;
     highlight?: string | null;
+    fileId?: string | number | null;
   },
 ): string {
   const params = new URLSearchParams(removeUndefinedValues(queryParams));
