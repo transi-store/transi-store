@@ -10,6 +10,7 @@ import {
 } from "../../tests/test-db";
 import {
   createProjectFile,
+  deleteProjectFile,
   DuplicateFilePathError,
   getProjectFiles,
 } from "./project-files.server";
@@ -79,5 +80,48 @@ describe("createProjectFile", () => {
     });
 
     expect(other.projectId).toBe(otherProject.id);
+  });
+});
+
+describe("deleteProjectFile", () => {
+  let db: TestDb;
+  let projectId: number;
+
+  beforeEach(async () => {
+    await cleanupDb();
+    db = getTestDb();
+    const org = await createOrganization(db);
+    const project = await createProject(db, org.id);
+    projectId = project.id;
+  });
+
+  it("deletes an existing file", async () => {
+    const file = await createProjectFile(projectId, {
+      filePath: "locales/<lang>/common.json",
+      format: SupportedFormat.JSON,
+    });
+
+    await deleteProjectFile(projectId, file.id);
+
+    const all = await getProjectFiles(projectId);
+    expect(all).toHaveLength(0);
+  });
+
+  it("does not delete a file belonging to another project", async () => {
+    const org = await createOrganization(db, { name: "Other", slug: "other" });
+    const otherProject = await createProject(db, org.id);
+    const otherFile = await createProjectFile(otherProject.id, {
+      filePath: "locales/<lang>/common.json",
+      format: SupportedFormat.JSON,
+    });
+
+    await deleteProjectFile(projectId, otherFile.id);
+
+    const all = await getProjectFiles(otherProject.id);
+    expect(all).toHaveLength(1);
+  });
+
+  it("does not throw when the file does not exist", async () => {
+    await expect(deleteProjectFile(projectId, 999999)).resolves.toBeUndefined();
   });
 });

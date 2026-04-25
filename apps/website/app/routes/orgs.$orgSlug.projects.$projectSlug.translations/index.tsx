@@ -42,6 +42,7 @@ import {
   getProjectFiles,
   updateProjectFile,
   createProjectFile,
+  deleteProjectFile,
   DuplicateFilePathError,
 } from "~/lib/project-files.server";
 import { validateOutputPath } from "~/lib/path-utils";
@@ -341,6 +342,27 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     }
 
     return { success: true, action: "edit_file" };
+  }
+
+  if (action === "delete_file") {
+    const fileId = formData.get("fileId");
+
+    if (!fileId || typeof fileId !== "string") {
+      return {
+        error: i18next.t("files.errors.missingFileId"),
+        action: "delete_file",
+      };
+    }
+    const parsedFileId = parseInt(fileId, 10);
+    if (isNaN(parsedFileId)) {
+      return {
+        error: i18next.t("files.errors.invalidFileId", { fileId }),
+        action: "delete_file",
+      };
+    }
+
+    await deleteProjectFile(project.id, parsedFileId);
+    return { success: true, action: "delete_file" };
   }
 
   throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });

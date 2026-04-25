@@ -58,6 +58,8 @@
   "files.errors.path.notRelative": "La ruta del archivo debe ser relativa",
   "files.errors.pathRequired": "Se requiere la ruta del archivo",
   "files.modal.create": "Crear",
+  "files.modal.delete": "Eliminar",
+  "files.modal.deleteConfirm": "Confirmar eliminación",
   "files.modal.formatLabel": "Formato",
   "files.modal.pathHelperPrefix": "Ruta relativa, usa",
   "files.modal.pathHelperSuffix": "como marcador de idioma",

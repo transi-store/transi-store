@@ -87,6 +87,8 @@
   "files.errors.path.notRelative": "File path must be a relative path",
   "files.errors.pathRequired": "File path is required",
   "files.modal.create": "Create",
+  "files.modal.delete": "Delete",
+  "files.modal.deleteConfirm": "Confirm deletion",
   "files.modal.formatLabel": "Format",
   "files.modal.pathHelperPrefix": "Relative path, use",
   "files.modal.pathHelperSuffix": "as a language placeholder",

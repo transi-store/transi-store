@@ -68,6 +68,20 @@ export async function createProjectFile(
   }
 }
 
+export async function deleteProjectFile(
+  projectId: number,
+  fileId: number,
+): Promise<void> {
+  await db
+    .delete(schema.projectFiles)
+    .where(
+      and(
+        eq(schema.projectFiles.id, fileId),
+        eq(schema.projectFiles.projectId, projectId),
+      ),
+    );
+}
+
 type UpdateProjectFileParams = {
   format?: SupportedFormat;
   filePath?: string;
