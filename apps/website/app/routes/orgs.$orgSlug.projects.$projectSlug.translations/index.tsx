@@ -426,6 +426,7 @@ export default function ProjectTranslations({
       // Navigate to filter by the newly created key
       navigate(
         getTranslationsUrl(organization.slug, project.slug, {
+          fileId: selectedFileId,
           sort: TranslationKeysSort.CREATED_AT,
           highlight: highlight
             ? `${highlight},${actionData.keyName}`
@@ -440,6 +441,7 @@ export default function ProjectTranslations({
     project.slug,
     navigate,
     highlight,
+    selectedFileId,
   ]);
 
   return (
