@@ -19,10 +19,11 @@ import {
   VStack,
   createListCollection,
 } from "@chakra-ui/react";
-import { useFetcher } from "react-router";
+import { useFetcher, useNavigate, useParams } from "react-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
+import { getTranslationsUrl } from "~/lib/routes-helpers";
 
 type ProjectFile = { id: number; filePath: string; format: string };
 
@@ -35,6 +36,7 @@ type FileEditModalProps = {
 
 type ActionData = {
   success?: boolean;
+  fileId?: number;
   error?: string;
   action?: string;
 };
@@ -45,6 +47,8 @@ export function FileEditModal({
   file,
 }: FileEditModalProps) {
   const fetcher = useFetcher<ActionData>();
+  const navigate = useNavigate();
+  const params = useParams();
   const { t } = useTranslation();
   const isSubmitting = fetcher.state !== "idle";
   const isEditMode = file !== undefined;
@@ -67,8 +71,15 @@ export function FileEditModal({
       fetcher.data.action === formAction
     ) {
       onOpenChange(false);
+      if (fetcher.data.action === "create_file" && fetcher.data.fileId) {
+        navigate(
+          getTranslationsUrl(params.orgSlug ?? "", params.projectSlug ?? "", {
+            fileId: fetcher.data.fileId,
+          }),
+        );
+      }
     }
-  }, [fetcher.state, fetcher.data, onOpenChange, formAction]);
+  }, [fetcher.state, fetcher.data, onOpenChange, formAction, navigate, params]);
 
   return (
     <DialogRoot open={isOpen} onOpenChange={(e) => onOpenChange(e.open)}>

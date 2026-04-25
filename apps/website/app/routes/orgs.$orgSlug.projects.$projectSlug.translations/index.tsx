@@ -272,11 +272,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         filePath,
         format: fileFormat as SupportedFormat,
       });
-      return redirect(
-        getTranslationsUrl(params.orgSlug, params.projectSlug, {
-          fileId: created.id,
-        }),
-      );
+      return { success: true, fileId: created.id, action: "create_file" };
     } catch (error) {
       if (error instanceof DuplicateFilePathError) {
         return {

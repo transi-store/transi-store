@@ -77,7 +77,7 @@
   "export.title": "Export translations",
   "files.addFile": "Add file",
   "files.editFile": "Edit file",
-  "files.errors.duplicatePath": "A file with path \"{{filePath}}\" already exists",
+  "files.errors.duplicatePath": "A file with path \"{filePath}\" already exists",
   "files.errors.fileNotFound": "File \"{fileId}\" not found in project \"{projectSlug}\"",
   "files.errors.invalidFileId": "Invalid file ID \"{fileId}\"",
   "files.errors.invalidFormat": "Invalid file format",

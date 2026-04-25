@@ -48,7 +48,7 @@
   "export.title": "Exportar traducciones",
   "files.addFile": "Añadir archivo",
   "files.editFile": "Editar archivo",
-  "files.errors.duplicatePath": "Ya existe un archivo con la ruta «{{filePath}}»",
+  "files.errors.duplicatePath": "Ya existe un archivo con la ruta «{filePath}»",
   "files.errors.fileNotFound": "Archivo «{fileId}» no encontrado en el proyecto «{projectSlug}»",
   "files.errors.invalidFileId": "ID de archivo inválido «{fileId}»",
   "files.errors.invalidFormat": "Formato de archivo inválido",

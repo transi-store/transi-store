@@ -77,7 +77,7 @@
   "export.title": "Übersetzungen exportieren",
   "files.addFile": "Datei hinzufügen",
   "files.editFile": "Datei bearbeiten",
-  "files.errors.duplicatePath": "Eine Datei mit dem Pfad „{{filePath}}“ existiert bereits",
+  "files.errors.duplicatePath": "Eine Datei mit dem Pfad „{filePath}“ existiert bereits",
   "files.errors.fileNotFound": "Datei „{fileId}“ im Projekt „{projectSlug}“ nicht gefunden",
   "files.errors.invalidFileId": "Ungültige Datei-ID „{fileId}“",
   "files.errors.invalidFormat": "Ungültiges Dateiformat",

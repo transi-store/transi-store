@@ -77,7 +77,7 @@
   "export.title": "Exporter des traductions",
   "files.addFile": "Ajouter un fichier",
   "files.editFile": "Éditer le fichier",
-  "files.errors.duplicatePath": "Un fichier avec le chemin « {{filePath}} » existe déjà",
+  "files.errors.duplicatePath": "Un fichier avec le chemin « {filePath} » existe déjà",
   "files.errors.fileNotFound": "Fichier « {fileId} » introuvable dans le projet « {projectSlug} »",
   "files.errors.invalidFileId": "Identifiant de fichier invalide « {fileId} »",
   "files.errors.invalidFormat": "Format de fichier invalide",
