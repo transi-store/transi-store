@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
+import { SupportedFormat } from "@transi-store/common";
 import * as schema from "../../drizzle/schema";
 import {
   getTestDb,
   cleanupDb,
   createOrganization,
   createProject,
+  createProjectFile,
   createBranch,
   createTranslationKey,
   type TestDb,
@@ -34,6 +36,7 @@ describe("Branch Key Deletions", () => {
   let db: TestDb;
   let projectId: number;
   let branchId: number;
+  let fileId: number;
 
   beforeEach(async () => {
     await cleanupDb();
@@ -41,6 +44,12 @@ describe("Branch Key Deletions", () => {
     const org = await createOrganization(db);
     const project = await createProject(db, org.id);
     projectId = project.id;
+    const file = await createProjectFile(db, {
+      projectId,
+      format: SupportedFormat.JSON,
+      filePath: "locales/<lang>/common.json",
+    });
+    fileId = file.id;
     const branch = await createBranch(db, projectId);
     branchId = branch.id;
   });
@@ -140,7 +149,11 @@ describe("Branch Key Deletions", () => {
         branchId,
       });
 
-      const result = await searchMainKeysForDeletion(projectId, branchId);
+      const result = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].keyName).toBe("main.key");
@@ -152,7 +165,11 @@ describe("Branch Key Deletions", () => {
       const key2 = await createTranslationKey(db, projectId, "marked.key");
       await addKeyDeletionsToBranch(branchId, [key2.id]);
 
-      const result = await searchMainKeysForDeletion(projectId, branchId);
+      const result = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].keyName).toBe("keep.me");
@@ -164,7 +181,11 @@ describe("Branch Key Deletions", () => {
         deletedAt: new Date(),
       });
 
-      const result = await searchMainKeysForDeletion(projectId, branchId);
+      const result = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].keyName).toBe("alive.key");
@@ -175,14 +196,24 @@ describe("Branch Key Deletions", () => {
       await createTranslationKey(db, projectId, "b");
       await createTranslationKey(db, projectId, "c");
 
-      const page1 = await searchMainKeysForDeletion(projectId, branchId, {
-        limit: 2,
-        offset: 0,
-      });
-      const page2 = await searchMainKeysForDeletion(projectId, branchId, {
-        limit: 2,
-        offset: 2,
-      });
+      const page1 = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+        {
+          limit: 2,
+          offset: 0,
+        },
+      );
+      const page2 = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+        {
+          limit: 2,
+          offset: 2,
+        },
+      );
 
       expect(page1.data).toHaveLength(2);
       expect(page1.count).toBe(3);
@@ -190,10 +221,85 @@ describe("Branch Key Deletions", () => {
     });
 
     it("returns empty when no main keys exist", async () => {
-      const result = await searchMainKeysForDeletion(projectId, branchId);
+      const result = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+      );
 
       expect(result.data).toEqual([]);
       expect(result.count).toBe(0);
+    });
+
+    it("only returns keys from the given file", async () => {
+      const otherFile = await createProjectFile(db, {
+        projectId,
+        format: SupportedFormat.JSON,
+        filePath: "locales/<lang>/other.json",
+      });
+      await createTranslationKey(db, projectId, "file-one.key", { fileId });
+      await createTranslationKey(db, projectId, "file-two.key", {
+        fileId: otherFile.id,
+      });
+
+      const result = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+      );
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].keyName).toBe("file-one.key");
+    });
+  });
+
+  describe("getBranchKeyDeletions / getBranchKeyDeletionCount with fileId", () => {
+    it("scopes deletions to the given fileId", async () => {
+      const otherFile = await createProjectFile(db, {
+        projectId,
+        format: SupportedFormat.JSON,
+        filePath: "locales/<lang>/other.json",
+      });
+      const keyA = await createTranslationKey(db, projectId, "a", { fileId });
+      const keyB = await createTranslationKey(db, projectId, "b", {
+        fileId: otherFile.id,
+      });
+      await addKeyDeletionsToBranch(branchId, [keyA.id, keyB.id]);
+
+      const scoped = await getBranchKeyDeletions(branchId, { fileId });
+      expect(scoped).toHaveLength(1);
+      expect(scoped[0].keyName).toBe("a");
+      expect(scoped[0].filePath).toBe("locales/<lang>/common.json");
+
+      const scopedCount = await getBranchKeyDeletionCount(branchId, { fileId });
+      expect(scopedCount).toBe(1);
+
+      const allCount = await getBranchKeyDeletionCount(branchId);
+      expect(allCount).toBe(2);
+    });
+
+    it("returns filePath on each deleted key", async () => {
+      const key = await createTranslationKey(db, projectId, "k");
+      await addKeyDeletionsToBranch(branchId, [key.id]);
+
+      const deletions = await getBranchKeyDeletions(branchId);
+
+      expect(deletions).toHaveLength(1);
+      expect(deletions[0].filePath).toBe("locales/<lang>/common.json");
+    });
+  });
+
+  describe("getBranchKeys returns filePath", () => {
+    it("includes filePath on each key", async () => {
+      await createTranslationKey(db, projectId, "branch.key", {
+        branchId,
+        fileId,
+      });
+
+      const keys = await getBranchKeys(branchId);
+
+      expect(keys).toHaveLength(1);
+      expect(keys[0].filePath).toBe("locales/<lang>/common.json");
     });
   });
 });

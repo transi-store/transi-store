@@ -30,6 +30,7 @@ import type {
   TranslationKey,
 } from "../../drizzle/schema";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { KeyAction } from "~/components/translation-key/KeyAction";
 
 export type KeyLoaderData = {
   organization: Organization;
@@ -122,7 +123,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return redirect(redirectUrl);
   }
 
-  if (action === "editKey") {
+  if (action === KeyAction.Edit) {
     const keyName = formData.get("keyName");
     const description = formData.get("description");
 

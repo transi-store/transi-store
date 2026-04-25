@@ -63,6 +63,7 @@ import {
 } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
 import { TranslationPreview } from "./TranslationPreview";
 import { useCallback, useState, type JSX } from "react";
+import { KeyAction } from "./KeyAction";
 
 type TranslationKeyContentProps = {
   translationKey: TranslationKey;
@@ -112,7 +113,7 @@ export function TranslationKeyContent({
   });
 
   const editKeyError =
-    editKeyFetcher.data?.error && editKeyFetcher.data?.action === "editKey"
+    editKeyFetcher.data?.error && editKeyFetcher.data?.action === KeyAction.Edit
       ? editKeyFetcher.data.error
       : undefined;
 

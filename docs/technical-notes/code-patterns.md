@@ -193,6 +193,43 @@ export async function action({ request }: Route.ActionArgs) {
 }
 ```
 
+### Routes avec plusieurs actions
+
+Quand une route expose plusieurs actions (via un champ `_action`), les valeurs doivent être des **constantes d'enum** définies dans un fichier dédié à côté de la route, jamais des chaînes littérales éparpillées.
+
+**Fichier `FileAction.ts`** (à côté de la route) :
+
+```typescript
+export enum FileAction {
+  Create = "create_file",
+  Edit = "edit_file",
+  Delete = "delete_file",
+}
+```
+
+**Dans le formulaire** :
+
+```tsx
+<input type="hidden" name="_action" value={FileAction.Create} />
+```
+
+**Dans l'action** :
+
+```typescript
+import { FileAction } from "./FileAction";
+
+const action = formData.get("_action");
+
+if (action === FileAction.Create) { ... }
+if (action === FileAction.Edit) { ... }
+```
+
+**Dans le composant** (vérification de `useActionData`) :
+
+```tsx
+error={actionData?.action === FileAction.Create ? actionData.error : undefined}
+```
+
 ## Type inference
 
 ### Types Drizzle
