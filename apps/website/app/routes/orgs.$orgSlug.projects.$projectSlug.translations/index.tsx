@@ -18,6 +18,7 @@ import {
   useActionData,
   useNavigation,
   useNavigate,
+  useSearchParams,
 } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus, LuPencil } from "react-icons/lu";
@@ -58,6 +59,8 @@ import { getInstance } from "~/middleware/i18next";
 import { getKeyUrl, getTranslationsUrl } from "~/lib/routes-helpers";
 import { TranslationKeysSort } from "~/lib/sort/keySort";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { FileAction } from "./FileAction";
+import { KeyAction } from "~/components/translation-key/KeyAction";
 
 const LIMIT = 50;
 
@@ -192,7 +195,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return redirect(getKeyUrl(params.orgSlug, params.projectSlug, newKeyId));
   }
 
-  if (action === "createKey") {
+  if (action === KeyAction.Create) {
     const keyName = formData.get("keyName");
     const description = formData.get("description");
     const fileIdRaw = formData.get("fileId");
@@ -200,21 +203,21 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!keyName || typeof keyName !== "string") {
       return {
         error: i18next.t("keys.new.errors.nameRequired"),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
 
     if (!fileIdRaw || typeof fileIdRaw !== "string") {
       return {
         error: i18next.t("files.errors.missingFileId"),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
     const fileId = parseInt(fileIdRaw, 10);
     if (isNaN(fileId)) {
       return {
         error: i18next.t("files.errors.invalidFileId", { fileId: fileIdRaw }),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
 
@@ -223,7 +226,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (existing) {
       return {
         error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
 
@@ -239,22 +242,27 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     });
 
     // Retourner le succès avec le nom de la clé (la navigation se fera côté client)
-    return { success: true, keyName, search: keyName, action: "createKey" };
+    return {
+      success: true,
+      keyName,
+      search: keyName,
+      action: KeyAction.Create,
+    };
   }
 
-  if (action === "create_file") {
+  if (action === FileAction.Create) {
     const filePath = formData.get("filePath");
     const fileFormat = formData.get("fileFormat");
 
     if (!filePath || typeof filePath !== "string") {
       return {
         error: i18next.t("files.errors.pathRequired"),
-        action: "create_file",
+        action: FileAction.Create,
       };
     }
     const pathError = validateOutputPath(filePath, i18next.t);
     if (pathError) {
-      return { error: pathError, action: "create_file" };
+      return { error: pathError, action: FileAction.Create };
     }
 
     if (
@@ -264,7 +272,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     ) {
       return {
         error: i18next.t("files.errors.invalidFormat"),
-        action: "create_file",
+        action: FileAction.Create,
       };
     }
 
@@ -273,19 +281,24 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         filePath,
         format: fileFormat as SupportedFormat,
       });
-      return { success: true, fileId: created.id, action: "create_file" };
+
+      return redirect(
+        getTranslationsUrl(params.orgSlug, params.projectSlug, {
+          fileId: created.id,
+        }),
+      );
     } catch (error) {
       if (error instanceof DuplicateFilePathError) {
         return {
           error: i18next.t("files.errors.duplicatePath", { filePath }),
-          action: "create_file",
+          action: FileAction.Create,
         };
       }
       throw error;
     }
   }
 
-  if (action === "edit_file") {
+  if (action === FileAction.Edit) {
     const fileId = formData.get("fileId");
     const filePath = formData.get("filePath");
     const fileFormat = formData.get("fileFormat");
@@ -293,26 +306,26 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!fileId || typeof fileId !== "string") {
       return {
         error: i18next.t("files.errors.missingFileId"),
-        action: "edit_file",
+        action: FileAction.Edit,
       };
     }
     const parsedFileId = parseInt(fileId, 10);
     if (isNaN(parsedFileId)) {
       return {
         error: i18next.t("files.errors.invalidFileId", { fileId }),
-        action: "edit_file",
+        action: FileAction.Edit,
       };
     }
 
     if (!filePath || typeof filePath !== "string") {
       return {
         error: i18next.t("files.errors.pathRequired"),
-        action: "edit_file",
+        action: FileAction.Edit,
       };
     }
     const pathError = validateOutputPath(filePath, i18next.t);
     if (pathError) {
-      return { error: pathError, action: "edit_file" };
+      return { error: pathError, action: FileAction.Edit };
     }
 
     if (
@@ -322,7 +335,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     ) {
       return {
         error: i18next.t("files.errors.invalidFormat"),
-        action: "edit_file",
+        action: FileAction.Edit,
       };
     }
 
@@ -335,34 +348,43 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       if (error instanceof DuplicateFilePathError) {
         return {
           error: i18next.t("files.errors.duplicatePath", { filePath }),
-          action: "edit_file",
+          action: FileAction.Edit,
         };
       }
       throw error;
     }
 
-    return { success: true, action: "edit_file" };
+    const url = new URL(request.url);
+    return redirect(
+      getTranslationsUrl(params.orgSlug, params.projectSlug, {
+        fileId: url.searchParams.get("fileId") ?? undefined,
+        search: url.searchParams.get("search") || undefined,
+        sort: url.searchParams.get("sort") || undefined,
+        highlight: url.searchParams.get("highlight") || undefined,
+      }),
+    );
   }
 
-  if (action === "delete_file") {
+  if (action === FileAction.Delete) {
     const fileId = formData.get("fileId");
 
     if (!fileId || typeof fileId !== "string") {
       return {
         error: i18next.t("files.errors.missingFileId"),
-        action: "delete_file",
+        action: FileAction.Delete,
       };
     }
     const parsedFileId = parseInt(fileId, 10);
     if (isNaN(parsedFileId)) {
       return {
         error: i18next.t("files.errors.invalidFileId", { fileId }),
-        action: "delete_file",
+        action: FileAction.Delete,
       };
     }
 
     await deleteProjectFile(project.id, parsedFileId);
-    return { success: true, action: "delete_file" };
+
+    return redirect(getTranslationsUrl(params.orgSlug, params.projectSlug));
   }
 
   throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });
@@ -387,10 +409,29 @@ export default function ProjectTranslations({
   const navigate = useNavigate();
   const isSubmitting = navigation.state === "submitting";
 
-  const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
-  const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
-  const [editingFileId, setEditingFileId] = useState<number | null>(null);
+  const [searchParams] = useSearchParams();
+  const modal = searchParams.get("modal");
+  const isCreateFileModalOpen = modal === "create-file";
+  const editingFileId = (() => {
+    if (!modal?.startsWith("edit-file-")) return null;
+    const id = parseInt(modal.slice("edit-file-".length), 10);
+    return isNaN(id) ? null : id;
+  })();
   const editingFile = projectFiles.find((f) => f.id === editingFileId) ?? null;
+
+  const [isCreateKeyModalOpen, setIsCreateKeyModalOpen] = useState(false);
+
+  function openFileModal(type: string) {
+    const next = new URLSearchParams(searchParams);
+    next.set("modal", type);
+    navigate(`?${next.toString()}`);
+  }
+
+  function closeFileModal() {
+    const next = new URLSearchParams(searchParams);
+    next.delete("modal");
+    navigate(`?${next.toString()}`);
+  }
 
   // Drawer state for inline editing
   const [drawerKeyId, setDrawerKeyId] = useState<number | null>(null);
@@ -417,7 +458,7 @@ export default function ProjectTranslations({
   useEffect(() => {
     if (
       actionData?.success &&
-      actionData.action === "createKey" &&
+      actionData.action === KeyAction.Create &&
       navigation.state === "idle"
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -484,7 +525,7 @@ export default function ProjectTranslations({
           </Text>
           <Button
             colorPalette="accent"
-            onClick={() => setIsCreateFileModalOpen(true)}
+            onClick={() => openFileModal("create-file")}
           >
             <LuPlus /> {t("files.addFile")}
           </Button>
@@ -524,7 +565,7 @@ export default function ProjectTranslations({
                     aria-label={t("files.editFile")}
                     size="xs"
                     variant="ghost"
-                    onClick={() => setEditingFileId(file.id)}
+                    onClick={() => openFileModal(`edit-file-${file.id}`)}
                   >
                     <LuPencil />
                   </IconButton>
@@ -535,7 +576,7 @@ export default function ProjectTranslations({
               aria-label={t("files.addFile")}
               size="xs"
               variant="ghost"
-              onClick={() => setIsCreateFileModalOpen(true)}
+              onClick={() => openFileModal("create-file")}
             >
               <LuPlus />
             </IconButton>
@@ -616,7 +657,7 @@ export default function ProjectTranslations({
           onOpenChange={setIsCreateKeyModalOpen}
           mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
           error={
-            actionData?.error && actionData.action === "createKey"
+            actionData?.error && actionData.action === KeyAction.Create
               ? actionData.error
               : undefined
           }
@@ -629,15 +670,27 @@ export default function ProjectTranslations({
         <FileEditModal
           isOpen={true}
           onOpenChange={(open) => {
-            if (!open) setEditingFileId(null);
+            if (!open) closeFileModal();
           }}
           file={editingFile}
+          error={
+            actionData?.error && actionData.action === FileAction.Edit
+              ? actionData.error
+              : undefined
+          }
         />
       )}
 
       <FileEditModal
         isOpen={isCreateFileModalOpen}
-        onOpenChange={setIsCreateFileModalOpen}
+        onOpenChange={(open) => {
+          if (!open) closeFileModal();
+        }}
+        error={
+          actionData?.error && actionData.action === FileAction.Create
+            ? actionData.error
+            : undefined
+        }
       />
     </VStack>
   );

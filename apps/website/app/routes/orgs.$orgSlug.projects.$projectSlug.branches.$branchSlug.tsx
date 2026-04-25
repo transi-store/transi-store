@@ -69,6 +69,8 @@ import {
 } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { KeyAction } from "~/components/translation-key/KeyAction";
+import { BranchAction } from "./BranchAction";
 
 const LIMIT = 50;
 
@@ -207,7 +209,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const action = formData.get("_action");
 
-  if (action === "createKey") {
+  if (action === KeyAction.Create) {
     const keyName = formData.get("keyName");
     const description = formData.get("description");
     const fileIdRaw = formData.get("fileId");
@@ -215,21 +217,21 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!keyName || typeof keyName !== "string") {
       return {
         error: i18next.t("keys.new.errors.nameRequired"),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
 
     if (!fileIdRaw || typeof fileIdRaw !== "string") {
       return {
         error: i18next.t("files.errors.missingFileId"),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
     const fileId = parseInt(fileIdRaw, 10);
     if (isNaN(fileId)) {
       return {
         error: i18next.t("files.errors.invalidFileId", { fileId: fileIdRaw }),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
 
@@ -237,7 +239,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (existing) {
       return {
         error: i18next.t("keys.new.errors.alreadyExists", { keyName }),
-        action: "createKey",
+        action: KeyAction.Create,
       };
     }
 
@@ -252,15 +254,20 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       fileId,
     });
 
-    return { success: true, keyName, search: keyName, action: "createKey" };
+    return {
+      success: true,
+      keyName,
+      search: keyName,
+      action: KeyAction.Create,
+    };
   }
 
-  if (action === "closeBranch") {
+  if (action === BranchAction.Close) {
     await deleteBranch(branch.id);
     return redirect(getBranchesUrl(params.orgSlug, params.projectSlug));
   }
 
-  if (action === "addDeletions") {
+  if (action === BranchAction.AddDeletions) {
     const keyIds = formData.getAll("keyIds");
     const validKeyIds = keyIds
       .map((id) => parseInt(String(id), 10))
@@ -270,16 +277,16 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       await addKeyDeletionsToBranch(branch.id, validKeyIds);
     }
 
-    return { success: true, action: "addDeletions" };
+    return { success: true, action: BranchAction.AddDeletions };
   }
 
-  if (action === "removeDeletion") {
+  if (action === BranchAction.RemoveDeletion) {
     const keyId = formData.get("keyId");
     if (keyId) {
       await removeKeyDeletionFromBranch(branch.id, parseInt(String(keyId), 10));
     }
 
-    return { success: true, action: "removeDeletion" };
+    return { success: true, action: BranchAction.RemoveDeletion };
   }
 
   throw new Response(i18next.t("keys.errors.unknownAction"), { status: 400 });
@@ -338,7 +345,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
   useEffect(() => {
     if (
       actionData?.success &&
-      actionData.action === "createKey" &&
+      actionData.action === KeyAction.Create &&
       navigation.state === "idle"
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -350,7 +357,10 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
   const [prevActionData, setPrevActionData] = useState(actionData);
   if (actionData !== prevActionData) {
     setPrevActionData(actionData);
-    if (actionData?.success && actionData.action === "addDeletions") {
+    if (
+      actionData?.success &&
+      actionData.action === BranchAction.AddDeletions
+    ) {
       setSelectedKeyIds([]);
     }
   }
@@ -408,7 +418,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
               </Link>
             </Button>
             <Form method="post">
-              <input type="hidden" name="_action" value="closeBranch" />
+              <input type="hidden" name="_action" value={BranchAction.Close} />
               <Button
                 type="submit"
                 size="sm"
@@ -605,7 +615,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                       <input
                         type="hidden"
                         name="_action"
-                        value="addDeletions"
+                        value={BranchAction.AddDeletions}
                       />
                       {selectedKeyIds.map((id) => (
                         <input
@@ -732,7 +742,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                             <input
                               type="hidden"
                               name="_action"
-                              value="removeDeletion"
+                              value={BranchAction.RemoveDeletion}
                             />
                             <input
                               type="hidden"
@@ -774,7 +784,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
             onOpenChange={setIsCreateKeyModalOpen}
             mode={TRANSLATIONS_KEY_MODEL_MODE.CREATE}
             error={
-              actionData?.error && actionData.action === "createKey"
+              actionData?.error && actionData.action === KeyAction.Create
                 ? actionData.error
                 : undefined
             }

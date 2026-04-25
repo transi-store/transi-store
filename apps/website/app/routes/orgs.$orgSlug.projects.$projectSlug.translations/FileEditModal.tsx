@@ -19,11 +19,11 @@ import {
   VStack,
   createListCollection,
 } from "@chakra-ui/react";
-import { useFetcher, useNavigate, useParams } from "react-router";
-import { useEffect, useState } from "react";
+import { Form, useFetcher, useNavigation } from "react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
-import { getTranslationsUrl } from "~/lib/routes-helpers";
+import { FileAction } from "./FileAction";
 
 type ProjectFile = { id: number; filePath: string; format: string };
 
@@ -32,29 +32,29 @@ type FileEditModalProps = {
   onOpenChange: (open: boolean) => void;
   /** When provided, the modal opens in edit mode for that file. When undefined, it opens in create mode. */
   file?: ProjectFile;
+  /** Validation error from the route's action, passed by the parent. */
+  error?: string;
 };
 
-type ActionData = {
-  success?: boolean;
-  fileId?: number;
+type DeleteActionData = {
   error?: string;
-  action?: string;
 };
 
 export function FileEditModal({
   isOpen,
   onOpenChange,
   file,
+  error,
 }: FileEditModalProps) {
-  const fetcher = useFetcher<ActionData>();
-  const deleteFetcher = useFetcher<ActionData>();
-  const navigate = useNavigate();
-  const params = useParams();
+  const deleteFetcher = useFetcher<DeleteActionData>();
+  const navigation = useNavigation();
   const { t } = useTranslation();
-  const isSubmitting = fetcher.state !== "idle";
-  const isDeleting = deleteFetcher.state !== "idle";
   const isEditMode = file !== undefined;
-  const formAction = isEditMode ? "edit_file" : "create_file";
+  const formAction = isEditMode ? FileAction.Edit : FileAction.Create;
+  const isSubmitting =
+    navigation.state === "submitting" &&
+    navigation.formData?.get("_action") === formAction;
+  const isDeleting = deleteFetcher.state !== "idle";
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const formatCollection = createListCollection({
@@ -67,53 +67,6 @@ export function FileEditModal({
   const defaultFormat =
     (file?.format as SupportedFormat | undefined) ?? SupportedFormat.JSON;
 
-  useEffect(() => {
-    if (
-      isOpen &&
-      fetcher.state === "idle" &&
-      fetcher.data?.success &&
-      fetcher.data.action === formAction
-    ) {
-      onOpenChange(false);
-      if (fetcher.data.action === "create_file" && fetcher.data.fileId) {
-        navigate(
-          getTranslationsUrl(params.orgSlug ?? "", params.projectSlug ?? "", {
-            fileId: fetcher.data.fileId,
-          }),
-        );
-      }
-    }
-  }, [
-    isOpen,
-    fetcher.state,
-    fetcher.data,
-    onOpenChange,
-    formAction,
-    navigate,
-    params,
-  ]);
-
-  useEffect(() => {
-    if (
-      isOpen &&
-      deleteFetcher.state === "idle" &&
-      deleteFetcher.data?.success &&
-      deleteFetcher.data.action === "delete_file"
-    ) {
-      onOpenChange(false);
-      navigate(
-        getTranslationsUrl(params.orgSlug ?? "", params.projectSlug ?? ""),
-      );
-    }
-  }, [
-    isOpen,
-    deleteFetcher.state,
-    deleteFetcher.data,
-    onOpenChange,
-    navigate,
-    params,
-  ]);
-
   function handleOpenChange(open: boolean) {
     if (!open) setIsConfirmingDelete(false);
     onOpenChange(open);
@@ -125,7 +78,7 @@ export function FileEditModal({
         <DialogBackdrop />
         <DialogPositioner>
           <DialogContent>
-            <fetcher.Form method="post">
+            <Form method="post">
               <input type="hidden" name="_action" value={formAction} />
               {isEditMode && (
                 <input type="hidden" name="fileId" value={String(file.id)} />
@@ -140,9 +93,9 @@ export function FileEditModal({
               </DialogHeader>
               <DialogBody>
                 <VStack align="stretch" gap={4}>
-                  {fetcher.data?.error && (
+                  {error && (
                     <Box p={3} bg="red.subtle" color="red.fg" borderRadius="md">
-                      <Text>{fetcher.data.error}</Text>
+                      <Text>{error}</Text>
                     </Box>
                   )}
                   {deleteFetcher.data?.error && (
@@ -209,7 +162,10 @@ export function FileEditModal({
                     onClick={() => {
                       if (isConfirmingDelete) {
                         deleteFetcher.submit(
-                          { _action: "delete_file", fileId: String(file.id) },
+                          {
+                            _action: FileAction.Delete,
+                            fileId: String(file.id),
+                          },
                           { method: "post" },
                         );
                       } else {
@@ -245,7 +201,7 @@ export function FileEditModal({
                   </Button>
                 </Box>
               </DialogFooter>
-            </fetcher.Form>
+            </Form>
           </DialogContent>
         </DialogPositioner>
       </Portal>
