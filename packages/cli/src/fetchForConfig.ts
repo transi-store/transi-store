@@ -78,7 +78,11 @@ async function fetchTranslationsAndPrint(
     ? `${label.project} / ${label.fileName} / ${label.locale}`
     : `${config.project} / ${config.locale}`;
 
-  if (result.success) {
+  if ("skipped" in result) {
+    console.log(
+      `${styleText("dim", "-")} ${styleText("bold", name)} — ${styleText("dim", "no translations")}`,
+    );
+  } else if (result.success) {
     console.log(
       `${styleText("green", "✓")} ${styleText("bold", name)} ${styleText("dim", "→")} ${result.output}`,
     );
@@ -251,7 +255,11 @@ export async function fetchForConfig(
           const counter = styleText("dim", `[${completed}/${total}]`);
           const label = `${task.project} / ${task.fileName} / ${task.locale}`;
 
-          if (fetchResult.success) {
+          if ("skipped" in fetchResult) {
+            console.log(
+              `  ${counter} ${styleText("dim", "-")} ${styleText("bold", label)}`,
+            );
+          } else if (fetchResult.success) {
             console.log(
               `  ${counter} ${styleText("green", "✓")} ${styleText("bold", label)}`,
             );
@@ -270,6 +278,7 @@ export async function fetchForConfig(
   }
 
   const failures: Array<{ label: string; error: string }> = [];
+  let skippedCount = 0;
 
   for (const project of projectOrder) {
     const fileResults = resultsMap.get(project)!;
@@ -282,7 +291,10 @@ export async function fetchForConfig(
       for (const locale of locales) {
         const res = localeResults.get(locale);
         if (!res) continue;
-        if (res.success) {
+        if ("skipped" in res) {
+          statuses.push(styleText("dim", `- ${locale}`));
+          skippedCount++;
+        } else if (res.success) {
           statuses.push(styleText("green", `✓ ${locale}`));
         } else {
           statuses.push(styleText("red", `✗ ${locale}`));
@@ -300,20 +312,45 @@ export async function fetchForConfig(
 
   console.log();
 
-  const succeeded = total - failures.length;
+  const succeeded = total - failures.length - skippedCount;
   if (failures.length === 0) {
-    console.log(
-      styleText(
-        ["green", "bold"],
-        `✓ All ${total} translation${total > 1 ? "s" : ""} downloaded successfully`,
-      ),
-    );
+    if (skippedCount === 0) {
+      console.log(
+        styleText(
+          ["green", "bold"],
+          `✓ All ${total} translation${total > 1 ? "s" : ""} downloaded successfully`,
+        ),
+      );
+    } else {
+      if (succeeded > 0) {
+        console.log(
+          styleText(
+            "green",
+            `✓ ${succeeded} translation${succeeded > 1 ? "s" : ""} downloaded`,
+          ),
+        );
+      }
+      console.log(
+        styleText(
+          "dim",
+          `- ${skippedCount} locale${skippedCount > 1 ? "s" : ""} skipped (no translations)`,
+        ),
+      );
+    }
   } else {
     if (succeeded > 0) {
       console.log(
         styleText(
           "green",
           `✓ ${succeeded} translation${succeeded > 1 ? "s" : ""} downloaded`,
+        ),
+      );
+    }
+    if (skippedCount > 0) {
+      console.log(
+        styleText(
+          "dim",
+          `- ${skippedCount} locale${skippedCount > 1 ? "s" : ""} skipped (no translations)`,
         ),
       );
     }
