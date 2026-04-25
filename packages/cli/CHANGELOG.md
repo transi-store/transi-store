@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.2.1
+
+### Patch Changes
+
+- [#167](https://github.com/transi-store/transi-store/pull/167) [`f55bd99`](https://github.com/transi-store/transi-store/commit/f55bd99c5494af88a7d0f8a0fb1155d832182fd3) Thanks [@jdeniau](https://github.com/jdeniau)! - Handle 404 responses when a locale has no translations without returning an error code
+
 ## 2.2.0
 
 ### Minor Changes
