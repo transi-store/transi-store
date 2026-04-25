@@ -24,8 +24,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
 import { FileAction } from "./FileAction";
-
-type ProjectFile = { id: number; filePath: string; format: string };
+import type { ProjectFile } from "../../../drizzle/schema";
 
 type FileEditModalProps = {
   isOpen: boolean;
@@ -64,8 +63,7 @@ export function FileEditModal({
     })),
   });
 
-  const defaultFormat =
-    (file?.format as SupportedFormat | undefined) ?? SupportedFormat.JSON;
+  const defaultFormat = file?.format;
 
   function handleOpenChange(open: boolean) {
     if (!open) setIsConfirmingDelete(false);
@@ -108,13 +106,15 @@ export function FileEditModal({
                     <Select.Root
                       collection={formatCollection}
                       name="fileFormat"
-                      defaultValue={[defaultFormat]}
+                      defaultValue={defaultFormat ? [defaultFormat] : undefined}
                       disabled={isSubmitting}
                     >
                       <Select.HiddenSelect />
                       <Select.Control>
                         <Select.Trigger>
-                          <Select.ValueText />
+                          <Select.ValueText
+                            placeholder={t("files.modal.formatPlaceholder")}
+                          />
                         </Select.Trigger>
                         <Select.IndicatorGroup>
                           <Select.Indicator />

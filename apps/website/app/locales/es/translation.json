@@ -61,6 +61,7 @@
   "files.modal.delete": "Eliminar",
   "files.modal.deleteConfirm": "Confirmar eliminación",
   "files.modal.formatLabel": "Formato",
+  "files.modal.formatPlaceholder": "Seleccionar un formato de archivo",
   "files.modal.pathHelperPrefix": "Ruta relativa, usa",
   "files.modal.pathHelperSuffix": "como marcador de idioma",
   "files.modal.pathLabel": "Ruta del archivo",

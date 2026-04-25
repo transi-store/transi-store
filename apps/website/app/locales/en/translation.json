@@ -90,6 +90,7 @@
   "files.modal.delete": "Delete",
   "files.modal.deleteConfirm": "Confirm deletion",
   "files.modal.formatLabel": "Format",
+  "files.modal.formatPlaceholder": "Select a file format",
   "files.modal.pathHelperPrefix": "Relative path, use",
   "files.modal.pathHelperSuffix": "as a language placeholder",
   "files.modal.pathLabel": "File path",
