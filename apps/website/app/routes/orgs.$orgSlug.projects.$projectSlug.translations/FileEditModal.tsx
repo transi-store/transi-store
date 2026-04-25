@@ -19,21 +19,24 @@ import {
   VStack,
   createListCollection,
 } from "@chakra-ui/react";
-import { useFetcher } from "react-router";
-import { useEffect } from "react";
+import { useFetcher, useNavigate, useParams } from "react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
+import { getTranslationsUrl } from "~/lib/routes-helpers";
 
 type ProjectFile = { id: number; filePath: string; format: string };
 
 type FileEditModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  file: ProjectFile;
+  /** When provided, the modal opens in edit mode for that file. When undefined, it opens in create mode. */
+  file?: ProjectFile;
 };
 
 type ActionData = {
   success?: boolean;
+  fileId?: number;
   error?: string;
   action?: string;
 };
@@ -44,8 +47,15 @@ export function FileEditModal({
   file,
 }: FileEditModalProps) {
   const fetcher = useFetcher<ActionData>();
+  const deleteFetcher = useFetcher<ActionData>();
+  const navigate = useNavigate();
+  const params = useParams();
   const { t } = useTranslation();
   const isSubmitting = fetcher.state !== "idle";
+  const isDeleting = deleteFetcher.state !== "idle";
+  const isEditMode = file !== undefined;
+  const formAction = isEditMode ? "edit_file" : "create_file";
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const formatCollection = createListCollection({
     items: Object.values(SupportedFormat).map((value) => ({
@@ -55,29 +65,77 @@ export function FileEditModal({
   });
 
   const defaultFormat =
-    (file.format as SupportedFormat) ?? SupportedFormat.JSON;
+    (file?.format as SupportedFormat | undefined) ?? SupportedFormat.JSON;
 
   useEffect(() => {
     if (
+      isOpen &&
       fetcher.state === "idle" &&
       fetcher.data?.success &&
-      fetcher.data.action === "edit_file"
+      fetcher.data.action === formAction
     ) {
       onOpenChange(false);
+      if (fetcher.data.action === "create_file" && fetcher.data.fileId) {
+        navigate(
+          getTranslationsUrl(params.orgSlug ?? "", params.projectSlug ?? "", {
+            fileId: fetcher.data.fileId,
+          }),
+        );
+      }
     }
-  }, [fetcher.state, fetcher.data, onOpenChange]);
+  }, [
+    isOpen,
+    fetcher.state,
+    fetcher.data,
+    onOpenChange,
+    formAction,
+    navigate,
+    params,
+  ]);
+
+  useEffect(() => {
+    if (
+      isOpen &&
+      deleteFetcher.state === "idle" &&
+      deleteFetcher.data?.success &&
+      deleteFetcher.data.action === "delete_file"
+    ) {
+      onOpenChange(false);
+      navigate(
+        getTranslationsUrl(params.orgSlug ?? "", params.projectSlug ?? ""),
+      );
+    }
+  }, [
+    isOpen,
+    deleteFetcher.state,
+    deleteFetcher.data,
+    onOpenChange,
+    navigate,
+    params,
+  ]);
+
+  function handleOpenChange(open: boolean) {
+    if (!open) setIsConfirmingDelete(false);
+    onOpenChange(open);
+  }
 
   return (
-    <DialogRoot open={isOpen} onOpenChange={(e) => onOpenChange(e.open)}>
+    <DialogRoot open={isOpen} onOpenChange={(e) => handleOpenChange(e.open)}>
       <Portal>
         <DialogBackdrop />
         <DialogPositioner>
           <DialogContent>
             <fetcher.Form method="post">
-              <input type="hidden" name="_action" value="edit_file" />
-              <input type="hidden" name="fileId" value={String(file.id)} />
+              <input type="hidden" name="_action" value={formAction} />
+              {isEditMode && (
+                <input type="hidden" name="fileId" value={String(file.id)} />
+              )}
               <DialogHeader>
-                <DialogTitle>{t("files.modal.titleEdit")}</DialogTitle>
+                <DialogTitle>
+                  {isEditMode
+                    ? t("files.modal.titleEdit")
+                    : t("files.modal.titleCreate")}
+                </DialogTitle>
                 <DialogCloseTrigger />
               </DialogHeader>
               <DialogBody>
@@ -85,6 +143,11 @@ export function FileEditModal({
                   {fetcher.data?.error && (
                     <Box p={3} bg="red.subtle" color="red.fg" borderRadius="md">
                       <Text>{fetcher.data.error}</Text>
+                    </Box>
+                  )}
+                  {deleteFetcher.data?.error && (
+                    <Box p={3} bg="red.subtle" color="red.fg" borderRadius="md">
+                      <Text>{deleteFetcher.data.error}</Text>
                     </Box>
                   )}
                   <Field.Root required>
@@ -122,7 +185,7 @@ export function FileEditModal({
                     <Field.Label>{t("files.modal.pathLabel")}</Field.Label>
                     <Input
                       name="filePath"
-                      defaultValue={file.filePath}
+                      defaultValue={file?.filePath ?? ""}
                       placeholder="locales/<lang>/common.json"
                       fontFamily="mono"
                       fontSize="sm"
@@ -137,22 +200,50 @@ export function FileEditModal({
                   </Field.Root>
                 </VStack>
               </DialogBody>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
-                >
-                  {t("settings.cancel")}
-                </Button>
-                <Button
-                  type="submit"
-                  colorPalette="brand"
-                  loading={isSubmitting}
-                >
-                  {t("files.modal.save")}
-                </Button>
+              <DialogFooter justifyContent="space-between">
+                {isEditMode && (
+                  <Button
+                    type="button"
+                    colorPalette="red"
+                    variant={isConfirmingDelete ? "solid" : "ghost"}
+                    onClick={() => {
+                      if (isConfirmingDelete) {
+                        deleteFetcher.submit(
+                          { _action: "delete_file", fileId: String(file.id) },
+                          { method: "post" },
+                        );
+                      } else {
+                        setIsConfirmingDelete(true);
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    loading={isDeleting}
+                  >
+                    {isConfirmingDelete
+                      ? t("files.modal.deleteConfirm")
+                      : t("files.modal.delete")}
+                  </Button>
+                )}
+                <Box display="flex" gap={2}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleOpenChange(false)}
+                    disabled={isSubmitting || isDeleting}
+                  >
+                    {t("settings.cancel")}
+                  </Button>
+                  <Button
+                    type="submit"
+                    colorPalette="brand"
+                    loading={isSubmitting}
+                    disabled={isDeleting}
+                  >
+                    {isEditMode
+                      ? t("files.modal.save")
+                      : t("files.modal.create")}
+                  </Button>
+                </Box>
               </DialogFooter>
             </fetcher.Form>
           </DialogContent>

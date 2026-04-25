@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Card,
+  Code,
   HStack,
   Text,
   VStack,
@@ -83,12 +84,17 @@ export default function SearchResultRow({
                     to={getTranslationsUrl(
                       result.organizationSlug,
                       result.projectSlug,
-                      { search: result.keyName, sort: "relevance" },
+                      {
+                        search: result.keyName,
+                        sort: "relevance",
+                        fileId: result.fileId,
+                      },
                     )}
                   >
                     {result.projectName}
                   </Link>
                 </Text>
+                <Code fontSize="xs">{result.filePath}</Code>
               </HStack>
             </Box>
 

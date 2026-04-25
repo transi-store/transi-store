@@ -62,13 +62,25 @@ export async function deleteBranch(branchId: number): Promise<void> {
   await db.delete(schema.branches).where(eq(schema.branches.id, branchId));
 }
 
+type TranslationKeyWithFilePath = TranslationKey & { filePath: string };
+
 export async function getBranchKeys(
   branchId: number,
-): Promise<Array<TranslationKey>> {
-  return await db.query.translationKeys.findMany({
-    where: { branchId },
-    orderBy: { keyName: "asc" },
-  });
+): Promise<Array<TranslationKeyWithFilePath>> {
+  const rows = await db
+    .select({
+      key: schema.translationKeys,
+      filePath: schema.projectFiles.filePath,
+    })
+    .from(schema.translationKeys)
+    .innerJoin(
+      schema.projectFiles,
+      eq(schema.translationKeys.fileId, schema.projectFiles.id),
+    )
+    .where(eq(schema.translationKeys.branchId, branchId))
+    .orderBy(schema.translationKeys.keyName);
+
+  return rows.map((row) => ({ ...row.key, filePath: row.filePath }));
 }
 
 export async function getBranchKeyCount(branchId: number): Promise<number> {
@@ -196,7 +208,8 @@ export async function removeKeyDeletionFromBranch(
 
 export async function getBranchKeyDeletions(
   branchId: number,
-): Promise<Array<TranslationKey>> {
+  options?: { fileId?: number },
+): Promise<Array<TranslationKeyWithFilePath>> {
   const deletions = await db
     .select({ translationKeyId: schema.branchKeyDeletions.translationKeyId })
     .from(schema.branchKeyDeletions)
@@ -204,21 +217,58 @@ export async function getBranchKeyDeletions(
 
   if (deletions.length === 0) return [];
 
-  return db.query.translationKeys.findMany({
-    where: {
-      id: { in: deletions.map((d) => d.translationKeyId) },
-    },
-    orderBy: { keyName: "asc" },
-  });
+  const rows = await db
+    .select({
+      key: schema.translationKeys,
+      filePath: schema.projectFiles.filePath,
+    })
+    .from(schema.translationKeys)
+    .innerJoin(
+      schema.projectFiles,
+      eq(schema.translationKeys.fileId, schema.projectFiles.id),
+    )
+    .where(
+      and(
+        inArray(
+          schema.translationKeys.id,
+          deletions.map((d) => d.translationKeyId),
+        ),
+        options?.fileId !== undefined
+          ? eq(schema.translationKeys.fileId, options.fileId)
+          : undefined,
+      ),
+    )
+    .orderBy(schema.translationKeys.keyName);
+
+  return rows.map((row) => ({ ...row.key, filePath: row.filePath }));
 }
 
 export async function getBranchKeyDeletionCount(
   branchId: number,
+  options?: { fileId?: number },
 ): Promise<number> {
-  return await db.$count(
-    schema.branchKeyDeletions,
-    eq(schema.branchKeyDeletions.branchId, branchId),
-  );
+  if (options?.fileId === undefined) {
+    return await db.$count(
+      schema.branchKeyDeletions,
+      eq(schema.branchKeyDeletions.branchId, branchId),
+    );
+  }
+
+  const rows = await db
+    .select({ id: schema.branchKeyDeletions.id })
+    .from(schema.branchKeyDeletions)
+    .innerJoin(
+      schema.translationKeys,
+      eq(schema.branchKeyDeletions.translationKeyId, schema.translationKeys.id),
+    )
+    .where(
+      and(
+        eq(schema.branchKeyDeletions.branchId, branchId),
+        eq(schema.translationKeys.fileId, options.fileId),
+      ),
+    );
+
+  return rows.length;
 }
 
 /**
@@ -228,6 +278,7 @@ export async function getBranchKeyDeletionCount(
 export async function searchMainKeysForDeletion(
   projectId: number,
   branchId: number,
+  fileId: number,
   options?: { search?: string; limit?: number; offset?: number },
 ): Promise<{ data: TranslationKey[]; count: number }> {
   const limit = options?.limit ?? 50;
@@ -243,6 +294,7 @@ export async function searchMainKeysForDeletion(
 
   const conditions = [
     eq(schema.translationKeys.projectId, projectId),
+    eq(schema.translationKeys.fileId, fileId),
     isNull(schema.translationKeys.branchId),
     isNull(schema.translationKeys.deletedAt),
   ];
