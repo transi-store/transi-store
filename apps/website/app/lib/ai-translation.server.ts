@@ -164,6 +164,115 @@ async function translateWithFake(
 }
 
 /**
+ * Schéma de réponse pour la traduction markdown : un seul texte traduit,
+ * conservant la structure markdown du source.
+ */
+const MarkdownTranslationSchema = z.object({
+  translatedText: z.string(),
+});
+
+type MarkdownTranslationContext = {
+  sourceText: string;
+  sourceLocale: string;
+  targetLocale: string;
+  /** Whether the source is MDX (so JSX/expressions must be preserved verbatim). */
+  isMdx: boolean;
+};
+
+function buildMarkdownSystemPrompt(isMdx: boolean): string {
+  return `Tu es un traducteur professionnel spécialisé dans la documentation technique.
+Le texte à traduire est au format Markdown${isMdx ? " / MDX" : ""}.
+
+Tu dois préserver EXACTEMENT :
+- La structure des titres (#, ##, ### …) et leur niveau
+- Les blocs de code délimités par \`\`\` (le contenu reste inchangé)
+- Le code inline entre backticks
+- Les liens [texte](url) — traduis le texte, garde l'URL telle quelle
+- Les images ![alt](url) — traduis l'alt, garde l'URL
+- Les listes, citations (>) et tableaux
+- Le formatage gras (**), italique (*), barré (~~)${
+    isMdx
+      ? `
+- Les composants JSX (<Component .../>) et expressions {expr} : laisse-les intacts, ne traduis PAS leurs noms ni leurs props sauf si elles contiennent du texte naturel`
+      : ""
+  }
+
+IMPORTANT :
+- Adapte naturellement le texte à la langue cible
+- Conserve le ton et le registre du source
+- Garde la longueur des paragraphes raisonnablement proche
+- Ne change pas l'ordre des sections
+
+Réponds UNIQUEMENT au format JSON suivant :
+{ "translatedText": "<le markdown traduit>" }
+`;
+}
+
+function buildMarkdownUserPrompt(context: MarkdownTranslationContext): string {
+  return `Traduis le markdown suivant de "${context.sourceLocale}" vers "${context.targetLocale}".
+
+Texte source :
+${context.sourceText}`;
+}
+
+/**
+ * Traduit un fragment markdown / MDX en préservant la structure (titres,
+ * code blocks, liens, JSX). Renvoie le texte traduit prêt à remplacer la
+ * section source dans la locale cible.
+ */
+export async function translateMarkdownWithAI(
+  context: MarkdownTranslationContext,
+  provider: {
+    provider: AiProviderEnum;
+    apiKey: string;
+    model: string | null | undefined;
+  },
+): Promise<string> {
+  const { provider: providerName, apiKey, model } = provider;
+
+  const systemPrompt = buildMarkdownSystemPrompt(context.isMdx);
+  const userPrompt = buildMarkdownUserPrompt(context);
+  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+
+  const buildModel = () => {
+    switch (providerName) {
+      case AiProviderEnum.OPENAI: {
+        const openai = createOpenAI({ apiKey });
+        const modelId =
+          model ?? getAiProvider(AiProviderEnum.OPENAI).models[0].value;
+        return openai(modelId);
+      }
+      case AiProviderEnum.GEMINI: {
+        const google = createGoogleGenerativeAI({ apiKey });
+        const modelId =
+          model ?? getAiProvider(AiProviderEnum.GEMINI).models[0].value;
+        return google(modelId);
+      }
+      case AiProviderEnum.FAKE: {
+        if (process.env.NODE_ENV === "production") {
+          throw new Error("Fake AI provider is not available in production");
+        }
+        const modelId =
+          model ?? getAiProvider(AiProviderEnum.FAKE).models[0].value;
+        return createFakeModel(modelId);
+      }
+      default:
+        throw new Error(`Provider IA non supporté: ${providerName}`);
+    }
+  };
+
+  const { output } = await generateText({
+    model: buildModel(),
+    prompt: fullPrompt,
+    output: Output.object({
+      schema: MarkdownTranslationSchema,
+    }),
+  });
+
+  return output.translatedText;
+}
+
+/**
  * Traduit un texte ICU avec le provider IA spécifié
  */
 export async function translateWithAI(

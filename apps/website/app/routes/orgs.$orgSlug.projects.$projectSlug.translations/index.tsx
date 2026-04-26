@@ -27,6 +27,7 @@ import {
   FORMAT_LABELS,
   SupportedFormat,
   isSupportedFormat,
+  isDocumentFormat,
 } from "@transi-store/common";
 import type { Route } from "./+types/index";
 import { userContext } from "~/middleware/auth";
@@ -138,6 +139,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         highlight,
         page: page > 1 ? String(page) : undefined,
       }),
+    );
+  }
+
+  // Files in a document format (markdown / mdx) use a different UI: redirect
+  // to the dedicated full-width side-by-side editor.
+  if (isDocumentFormat(selectedFile.format)) {
+    throw redirect(
+      `/orgs/${params.orgSlug}/projects/${params.projectSlug}/translations/markdown?fileId=${selectedFile.id}`,
     );
   }
 

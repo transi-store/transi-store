@@ -6,6 +6,8 @@ export enum SupportedFormat {
   PO = "po",
   INI = "ini",
   PHP = "php",
+  MARKDOWN = "markdown",
+  MDX = "mdx",
 }
 
 /** Human-readable labels for each format (used in UI dropdowns and CLI help). */
@@ -17,7 +19,22 @@ export const FORMAT_LABELS: Record<SupportedFormat, string> = {
   [SupportedFormat.PO]: "Gettext (PO)",
   [SupportedFormat.INI]: "INI",
   [SupportedFormat.PHP]: "PHP",
+  [SupportedFormat.MARKDOWN]: "Markdown",
+  [SupportedFormat.MDX]: "MDX",
 };
+
+/**
+ * Formats stored as a single document body per locale (one row per locale)
+ * rather than a key/value bag. They use a dedicated UI and storage path.
+ */
+export const DOCUMENT_FORMATS = [
+  SupportedFormat.MARKDOWN,
+  SupportedFormat.MDX,
+] as const;
+
+export function isDocumentFormat(format: string): boolean {
+  return (DOCUMENT_FORMATS as ReadonlyArray<string>).includes(format);
+}
 
 /** Formatted list of supported formats for display in error messages: `'json', 'xliff', …` */
 export const SUPPORTED_FORMATS_LIST = new Intl.ListFormat("en", {
@@ -35,6 +52,9 @@ const EXTENSION_TO_FORMAT: Record<string, SupportedFormat> = {
   ".po": SupportedFormat.PO,
   ".ini": SupportedFormat.INI,
   ".php": SupportedFormat.PHP,
+  ".md": SupportedFormat.MARKDOWN,
+  ".markdown": SupportedFormat.MARKDOWN,
+  ".mdx": SupportedFormat.MDX,
 };
 
 /** Returns the matching SupportedFormat for a filename based on its extension, or `undefined`. */

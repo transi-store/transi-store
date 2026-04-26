@@ -7,6 +7,15 @@ import { PoTranslationFormat } from "./po-format.server";
 import { IniTranslationFormat } from "./ini-format.server";
 import { PhpTranslationFormat } from "./php-format.server";
 
+export class DocumentFormatNotSupportedError extends Error {
+  constructor(format: SupportedFormat) {
+    super(
+      `Format ${format} stores a single document body per locale and is not handled by the key/value format factory. Use markdown-documents.server.ts instead.`,
+    );
+    this.name = "DocumentFormatNotSupportedError";
+  }
+}
+
 export function createTranslationFormat(
   format: SupportedFormat,
 ): TranslationFormat {
@@ -25,5 +34,8 @@ export function createTranslationFormat(
       return new IniTranslationFormat();
     case SupportedFormat.PHP:
       return new PhpTranslationFormat();
+    case SupportedFormat.MARKDOWN:
+    case SupportedFormat.MDX:
+      throw new DocumentFormatNotSupportedError(format);
   }
 }
