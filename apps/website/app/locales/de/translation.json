@@ -232,6 +232,7 @@
   "markdownTranslate.errors.missingPayload": "Erforderliche Felder fehlen in der Anfrage",
   "markdownTranslate.errors.notDocumentFormat": "Diese Datei ist kein Markdown- oder MDX-Dokument",
   "markdownTranslate.errors.tooFewLanguages": "Mindestens zwei Sprachen sind erforderlich, um ein Dokument zu übersetzen.",
+  "markdownTranslate.errors.translationMissing": "Speichere zuerst Inhalt für diese Sprache, bevor du Abschnitte markierst.",
   "markdownTranslate.languagePicker.aria": "Sprache auswählen",
   "markdownTranslate.status.aiTranslating": "KI-Übersetzung läuft …",
   "markdownTranslate.status.saved": "Gespeichert",

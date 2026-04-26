@@ -1,89 +1,74 @@
 /**
  * Server-side data access for markdown / MDX translation documents.
  *
- * Storage model: a `markdownDocument` per `projectFile`, one
- * `markdownDocumentTranslations` row per locale (full document body in
- * `content`), and a sidecar `markdownSectionStates` table holding per-section
- * metadata (isFuzzy, last AI translation timestamp). The sidecar is
- * reconciled on every save in the same transaction as the content upsert.
+ * Storage model: one `markdownDocumentTranslations` row per
+ * (projectFileId, locale) — full document body in `content` — and a sidecar
+ * `markdownSectionStates` table holding per-section metadata (isFuzzy, last
+ * AI translation timestamp), keyed directly by the translation row id.
+ * The sidecar is reconciled on every save in the same transaction as the
+ * content upsert.
  */
 import { and, eq, inArray, notInArray } from "drizzle-orm";
 import { SupportedFormat, isDocumentFormat } from "@transi-store/common";
 import { db, schema } from "./db.server";
 import type {
-  MarkdownDocument,
   MarkdownDocumentTranslation,
   MarkdownSectionState,
   ProjectFile,
 } from "../../drizzle/schema";
 import { parseSections, type Section } from "./markdown-sections";
 
-export type DocumentWithFile = {
-  document: MarkdownDocument;
-  projectFile: ProjectFile;
-};
-
 function mdxFromFormat(format: string): boolean {
   return format === SupportedFormat.MDX;
 }
 
-/**
- * Resolve (or create) the markdown document tied to a project file. The file
- * must have a document format (markdown / mdx); other formats throw.
- *
- * Caller is responsible for verifying that the project belongs to the
- * authenticated organization.
- */
-export async function getOrCreateDocumentForFile(
-  projectFile: ProjectFile,
-): Promise<MarkdownDocument> {
+function ensureDocumentFormat(projectFile: ProjectFile): void {
   if (!isDocumentFormat(projectFile.format)) {
     throw new Error(
       `Project file ${projectFile.id} is not a document format (got ${projectFile.format})`,
     );
   }
-
-  const existing = await db.query.markdownDocuments.findFirst({
-    where: { projectFileId: projectFile.id },
-  });
-  if (existing) return existing;
-
-  const [created] = await db
-    .insert(schema.markdownDocuments)
-    .values({ projectFileId: projectFile.id })
-    .returning();
-  return created;
 }
 
-export async function getDocumentTranslations(
-  documentId: number,
+/**
+ * List all locale rows for a markdown / MDX project file. Caller is
+ * responsible for verifying that the project file belongs to the
+ * authenticated organization.
+ */
+export async function getProjectFileTranslations(
+  projectFileId: number,
 ): Promise<MarkdownDocumentTranslation[]> {
   return await db.query.markdownDocumentTranslations.findMany({
-    where: { documentId },
+    where: { projectFileId },
     orderBy: (t, { asc }) => [asc(t.locale)],
   });
 }
 
-export async function getSectionStates(
-  documentId: number,
-  locale?: string,
+/**
+ * Bulk-fetch the section states for a list of translation rows. Returns an
+ * empty array when the list is empty.
+ */
+export async function getSectionStatesForTranslations(
+  translationIds: number[],
 ): Promise<MarkdownSectionState[]> {
+  if (translationIds.length === 0) return [];
   return await db.query.markdownSectionStates.findMany({
-    where: locale ? { documentId, locale } : { documentId },
+    where: { documentTranslationId: { in: translationIds } },
   });
 }
 
 /**
- * Save the body of a translation for a given locale. In the same transaction:
- * 1. Upsert the `markdownDocumentTranslations` row for (documentId, locale).
+ * Save the body of a translation for a given (projectFile, locale). In the
+ * same transaction:
+ * 1. Upsert the `markdownDocumentTranslations` row.
  * 2. Reparse the new content to compute the set of valid `structuralPath`s.
- * 3. Delete any sidecar `markdownSectionStates` row for this locale whose
- *    `structuralPath` no longer exists in the document.
+ * 3. Delete any sidecar `markdownSectionStates` row for this translation
+ *    whose `structuralPath` no longer exists in the document.
  *
  * Returns the persisted translation row and the freshly parsed sections.
  */
 export async function saveDocumentTranslation(params: {
-  documentId: number;
+  projectFileId: number;
   locale: string;
   content: string;
   format: SupportedFormat;
@@ -100,7 +85,10 @@ export async function saveDocumentTranslation(params: {
 
   return await db.transaction(async (tx) => {
     const existing = await tx.query.markdownDocumentTranslations.findFirst({
-      where: { documentId: params.documentId, locale: params.locale },
+      where: {
+        projectFileId: params.projectFileId,
+        locale: params.locale,
+      },
     });
 
     if (
@@ -123,7 +111,7 @@ export async function saveDocumentTranslation(params: {
       const [inserted] = await tx
         .insert(schema.markdownDocumentTranslations)
         .values({
-          documentId: params.documentId,
+          projectFileId: params.projectFileId,
           locale: params.locale,
           content: params.content,
         })
@@ -136,9 +124,9 @@ export async function saveDocumentTranslation(params: {
       await tx
         .delete(schema.markdownSectionStates)
         .where(
-          and(
-            eq(schema.markdownSectionStates.documentId, params.documentId),
-            eq(schema.markdownSectionStates.locale, params.locale),
+          eq(
+            schema.markdownSectionStates.documentTranslationId,
+            translation.id,
           ),
         );
     } else {
@@ -146,9 +134,14 @@ export async function saveDocumentTranslation(params: {
         .delete(schema.markdownSectionStates)
         .where(
           and(
-            eq(schema.markdownSectionStates.documentId, params.documentId),
-            eq(schema.markdownSectionStates.locale, params.locale),
-            notInArray(schema.markdownSectionStates.structuralPath, validPaths),
+            eq(
+              schema.markdownSectionStates.documentTranslationId,
+              translation.id,
+            ),
+            notInArray(
+              schema.markdownSectionStates.structuralPath,
+              validPaths,
+            ),
           ),
         );
     }
@@ -164,20 +157,41 @@ export class MarkdownDocumentConflictError extends Error {
   }
 }
 
+export class MarkdownTranslationMissingError extends Error {
+  constructor(projectFileId: number, locale: string) {
+    super(
+      `No translation row exists yet for projectFile=${projectFileId} locale=${locale}; save content first.`,
+    );
+    this.name = "MarkdownTranslationMissingError";
+  }
+}
+
+async function findTranslation(
+  projectFileId: number,
+  locale: string,
+): Promise<MarkdownDocumentTranslation> {
+  const row = await db.query.markdownDocumentTranslations.findFirst({
+    where: { projectFileId, locale },
+  });
+  if (!row) throw new MarkdownTranslationMissingError(projectFileId, locale);
+  return row;
+}
+
 /**
  * Toggle the `isFuzzy` flag on a section. Inserts a sidecar row when none
- * exists yet for this (document, locale, structuralPath).
+ * exists yet for this (translation, structuralPath). The translation row
+ * must already exist (the user has saved content at least once).
  */
 export async function setSectionFuzzy(params: {
-  documentId: number;
+  projectFileId: number;
   locale: string;
   structuralPath: string;
   isFuzzy: boolean;
 }): Promise<MarkdownSectionState> {
+  const translation = await findTranslation(params.projectFileId, params.locale);
   const existing = await db.query.markdownSectionStates.findFirst({
     where: {
-      documentId: params.documentId,
-      locale: params.locale,
+      documentTranslationId: translation.id,
       structuralPath: params.structuralPath,
     },
   });
@@ -194,8 +208,7 @@ export async function setSectionFuzzy(params: {
   const [inserted] = await db
     .insert(schema.markdownSectionStates)
     .values({
-      documentId: params.documentId,
-      locale: params.locale,
+      documentTranslationId: translation.id,
       structuralPath: params.structuralPath,
       isFuzzy: params.isFuzzy,
     })
@@ -205,17 +218,18 @@ export async function setSectionFuzzy(params: {
 
 /**
  * Record that a section was just translated by AI; clears `isFuzzy` and
- * stamps `lastAiTranslatedAt`. Idempotent; creates the sidecar row if missing.
+ * stamps `lastAiTranslatedAt`. Idempotent; creates the sidecar row if
+ * missing. The translation row must already exist.
  */
 export async function recordAiTranslation(params: {
-  documentId: number;
+  projectFileId: number;
   locale: string;
   structuralPath: string;
 }): Promise<MarkdownSectionState> {
+  const translation = await findTranslation(params.projectFileId, params.locale);
   const existing = await db.query.markdownSectionStates.findFirst({
     where: {
-      documentId: params.documentId,
-      locale: params.locale,
+      documentTranslationId: translation.id,
       structuralPath: params.structuralPath,
     },
   });
@@ -237,8 +251,7 @@ export async function recordAiTranslation(params: {
   const [inserted] = await db
     .insert(schema.markdownSectionStates)
     .values({
-      documentId: params.documentId,
-      locale: params.locale,
+      documentTranslationId: translation.id,
       structuralPath: params.structuralPath,
       isFuzzy: false,
       lastAiTranslatedAt: now,
@@ -248,12 +261,11 @@ export async function recordAiTranslation(params: {
 }
 
 /**
- * Delete all sidecar rows for a list of structural paths. Used when bulk-
- * dropping outdated metadata after a manual reorganization.
+ * Delete a list of sidecar rows for a translation. Used when bulk-dropping
+ * outdated metadata after a manual reorganization.
  */
 export async function deleteSectionStates(params: {
-  documentId: number;
-  locale: string;
+  documentTranslationId: number;
   structuralPaths: string[];
 }): Promise<void> {
   if (params.structuralPaths.length === 0) return;
@@ -261,12 +273,22 @@ export async function deleteSectionStates(params: {
     .delete(schema.markdownSectionStates)
     .where(
       and(
-        eq(schema.markdownSectionStates.documentId, params.documentId),
-        eq(schema.markdownSectionStates.locale, params.locale),
+        eq(
+          schema.markdownSectionStates.documentTranslationId,
+          params.documentTranslationId,
+        ),
         inArray(
           schema.markdownSectionStates.structuralPath,
           params.structuralPaths,
         ),
       ),
     );
+}
+
+/**
+ * Validate that the project file uses a document format, throwing otherwise.
+ * Exposed for routes/endpoints that resolve the file before delegating here.
+ */
+export function assertDocumentFormat(projectFile: ProjectFile): void {
+  ensureDocumentFormat(projectFile);
 }

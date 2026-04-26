@@ -27,12 +27,12 @@ import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFiles, getProjectFileById } from "~/lib/project-files.server";
 import {
-  getOrCreateDocumentForFile,
-  getDocumentTranslations,
-  getSectionStates,
+  getProjectFileTranslations,
+  getSectionStatesForTranslations,
   saveDocumentTranslation,
   setSectionFuzzy,
   MarkdownDocumentConflictError,
+  MarkdownTranslationMissingError,
 } from "~/lib/markdown-documents.server";
 import { getInstance } from "~/middleware/i18next";
 import { getTranslationsUrl } from "~/lib/routes-helpers";
@@ -99,9 +99,10 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     };
   }
 
-  const document = await getOrCreateDocumentForFile(selectedFile);
-  const translations = await getDocumentTranslations(document.id);
-  const sectionStates = await getSectionStates(document.id);
+  const translations = await getProjectFileTranslations(selectedFile.id);
+  const sectionStates = await getSectionStatesForTranslations(
+    translations.map((t) => t.id),
+  );
 
   const contentByLocale: Record<string, string> = {};
   for (const lang of languages) {
@@ -111,15 +112,21 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     contentByLocale[tr.locale] = tr.content;
   }
 
+  // Map translation row id → locale to attribute section states to a locale.
+  const localeByTranslationId = new Map<number, string>();
+  for (const tr of translations) {
+    localeByTranslationId.set(tr.id, tr.locale);
+  }
+
   const fuzzyByLocale: Record<string, Record<string, boolean>> = {};
   for (const lang of languages) {
     fuzzyByLocale[lang.locale] = {};
   }
   for (const state of sectionStates) {
-    if (!fuzzyByLocale[state.locale]) {
-      fuzzyByLocale[state.locale] = {};
-    }
-    fuzzyByLocale[state.locale][state.structuralPath] = state.isFuzzy;
+    const locale = localeByTranslationId.get(state.documentTranslationId);
+    if (!locale) continue;
+    if (!fuzzyByLocale[locale]) fuzzyByLocale[locale] = {};
+    fuzzyByLocale[locale][state.structuralPath] = state.isFuzzy;
   }
 
   void i18next; // i18next instance available if we need server-side strings later
@@ -173,8 +180,6 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     );
   }
 
-  const document = await getOrCreateDocumentForFile(projectFile);
-
   if (action === MarkdownTranslateAction.SaveContent) {
     const locale = formData.get("locale");
     const content = formData.get("content");
@@ -191,7 +196,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         : undefined;
     try {
       const { translation } = await saveDocumentTranslation({
-        documentId: document.id,
+        projectFileId: projectFile.id,
         locale,
         content,
         format: projectFile.format as SupportedFormat,
@@ -230,12 +235,22 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         i18next.t("markdownTranslate.errors.missingPayload"),
       );
     }
-    await setSectionFuzzy({
-      documentId: document.id,
-      locale,
-      structuralPath,
-      isFuzzy: isFuzzyRaw === "true",
-    });
+    try {
+      await setSectionFuzzy({
+        projectFileId: projectFile.id,
+        locale,
+        structuralPath,
+        isFuzzy: isFuzzyRaw === "true",
+      });
+    } catch (error) {
+      if (error instanceof MarkdownTranslationMissingError) {
+        return jsonError(
+          409,
+          i18next.t("markdownTranslate.errors.translationMissing"),
+        );
+      }
+      throw error;
+    }
     return Response.json({ ok: true });
   }
 

@@ -121,33 +121,21 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.projects.id,
     }),
     translationKeys: r.many.translationKeys(),
-    markdownDocument: r.one.markdownDocuments({
-      from: r.projectFiles.id,
-      to: r.markdownDocuments.projectFileId,
-    }),
-  },
-
-  // Markdown Documents relations
-  markdownDocuments: {
-    projectFile: r.one.projectFiles({
-      from: r.markdownDocuments.projectFileId,
-      to: r.projectFiles.id,
-    }),
-    translations: r.many.markdownDocumentTranslations(),
-    sectionStates: r.many.markdownSectionStates(),
+    markdownTranslations: r.many.markdownDocumentTranslations(),
   },
 
   markdownDocumentTranslations: {
-    document: r.one.markdownDocuments({
-      from: r.markdownDocumentTranslations.documentId,
-      to: r.markdownDocuments.id,
+    projectFile: r.one.projectFiles({
+      from: r.markdownDocumentTranslations.projectFileId,
+      to: r.projectFiles.id,
     }),
+    sectionStates: r.many.markdownSectionStates(),
   },
 
   markdownSectionStates: {
-    document: r.one.markdownDocuments({
-      from: r.markdownSectionStates.documentId,
-      to: r.markdownDocuments.id,
+    documentTranslation: r.one.markdownDocumentTranslations({
+      from: r.markdownSectionStates.documentTranslationId,
+      to: r.markdownDocumentTranslations.id,
     }),
   },
 

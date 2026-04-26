@@ -18,8 +18,8 @@ import { getProjectFileById } from "~/lib/project-files.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
 import { translateMarkdownWithAI } from "~/lib/ai-translation.server";
 import {
-  getOrCreateDocumentForFile,
   recordAiTranslation,
+  MarkdownTranslationMissingError,
 } from "~/lib/markdown-documents.server";
 import { getInstance } from "~/middleware/i18next";
 import { orgContext } from "~/middleware/api-auth";
@@ -127,12 +127,18 @@ export async function action({
     );
 
     if (data.scope === "section" && data.structuralPath) {
-      const document = await getOrCreateDocumentForFile(projectFile);
-      await recordAiTranslation({
-        documentId: document.id,
-        locale: data.targetLocale,
-        structuralPath: data.structuralPath,
-      });
+      try {
+        await recordAiTranslation({
+          projectFileId: projectFile.id,
+          locale: data.targetLocale,
+          structuralPath: data.structuralPath,
+        });
+      } catch (error) {
+        // No-op: if the target translation row doesn't exist yet (the user
+        // hasn't applied the AI suggestion to disk), we just skip the
+        // metadata update — the translation was still produced.
+        if (!(error instanceof MarkdownTranslationMissingError)) throw error;
+      }
     }
 
     return Response.json<Success>({ translatedText });

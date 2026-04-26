@@ -277,48 +277,40 @@ export const translations = pgTable(
   ],
 );
 
-// Documents Markdown / MDX : un par projectFile au format document
-export const markdownDocuments = pgTable(
-  "markdown_documents",
-  {
-    id: serial("id").primaryKey(),
-    projectFileId: integer("project_file_id")
-      .notNull()
-      .unique()
-      .references(() => projectFiles.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-);
-
-// Une ligne par locale : source de vérité du contenu markdown traduit
+// Documents Markdown / MDX : une ligne par locale, source de vérité du
+// contenu pour un projectFile au format document.
 export const markdownDocumentTranslations = pgTable(
   "markdown_document_translations",
   {
     id: serial("id").primaryKey(),
-    documentId: integer("document_id")
+    projectFileId: integer("project_file_id")
       .notNull()
-      .references(() => markdownDocuments.id, { onDelete: "cascade" }),
+      .references(() => projectFiles.id, { onDelete: "cascade" }),
     locale: varchar("locale", { length: 10 }).notNull(),
     content: text("content").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("unique_document_locale").on(table.documentId, table.locale),
+    uniqueIndex("unique_md_translation_file_locale").on(
+      table.projectFileId,
+      table.locale,
+    ),
   ],
 );
 
 // Sidecar : métadonnées par section (isFuzzy, dernière trad IA), keyé par
 // structuralPath calculé depuis l'AST mdast (cf. lib/markdown-sections.ts)
+// et rattaché directement à la ligne de traduction concernée.
 export const markdownSectionStates = pgTable(
   "markdown_section_states",
   {
     id: serial("id").primaryKey(),
-    documentId: integer("document_id")
+    documentTranslationId: integer("document_translation_id")
       .notNull()
-      .references(() => markdownDocuments.id, { onDelete: "cascade" }),
-    locale: varchar("locale", { length: 10 }).notNull(),
+      .references(() => markdownDocumentTranslations.id, {
+        onDelete: "cascade",
+      }),
     structuralPath: varchar("structural_path", { length: 500 }).notNull(),
     isFuzzy: boolean("is_fuzzy").default(false).notNull(),
     lastAiTranslatedAt: timestamp("last_ai_translated_at"),
@@ -327,11 +319,10 @@ export const markdownSectionStates = pgTable(
   },
   (table) => [
     uniqueIndex("unique_section_state").on(
-      table.documentId,
-      table.locale,
+      table.documentTranslationId,
       table.structuralPath,
     ),
-    index("idx_section_state_doc_locale").on(table.documentId, table.locale),
+    index("idx_section_state_translation").on(table.documentTranslationId),
   ],
 );
 
@@ -401,9 +392,6 @@ export type NewOrganizationAiProvider =
 
 export type BranchKeyDeletion = typeof branchKeyDeletions.$inferSelect;
 export type NewBranchKeyDeletion = typeof branchKeyDeletions.$inferInsert;
-
-export type MarkdownDocument = typeof markdownDocuments.$inferSelect;
-export type NewMarkdownDocument = typeof markdownDocuments.$inferInsert;
 
 export type MarkdownDocumentTranslation =
   typeof markdownDocumentTranslations.$inferSelect;

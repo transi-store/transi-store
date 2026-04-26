@@ -232,6 +232,7 @@
   "markdownTranslate.errors.missingPayload": "Required fields missing in the request",
   "markdownTranslate.errors.notDocumentFormat": "This file is not a markdown or MDX document",
   "markdownTranslate.errors.tooFewLanguages": "At least two languages are required to translate a document.",
+  "markdownTranslate.errors.translationMissing": "Save some content for this language before flagging sections.",
   "markdownTranslate.languagePicker.aria": "Select language",
   "markdownTranslate.status.aiTranslating": "Translating with AI…",
   "markdownTranslate.status.saved": "Saved",

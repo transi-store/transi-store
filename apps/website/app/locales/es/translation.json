@@ -203,6 +203,7 @@
   "markdownTranslate.errors.missingPayload": "Faltan campos obligatorios en la solicitud",
   "markdownTranslate.errors.notDocumentFormat": "Este archivo no es un documento markdown o MDX",
   "markdownTranslate.errors.tooFewLanguages": "Se necesitan al menos dos idiomas para traducir un documento.",
+  "markdownTranslate.errors.translationMissing": "Guarda algo de contenido para este idioma antes de marcar secciones.",
   "markdownTranslate.languagePicker.aria": "Seleccionar idioma",
   "markdownTranslate.status.aiTranslating": "Traduciendo con IA…",
   "markdownTranslate.status.saved": "Guardado",
