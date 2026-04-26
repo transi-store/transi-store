@@ -8,26 +8,17 @@
  * The sidecar is reconciled on every save in the same transaction as the
  * content upsert.
  */
-import { and, eq, inArray, notInArray } from "drizzle-orm";
-import { SupportedFormat, isDocumentFormat } from "@transi-store/common";
+import { and, eq, notInArray } from "drizzle-orm";
+import { SupportedFormat } from "@transi-store/common";
 import { db, schema } from "./db.server";
 import type {
   MarkdownDocumentTranslation,
   MarkdownSectionState,
-  ProjectFile,
 } from "../../drizzle/schema";
 import { parseSections, type Section } from "./markdown-sections";
 
 function mdxFromFormat(format: string): boolean {
   return format === SupportedFormat.MDX;
-}
-
-function ensureDocumentFormat(projectFile: ProjectFile): void {
-  if (!isDocumentFormat(projectFile.format)) {
-    throw new Error(
-      `Project file ${projectFile.id} is not a document format (got ${projectFile.format})`,
-    );
-  }
 }
 
 /**
@@ -94,7 +85,8 @@ export async function saveDocumentTranslation(params: {
     if (
       params.expectedUpdatedAt !== undefined &&
       existing &&
-      existing.updatedAt.getTime() !== (params.expectedUpdatedAt?.getTime() ?? 0)
+      existing.updatedAt.getTime() !==
+        (params.expectedUpdatedAt?.getTime() ?? 0)
     ) {
       throw new MarkdownDocumentConflictError();
     }
@@ -138,10 +130,7 @@ export async function saveDocumentTranslation(params: {
               schema.markdownSectionStates.documentTranslationId,
               translation.id,
             ),
-            notInArray(
-              schema.markdownSectionStates.structuralPath,
-              validPaths,
-            ),
+            notInArray(schema.markdownSectionStates.structuralPath, validPaths),
           ),
         );
     }
@@ -188,7 +177,10 @@ export async function setSectionFuzzy(params: {
   structuralPath: string;
   isFuzzy: boolean;
 }): Promise<MarkdownSectionState> {
-  const translation = await findTranslation(params.projectFileId, params.locale);
+  const translation = await findTranslation(
+    params.projectFileId,
+    params.locale,
+  );
   const existing = await db.query.markdownSectionStates.findFirst({
     where: {
       documentTranslationId: translation.id,
@@ -226,7 +218,10 @@ export async function recordAiTranslation(params: {
   locale: string;
   structuralPath: string;
 }): Promise<MarkdownSectionState> {
-  const translation = await findTranslation(params.projectFileId, params.locale);
+  const translation = await findTranslation(
+    params.projectFileId,
+    params.locale,
+  );
   const existing = await db.query.markdownSectionStates.findFirst({
     where: {
       documentTranslationId: translation.id,
@@ -258,37 +253,4 @@ export async function recordAiTranslation(params: {
     })
     .returning();
   return inserted;
-}
-
-/**
- * Delete a list of sidecar rows for a translation. Used when bulk-dropping
- * outdated metadata after a manual reorganization.
- */
-export async function deleteSectionStates(params: {
-  documentTranslationId: number;
-  structuralPaths: string[];
-}): Promise<void> {
-  if (params.structuralPaths.length === 0) return;
-  await db
-    .delete(schema.markdownSectionStates)
-    .where(
-      and(
-        eq(
-          schema.markdownSectionStates.documentTranslationId,
-          params.documentTranslationId,
-        ),
-        inArray(
-          schema.markdownSectionStates.structuralPath,
-          params.structuralPaths,
-        ),
-      ),
-    );
-}
-
-/**
- * Validate that the project file uses a document format, throwing otherwise.
- * Exposed for routes/endpoints that resolve the file before delegating here.
- */
-export function assertDocumentFormat(projectFile: ProjectFile): void {
-  ensureDocumentFormat(projectFile);
 }

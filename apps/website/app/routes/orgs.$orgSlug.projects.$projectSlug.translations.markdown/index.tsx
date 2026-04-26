@@ -25,7 +25,10 @@ import type { Route } from "./+types/index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import { getProjectFiles, getProjectFileById } from "~/lib/project-files.server";
+import {
+  getProjectFiles,
+  getProjectFileById,
+} from "~/lib/project-files.server";
 import {
   getProjectFileTranslations,
   getSectionStatesForTranslations,
@@ -191,7 +194,8 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       );
     }
     const expectedUpdatedAt =
-      typeof expectedUpdatedAtRaw === "string" && expectedUpdatedAtRaw.length > 0
+      typeof expectedUpdatedAtRaw === "string" &&
+      expectedUpdatedAtRaw.length > 0
         ? new Date(expectedUpdatedAtRaw)
         : undefined;
     try {
@@ -262,8 +266,11 @@ export default function MarkdownTranslate({
   params,
 }: Route.ComponentProps) {
   const { t } = useTranslation();
-  const { organization, project, languages: ctxLanguages } =
-    useOutletContext<ContextType>();
+  const {
+    organization,
+    project,
+    languages: ctxLanguages,
+  } = useOutletContext<ContextType>();
 
   const {
     file,
@@ -358,7 +365,10 @@ export default function MarkdownTranslate({
           fileId={file.id}
           filePath={file.filePath}
           isMdx={isMdx}
-          languages={languages}
+          languages={languages.map((l) => ({
+            locale: l.locale,
+            isDefault: l.isDefault ?? false,
+          }))}
           initialContent={contentByLocale}
           fuzzyByLocale={fuzzyByLocale}
           initialLeftLocale={initialLeftLocale}

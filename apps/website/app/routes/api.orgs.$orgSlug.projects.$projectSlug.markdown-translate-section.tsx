@@ -34,15 +34,6 @@ const requestSchema = z.object({
   scope: z.enum(["section", "document"]),
 });
 
-type Success = {
-  translatedText: string;
-};
-
-type Failure = {
-  error: string;
-  originalError?: string;
-};
-
 export async function action({
   params,
   request,
@@ -53,7 +44,7 @@ export async function action({
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    return Response.json<Failure>(
+    return Response.json(
       { error: i18next.t("api.translate.projectNotFound") },
       { status: 404 },
     );
@@ -69,7 +60,7 @@ export async function action({
     scope: formData.get("scope"),
   });
   if (!parsed.success) {
-    return Response.json<Failure>(
+    return Response.json(
       {
         error: parsed.error.issues
           .map((i) => `${i.path.join(".")}: ${i.message}`)
@@ -82,7 +73,7 @@ export async function action({
 
   const projectFile = await getProjectFileById(project.id, data.fileId);
   if (!projectFile) {
-    return Response.json<Failure>(
+    return Response.json(
       {
         error: i18next.t("files.errors.fileNotFound", {
           fileId: String(data.fileId),
@@ -94,7 +85,7 @@ export async function action({
   }
 
   if (!isDocumentFormat(projectFile.format)) {
-    return Response.json<Failure>(
+    return Response.json(
       { error: i18next.t("markdownTranslate.errors.notDocumentFormat") },
       { status: 400 },
     );
@@ -102,14 +93,14 @@ export async function action({
 
   const activeProvider = await getActiveAiProvider(organization.id);
   if (!activeProvider) {
-    return Response.json<Failure>(
+    return Response.json(
       { error: i18next.t("api.translate.noAiProvider") },
       { status: 400 },
     );
   }
 
   if (data.sourceText.trim().length === 0) {
-    return Response.json<Failure>(
+    return Response.json(
       { error: i18next.t("markdownTranslate.errors.emptySource") },
       { status: 400 },
     );
@@ -141,10 +132,10 @@ export async function action({
       }
     }
 
-    return Response.json<Success>({ translatedText });
+    return Response.json({ translatedText });
   } catch (error) {
     console.error("Markdown AI translation failed:", error);
-    return Response.json<Failure>(
+    return Response.json(
       {
         error: i18next.t("api.translate.translateError"),
         originalError: error instanceof Error ? error.message : undefined,

@@ -4,13 +4,7 @@
  * `SectionSyncProvider`; subscribers on the other side scroll & highlight
  * their counterpart section.
  */
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Flex,
@@ -97,9 +91,9 @@ function MarkdownTranslateInner({
   const [rightLocale, setRightLocale] = useState(initialRightLocale);
 
   // Per-locale current content. Seeded from props; updated as user types.
-  const [contentByLocale, setContentByLocale] = useState<Record<string, string>>(
-    () => ({ ...initialContent }),
-  );
+  const [contentByLocale, setContentByLocale] = useState<
+    Record<string, string>
+  >(() => ({ ...initialContent }));
 
   // Per-locale current fuzzy flags (mirrors sidecar). Mutated optimistically.
   const [fuzzyState, setFuzzyState] = useState<
@@ -167,7 +161,8 @@ function MarkdownTranslateInner({
   useEffect(() => {
     return sync.subscribe(({ side, counterpartIndex }) => {
       const otherSide: EditorSide = side === "left" ? "right" : "left";
-      const otherView = otherSide === "left" ? leftViewRef.current : rightViewRef.current;
+      const otherView =
+        otherSide === "left" ? leftViewRef.current : rightViewRef.current;
       const otherSections = otherSide === "left" ? leftSections : rightSections;
       if (!otherView) return;
       if (counterpartIndex === null) {
@@ -198,8 +193,7 @@ function MarkdownTranslateInner({
 
   // Compute current section / counterpart for the action bar.
   const activeSide: EditorSide = sync.state.activeSide ?? "left";
-  const activeSections =
-    activeSide === "left" ? leftSections : rightSections;
+  const activeSections = activeSide === "left" ? leftSections : rightSections;
   const activeIndex = sync.state.activeSectionIndex;
   const activeSection: Section | undefined =
     activeIndex !== null ? activeSections[activeIndex] : undefined;
@@ -215,12 +209,9 @@ function MarkdownTranslateInner({
   const counterpartSection =
     counterpartIndex !== null ? otherSections[counterpartIndex] : undefined;
 
-  const isCurrentSectionFuzzy =
-    activeSection
-      ? Boolean(
-          fuzzyState[activeLocale]?.[activeSection.structuralPath],
-        )
-      : false;
+  const isCurrentSectionFuzzy = activeSection
+    ? Boolean(fuzzyState[activeLocale]?.[activeSection.structuralPath])
+    : false;
 
   const isAiBusy = aiFetcher.state !== "idle";
 
@@ -248,7 +239,8 @@ function MarkdownTranslateInner({
     } else {
       // No counterpart on the other side: append at end.
       const otherContent = contentByLocale[otherLocale] ?? "";
-      const sep = otherContent.endsWith("\n") || otherContent.length === 0 ? "" : "\n\n";
+      const sep =
+        otherContent.endsWith("\n") || otherContent.length === 0 ? "" : "\n\n";
       handleEditorChange(otherLocale, otherContent + sep + text);
     }
   }, [
@@ -266,6 +258,16 @@ function MarkdownTranslateInner({
     handleEditorChange(otherLocale, sourceContent);
   }, [contentByLocale, activeLocale, otherLocale, handleEditorChange]);
 
+  // Track in-flight AI request metadata so we can apply the response when it
+  // lands. (We can't read aiFetcher.formData when state === "idle".)
+  const pendingAiRequestRef = useRef<{
+    key: string;
+    scope: "section" | "document";
+    targetLocale: string;
+    structuralPath: string;
+  } | null>(null);
+  const appliedAiKeyRef = useRef<string | null>(null);
+
   const handleAiTranslateSection = useCallback(() => {
     if (!activeSection) return;
     const sourceContent = contentByLocale[activeLocale] ?? "";
@@ -277,8 +279,22 @@ function MarkdownTranslateInner({
     formData.set("structuralPath", activeSection.structuralPath);
     formData.set("fileId", String(fileId));
     formData.set("scope", "section");
+    pendingAiRequestRef.current = {
+      key: `section:${activeSection.structuralPath}:${activeLocale}:${otherLocale}:${Date.now()}`,
+      scope: "section",
+      targetLocale: otherLocale,
+      structuralPath: activeSection.structuralPath,
+    };
     aiFetcher.submit(formData, { method: "post", action: aiTranslateUrl });
-  }, [activeSection, contentByLocale, activeLocale, otherLocale, fileId, aiFetcher, aiTranslateUrl]);
+  }, [
+    activeSection,
+    contentByLocale,
+    activeLocale,
+    otherLocale,
+    fileId,
+    aiFetcher,
+    aiTranslateUrl,
+  ]);
 
   const handleAiTranslateDocument = useCallback(() => {
     const sourceText = contentByLocale[activeLocale] ?? "";
@@ -289,29 +305,36 @@ function MarkdownTranslateInner({
     formData.set("sourceText", sourceText);
     formData.set("fileId", String(fileId));
     formData.set("scope", "document");
+    pendingAiRequestRef.current = {
+      key: `document:${activeLocale}:${otherLocale}:${Date.now()}`,
+      scope: "document",
+      targetLocale: otherLocale,
+      structuralPath: "",
+    };
     aiFetcher.submit(formData, { method: "post", action: aiTranslateUrl });
-  }, [contentByLocale, activeLocale, otherLocale, fileId, aiFetcher, aiTranslateUrl]);
+  }, [
+    contentByLocale,
+    activeLocale,
+    otherLocale,
+    fileId,
+    aiFetcher,
+    aiTranslateUrl,
+  ]);
 
   // Apply AI response when it lands. We use a ref to track the last applied
   // request so we don't re-apply the same response multiple times.
-  const appliedAiKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (aiFetcher.state !== "idle") return;
     const data = aiFetcher.data;
     if (!data?.translatedText) return;
-    const formAction = aiFetcher.formData;
-    const key = formAction
-      ? `${formAction.get("scope")}:${formAction.get("structuralPath") ?? ""}:${formAction.get("sourceLocale")}:${formAction.get("targetLocale")}`
-      : null;
-    if (!key || appliedAiKeyRef.current === key) return;
-    appliedAiKeyRef.current = key;
+    const pending = pendingAiRequestRef.current;
+    if (!pending || appliedAiKeyRef.current === pending.key) return;
+    appliedAiKeyRef.current = pending.key;
 
-    const scope = formAction?.get("scope");
-    const targetLocale = String(formAction?.get("targetLocale") ?? "");
+    const { scope, targetLocale, structuralPath } = pending;
     if (!targetLocale) return;
 
     if (scope === "section") {
-      const structuralPath = String(formAction?.get("structuralPath") ?? "");
       const targetSections =
         targetLocale === leftLocale ? leftSections : rightSections;
       const target = targetSections.find(
@@ -330,7 +353,10 @@ function MarkdownTranslateInner({
           targetContent.length === 0 || targetContent.endsWith("\n")
             ? ""
             : "\n\n";
-        handleEditorChange(targetLocale, targetContent + sep + data.translatedText);
+        handleEditorChange(
+          targetLocale,
+          targetContent + sep + data.translatedText,
+        );
       }
     } else {
       handleEditorChange(targetLocale, data.translatedText);
@@ -338,7 +364,6 @@ function MarkdownTranslateInner({
   }, [
     aiFetcher.state,
     aiFetcher.data,
-    aiFetcher.formData,
     leftLocale,
     rightLocale,
     leftSections,
@@ -364,7 +389,13 @@ function MarkdownTranslateInner({
     formData.set("structuralPath", activeSection.structuralPath);
     formData.set("isFuzzy", next ? "true" : "false");
     fuzzyFetcher.submit(formData, { method: "post" });
-  }, [activeSection, activeLocale, isCurrentSectionFuzzy, fileId, fuzzyFetcher]);
+  }, [
+    activeSection,
+    activeLocale,
+    isCurrentSectionFuzzy,
+    fileId,
+    fuzzyFetcher,
+  ]);
 
   const handleJumpToNextOrphan = useCallback(() => {
     const orphan = sync.state.alignment.find(
@@ -380,7 +411,10 @@ function MarkdownTranslateInner({
           from: target.range[0],
           to: target.range[1],
         });
-        setTimeout(() => setEditorSectionHighlight(view, null), HIGHLIGHT_DURATION_MS);
+        setTimeout(
+          () => setEditorSectionHighlight(view, null),
+          HIGHLIGHT_DURATION_MS,
+        );
       }
     } else if (orphan.rightIndex !== null) {
       const target = rightSections[orphan.rightIndex];
@@ -391,7 +425,10 @@ function MarkdownTranslateInner({
           from: target.range[0],
           to: target.range[1],
         });
-        setTimeout(() => setEditorSectionHighlight(view, null), HIGHLIGHT_DURATION_MS);
+        setTimeout(
+          () => setEditorSectionHighlight(view, null),
+          HIGHLIGHT_DURATION_MS,
+        );
       }
     }
   }, [sync.state.alignment, leftSections, rightSections]);
