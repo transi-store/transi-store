@@ -4,7 +4,15 @@
  * `SectionSyncProvider`; subscribers on the other side scroll & highlight
  * their counterpart section.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Box,
   Flex,
@@ -107,13 +115,21 @@ function MarkdownTranslateInner({
   const leftContent = contentByLocale[leftLocale] ?? "";
   const rightContent = contentByLocale[rightLocale] ?? "";
 
+  // parseSections() walks the doc through remark-gfm and is too slow to run
+  // synchronously on every keystroke. We defer the *parsing* input so React
+  // schedules it as a low-priority transition: typing stays snappy and the
+  // section-derived UI (alignment, highlight, counterpart lookup) catches up
+  // on the next idle frame.
+  const deferredLeftContent = useDeferredValue(leftContent);
+  const deferredRightContent = useDeferredValue(rightContent);
+
   const leftSections = useMemo(
-    () => parseSections(leftContent, { mdx: isMdx }),
-    [leftContent, isMdx],
+    () => parseSections(deferredLeftContent, { mdx: isMdx }),
+    [deferredLeftContent, isMdx],
   );
   const rightSections = useMemo(
-    () => parseSections(rightContent, { mdx: isMdx }),
-    [rightContent, isMdx],
+    () => parseSections(deferredRightContent, { mdx: isMdx }),
+    [deferredRightContent, isMdx],
   );
 
   // Push sections into context whenever they change.
@@ -216,6 +232,33 @@ function MarkdownTranslateInner({
     },
     [sync, leftSections, rightSections],
   );
+
+  // Side-bound, stable callbacks for the EditorPane children. Keeping them
+  // memoized lets `memo(EditorPane)` skip re-rendering the side that isn't
+  // being typed in. Their identities only change when sections (deferred)
+  // or the locale switch.
+  const handleLeftContentChange = useCallback(
+    (v: string) => handleEditorChange(leftLocale, v),
+    [handleEditorChange, leftLocale],
+  );
+  const handleRightContentChange = useCallback(
+    (v: string) => handleEditorChange(rightLocale, v),
+    [handleEditorChange, rightLocale],
+  );
+  const handleLeftCursor = useCallback(
+    (offset: number) => handleCursor("left", offset),
+    [handleCursor],
+  );
+  const handleRightCursor = useCallback(
+    (offset: number) => handleCursor("right", offset),
+    [handleCursor],
+  );
+  const handleLeftViewReady = useCallback((view: EditorView) => {
+    leftViewRef.current = view;
+  }, []);
+  const handleRightViewReady = useCallback((view: EditorView) => {
+    rightViewRef.current = view;
+  }, []);
 
   // Compute current section / counterpart for the action bar.
   const activeSide: EditorSide = sync.state.activeSide ?? "left";
@@ -503,9 +546,9 @@ function MarkdownTranslateInner({
           languages={languages}
           isMdx={isMdx}
           onLocaleChange={setLeftLocale}
-          onContentChange={(v) => handleEditorChange(leftLocale, v)}
-          onCursor={(offset) => handleCursor("left", offset)}
-          onViewReady={(view) => (leftViewRef.current = view)}
+          onContentChange={handleLeftContentChange}
+          onCursor={handleLeftCursor}
+          onViewReady={handleLeftViewReady}
           isActive={sync.state.activeSide === "left"}
           fuzzyForLocale={fuzzyState[leftLocale]}
           activeStructuralPath={
@@ -537,9 +580,9 @@ function MarkdownTranslateInner({
           languages={languages}
           isMdx={isMdx}
           onLocaleChange={setRightLocale}
-          onContentChange={(v) => handleEditorChange(rightLocale, v)}
-          onCursor={(offset) => handleCursor("right", offset)}
-          onViewReady={(view) => (rightViewRef.current = view)}
+          onContentChange={handleRightContentChange}
+          onCursor={handleRightCursor}
+          onViewReady={handleRightViewReady}
           isActive={sync.state.activeSide === "right"}
           fuzzyForLocale={fuzzyState[rightLocale]}
           activeStructuralPath={
@@ -581,7 +624,7 @@ type EditorPaneProps = {
   orphanCount: number;
 };
 
-function EditorPane({
+const EditorPane = memo(function EditorPane({
   locale,
   otherLocale,
   content,
@@ -639,4 +682,4 @@ function EditorPane({
       </Box>
     </Flex>
   );
-}
+});
