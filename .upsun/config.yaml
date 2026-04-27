@@ -85,7 +85,7 @@ applications:
     # More information: https://docs.upsun.com/app/reference/dependencies/
     dependencies:
       nodejs:
-        yarn: "^1.22.0"
+        yarn: "^4.12.0"
 
     # Hooks allow you to customize your code/environment as the project moves through the build and deploy stages
     # More information: https://docs.upsun.com/app/reference/hooks/
@@ -94,8 +94,7 @@ applications:
       # More information: https://docs.upsun.com/app/hooks/compare/compare/build/
       build: |
         set -eux
-        corepack enable
-        yarn
+        yarn install
         yarn build
         
       # The deploy hook is run after the app container has been started, but before it has started accepting requests.
