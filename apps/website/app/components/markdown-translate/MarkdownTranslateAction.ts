@@ -5,7 +5,54 @@
 export const MarkdownTranslateAction = {
   SaveContent: "saveContent",
   ToggleFuzzy: "toggleFuzzy",
+  TranslateSection: "translateSection",
+  TranslateDocument: "translateDocument",
 } as const;
 
 export type MarkdownTranslateActionValue =
   (typeof MarkdownTranslateAction)[keyof typeof MarkdownTranslateAction];
+
+import type { TranslationSuggestion } from "~/lib/ai-translation.server";
+import type { AiProviderEnum } from "~/lib/ai-providers";
+
+// ---- AI translate response shapes (returned by the page action) ----
+
+export type MarkdownAiSectionSuccess = {
+  scope: "section";
+  suggestions: TranslationSuggestion[];
+  provider: AiProviderEnum;
+  providerModel: string | null | undefined;
+};
+
+export type MarkdownAiDocumentSuccess = {
+  scope: "document";
+  translatedText: string;
+};
+
+export type MarkdownAiError = {
+  error: string;
+  originalError?: string;
+};
+
+export type MarkdownAiResponse =
+  | MarkdownAiSectionSuccess
+  | MarkdownAiDocumentSuccess
+  | MarkdownAiError;
+
+export function isMarkdownAiSectionSuccess(
+  data: MarkdownAiResponse | undefined,
+): data is MarkdownAiSectionSuccess {
+  return !!data && (data as MarkdownAiSectionSuccess).scope === "section";
+}
+
+export function isMarkdownAiDocumentSuccess(
+  data: MarkdownAiResponse | undefined,
+): data is MarkdownAiDocumentSuccess {
+  return !!data && (data as MarkdownAiDocumentSuccess).scope === "document";
+}
+
+export function isMarkdownAiError(
+  data: MarkdownAiResponse | undefined,
+): data is MarkdownAiError {
+  return !!data && (data as MarkdownAiError).error !== undefined;
+}

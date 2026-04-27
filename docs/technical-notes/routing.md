@@ -88,6 +88,21 @@ export default [
 | `/orgs/my-org`                     | `route("orgs/:orgSlug", "...")`                       | `routes/orgs.$orgSlug._index.tsx`                |
 | `/orgs/my-org/projects/my-project` | `route("orgs/:orgSlug/projects/:projectSlug", "...")` | `routes/orgs.$orgSlug.projects.$projectSlug.tsx` |
 
+## Convention `/api` : routes publiques uniquement
+
+Le préfixe `/api/...` est **réservé aux routes exposées au public** (consommables par des intégrations externes via clé API ou navigateur), comme les endpoints documentés dans OpenAPI :
+
+- ✅ `/api/orgs/:orgSlug/projects/:projectSlug/files/:fileId/translations` — endpoint d'export public
+- ✅ `/api/locales/:lng/:ns` — chargement des traductions client-side
+- ✅ `/api/doc.json`, `/api/doc/viewer`
+
+**Ne PAS préfixer par `/api`** les actions internes utilisées uniquement par l'UI (auth-session, non documentées) :
+
+- ❌ Mauvais : `/api/orgs/:orgSlug/projects/:projectSlug/markdown-translate-section`
+- ✅ Bon : ajouter l'action directement dans le `action()` de la route page existante (via un discriminateur `_action` sur le formData), comme `SaveContent` / `ToggleFuzzy` / `TranslateSection` dans `routes/orgs.$orgSlug.projects.$projectSlug.translations.markdown/index.tsx`
+
+Si une action interne nécessite vraiment sa propre route (cas rare : besoin d'une URL distincte côté client), elle doit vivre sous `app-layout` à un chemin **non préfixé** par `/api`. Le bundle OpenAPI ne doit jamais l'enregistrer.
+
 ## Conventions de nommage des fichiers
 
 - **Segments dynamiques**: Utiliser `$` → `orgs.$orgSlug.tsx` pour `/orgs/:orgSlug`

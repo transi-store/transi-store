@@ -34,14 +34,23 @@ import {
   getSectionStatesForTranslations,
   saveDocumentTranslation,
   setSectionFuzzy,
+  recordAiTranslation,
   MarkdownDocumentConflictError,
   MarkdownTranslationMissingError,
 } from "~/lib/markdown-documents.server";
+import { getActiveAiProvider } from "~/lib/ai-providers.server";
+import {
+  translateMarkdownWithAI,
+  translateWithAI,
+} from "~/lib/ai-translation.server";
 import { getInstance } from "~/middleware/i18next";
 import { getTranslationsUrl } from "~/lib/routes-helpers";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { MarkdownTranslateLayout } from "~/components/markdown-translate/MarkdownTranslateLayout";
-import { MarkdownTranslateAction } from "~/components/markdown-translate/MarkdownTranslateAction";
+import {
+  MarkdownTranslateAction,
+  type MarkdownAiResponse,
+} from "~/components/markdown-translate/MarkdownTranslateAction";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -225,6 +234,112 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     }
   }
 
+  if (
+    action === MarkdownTranslateAction.TranslateSection ||
+    action === MarkdownTranslateAction.TranslateDocument
+  ) {
+    const sourceLocale = formData.get("sourceLocale");
+    const targetLocale = formData.get("targetLocale");
+    const sourceText = formData.get("sourceText");
+    const structuralPath = formData.get("structuralPath");
+    const targetCurrentText = formData.get("targetCurrentText");
+    if (
+      typeof sourceLocale !== "string" ||
+      typeof targetLocale !== "string" ||
+      typeof sourceText !== "string"
+    ) {
+      return jsonError(
+        400,
+        i18next.t("markdownTranslate.errors.missingPayload"),
+      );
+    }
+
+    const activeProvider = await getActiveAiProvider(organization.id);
+    if (!activeProvider) {
+      return Response.json(
+        {
+          error: i18next.t("api.translate.noAiProvider"),
+        } satisfies MarkdownAiResponse,
+        { status: 400 },
+      );
+    }
+
+    if (sourceText.trim().length === 0) {
+      return Response.json(
+        {
+          error: i18next.t("markdownTranslate.errors.emptySource"),
+        } satisfies MarkdownAiResponse,
+        { status: 400 },
+      );
+    }
+
+    const isMdx = projectFile.format === SupportedFormat.MDX;
+    const targetCurrent =
+      typeof targetCurrentText === "string" ? targetCurrentText : undefined;
+
+    try {
+      if (action === MarkdownTranslateAction.TranslateSection) {
+        const suggestions = await translateWithAI(
+          {
+            sourceText,
+            sourceLocale,
+            targetLocale,
+            existingTranslations: [],
+            format: isMdx ? "mdx" : "markdown",
+            targetCurrentText: targetCurrent,
+          },
+          activeProvider,
+        );
+
+        if (typeof structuralPath === "string" && structuralPath.length > 0) {
+          try {
+            await recordAiTranslation({
+              projectFileId: projectFile.id,
+              locale: targetLocale,
+              structuralPath,
+            });
+          } catch (error) {
+            // The target row may not exist yet (the user hasn't saved a
+            // draft of that locale): skip metadata stamping silently.
+            if (!(error instanceof MarkdownTranslationMissingError))
+              throw error;
+          }
+        }
+
+        return Response.json({
+          scope: "section",
+          suggestions,
+          provider: activeProvider.provider,
+          providerModel: activeProvider.model,
+        } satisfies MarkdownAiResponse);
+      }
+
+      const translatedText = await translateMarkdownWithAI(
+        {
+          sourceText,
+          sourceLocale,
+          targetLocale,
+          isMdx,
+          targetCurrentText: targetCurrent,
+        },
+        activeProvider,
+      );
+      return Response.json({
+        scope: "document",
+        translatedText,
+      } satisfies MarkdownAiResponse);
+    } catch (error) {
+      console.error("Markdown AI translation failed:", error);
+      return Response.json(
+        {
+          error: i18next.t("api.translate.translateError"),
+          originalError: error instanceof Error ? error.message : undefined,
+        } satisfies MarkdownAiResponse,
+        { status: 500 },
+      );
+    }
+  }
+
   if (action === MarkdownTranslateAction.ToggleFuzzy) {
     const locale = formData.get("locale");
     const structuralPath = formData.get("structuralPath");
@@ -263,7 +378,6 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
 export default function MarkdownTranslate({
   loaderData,
-  params,
 }: Route.ComponentProps) {
   const { t } = useTranslation();
   const {
@@ -292,8 +406,6 @@ export default function MarkdownTranslate({
     const others = languages.filter((l) => l.locale !== initialLeftLocale);
     return others[0]?.locale ?? initialLeftLocale;
   }, [languages, initialLeftLocale]);
-
-  const aiTranslateUrl = `/api/orgs/${params.orgSlug}/projects/${params.projectSlug}/markdown-translate-section`;
 
   void ctxLanguages;
 
@@ -373,7 +485,6 @@ export default function MarkdownTranslate({
           fuzzyByLocale={fuzzyByLocale}
           initialLeftLocale={initialLeftLocale}
           initialRightLocale={initialRightLocale}
-          aiTranslateUrl={aiTranslateUrl}
         />
       )}
     </Stack>

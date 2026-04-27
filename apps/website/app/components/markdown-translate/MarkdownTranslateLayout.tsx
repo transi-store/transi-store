@@ -36,9 +36,11 @@ import {
   useSectionSync,
   type EditorSide,
 } from "./SectionSyncContext";
-import { MarkdownTranslateAction } from "./MarkdownTranslateAction";
+import {
+  MarkdownTranslateAction,
+  type MarkdownAiResponse,
+} from "./MarkdownTranslateAction";
 import { AiSectionSuggestionsDialog } from "./AiSectionSuggestionsDialog";
-import type { MarkdownTranslateSectionAction } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.markdown-translate-section";
 
 const SAVE_DEBOUNCE_MS = 600;
 
@@ -55,8 +57,6 @@ export type MarkdownTranslateLayoutProps = {
   fuzzyByLocale: Record<string, Record<string, boolean>>;
   initialLeftLocale: string;
   initialRightLocale: string;
-  /** AI translate API endpoint. POST { sourceLocale, targetLocale, sourceText, structuralPath? } */
-  aiTranslateUrl: string;
 };
 
 export function MarkdownTranslateLayout(props: MarkdownTranslateLayoutProps) {
@@ -75,13 +75,12 @@ function MarkdownTranslateInner({
   fuzzyByLocale,
   initialLeftLocale,
   initialRightLocale,
-  aiTranslateUrl,
 }: MarkdownTranslateLayoutProps) {
   const { t } = useTranslation();
   const sync = useSectionSync();
   const saveFetcher = useFetcher();
   const fuzzyFetcher = useFetcher();
-  const aiFetcher = useFetcher<MarkdownTranslateSectionAction>();
+  const aiFetcher = useFetcher<MarkdownAiResponse>();
 
   const [leftLocale, setLeftLocale] = useState(initialLeftLocale);
   const [rightLocale, setRightLocale] = useState(initialRightLocale);
@@ -307,12 +306,12 @@ function MarkdownTranslateInner({
     const sourceText = getSectionText(sourceContent, activeSection);
     const targetCurrentText = contentByLocale[otherLocale] ?? "";
     const formData = new FormData();
+    formData.set("_action", MarkdownTranslateAction.TranslateSection);
     formData.set("sourceLocale", activeLocale);
     formData.set("targetLocale", otherLocale);
     formData.set("sourceText", sourceText);
     formData.set("structuralPath", activeSection.structuralPath);
     formData.set("fileId", String(fileId));
-    formData.set("scope", "section");
     if (targetCurrentText.length > 0) {
       formData.set("targetCurrentText", targetCurrentText);
     }
@@ -322,7 +321,7 @@ function MarkdownTranslateInner({
       requestKey: `section:${activeSection.structuralPath}:${activeLocale}:${otherLocale}:${Date.now()}`,
     };
     setAiSectionDialogOpen(true);
-    aiFetcher.submit(formData, { method: "post", action: aiTranslateUrl });
+    aiFetcher.submit(formData, { method: "post" });
   }, [
     activeSection,
     contentByLocale,
@@ -330,7 +329,6 @@ function MarkdownTranslateInner({
     otherLocale,
     fileId,
     aiFetcher,
-    aiTranslateUrl,
   ]);
 
   const handleSelectSectionSuggestion = useCallback(
@@ -373,25 +371,18 @@ function MarkdownTranslateInner({
     if (sourceText.length === 0) return;
     const targetCurrentText = contentByLocale[otherLocale] ?? "";
     const formData = new FormData();
+    formData.set("_action", MarkdownTranslateAction.TranslateDocument);
     formData.set("sourceLocale", activeLocale);
     formData.set("targetLocale", otherLocale);
     formData.set("sourceText", sourceText);
     formData.set("fileId", String(fileId));
-    formData.set("scope", "document");
     if (targetCurrentText.length > 0) {
       formData.set("targetCurrentText", targetCurrentText);
     }
     pendingDocumentRequestRef.current = `document:${activeLocale}:${otherLocale}:${Date.now()}`;
     pendingDocumentTargetRef.current = otherLocale;
-    aiFetcher.submit(formData, { method: "post", action: aiTranslateUrl });
-  }, [
-    contentByLocale,
-    activeLocale,
-    otherLocale,
-    fileId,
-    aiFetcher,
-    aiTranslateUrl,
-  ]);
+    aiFetcher.submit(formData, { method: "post" });
+  }, [contentByLocale, activeLocale, otherLocale, fileId, aiFetcher]);
 
   // Auto-apply document-scope translations when the fetcher resolves.
   // Section-scope responses are NOT applied here: the user picks a

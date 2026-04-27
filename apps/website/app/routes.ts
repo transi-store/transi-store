@@ -124,10 +124,6 @@ export default [
         "projects/:projectSlug/translate",
         "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
       ),
-      route(
-        "projects/:projectSlug/markdown-translate-section",
-        "routes/api.orgs.$orgSlug.projects.$projectSlug.markdown-translate-section.tsx",
-      ),
     ]),
   ]),
 

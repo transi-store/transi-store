@@ -28,17 +28,17 @@ import { LuSparkles } from "react-icons/lu";
 import type { FetcherWithComponents } from "react-router";
 import { getAiProvider } from "~/lib/ai-providers";
 import {
-  isMarkdownSectionSuccess,
-  isMarkdownTranslateError,
-  type MarkdownTranslateSectionAction,
-} from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.markdown-translate-section";
+  isMarkdownAiSectionSuccess,
+  isMarkdownAiError,
+  type MarkdownAiResponse,
+} from "./MarkdownTranslateAction";
 
 type Props = {
   open: boolean;
   targetLocale: string | null;
   onClose: () => void;
   onSelect: (text: string) => void;
-  fetcher: FetcherWithComponents<MarkdownTranslateSectionAction>;
+  fetcher: FetcherWithComponents<MarkdownAiResponse>;
 };
 
 export function AiSectionSuggestionsDialog({
@@ -87,7 +87,7 @@ export function AiSectionSuggestionsDialog({
                     {t("keys.translateWithAI.generating")}
                   </Text>
                 </VStack>
-              ) : isMarkdownTranslateError(data) ? (
+              ) : isMarkdownAiError(data) ? (
                 <Box p={4} bg="red.subtle" borderRadius="md">
                   <Text color="red.fg">
                     {data.error}
@@ -99,7 +99,7 @@ export function AiSectionSuggestionsDialog({
                     )}
                   </Text>
                 </Box>
-              ) : isMarkdownSectionSuccess(data) ? (
+              ) : isMarkdownAiSectionSuccess(data) ? (
                 <VStack align="stretch" gap={3}>
                   {data.provider && (
                     <Text fontSize="xs" color="fg.subtle">
