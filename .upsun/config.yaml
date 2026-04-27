@@ -3,14 +3,13 @@
 applications:
   website:
     source:
-      root: apps/website
+      root: /
     type: nodejs:24
     build:
       flavor: none
     hooks:
       build: |
         set -ex
-        corepack prepare yarn@4.12.0 --activate
         corepack yarn install --immutable
         corepack yarn build
     web:
@@ -18,7 +17,7 @@ applications:
         start: yarn start
       locations:
         /:
-          root: build
+          root: apps/website/build
           index: [index.html]
           scripts: false
           expires: 24h
