@@ -63,6 +63,11 @@ cp .env.example .env
 Open `.env` and configure at minimum:
 
 ```bash
+DOMAIN_ROOT=https://example.com
+
+# Database connection string for website and scripts
+DATABASE_URL=postgresql://transi-store:transi-store@localhost:5432/transi-store
+
 SESSION_SECRET=a-long-random-secret-string
 ENCRYPTION_KEY=a-64-character-hexadecimal-key # generate one with `openssl rand -hex 32`
 
