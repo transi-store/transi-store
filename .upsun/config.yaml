@@ -85,7 +85,7 @@ applications:
     # More information: https://docs.upsun.com/app/reference/dependencies/
     dependencies:
       nodejs:
-        yarn: "^4.12.0"
+        yarn: "^4.0"
 
     # Hooks allow you to customize your code/environment as the project moves through the build and deploy stages
     # More information: https://docs.upsun.com/app/reference/hooks/
