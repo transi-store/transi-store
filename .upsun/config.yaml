@@ -94,6 +94,7 @@ applications:
       # More information: https://docs.upsun.com/app/hooks/compare/compare/build/
       build: |
         set -eux
+        corepack enable
         yarn
         yarn build
         
