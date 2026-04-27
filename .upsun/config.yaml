@@ -1,146 +1,37 @@
-# Complete list of all available properties: https://docs.upsun.com/app/reference/
+# Upsun configuration, generated using AI at: 2026-04-27T14:00:13Z
+# AI can make mistakes. Please modify this file to suit your needs.
 applications:
-  transi-store:
-    # Application source code directory
+  website:
     source:
-      root: "/"
-
-    # The runtime the application uses.
-    # Complete list of available runtimes: https://docs.upsun.com/app/reference/type/
-    type: "nodejs:24"
-
-    # Choose which container profile (ratio CPU+RAM) your app will use. Default value comes from the image itself.
-    # More information: https://docs.upsun.com/anchors/resources/manage/configuration/profiles/adjust/
-    # container_profile:
-
-    # The relationships of the application with services or other applications.
-    # The left-hand side is the name of the relationship as it will be exposed
-    # to the application in the PLATFORM_RELATIONSHIPS variable. The right-hand
-    # side is in the form `<service name>:<endpoint name>`.
-    # More information: https://docs.upsun.com/app/reference/relationships/
-    relationships:
-      postgresql:
-      
-
-    # Mounts define directories that are writable after the build is complete.
-    # More information: https://docs.upsun.com/app/reference/mounts/
-    # mounts:
-    #   "/var/uploads": # Represents the path in the app.
-    #     source: "storage" # "storage" sources are unique to the app, but shared among instances of the app. "service" sources can be shared among apps.
-    #     source_path: "var/uploads" # The subdirectory within the mounted disk (the source) where the mount should point.
-
-    # The web key configures the web server running in front of your app.
-    # More information: https://docs.upsun.com/app/reference/web/
-    web:
-      # Commands are run once after deployment to start the application process.
-      # More information: https://docs.upsun.com/app/reference/web/commands/
-      commands:
-        # The command to launch your app. If it terminates, it’s restarted immediately.
-        # You can use the $PORT or the $SOCKET environment variable depending on the socket family of your upstream
-        start: "echo 'Put your web server command in here! You need to listen to \"$PORT\" port. Read more about it here: https://docs.upsun.com/app/reference/#web-commands'; sleep 60"
-      # You can listen to a UNIX socket (unix) or a TCP port (tcp, default).
-      # Whether your app should speak to the webserver via TCP or Unix socket. Defaults to tcp
-      # More information: https://docs.upsun.com/app/reference/web/upstream/socket-family/
-      upstream:
-        # Whether your app should speak to the webserver via TCP or Unix socket. Defaults to tcp
-        # More information: https://docs.upsun.com/app/reference/web/upstream/socket-family/
-        socket_family: tcp
-      # Each key in locations is a path on your site with a leading /.
-      # More information: https://docs.upsun.com/app/reference/web/locations/
-      locations:
-        "/":
-          passthru: true
-          
-        
-
-    # Alternate copies of the application to run as background processes.
-    # More information: https://docs.upsun.com/app/reference/workers/
-    # workers:
-
-    # The timezone for crons to run. Format: a TZ database name. Defaults to UTC, which is the timezone used for all logs
-    # no matter the value here. More information: https://docs.upsun.com/app/timezone/
-    # timezone: <time-zone>
-
-    # Access control for roles accessing app environments.
-    # More information: https://docs.upsun.com/app/reference/access/
-    # access:
-
-    # Variables to control the environment. More information: https://docs.upsun.com/app/reference/variables/
-    # variables:
-    #   env:
-    #     # Add environment variables here that are static.
-    #     NODE_ENV: development
-
-    # Outbound firewall rules for the application. More information: https://docs.upsun.com/app/reference/firewall/
-    # firewall:
-
-    # Specifies a default set of build tasks to run. Flavors are language-specific.
-    # More information: https://docs.upsun.com/app/reference/build/
+      root: apps/website
+    type: nodejs:24
     build:
       flavor: none
-
-    # Installs global dependencies as part of the build process. They’re independent of your app’s dependencies and
-    # are available in the PATH during the build process and in the runtime environment. They’re installed before
-    # the build hook runs using a package manager for the language.
-    # More information: https://docs.upsun.com/app/reference/dependencies/
-    dependencies:
-      nodejs:
-        yarn: "^4.0"
-
-    # Hooks allow you to customize your code/environment as the project moves through the build and deploy stages
-    # More information: https://docs.upsun.com/app/reference/hooks/
     hooks:
-      # The build hook is run after any build flavor.
-      # More information: https://docs.upsun.com/app/hooks/compare/compare/build/
       build: |
-        set -eux
-        yarn install
+        set -ex
+        yarn install --immutable
         yarn build
-        
-      # The deploy hook is run after the app container has been started, but before it has started accepting requests.
-      # More information: https://docs.upsun.com/app/hooks/compare/compare/deploy/
-      deploy: |
-        set -eux
-        # echo 'Put your deploy command here'
-        
+    web:
+      commands:
+        start: yarn start
+      locations:
+        /:
+          root: build
+          index: [index.html]
+          scripts: false
+          expires: 24h
+          rules:
+            '\.(css|js|gif|jpe?g|png|svg|webp)$':
+              expires: 4w
+    relationships:
+      db: {}
 
-      # The post_deploy hook is run after the app container has been started and after it has started accepting requests.
-      # More information: https://docs.upsun.com/app/hooks/compare/compare/post-deploy/
-      # post_deploy: |
-
-    # Scheduled tasks for the app.
-    # More information: https://docs.upsun.com/app/reference/crons/
-    # crons:
-
-    # Customizations to your PHP or Lisp runtime. More information: https://docs.upsun.com/app/reference/runtime/
-    # runtime:
-
-    # More information: https://docs.upsun.com/app/reference/additional-hosts/
-    # additional_hosts:
-
-# The services of the project.
-#
-# Each service listed will be deployed
-# to power your Upsun project.
-# More information: https://docs.upsun.com/services/
-# Full list of available services: https://docs.upsun.com/services/available/
 services:
-  postgresql:
-    type: postgresql:18 # All available versions are: 18, 17, 16, 15, 14, 13, 12
+  db:
+    type: postgresql:18
 
-  
-
-# The routes of the project.
-#
-# Each route describes how an incoming URL is going
-# to be processed by Upsun.
-# More information: https://docs.upsun.com/routes/
 routes:
-  "https://{default}/":
+  https://{default}/:
     type: upstream
-    upstream: "transi-store:http"
-  # A basic redirect definition
-  # More information: https://docs.upsun.com/routes/examples/redirect/
-  "https://www.{default}":
-    type: redirect
-    to: "https://{default}/"
+    upstream: website:http
