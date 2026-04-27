@@ -10,6 +10,7 @@ applications:
     hooks:
       build: |
         set -ex
+        corepack prepare yarn@4.12.0 --activate
         corepack yarn install --immutable
         corepack yarn build
     web:
