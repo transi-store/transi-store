@@ -1,22 +1,28 @@
 /**
  * AI translate endpoint for markdown / MDX documents.
  *
- * POST body (form-encoded):
- * - sourceLocale, targetLocale: ISO locale strings
- * - sourceText: markdown / MDX text to translate (a section, or the whole doc)
- * - fileId: id of the project file (used to resolve the document and update sidecar)
- * - structuralPath?: when scope=section, the structuralPath of the section being translated
- * - scope: "section" | "document"
+ * Two scopes are supported:
  *
- * Reuses `translateMarkdownWithAI()` with a markdown-aware prompt that
- * preserves headings, code blocks, links, lists, and JSX (for MDX).
+ * - `scope=section`: re-uses `translateWithAI` with `format=markdown|mdx`,
+ *   returns 2–3 ranked `TranslationSuggestion`s — same shape as the ICU
+ *   translate endpoint, so the UI can display a suggestion picker.
+ * - `scope=document`: uses `translateMarkdownWithAI` and returns a single
+ *   `translatedText` (multi-suggestion on a whole document is rarely useful
+ *   and expensive).
+ *
+ * Both scopes accept an optional `targetCurrentText` field — the current
+ * target-locale draft, sent to the AI as a tone/terminology reference.
  */
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.markdown-translate-section";
 import { z } from "zod";
 import { getProjectBySlug } from "~/lib/projects.server";
 import { getProjectFileById } from "~/lib/project-files.server";
 import { getActiveAiProvider } from "~/lib/ai-providers.server";
-import { translateMarkdownWithAI } from "~/lib/ai-translation.server";
+import {
+  translateMarkdownWithAI,
+  translateWithAI,
+  type TranslationSuggestion,
+} from "~/lib/ai-translation.server";
 import {
   recordAiTranslation,
   MarkdownTranslationMissingError,
@@ -24,6 +30,7 @@ import {
 import { getInstance } from "~/middleware/i18next";
 import { orgContext } from "~/middleware/api-auth";
 import { SupportedFormat, isDocumentFormat } from "@transi-store/common";
+import type { AiProviderEnum } from "~/lib/ai-providers";
 
 const requestSchema = z.object({
   sourceLocale: z.string().min(2),
@@ -32,7 +39,48 @@ const requestSchema = z.object({
   fileId: z.coerce.number().int().positive(),
   structuralPath: z.string().optional(),
   scope: z.enum(["section", "document"]),
+  targetCurrentText: z.string().optional(),
 });
+
+type SectionSuccessReturn = {
+  scope: "section";
+  suggestions: TranslationSuggestion[];
+  provider: AiProviderEnum;
+  providerModel: string | null | undefined;
+};
+
+type DocumentSuccessReturn = {
+  scope: "document";
+  translatedText: string;
+};
+
+type ErrorReturn = {
+  error: string;
+  originalError?: string;
+};
+
+export type MarkdownTranslateSectionAction =
+  | SectionSuccessReturn
+  | DocumentSuccessReturn
+  | ErrorReturn;
+
+export function isMarkdownSectionSuccess(
+  data: MarkdownTranslateSectionAction | undefined,
+): data is SectionSuccessReturn {
+  return !!data && (data as SectionSuccessReturn).scope === "section";
+}
+
+export function isMarkdownDocumentSuccess(
+  data: MarkdownTranslateSectionAction | undefined,
+): data is DocumentSuccessReturn {
+  return !!data && (data as DocumentSuccessReturn).scope === "document";
+}
+
+export function isMarkdownTranslateError(
+  data: MarkdownTranslateSectionAction | undefined,
+): data is ErrorReturn {
+  return !!data && (data as ErrorReturn).error !== undefined;
+}
 
 export async function action({
   params,
@@ -58,6 +106,7 @@ export async function action({
     fileId: formData.get("fileId"),
     structuralPath: formData.get("structuralPath") ?? undefined,
     scope: formData.get("scope"),
+    targetCurrentText: formData.get("targetCurrentText") ?? undefined,
   });
   if (!parsed.success) {
     return Response.json(
@@ -106,40 +155,67 @@ export async function action({
     );
   }
 
+  const isMdx = projectFile.format === SupportedFormat.MDX;
+
   try {
+    if (data.scope === "section") {
+      const suggestions = await translateWithAI(
+        {
+          sourceText: data.sourceText,
+          sourceLocale: data.sourceLocale,
+          targetLocale: data.targetLocale,
+          existingTranslations: [],
+          format: isMdx ? "mdx" : "markdown",
+          targetCurrentText: data.targetCurrentText,
+        },
+        activeProvider,
+      );
+
+      if (data.structuralPath) {
+        try {
+          await recordAiTranslation({
+            projectFileId: projectFile.id,
+            locale: data.targetLocale,
+            structuralPath: data.structuralPath,
+          });
+        } catch (error) {
+          // No-op: if the target translation row doesn't exist yet (the
+          // user hasn't saved a draft of that locale), we just skip the
+          // metadata update — the suggestions were still produced.
+          if (!(error instanceof MarkdownTranslationMissingError)) throw error;
+        }
+      }
+
+      return Response.json({
+        scope: "section",
+        suggestions,
+        provider: activeProvider.provider,
+        providerModel: activeProvider.model,
+      } satisfies SectionSuccessReturn);
+    }
+
     const translatedText = await translateMarkdownWithAI(
       {
         sourceText: data.sourceText,
         sourceLocale: data.sourceLocale,
         targetLocale: data.targetLocale,
-        isMdx: projectFile.format === SupportedFormat.MDX,
+        isMdx,
+        targetCurrentText: data.targetCurrentText,
       },
       activeProvider,
     );
 
-    if (data.scope === "section" && data.structuralPath) {
-      try {
-        await recordAiTranslation({
-          projectFileId: projectFile.id,
-          locale: data.targetLocale,
-          structuralPath: data.structuralPath,
-        });
-      } catch (error) {
-        // No-op: if the target translation row doesn't exist yet (the user
-        // hasn't applied the AI suggestion to disk), we just skip the
-        // metadata update — the translation was still produced.
-        if (!(error instanceof MarkdownTranslationMissingError)) throw error;
-      }
-    }
-
-    return Response.json({ translatedText });
+    return Response.json({
+      scope: "document",
+      translatedText,
+    } satisfies DocumentSuccessReturn);
   } catch (error) {
     console.error("Markdown AI translation failed:", error);
     return Response.json(
       {
         error: i18next.t("api.translate.translateError"),
         originalError: error instanceof Error ? error.message : undefined,
-      },
+      } satisfies ErrorReturn,
       { status: 500 },
     );
   }

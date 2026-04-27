@@ -37,8 +37,9 @@ import {
   type EditorSide,
 } from "./SectionSyncContext";
 import { MarkdownTranslateAction } from "./MarkdownTranslateAction";
+import { AiSectionSuggestionsDialog } from "./AiSectionSuggestionsDialog";
+import type { MarkdownTranslateSectionAction } from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.markdown-translate-section";
 
-const HIGHLIGHT_DURATION_MS = 1200;
 const SAVE_DEBOUNCE_MS = 600;
 
 export type MarkdownTranslateLayoutProps = {
@@ -66,11 +67,6 @@ export function MarkdownTranslateLayout(props: MarkdownTranslateLayoutProps) {
   );
 }
 
-type AiResponse = {
-  translatedText?: string;
-  error?: string;
-};
-
 function MarkdownTranslateInner({
   fileId,
   isMdx,
@@ -85,7 +81,7 @@ function MarkdownTranslateInner({
   const sync = useSectionSync();
   const saveFetcher = useFetcher();
   const fuzzyFetcher = useFetcher();
-  const aiFetcher = useFetcher<AiResponse>();
+  const aiFetcher = useFetcher<MarkdownTranslateSectionAction>();
 
   const [leftLocale, setLeftLocale] = useState(initialLeftLocale);
   const [rightLocale, setRightLocale] = useState(initialRightLocale);
@@ -157,30 +153,61 @@ function MarkdownTranslateInner({
     [persistContent],
   );
 
-  // Drive scroll + highlight on the *other* side when the cursor moves.
+  // Drive the section highlight on BOTH sides whenever the active section
+  // changes. The active side gets the highlight on the section under the
+  // cursor; the other side gets it on the counterpart (and is scrolled into
+  // view). Highlights persist as long as the cursor stays in the section.
   useEffect(() => {
-    return sync.subscribe(({ side, counterpartIndex }) => {
-      const otherSide: EditorSide = side === "left" ? "right" : "left";
-      const otherView =
-        otherSide === "left" ? leftViewRef.current : rightViewRef.current;
-      const otherSections = otherSide === "left" ? leftSections : rightSections;
-      if (!otherView) return;
-      if (counterpartIndex === null) {
-        setEditorSectionHighlight(otherView, null);
-        return;
-      }
-      const target = otherSections[counterpartIndex];
-      if (!target) return;
-      scrollEditorToOffset(otherView, target.range[0]);
-      setEditorSectionHighlight(otherView, {
-        from: target.range[0],
-        to: target.range[1],
+    const leftView = leftViewRef.current;
+    const rightView = rightViewRef.current;
+    if (!leftView || !rightView) return;
+
+    const { activeSide, activeSectionIndex, alignment } = sync.state;
+
+    if (activeSide === null || activeSectionIndex === null) {
+      setEditorSectionHighlight(leftView, null);
+      setEditorSectionHighlight(rightView, null);
+      return;
+    }
+
+    const counterpartIdx = findCounterpart(
+      alignment,
+      activeSide,
+      activeSectionIndex,
+    );
+    const activeSectionLocal =
+      activeSide === "left"
+        ? leftSections[activeSectionIndex]
+        : rightSections[activeSectionIndex];
+    const otherSectionLocal =
+      counterpartIdx !== null
+        ? activeSide === "left"
+          ? rightSections[counterpartIdx]
+          : leftSections[counterpartIdx]
+        : null;
+
+    const activeView = activeSide === "left" ? leftView : rightView;
+    const otherView = activeSide === "left" ? rightView : leftView;
+
+    if (activeSectionLocal) {
+      setEditorSectionHighlight(activeView, {
+        from: activeSectionLocal.range[0],
+        to: activeSectionLocal.range[1],
       });
-      setTimeout(() => {
-        setEditorSectionHighlight(otherView, null);
-      }, HIGHLIGHT_DURATION_MS);
-    });
-  }, [sync, leftSections, rightSections]);
+    } else {
+      setEditorSectionHighlight(activeView, null);
+    }
+
+    if (otherSectionLocal) {
+      setEditorSectionHighlight(otherView, {
+        from: otherSectionLocal.range[0],
+        to: otherSectionLocal.range[1],
+      });
+      scrollEditorToOffset(otherView, otherSectionLocal.range[0]);
+    } else {
+      setEditorSectionHighlight(otherView, null);
+    }
+  }, [sync.state, leftSections, rightSections]);
 
   const handleCursor = useCallback(
     (side: EditorSide, offset: number) => {
@@ -258,20 +285,27 @@ function MarkdownTranslateInner({
     handleEditorChange(otherLocale, sourceContent);
   }, [contentByLocale, activeLocale, otherLocale, handleEditorChange]);
 
-  // Track in-flight AI request metadata so we can apply the response when it
-  // lands. (We can't read aiFetcher.formData when state === "idle".)
-  const pendingAiRequestRef = useRef<{
-    key: string;
-    scope: "section" | "document";
+  // Section AI flow: clicking the action bar button opens a modal that
+  // shows 2-3 ranked suggestions (same UX as the per-key translate flow).
+  // The user picks one, which is then injected at the counterpart range.
+  const [aiSectionDialogOpen, setAiSectionDialogOpen] = useState(false);
+  const aiSectionContextRef = useRef<{
     targetLocale: string;
     structuralPath: string;
+    requestKey: string;
   } | null>(null);
-  const appliedAiKeyRef = useRef<string | null>(null);
+
+  // Document AI flow stays auto-apply: once the fetcher resolves with a
+  // document-scope payload we replace the other-side content directly.
+  const pendingDocumentRequestRef = useRef<string | null>(null);
+  const appliedDocumentKeyRef = useRef<string | null>(null);
+  const pendingDocumentTargetRef = useRef<string | null>(null);
 
   const handleAiTranslateSection = useCallback(() => {
     if (!activeSection) return;
     const sourceContent = contentByLocale[activeLocale] ?? "";
     const sourceText = getSectionText(sourceContent, activeSection);
+    const targetCurrentText = contentByLocale[otherLocale] ?? "";
     const formData = new FormData();
     formData.set("sourceLocale", activeLocale);
     formData.set("targetLocale", otherLocale);
@@ -279,12 +313,15 @@ function MarkdownTranslateInner({
     formData.set("structuralPath", activeSection.structuralPath);
     formData.set("fileId", String(fileId));
     formData.set("scope", "section");
-    pendingAiRequestRef.current = {
-      key: `section:${activeSection.structuralPath}:${activeLocale}:${otherLocale}:${Date.now()}`,
-      scope: "section",
+    if (targetCurrentText.length > 0) {
+      formData.set("targetCurrentText", targetCurrentText);
+    }
+    aiSectionContextRef.current = {
       targetLocale: otherLocale,
       structuralPath: activeSection.structuralPath,
+      requestKey: `section:${activeSection.structuralPath}:${activeLocale}:${otherLocale}:${Date.now()}`,
     };
+    setAiSectionDialogOpen(true);
     aiFetcher.submit(formData, { method: "post", action: aiTranslateUrl });
   }, [
     activeSection,
@@ -296,21 +333,56 @@ function MarkdownTranslateInner({
     aiTranslateUrl,
   ]);
 
+  const handleSelectSectionSuggestion = useCallback(
+    (text: string) => {
+      const ctx = aiSectionContextRef.current;
+      if (!ctx) return;
+      const { targetLocale, structuralPath } = ctx;
+      const targetSections =
+        targetLocale === leftLocale ? leftSections : rightSections;
+      const target = targetSections.find(
+        (s) => s.structuralPath === structuralPath,
+      );
+      const targetContent = contentByLocale[targetLocale] ?? "";
+      if (target) {
+        const next =
+          targetContent.slice(0, target.range[0]) +
+          text +
+          targetContent.slice(target.range[1]);
+        handleEditorChange(targetLocale, next);
+      } else {
+        const sep =
+          targetContent.length === 0 || targetContent.endsWith("\n")
+            ? ""
+            : "\n\n";
+        handleEditorChange(targetLocale, targetContent + sep + text);
+      }
+      setAiSectionDialogOpen(false);
+    },
+    [
+      leftLocale,
+      leftSections,
+      rightSections,
+      contentByLocale,
+      handleEditorChange,
+    ],
+  );
+
   const handleAiTranslateDocument = useCallback(() => {
     const sourceText = contentByLocale[activeLocale] ?? "";
     if (sourceText.length === 0) return;
+    const targetCurrentText = contentByLocale[otherLocale] ?? "";
     const formData = new FormData();
     formData.set("sourceLocale", activeLocale);
     formData.set("targetLocale", otherLocale);
     formData.set("sourceText", sourceText);
     formData.set("fileId", String(fileId));
     formData.set("scope", "document");
-    pendingAiRequestRef.current = {
-      key: `document:${activeLocale}:${otherLocale}:${Date.now()}`,
-      scope: "document",
-      targetLocale: otherLocale,
-      structuralPath: "",
-    };
+    if (targetCurrentText.length > 0) {
+      formData.set("targetCurrentText", targetCurrentText);
+    }
+    pendingDocumentRequestRef.current = `document:${activeLocale}:${otherLocale}:${Date.now()}`;
+    pendingDocumentTargetRef.current = otherLocale;
     aiFetcher.submit(formData, { method: "post", action: aiTranslateUrl });
   }, [
     contentByLocale,
@@ -321,56 +393,21 @@ function MarkdownTranslateInner({
     aiTranslateUrl,
   ]);
 
-  // Apply AI response when it lands. We use a ref to track the last applied
-  // request so we don't re-apply the same response multiple times.
+  // Auto-apply document-scope translations when the fetcher resolves.
+  // Section-scope responses are NOT applied here: the user picks a
+  // suggestion in the modal, which calls `handleSelectSectionSuggestion`.
   useEffect(() => {
     if (aiFetcher.state !== "idle") return;
     const data = aiFetcher.data;
-    if (!data?.translatedText) return;
-    const pending = pendingAiRequestRef.current;
-    if (!pending || appliedAiKeyRef.current === pending.key) return;
-    appliedAiKeyRef.current = pending.key;
-
-    const { scope, targetLocale, structuralPath } = pending;
-    if (!targetLocale) return;
-
-    if (scope === "section") {
-      const targetSections =
-        targetLocale === leftLocale ? leftSections : rightSections;
-      const target = targetSections.find(
-        (s) => s.structuralPath === structuralPath,
-      );
-      const targetContent = contentByLocale[targetLocale] ?? "";
-      if (target) {
-        const next =
-          targetContent.slice(0, target.range[0]) +
-          data.translatedText +
-          targetContent.slice(target.range[1]);
-        handleEditorChange(targetLocale, next);
-      } else {
-        // No counterpart yet: append.
-        const sep =
-          targetContent.length === 0 || targetContent.endsWith("\n")
-            ? ""
-            : "\n\n";
-        handleEditorChange(
-          targetLocale,
-          targetContent + sep + data.translatedText,
-        );
-      }
-    } else {
-      handleEditorChange(targetLocale, data.translatedText);
-    }
-  }, [
-    aiFetcher.state,
-    aiFetcher.data,
-    leftLocale,
-    rightLocale,
-    leftSections,
-    rightSections,
-    contentByLocale,
-    handleEditorChange,
-  ]);
+    if (!data) return;
+    if (!("scope" in data) || data.scope !== "document") return;
+    const pendingKey = pendingDocumentRequestRef.current;
+    const targetLocale = pendingDocumentTargetRef.current;
+    if (!pendingKey || !targetLocale) return;
+    if (appliedDocumentKeyRef.current === pendingKey) return;
+    appliedDocumentKeyRef.current = pendingKey;
+    handleEditorChange(targetLocale, data.translatedText);
+  }, [aiFetcher.state, aiFetcher.data, handleEditorChange]);
 
   const handleToggleFuzzy = useCallback(() => {
     if (!activeSection) return;
@@ -402,33 +439,24 @@ function MarkdownTranslateInner({
       (entry) => entry.leftIndex === null || entry.rightIndex === null,
     );
     if (!orphan) return;
+    // Move the cursor to the orphan section: that triggers reportCursor,
+    // which updates sync.state, and the highlight effect will paint both
+    // sides automatically.
     if (orphan.leftIndex !== null) {
       const target = leftSections[orphan.leftIndex];
       const view = leftViewRef.current;
       if (view && target) {
+        view.dispatch({ selection: { anchor: target.range[0] } });
         scrollEditorToOffset(view, target.range[0]);
-        setEditorSectionHighlight(view, {
-          from: target.range[0],
-          to: target.range[1],
-        });
-        setTimeout(
-          () => setEditorSectionHighlight(view, null),
-          HIGHLIGHT_DURATION_MS,
-        );
+        view.focus();
       }
     } else if (orphan.rightIndex !== null) {
       const target = rightSections[orphan.rightIndex];
       const view = rightViewRef.current;
       if (view && target) {
+        view.dispatch({ selection: { anchor: target.range[0] } });
         scrollEditorToOffset(view, target.range[0]);
-        setEditorSectionHighlight(view, {
-          from: target.range[0],
-          to: target.range[1],
-        });
-        setTimeout(
-          () => setEditorSectionHighlight(view, null),
-          HIGHLIGHT_DURATION_MS,
-        );
+        view.focus();
       }
     }
   }, [sync.state.alignment, leftSections, rightSections]);
@@ -533,6 +561,14 @@ function MarkdownTranslateInner({
           }
         />
       </Flex>
+
+      <AiSectionSuggestionsDialog
+        open={aiSectionDialogOpen}
+        targetLocale={aiSectionContextRef.current?.targetLocale ?? null}
+        onClose={() => setAiSectionDialogOpen(false)}
+        onSelect={handleSelectSectionSuggestion}
+        fetcher={aiFetcher}
+      />
     </Stack>
   );
 }

@@ -30,8 +30,11 @@ const baseTheme = EditorView.theme({
   ".cm-gutters": {
     border: "none",
   },
+  // Section highlight is applied as a line decoration: the class lands on
+  // each `.cm-line` wrapper so the band spans the full editor width
+  // regardless of text length.
   ".cm-section-highlight": {
-    transition: "background-color 0.4s ease-out",
+    transition: "background-color 0.15s ease-out",
   },
 });
 
@@ -95,8 +98,11 @@ const lightChrome = EditorView.theme(
     ".cm-activeLine": {
       backgroundColor: "rgba(11, 107, 203, 0.06)",
     },
-    ".cm-section-highlight": {
-      backgroundColor: "rgba(255, 213, 79, 0.32)",
+    ".cm-line.cm-section-highlight": {
+      backgroundColor: "rgba(11, 107, 203, 0.06)",
+    },
+    ".cm-line.cm-section-highlight.cm-activeLine": {
+      backgroundColor: "rgba(11, 107, 203, 0.12)",
     },
   },
   { dark: false },
@@ -120,8 +126,11 @@ const darkChrome = EditorView.theme(
     ".cm-activeLine": {
       backgroundColor: "rgba(124, 196, 255, 0.08)",
     },
-    ".cm-section-highlight": {
-      backgroundColor: "rgba(255, 213, 79, 0.18)",
+    ".cm-line.cm-section-highlight": {
+      backgroundColor: "rgba(124, 196, 255, 0.07)",
+    },
+    ".cm-line.cm-section-highlight.cm-activeLine": {
+      backgroundColor: "rgba(124, 196, 255, 0.14)",
     },
   },
   { dark: true },

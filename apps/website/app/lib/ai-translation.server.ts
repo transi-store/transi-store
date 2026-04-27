@@ -5,7 +5,6 @@ import { createFakeModel } from "./fake-ai-provider.server";
 import { AiProviderEnum, getAiProvider } from "./ai-providers";
 import { z } from "zod";
 
-// 1. Définition du schéma Zod
 const SuggestionSchema = z.object({
   suggestions: z.array(
     z.object({
@@ -16,78 +15,141 @@ const SuggestionSchema = z.object({
   ),
 });
 
+export type TranslationFormat = "icu" | "markdown" | "mdx";
+
 type TranslationContext = {
   sourceText: string;
   sourceLocale: string;
   targetLocale: string;
   existingTranslations: { locale: string; value: string }[];
   keyDescription?: string;
+  /**
+   * Translation format. Defaults to "icu" which keeps the legacy ICU
+   * MessageFormat prompt. "markdown" / "mdx" switch to a markdown-aware
+   * prompt that preserves headings, code, links and (for MDX) JSX.
+   */
+  format?: TranslationFormat;
+  /**
+   * Current target-locale content used as a wording reference (tone,
+   * terminology). Not the thing to translate — only context. Useful when
+   * translating a section of a markdown document so the AI matches the
+   * style already used in that locale.
+   */
+  targetCurrentText?: string;
 };
 
 export type TranslationSuggestion = z.infer<
   typeof SuggestionSchema
 >["suggestions"][number];
 
-/**
- * Construit le prompt système pour la traduction ICU
- */
-function buildSystemPrompt(): string {
-  return `Tu es un traducteur professionnel spécialisé dans la localisation d'applications.
-Le texte à traduire utilise le format ICU MessageFormat.
-Tu dois préserver exactement :
-- Les variables simples : {username}, {count}, {date}
-- Les pluriels : {count, plural, one {# item} other {# items}}
-- Les sélections : {gender, select, male {He} female {She} other {They}}
-- Les formats : {date, date, short}, {amount, number, currency}
-- Toute autre construction ICU
+function buildIcuSystemPrompt(): string {
+  return `You are a professional translator specialized in app localization.
+The text to translate uses the ICU MessageFormat.
+You must preserve EXACTLY:
+- Simple variables: {username}, {count}, {date}
+- Plurals: {count, plural, one {# item} other {# items}}
+- Selects: {gender, select, male {He} female {She} other {They}}
+- Formats: {date, date, short}, {amount, number, currency}
+- Any other ICU construct
 
-IMPORTANT :
-- Ne traduis PAS le contenu des accolades qui représente des noms de variables
-- Préserve la structure ICU exacte
-- Adapte naturellement le texte à la langue cible
-- Propose 2-3 variantes quand c'est pertinent (formulation différente, registre formel/informel)
+IMPORTANT:
+- Do NOT translate the content inside braces — these are variable names
+- Preserve the exact ICU structure
+- Naturally adapt the text to the target language
+- Propose 2-3 variants when relevant (different phrasings, formal/informal register)
 
-Réponds UNIQUEMENT au format JSON suivant :
+Reply ONLY in the following JSON format:
 {
   "suggestions": [
-    { "text": "traduction 1", "confidence": 0.95, notes: "pourquoi cette traduction en particulier ?" },
-    { "text": "traduction alternative", "confidence": 0.85, notes: "cette traduction peut être meilleure dans tel contexte." }
+    { "text": "translation 1", "confidence": 0.95, "notes": "why this translation in particular?" },
+    { "text": "alternative translation", "confidence": 0.85, "notes": "this translation may be better in this context." }
   ]
 }
 
-Les clés "notes" DOIVENT être dans la langue du texte source.
-  
+The "notes" field MUST be written in the language of the source text.
 `;
 }
 
-/**
- * Construit le prompt utilisateur avec le contexte de traduction
- */
-function buildUserPrompt(context: TranslationContext): string {
-  let prompt = `Traduis le texte suivant de "${context.sourceLocale}" vers "${context.targetLocale}".
+function buildMarkdownSystemPrompt(isMdx: boolean): string {
+  return `You are a professional translator specialized in technical documentation.
+The text to translate is in Markdown${isMdx ? " / MDX" : ""} format.
 
-Texte source :
+You must preserve EXACTLY:
+- The heading structure (#, ##, ### …) and the heading level
+- Fenced code blocks delimited by \`\`\` (the content stays unchanged)
+- Inline code between backticks
+- Links [text](url) — translate the text, keep the URL as-is
+- Images ![alt](url) — translate the alt, keep the URL
+- Lists, blockquotes (>) and tables
+- Bold (**), italic (*), strikethrough (~~) formatting${
+    isMdx
+      ? `
+- JSX components (<Component .../>) and expressions {expr}: leave them intact, do NOT translate their names or props unless they contain natural-language text`
+      : ""
+  }
+
+IMPORTANT:
+- Naturally adapt the text to the target language
+- Keep the source tone and register
+- Keep paragraph length reasonably close to the source
+- Do not change the order of sections
+- Propose 2-3 variants when relevant (different phrasings, formal/informal register)
+
+Reply ONLY in the following JSON format:
+{
+  "suggestions": [
+    { "text": "translation 1", "confidence": 0.95, "notes": "why this translation in particular?" },
+    { "text": "alternative translation", "confidence": 0.85, "notes": "this translation may be better in this context." }
+  ]
+}
+
+The "notes" field MUST be written in the language of the source text.
+`;
+}
+
+function buildSystemPrompt(format: TranslationFormat): string {
+  if (format === "markdown" || format === "mdx") {
+    return buildMarkdownSystemPrompt(format === "mdx");
+  }
+  return buildIcuSystemPrompt();
+}
+
+function buildUserPrompt(context: TranslationContext): string {
+  let prompt = `Translate the following text from "${context.sourceLocale}" to "${context.targetLocale}".
+
+Source text:
 ${context.sourceText}`;
 
   if (context.keyDescription) {
     prompt += `
 
-Description/contexte de la clé :
+Key description / context:
 ${context.keyDescription}`;
   }
 
   if (context.existingTranslations.length > 0) {
+    const others = context.existingTranslations.filter(
+      (t) => t.locale !== context.targetLocale,
+    );
+    if (others.length > 0) {
+      prompt += `
+
+Existing translations (for context only):`;
+      for (const t of others) {
+        prompt += `
+- ${t.locale}: ${t.value}`;
+      }
+    }
+  }
+
+  if (
+    context.targetCurrentText &&
+    context.targetCurrentText.trim().length > 0
+  ) {
     prompt += `
 
-Traductions existantes (pour le contexte) :`;
-    for (const t of context.existingTranslations) {
-      if (t.locale === context.targetLocale) {
-        continue;
-      }
-
-      prompt += `
-- ${t.locale}: ${t.value}`;
-    }
+Current ${context.targetLocale} draft (use only for tone and terminology consistency, do not copy verbatim):
+${context.targetCurrentText}`;
   }
 
   return prompt;
@@ -102,10 +164,11 @@ async function callGenerateText({
   model: Parameters<typeof generateText>[0]["model"];
   extraParameters?: Record<string, unknown>;
 }): Promise<TranslationSuggestion[]> {
+  const format = context.format ?? "icu";
   const { output } = await generateText({
     ...extraParameters,
     model,
-    prompt: `${buildSystemPrompt()} \n\n ${buildUserPrompt(context)}`,
+    prompt: `${buildSystemPrompt(format)} \n\n ${buildUserPrompt(context)}`,
     output: Output.object({
       schema: SuggestionSchema,
     }),
@@ -114,9 +177,6 @@ async function callGenerateText({
   return output.suggestions;
 }
 
-/**
- * Traduit avec OpenAI GPT
- */
 async function translateWithOpenAI(
   context: TranslationContext,
   apiKey: string,
@@ -128,9 +188,6 @@ async function translateWithOpenAI(
   return callGenerateText({ context, model: openai(modelId) });
 }
 
-/**
- * Traduit avec Google Gemini
- */
 async function translateWithGemini(
   context: TranslationContext,
   apiKey: string,
@@ -146,9 +203,6 @@ async function translateWithGemini(
   });
 }
 
-/**
- * Traduit avec le provider fake (dev seulement)
- */
 async function translateWithFake(
   context: TranslationContext,
   _apiKey: string,
@@ -163,65 +217,76 @@ async function translateWithFake(
   return callGenerateText({ context, model: createFakeModel(modelId) });
 }
 
-/**
- * Schéma de réponse pour la traduction markdown : un seul texte traduit,
- * conservant la structure markdown du source.
- */
 const MarkdownTranslationSchema = z.object({
   translatedText: z.string(),
 });
 
-type MarkdownTranslationContext = {
+type MarkdownDocumentTranslationContext = {
   sourceText: string;
   sourceLocale: string;
   targetLocale: string;
-  /** Whether the source is MDX (so JSX/expressions must be preserved verbatim). */
   isMdx: boolean;
+  /** Existing target-locale draft, used only as a tone/terminology reference. */
+  targetCurrentText?: string;
 };
 
-function buildMarkdownSystemPrompt(isMdx: boolean): string {
-  return `Tu es un traducteur professionnel spécialisé dans la documentation technique.
-Le texte à traduire est au format Markdown${isMdx ? " / MDX" : ""}.
+function buildMarkdownDocumentSystemPrompt(isMdx: boolean): string {
+  return `You are a professional translator specialized in technical documentation.
+The text to translate is a full ${isMdx ? "MDX" : "Markdown"} document.
 
-Tu dois préserver EXACTEMENT :
-- La structure des titres (#, ##, ### …) et leur niveau
-- Les blocs de code délimités par \`\`\` (le contenu reste inchangé)
-- Le code inline entre backticks
-- Les liens [texte](url) — traduis le texte, garde l'URL telle quelle
-- Les images ![alt](url) — traduis l'alt, garde l'URL
-- Les listes, citations (>) et tableaux
-- Le formatage gras (**), italique (*), barré (~~)${
+You must preserve EXACTLY:
+- The heading structure (#, ##, ### …) and the heading level
+- Fenced code blocks delimited by \`\`\` (the content stays unchanged)
+- Inline code between backticks
+- Links [text](url) — translate the text, keep the URL
+- Images ![alt](url) — translate the alt, keep the URL
+- Lists, blockquotes (>) and tables
+- Bold (**), italic (*), strikethrough (~~) formatting${
     isMdx
       ? `
-- Les composants JSX (<Component .../>) et expressions {expr} : laisse-les intacts, ne traduis PAS leurs noms ni leurs props sauf si elles contiennent du texte naturel`
+- JSX components (<Component .../>) and expressions {expr}: leave them intact, do NOT translate their names or props unless they contain natural-language text`
       : ""
   }
 
-IMPORTANT :
-- Adapte naturellement le texte à la langue cible
-- Conserve le ton et le registre du source
-- Garde la longueur des paragraphes raisonnablement proche
-- Ne change pas l'ordre des sections
+IMPORTANT:
+- Naturally adapt the text to the target language
+- Keep the source tone and register
+- Keep paragraph length reasonably close to the source
+- Do not change the order of sections
 
-Réponds UNIQUEMENT au format JSON suivant :
-{ "translatedText": "<le markdown traduit>" }
+Reply ONLY in the following JSON format:
+{ "translatedText": "<the translated markdown>" }
 `;
 }
 
-function buildMarkdownUserPrompt(context: MarkdownTranslationContext): string {
-  return `Traduis le markdown suivant de "${context.sourceLocale}" vers "${context.targetLocale}".
+function buildMarkdownDocumentUserPrompt(
+  context: MarkdownDocumentTranslationContext,
+): string {
+  let prompt = `Translate the following markdown document from "${context.sourceLocale}" to "${context.targetLocale}".
 
-Texte source :
+Source document:
 ${context.sourceText}`;
+
+  if (
+    context.targetCurrentText &&
+    context.targetCurrentText.trim().length > 0
+  ) {
+    prompt += `
+
+Current ${context.targetLocale} draft (use only for tone and terminology consistency, do not copy verbatim):
+${context.targetCurrentText}`;
+  }
+  return prompt;
 }
 
 /**
- * Traduit un fragment markdown / MDX en préservant la structure (titres,
- * code blocks, liens, JSX). Renvoie le texte traduit prêt à remplacer la
- * section source dans la locale cible.
+ * Translate a full markdown / MDX document, preserving structure (headings,
+ * code blocks, links, JSX). Returns a single translated text — not a list of
+ * suggestions, because suggesting multiple variants of an entire document
+ * is rarely useful and very expensive.
  */
 export async function translateMarkdownWithAI(
-  context: MarkdownTranslationContext,
+  context: MarkdownDocumentTranslationContext,
   provider: {
     provider: AiProviderEnum;
     apiKey: string;
@@ -230,8 +295,8 @@ export async function translateMarkdownWithAI(
 ): Promise<string> {
   const { provider: providerName, apiKey, model } = provider;
 
-  const systemPrompt = buildMarkdownSystemPrompt(context.isMdx);
-  const userPrompt = buildMarkdownUserPrompt(context);
+  const systemPrompt = buildMarkdownDocumentSystemPrompt(context.isMdx);
+  const userPrompt = buildMarkdownDocumentUserPrompt(context);
   const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
   const buildModel = () => {
@@ -257,7 +322,7 @@ export async function translateMarkdownWithAI(
         return createFakeModel(modelId);
       }
       default:
-        throw new Error(`Provider IA non supporté: ${providerName}`);
+        throw new Error(`Unsupported AI provider: ${providerName}`);
     }
   };
 
@@ -273,7 +338,10 @@ export async function translateMarkdownWithAI(
 }
 
 /**
- * Traduit un texte ICU avec le provider IA spécifié
+ * Translate text via the configured AI provider. Returns 2-3 ranked
+ * suggestions. The `format` field of the context selects the prompt:
+ * "icu" (default) for translation keys, "markdown" / "mdx" for sections of
+ * a markdown document.
  */
 export async function translateWithAI(
   context: TranslationContext,
@@ -293,6 +361,6 @@ export async function translateWithAI(
     case AiProviderEnum.FAKE:
       return translateWithFake(context, apiKey, model);
     default:
-      throw new Error(`Provider IA non supporté: ${provider}`);
+      throw new Error(`Unsupported AI provider: ${provider}`);
   }
 }

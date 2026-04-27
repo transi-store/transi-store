@@ -53,12 +53,22 @@ const sectionHighlightField = StateField.define<DecorationSet>({
         } else {
           const { from, to } = effect.value;
           if (from < to) {
-            next = Decoration.set([
-              Decoration.mark({ class: "cm-section-highlight" }).range(
-                from,
-                to,
-              ),
-            ]);
+            // Use line decorations so the highlight covers the whole line(s)
+            // (not just the text run), giving a stable per-row band.
+            const doc = tr.state.doc;
+            const decos = [];
+            let pos = from;
+            while (pos <= to) {
+              const line = doc.lineAt(pos);
+              decos.push(
+                Decoration.line({ class: "cm-section-highlight" }).range(
+                  line.from,
+                ),
+              );
+              if (line.to >= to) break;
+              pos = line.to + 1;
+            }
+            next = Decoration.set(decos);
           } else {
             next = Decoration.none;
           }
