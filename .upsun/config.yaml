@@ -9,12 +9,9 @@ applications:
       flavor: none
     hooks:
       build: |
-        mkdir -p $HOME/.local/bin
-        corepack enable --install-directory $HOME/.local/bin
-        export PATH="$HOME/.local/bin:$PATH"
-        corepack prepare yarn@4.12.0 --activate
-        yarn install --immutable
-        yarn build
+        set -ex
+        corepack yarn install --immutable
+        corepack yarn build
     web:
       commands:
         start: yarn start
