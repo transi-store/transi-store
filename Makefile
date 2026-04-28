@@ -90,4 +90,4 @@ clean-all: ## Clean all (containers, volumes, images, node_modules)
 
 ## Initial setup
 setup: up install build-common db-push ## Initial project setup (starts Docker, installs dependencies, creates the DB)
-	@echo "$(BLUE)✓ Setup done! Run `make dev` to start the development server.$(NC)"
+	@echo "$(BLUE)✓ Setup done! Run \"make dev\" to start the development server.$(NC)"
