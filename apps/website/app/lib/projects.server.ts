@@ -1,6 +1,13 @@
 import type { Project } from "../../drizzle/schema";
 import { db, schema } from "./db.server";
-import { count, eq, and, inArray, isNull, getColumns } from "drizzle-orm";
+import {
+  count,
+  eq,
+  and,
+  inArray,
+  isNull,
+  getColumns,
+} from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
@@ -50,7 +57,6 @@ export async function isProjectSlugAvailable(
 
 type ProjectWithInfos = Project & {
   translationKeyCount: number;
-  // languages: Array<ProjectLanguage>;
 };
 
 export async function getProjectsForOrganization(
@@ -69,10 +75,6 @@ export async function getProjectsForOrganization(
         isNull(schema.translationKeys.deletedAt),
         isNull(schema.translationKeys.branchId),
       ),
-    )
-    .leftJoin(
-      schema.projectLanguages,
-      eq(schema.projectLanguages.projectId, schema.projects.id),
     )
     .where(eq(schema.projects.organizationId, organizationId))
     .groupBy(schema.projects.id)
@@ -107,9 +109,11 @@ export async function getProjectLanguagesForProjects(
     .orderBy(schema.projectLanguages.locale);
 }
 
-type TranslationCoverageForProject = {
+export type TranslationCoverageForProject = {
   projectId: number;
   translatedCount: number;
+  totalPossible: number;
+  coverage: number;
 };
 
 export async function getTranslationCoverageForProjects(
@@ -121,10 +125,11 @@ export async function getTranslationCoverageForProjects(
 
   const projectIds = projects.map((p) => p.id);
 
-  return await db
+  const result = await db
     .select({
       projectId: schema.translationKeys.projectId,
       translatedCount: count(schema.translations.id),
+      totalPossible: count(schema.translationKeys.id),
     })
     .from(schema.translationKeys)
     .innerJoin(
@@ -149,6 +154,11 @@ export async function getTranslationCoverageForProjects(
       ),
     )
     .groupBy(schema.translationKeys.projectId);
+
+  return result.map((r) => ({
+    ...r,
+    coverage: r.totalPossible > 0 ? r.translatedCount / r.totalPossible : 1,
+  }));
 }
 
 export async function countProjectsForOrganization(organizationId: number) {
