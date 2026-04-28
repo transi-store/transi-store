@@ -12,7 +12,13 @@ import {
   getTestDb,
   type TestDb,
 } from "../../tests/test-db";
-import { deleteProject, getProjectDeletionSummary } from "./projects.server";
+import {
+  deleteProject,
+  getProjectDeletionSummary,
+  getProjectLanguagesForProjects,
+  getProjectsForOrganization,
+  getTranslationCoverageForProjects,
+} from "./projects.server";
 
 vi.mock("~/lib/db.server", () => ({
   get db() {
@@ -33,6 +39,254 @@ describe("projects.server", () => {
     organizationId = organization.id;
     const project = await createProject(db, organization.id);
     projectId = project.id;
+  });
+
+  describe("getProjectsForOrganization", () => {
+    it("returns empty array when no projects exist", async () => {
+      const emptyOrg = await createOrganization(db);
+      const projects = await getProjectsForOrganization(emptyOrg.id);
+      expect(projects).toEqual([]);
+    });
+
+    it("returns projects ordered by name with translationKeyCount", async () => {
+      const projectB = await createProject(db, organizationId, {
+        name: "B Project",
+        slug: "b-project",
+      });
+      const projectA = await createProject(db, organizationId, {
+        name: "A Project",
+        slug: "a-project",
+      });
+
+      await createTranslationKey(db, projectA.id, "key.one");
+      await createTranslationKey(db, projectA.id, "key.two");
+      await createTranslationKey(db, projectB.id, "key.one");
+
+      const projects = await getProjectsForOrganization(organizationId);
+
+      expect(projects).toHaveLength(3);
+      expect(projects[0].name).toBe("A Project");
+      expect(projects[0].translationKeyCount).toBe(2);
+      expect(projects[1].name).toBe("B Project");
+      expect(projects[1].translationKeyCount).toBe(1);
+      // projectId was created in beforeEach with name "Test Project N"
+      expect(projects[2].id).toBe(projectId);
+    });
+
+    it("excludes soft-deleted and branch keys from translationKeyCount", async () => {
+      const branch = await createBranch(db, projectId);
+      await createTranslationKey(db, projectId, "active.key");
+      await createTranslationKey(db, projectId, "deleted.key", {
+        deletedAt: new Date(),
+      });
+      await createTranslationKey(db, projectId, "branch.key", {
+        branchId: branch.id,
+      });
+
+      const [project] = await getProjectsForOrganization(organizationId);
+      expect(project.translationKeyCount).toBe(1);
+    });
+
+    it("does not return projects from other organizations", async () => {
+      const otherOrg = await createOrganization(db);
+      await createProject(db, otherOrg.id, { slug: "other-project" });
+
+      const projects = await getProjectsForOrganization(organizationId);
+      expect(projects).toHaveLength(1);
+      expect(projects[0].id).toBe(projectId);
+    });
+  });
+
+  describe("getProjectLanguagesForProjects", () => {
+    it("returns empty array when given an empty list", async () => {
+      const result = await getProjectLanguagesForProjects([]);
+      expect(result).toEqual([]);
+    });
+
+    it("returns languages for the given projects", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+
+      const result = await getProjectLanguagesForProjects([{ id: projectId }]);
+
+      expect(result).toHaveLength(2);
+      const locales = result.map((l) => l.locale).sort();
+      expect(locales).toEqual(["en", "fr"]);
+      expect(result.find((l) => l.locale === "en")?.isDefault).toBe(true);
+      expect(result.find((l) => l.locale === "fr")?.isDefault).toBe(false);
+    });
+
+    it("does not return languages from other projects", async () => {
+      const otherProject = await createProject(db, organizationId, {
+        slug: "other-project",
+      });
+      await createProjectLanguage(db, otherProject.id, {
+        locale: "de",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+
+      const result = await getProjectLanguagesForProjects([{ id: projectId }]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].locale).toBe("en");
+      expect(result[0].projectId).toBe(projectId);
+    });
+
+    it("returns languages for multiple projects at once", async () => {
+      const project2 = await createProject(db, organizationId, {
+        slug: "project-2",
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, project2.id, {
+        locale: "fr",
+        isDefault: true,
+      });
+
+      const result = await getProjectLanguagesForProjects([
+        { id: projectId },
+        { id: project2.id },
+      ]);
+
+      expect(result).toHaveLength(2);
+      const projectIds = result.map((l) => l.projectId);
+      expect(projectIds).toContain(projectId);
+      expect(projectIds).toContain(project2.id);
+    });
+  });
+
+  describe("getTranslationCoverageForProjects", () => {
+    it("returns empty array when given an empty list", async () => {
+      const result = await getTranslationCoverageForProjects([]);
+      expect(result).toEqual([]);
+    });
+
+    it("counts translations for non-default locales only", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+
+      const key = await createTranslationKey(db, projectId, "greeting");
+      await createTranslation(db, key.id, "en", "Hello");
+      await createTranslation(db, key.id, "fr", "Bonjour");
+
+      const result = await getTranslationCoverageForProjects([
+        { id: projectId },
+      ]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].projectId).toBe(projectId);
+      // Only the "fr" (non-default) translation should be counted
+      expect(result[0].translatedCount).toBe(1);
+    });
+
+    it("excludes soft-deleted keys", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+
+      const activeKey = await createTranslationKey(db, projectId, "active");
+      await createTranslation(db, activeKey.id, "fr", "Actif");
+      const deletedKey = await createTranslationKey(db, projectId, "deleted", {
+        deletedAt: new Date(),
+      });
+      await createTranslation(db, deletedKey.id, "fr", "Supprimé");
+
+      const result = await getTranslationCoverageForProjects([
+        { id: projectId },
+      ]);
+
+      expect(result[0].translatedCount).toBe(1);
+    });
+
+    it("excludes branch keys", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+
+      const branch = await createBranch(db, projectId);
+      const mainKey = await createTranslationKey(db, projectId, "main.key");
+      await createTranslation(db, mainKey.id, "fr", "Principal");
+      const branchKey = await createTranslationKey(
+        db,
+        projectId,
+        "branch.key",
+        { branchId: branch.id },
+      );
+      await createTranslation(db, branchKey.id, "fr", "Branche");
+
+      const result = await getTranslationCoverageForProjects([
+        { id: projectId },
+      ]);
+
+      expect(result[0].translatedCount).toBe(1);
+    });
+
+    it("returns coverage for multiple projects", async () => {
+      const project2 = await createProject(db, organizationId, {
+        slug: "project-2",
+      });
+
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+      await createProjectLanguage(db, project2.id, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, project2.id, {
+        locale: "de",
+        isDefault: false,
+      });
+
+      const key1 = await createTranslationKey(db, projectId, "key");
+      await createTranslation(db, key1.id, "fr", "Bonjour");
+      const key2 = await createTranslationKey(db, project2.id, "key");
+      await createTranslation(db, key2.id, "de", "Hallo");
+
+      const result = await getTranslationCoverageForProjects([
+        { id: projectId },
+        { id: project2.id },
+      ]);
+
+      expect(result).toHaveLength(2);
+      const p1 = result.find((r) => r.projectId === projectId);
+      const p2 = result.find((r) => r.projectId === project2.id);
+      expect(p1?.translatedCount).toBe(1);
+      expect(p2?.translatedCount).toBe(1);
+    });
   });
 
   describe("getProjectDeletionSummary", () => {
