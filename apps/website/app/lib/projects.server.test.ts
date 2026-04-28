@@ -116,10 +116,10 @@ describe("projects.server", () => {
       const result = await getProjectLanguagesForProjects([{ id: projectId }]);
 
       expect(result).toHaveLength(2);
-      const locales = result.map((l) => l.locale).sort();
-      expect(locales).toEqual(["en", "fr"]);
-      expect(result.find((l) => l.locale === "en")?.isDefault).toBe(true);
-      expect(result.find((l) => l.locale === "fr")?.isDefault).toBe(false);
+      expect(result).toEqual([
+        { projectId, locale: "en", isDefault: true },
+        { projectId, locale: "fr", isDefault: false },
+      ]);
     });
 
     it("does not return languages from other projects", async () => {
@@ -137,9 +137,7 @@ describe("projects.server", () => {
 
       const result = await getProjectLanguagesForProjects([{ id: projectId }]);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].locale).toBe("en");
-      expect(result[0].projectId).toBe(projectId);
+      expect(result).toEqual([{ projectId, locale: "en", isDefault: true }]);
     });
 
     it("returns languages for multiple projects at once", async () => {
@@ -160,10 +158,10 @@ describe("projects.server", () => {
         { id: project2.id },
       ]);
 
-      expect(result).toHaveLength(2);
-      const projectIds = result.map((l) => l.projectId);
-      expect(projectIds).toContain(projectId);
-      expect(projectIds).toContain(project2.id);
+      expect(result).toEqual([
+        { projectId, locale: "en", isDefault: true },
+        { projectId: project2.id, locale: "fr", isDefault: true },
+      ]);
     });
   });
 
@@ -185,16 +183,59 @@ describe("projects.server", () => {
 
       const key = await createTranslationKey(db, projectId, "greeting");
       await createTranslation(db, key.id, "en", "Hello");
+
+      const resultBeforeTranslations = await getTranslationCoverageForProjects([
+        { id: projectId },
+      ]);
+
+      // default translations are not counted towards coverage
+      expect(resultBeforeTranslations).toEqual([
+        { projectId, translatedCount: 0, totalPossible: 1, coverage: 0 },
+      ]);
+
       await createTranslation(db, key.id, "fr", "Bonjour");
 
       const result = await getTranslationCoverageForProjects([
         { id: projectId },
       ]);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].projectId).toBe(projectId);
       // Only the "fr" (non-default) translation should be counted
-      expect(result[0].translatedCount).toBe(1);
+      expect(result).toEqual([
+        { projectId, translatedCount: 1, totalPossible: 1, coverage: 1 },
+      ]);
+    });
+
+    it("count translated count with several languages", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "de",
+        isDefault: false,
+      });
+
+      const key = await createTranslationKey(db, projectId, "greeting");
+      await createTranslation(db, key.id, "en", "Hello");
+      await createTranslation(db, key.id, "fr", "Bonjour");
+      await createTranslation(db, key.id, "de", "Hallo");
+
+      const key2 = await createTranslationKey(db, projectId, "farewell");
+      await createTranslation(db, key2.id, "en", "Goodbye");
+      await createTranslation(db, key2.id, "fr", "Au revoir");
+
+      const result = await getTranslationCoverageForProjects([
+        { id: projectId },
+      ]);
+
+      // "fr" / "de" (non-default) translation should be counted
+      expect(result).toEqual([
+        { projectId, translatedCount: 3, totalPossible: 4, coverage: 0.75 },
+      ]);
     });
 
     it("excludes soft-deleted keys", async () => {
@@ -218,7 +259,9 @@ describe("projects.server", () => {
         { id: projectId },
       ]);
 
-      expect(result[0].translatedCount).toBe(1);
+      expect(result).toEqual([
+        { projectId, translatedCount: 1, totalPossible: 1, coverage: 1 },
+      ]);
     });
 
     it("excludes branch keys", async () => {
@@ -246,7 +289,9 @@ describe("projects.server", () => {
         { id: projectId },
       ]);
 
-      expect(result[0].translatedCount).toBe(1);
+      expect(result).toEqual([
+        { projectId, translatedCount: 1, totalPossible: 1, coverage: 1 },
+      ]);
     });
 
     it("returns coverage for multiple projects", async () => {
@@ -281,11 +326,15 @@ describe("projects.server", () => {
         { id: project2.id },
       ]);
 
-      expect(result).toHaveLength(2);
-      const p1 = result.find((r) => r.projectId === projectId);
-      const p2 = result.find((r) => r.projectId === project2.id);
-      expect(p1?.translatedCount).toBe(1);
-      expect(p2?.translatedCount).toBe(1);
+      expect(result).toEqual([
+        { projectId, translatedCount: 1, totalPossible: 1, coverage: 1 },
+        {
+          projectId: project2.id,
+          translatedCount: 1,
+          totalPossible: 1,
+          coverage: 1,
+        },
+      ]);
     });
   });
 

@@ -17,6 +17,7 @@ import {
   getProjectsForOrganization,
   getProjectLanguagesForProjects,
   getTranslationCoverageForProjects,
+  type TranslationCoverageForProject,
 } from "~/lib/projects.server";
 import type { Route } from "./+types";
 
@@ -43,12 +44,19 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       .filter((l) => l.projectId === project.id)
       .map((l) => ({ locale: l.locale, isDefault: l.isDefault ?? false }));
 
-    const nonDefaultLocaleCount = locales.filter((l) => !l.isDefault).length;
-    const translatedCount =
-      coverageData.find((c) => c.projectId === project.id)?.translatedCount ??
-      0;
-    const totalPossible = project.translationKeyCount * nonDefaultLocaleCount;
-    const coverage = totalPossible > 0 ? translatedCount / totalPossible : 1;
+    const coverageDataByProjectId: Record<
+      number,
+      TranslationCoverageForProject
+    > = coverageData.reduce(
+      (acc, data) => {
+        acc[data.projectId] = data;
+
+        return acc;
+      },
+      {} as Record<number, TranslationCoverageForProject>,
+    );
+
+    const translationCoverageForProject = coverageDataByProjectId[project.id];
 
     return {
       id: project.id,
@@ -57,7 +65,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       updatedAt: project.updatedAt.toISOString(),
       translationKeyCount: project.translationKeyCount,
       locales,
-      coverage,
+      coverage: translationCoverageForProject?.coverage ?? 0,
     };
   });
 
