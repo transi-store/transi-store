@@ -78,10 +78,6 @@ export async function getProjectsForOrganization(
     .groupBy(schema.projects.id)
     .orderBy(schema.projects.name);
 
-  projectWithInfos.forEach((project) => {
-    console.log(project);
-  });
-
   return projectWithInfos;
 }
 
@@ -107,7 +103,8 @@ export async function getProjectLanguagesForProjects(
       isDefault: schema.projectLanguages.isDefault,
     })
     .from(schema.projectLanguages)
-    .where(inArray(schema.projectLanguages.projectId, projectIds));
+    .where(inArray(schema.projectLanguages.projectId, projectIds))
+    .orderBy(schema.projectLanguage.locale);
 }
 
 type TranslationCoverageForProject = {
