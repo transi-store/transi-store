@@ -3,6 +3,7 @@ import {
   AVAILABLE_PROVIDERS,
   type ProviderConfig,
 } from "~/lib/auth-providers.server";
+import { OAuthProvider } from "~/lib/auth-providers";
 import {
   Alert,
   Box,
@@ -82,7 +83,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
             {enabledProviders.map((provider) => {
               const getProviderButton = () => {
                 switch (provider.type) {
-                  case "google":
+                  case OAuthProvider.GOOGLE:
                     return (
                       <Button
                         key={provider.type}
@@ -108,7 +109,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                         </Link>
                       </Button>
                     );
-                  case "mapado":
+                  case OAuthProvider.MAPADO:
                     return (
                       <Button
                         key={provider.type}
@@ -127,7 +128,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
                         </Link>
                       </Button>
                     );
-                  case "github":
+                  case OAuthProvider.GITHUB:
                     return (
                       <Button
                         key={provider.type}
