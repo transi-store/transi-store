@@ -303,6 +303,7 @@
   "projects.new.nameLabel": "Nombre del proyecto",
   "projects.new.namePlaceholder": "Mi aplicación",
   "projects.new.title": "Nuevo proyecto",
+  "projects.updatedAt": "Actualizado el {date}",
   "search.all": "Todas",
   "search.badgeKey": "Clave",
   "search.badgeTranslation": "Traducción",

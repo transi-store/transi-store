@@ -1,6 +1,7 @@
 import { Heading, Box, Text, HStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 
 const COVERAGE_ACCENT = {
   full: { color: "#87C241", glow: "rgba(135, 194, 65, 0.28)" },
@@ -61,8 +62,9 @@ export default function ProjectCard({
   href: string;
 }) {
   const [hovered, setHovered] = useState(false);
+  const { t, i18n } = useTranslation();
   const accent = getCoverageAccent(project.coverage);
-  const updatedDate = new Intl.DateTimeFormat("en", {
+  const updatedDate = new Intl.DateTimeFormat(i18n.language, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -169,7 +171,7 @@ export default function ProjectCard({
         </Box>
 
         <Text fontFamily="mono" fontSize="11px" color="fg.subtle">
-          Updated {updatedDate}
+          {t("projects.updatedAt", { date: updatedDate })}
         </Text>
       </Link>
     </Box>

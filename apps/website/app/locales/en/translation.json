@@ -332,6 +332,7 @@
   "projects.new.nameLabel": "Project name",
   "projects.new.namePlaceholder": "My application",
   "projects.new.title": "New project",
+  "projects.updatedAt": "Updated {date}",
   "search.all": "All",
   "search.badgeKey": "Key",
   "search.badgeTranslation": "Translation",
