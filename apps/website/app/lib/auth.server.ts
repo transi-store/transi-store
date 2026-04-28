@@ -3,13 +3,13 @@ import { eq } from "drizzle-orm";
 import { createUserSession } from "./session.server";
 import { decodeJwt } from "jose";
 import {
-  type OAuthProvider,
   exchangeMapadoCode,
   exchangeGoogleCode,
   getGoogleUserInfo,
   exchangeGithubCode,
   getGithubUserInfo,
 } from "./auth-providers.server";
+import { OAuthProvider } from "./auth-providers";
 
 type CallbackParams = {
   code: string;
@@ -30,11 +30,11 @@ async function handleCallback(params: CallbackParams) {
     throw new Error("State mismatch");
   }
 
-  if (params.provider === "google") {
+  if (params.provider === OAuthProvider.GOOGLE) {
     return handleGoogleCallback(params);
-  } else if (params.provider === "mapado") {
+  } else if (params.provider === OAuthProvider.MAPADO) {
     return handleMapadoCallback(params);
-  } else if (params.provider === "github") {
+  } else if (params.provider === OAuthProvider.GITHUB) {
     return handleGithubCallback(params);
   }
 
@@ -58,7 +58,7 @@ async function handleGoogleCallback(params: CallbackParams) {
 
   // Créer ou mettre à jour l'utilisateur
   const user = await upsertUser({
-    oauthProvider: "google",
+    oauthProvider: OAuthProvider.GOOGLE,
     oauthSubject: userInfo.sub,
     email: userInfo.email ?? `user-${userInfo.sub}@google.com`,
     name: userInfo.name ?? userInfo.given_name,
@@ -98,7 +98,7 @@ async function handleMapadoCallback(params: CallbackParams) {
 
   // Créer ou mettre à jour l'utilisateur (sans name)
   const user = await upsertUser({
-    oauthProvider: "mapado",
+    oauthProvider: OAuthProvider.MAPADO,
     oauthSubject: decodedToken.sub,
     email,
     name: undefined,
@@ -120,7 +120,7 @@ async function handleGithubCallback(params: CallbackParams) {
 
   // Créer ou mettre à jour l'utilisateur
   const user = await upsertUser({
-    oauthProvider: "github",
+    oauthProvider: OAuthProvider.GITHUB,
     oauthSubject: userInfo.id.toString(),
     email: userInfo.email ?? `${userInfo.login}@users.noreply.github.com`,
     name: userInfo.name ?? userInfo.login,
@@ -130,7 +130,7 @@ async function handleGithubCallback(params: CallbackParams) {
 }
 
 type UpsertUserParams = {
-  oauthProvider: string;
+  oauthProvider: OAuthProvider;
   oauthSubject: string;
   email: string;
   name?: string;
@@ -186,8 +186,8 @@ export async function exchangeCodeForUser(
   state: string,
   codeVerifier: string | undefined,
   expectedState: string,
-  redirectTo: string = "/",
-  provider: OAuthProvider = "mapado",
+  redirectTo: string,
+  provider: OAuthProvider,
 ) {
   const user = await handleCallback({
     code,

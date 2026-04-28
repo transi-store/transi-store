@@ -12,6 +12,7 @@ import {
 import { AI_PROVIDERS } from "~/lib/ai-providers";
 import { BRANCH_STATUS } from "~/lib/branches";
 import { SupportedFormat } from "@transi-store/common";
+import { OAuthProvider } from "~/lib/auth-providers";
 
 function ensureOneItem<T>(arr: T[]): [T, ...T[]] {
   if (arr.length === 0) {
@@ -28,7 +29,10 @@ export const users = pgTable(
     id: serial("id").primaryKey(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     name: varchar("name", { length: 255 }),
-    oauthProvider: varchar("oauth_provider", { length: 50 }).notNull(),
+    oauthProvider: varchar("oauth_provider", {
+      length: 50,
+      enum: ensureOneItem(Object.values(OAuthProvider)),
+    }).notNull(),
     oauthSubject: varchar("oauth_subject", { length: 255 }).notNull(),
     lastOrganizationId: integer("last_organization_id").references(
       () => organizations.id,

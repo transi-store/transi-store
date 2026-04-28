@@ -22,6 +22,7 @@ import {
   getBranchKeys,
 } from "./branches.server";
 import { BRANCH_STATUS } from "./branches";
+import type { OAuthProvider } from "./auth-providers";
 
 vi.mock("~/lib/db.server", () => ({
   get db() {
@@ -325,7 +326,7 @@ describe("mergeBranch with deletions", () => {
       .values({
         email: "merge-user@test.com",
         name: "Merge User",
-        oauthProvider: "test",
+        oauthProvider: "test" as OAuthProvider, // Cast to OAuthProvider to satisfy type, even though "test" is not a real provider
         oauthSubject: "merge-user",
       })
       .returning();
