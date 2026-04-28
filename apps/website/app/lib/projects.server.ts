@@ -7,7 +7,6 @@ import {
   inArray,
   isNull,
   getColumns,
-  countDistinct,
 } from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
