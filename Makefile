@@ -43,6 +43,9 @@ dev: ## Lance le serveur de développement
 build: ## Build l'application
 	docker compose exec app yarn build
 
+build-common: ## Build l'application
+	docker compose exec app yarn build:common
+
 start: ## Démarre l'application en production
 	docker compose exec app yarn start
 
@@ -86,5 +89,5 @@ clean-all: ## Nettoie tout (conteneurs, volumes, images, node_modules)
 	rm -rf node_modules .yarn/cache
 
 ## Setup initial
-setup: up install db-push ## Setup initial du projet (démarre Docker, installe les dépendances, crée la DB)
+setup: up install build-common db-push ## Setup initial du projet (démarre Docker, installe les dépendances, crée la DB)
 	@echo "$(BLUE)✓ Setup terminé! Lancez 'make dev' pour démarrer le serveur de développement.$(NC)"
