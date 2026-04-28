@@ -1,5 +1,6 @@
+import type { Project } from "../../drizzle/schema";
 import { db, schema } from "./db.server";
-import { count, eq, and, inArray, isNull } from "drizzle-orm";
+import { count, eq, and, inArray, isNull, getColumns } from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
@@ -47,14 +48,17 @@ export async function isProjectSlugAvailable(
   return !existing;
 }
 
-export async function getProjectsForOrganization(organizationId: number) {
-  return await db
+type ProjectWithInfos = Project & {
+  translationKeyCount: number;
+  // languages: Array<ProjectLanguage>;
+};
+
+export async function getProjectsForOrganization(
+  organizationId: number,
+): Promise<Array<ProjectWithInfos>> {
+  const projectWithInfos = await db
     .select({
-      id: schema.projects.id,
-      name: schema.projects.name,
-      slug: schema.projects.slug,
-      description: schema.projects.description,
-      createdAt: schema.projects.createdAt,
+      ...getColumns(schema.projects),
       translationKeyCount: count(schema.translationKeys.id),
     })
     .from(schema.projects)
@@ -66,9 +70,88 @@ export async function getProjectsForOrganization(organizationId: number) {
         isNull(schema.translationKeys.branchId),
       ),
     )
+    .leftJoin(
+      schema.projectLanguages,
+      eq(schema.projectLanguages.projectId, schema.projects.id),
+    )
     .where(eq(schema.projects.organizationId, organizationId))
     .groupBy(schema.projects.id)
-    .orderBy(schema.projects.createdAt);
+    .orderBy(schema.projects.name);
+
+  projectWithInfos.forEach((project) => {
+    console.log(project);
+  });
+
+  return projectWithInfos;
+}
+
+type LanguageForProject = {
+  projectId: number;
+  locale: string;
+  isDefault: boolean | null;
+};
+
+export async function getProjectLanguagesForProjects(
+  projectList: Array<{ id: number }>,
+): Promise<Array<LanguageForProject>> {
+  if (projectList.length === 0) {
+    return [];
+  }
+
+  const projectIds = projectList.map((p) => p.id);
+
+  return await db
+    .select({
+      projectId: schema.projectLanguages.projectId,
+      locale: schema.projectLanguages.locale,
+      isDefault: schema.projectLanguages.isDefault,
+    })
+    .from(schema.projectLanguages)
+    .where(inArray(schema.projectLanguages.projectId, projectIds));
+}
+
+type TranslationCoverageForProject = {
+  projectId: number;
+  translatedCount: number;
+};
+
+export async function getTranslationCoverageForProjects(
+  projects: Array<{ id: number }>,
+): Promise<Array<TranslationCoverageForProject>> {
+  if (projects.length === 0) {
+    return [];
+  }
+
+  const projectIds = projects.map((p) => p.id);
+
+  return await db
+    .select({
+      projectId: schema.translationKeys.projectId,
+      translatedCount: count(schema.translations.id),
+    })
+    .from(schema.translationKeys)
+    .innerJoin(
+      schema.projectLanguages,
+      and(
+        eq(schema.projectLanguages.projectId, schema.translationKeys.projectId),
+        eq(schema.projectLanguages.isDefault, false),
+      ),
+    )
+    .leftJoin(
+      schema.translations,
+      and(
+        eq(schema.translations.keyId, schema.translationKeys.id),
+        eq(schema.translations.locale, schema.projectLanguages.locale),
+      ),
+    )
+    .where(
+      and(
+        inArray(schema.translationKeys.projectId, projectIds),
+        isNull(schema.translationKeys.deletedAt),
+        isNull(schema.translationKeys.branchId),
+      ),
+    )
+    .groupBy(schema.translationKeys.projectId);
 }
 
 export async function countProjectsForOrganization(organizationId: number) {
