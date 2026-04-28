@@ -72,11 +72,13 @@ SESSION_SECRET=a-long-random-secret-string
 ENCRYPTION_KEY=a-64-character-hexadecimal-key # generate one with `openssl rand -hex 32`
 
 # At least one OAuth provider is required for authentication.
-# Google OAuth — https://console.cloud.google.com/apis/credentials
+# Google OAuth (optional)
+# Get your credentials at: https://console.cloud.google.com/apis/credentials > Create Credentials > OAuth 2.0 Client IDs > Authorized redirect URIs: your-domain-root:your-port/auth/google/callback
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# GitHub OAuth — https://github.com/settings/developers
+# GitHub OAuth (optional)
+# Get your creadentials at: https://github.com/settings/developers > New OAuth App > Authorization callback URL: your-domain-root:your-port/auth/github/callback
 # GITHUB_CLIENT_ID=your_client_id
 # GITHUB_CLIENT_SECRET=your_client_secret
 ```
