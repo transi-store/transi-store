@@ -243,7 +243,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       };
     }
 
-    await createTranslationKey({
+    const newKeyId = await createTranslationKey({
       projectId: project.id,
       keyName,
       description:
@@ -256,6 +256,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     return {
       success: true,
+      keyId: newKeyId,
       keyName,
       search: keyName,
       action: KeyAction.Create,
@@ -350,6 +351,11 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCreateKeyModalOpen(false);
+
+      // Open the drawer for the newly created key
+      if (actionData.keyId) {
+        setDrawerKeyId(actionData.keyId);
+      }
     }
   }, [actionData, navigation.state]);
 

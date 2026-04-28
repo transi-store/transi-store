@@ -231,7 +231,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     }
 
     // Créer la clé
-    await createTranslationKey({
+    const newKeyId = await createTranslationKey({
       projectId: project.id,
       keyName,
       description:
@@ -241,9 +241,10 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       fileId,
     });
 
-    // Retourner le succès avec le nom de la clé (la navigation se fera côté client)
+    // Retourner le succès avec l'ID et le nom de la clé
     return {
       success: true,
+      keyId: newKeyId,
       keyName,
       search: keyName,
       action: KeyAction.Create,
@@ -474,6 +475,11 @@ export default function ProjectTranslations({
             : actionData.keyName,
         }),
       );
+
+      // Open the drawer for the newly created key
+      if (actionData.keyId) {
+        setDrawerKeyId(actionData.keyId);
+      }
     }
   }, [
     actionData,
