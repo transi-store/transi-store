@@ -4,17 +4,21 @@ import {
   Box,
   Text,
   SimpleGrid,
-  Card,
   HStack,
 } from "@chakra-ui/react";
 import { Link, useLoaderData } from "react-router";
 import { LuPlus } from "react-icons/lu";
-import type { Route } from "./+types/orgs.$orgSlug._index";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { useTranslation } from "react-i18next";
 import { getProjectUrl } from "~/lib/routes-helpers";
-import { getProjectsForOrganization } from "~/lib/projects.server";
+import ProjectCard, { type ProjectWithStats } from "./ProjectCard";
+import {
+  getProjectsForOrganization,
+  getProjectLanguagesForProjects,
+  getTranslationCoverageForProjects,
+} from "~/lib/projects.server";
+import type { Route } from "./+types";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -23,8 +27,39 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     params.orgSlug,
   );
 
-  // Get projects for the organization
-  const projects = await getProjectsForOrganization(organization.id);
+  const rawProjects = await getProjectsForOrganization(organization.id);
+
+  const [allLocales, coverageData] = await Promise.all(
+    rawProjects.length > 0
+      ? [
+          getProjectLanguagesForProjects(rawProjects),
+          getTranslationCoverageForProjects(rawProjects),
+        ]
+      : [Promise.resolve([]), Promise.resolve([])],
+  );
+
+  const projects: Array<ProjectWithStats> = rawProjects.map((project) => {
+    const locales = allLocales
+      .filter((l) => l.projectId === project.id)
+      .map((l) => ({ locale: l.locale, isDefault: l.isDefault ?? false }));
+
+    const nonDefaultLocaleCount = locales.filter((l) => !l.isDefault).length;
+    const translatedCount =
+      coverageData.find((c) => c.projectId === project.id)?.translatedCount ??
+      0;
+    const totalPossible = project.translationKeyCount * nonDefaultLocaleCount;
+    const coverage = totalPossible > 0 ? translatedCount / totalPossible : 1;
+
+    return {
+      id: project.id,
+      name: project.name,
+      slug: project.slug,
+      updatedAt: project.updatedAt.toISOString(),
+      translationKeyCount: project.translationKeyCount,
+      locales,
+      coverage,
+    };
+  });
 
   return { organization, projects };
 }
@@ -60,25 +95,11 @@ export default function OrganizationProjects() {
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
           {projects.map((project) => (
-            <Card.Root key={project.id} asChild>
-              <Link to={getProjectUrl(organization.slug, project.slug)}>
-                <Card.Body>
-                  <Heading as="h3" size="md" mb={1}>
-                    {project.name}
-                  </Heading>
-                  <Text fontSize="xs" color="fg.subtle" mb={1}>
-                    {t("projects.keyCount", {
-                      count: project.translationKeyCount,
-                    })}
-                  </Text>
-                  {project.description && (
-                    <Text fontSize="sm" color="fg.muted">
-                      {project.description}
-                    </Text>
-                  )}
-                </Card.Body>
-              </Link>
-            </Card.Root>
+            <ProjectCard
+              key={project.id}
+              project={project}
+              href={getProjectUrl(organization.slug, project.slug)}
+            />
           ))}
         </SimpleGrid>
       )}
