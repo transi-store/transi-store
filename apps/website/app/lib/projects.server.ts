@@ -104,7 +104,7 @@ export async function getProjectLanguagesForProjects(
     })
     .from(schema.projectLanguages)
     .where(inArray(schema.projectLanguages.projectId, projectIds))
-    .orderBy(schema.projectLanguage.locale);
+    .orderBy(schema.projectLanguages.locale);
 }
 
 type TranslationCoverageForProject = {
