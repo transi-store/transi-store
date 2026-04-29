@@ -32,6 +32,7 @@
     "@codemirror/view": "^6.39.11",
     "@emotion/react": "^11.14.0",
     "@formatjs/icu-messageformat-parser": "^3.5.1",
+    "@lezer/highlight": "^1.2.3",
     "@mdx-js/rollup": "^3.1.1",
     "@scalar/api-reference-react": "^0.9.13",
     "@transi-store/common": "workspace:^",

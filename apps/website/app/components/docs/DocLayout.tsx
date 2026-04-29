@@ -178,6 +178,10 @@ const NAV_SECTIONS: DocNavSection[] = [
         label: "Managing Translations",
         href: "/docs/usage#managing-translations",
       },
+      {
+        label: "Translating Markdown / MDX documents",
+        href: "/docs/usage#translating-markdown--mdx-documents-two-side-mode",
+      },
       { label: "Branch Management", href: "/docs/usage#branch-management" },
       { label: "Import and Export", href: "/docs/usage#import-and-export" },
       { label: "AI Translations", href: "/docs/usage#ai-translations" },

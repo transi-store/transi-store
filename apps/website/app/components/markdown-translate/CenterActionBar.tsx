@@ -15,7 +15,7 @@ import {
   LuChevronDown,
 } from "react-icons/lu";
 
-export type CenterActionBarProps = {
+type CenterActionBarProps = {
   hasCurrentSection: boolean;
   isCurrentSectionFuzzy: boolean;
   isAiBusy: boolean;

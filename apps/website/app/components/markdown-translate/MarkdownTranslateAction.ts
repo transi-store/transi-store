@@ -9,9 +9,6 @@ export const MarkdownTranslateAction = {
   TranslateDocument: "translateDocument",
 } as const;
 
-export type MarkdownTranslateActionValue =
-  (typeof MarkdownTranslateAction)[keyof typeof MarkdownTranslateAction];
-
 import type { TranslationSuggestion } from "~/lib/ai-translation.server";
 import type { AiProviderEnum } from "~/lib/ai-providers";
 
@@ -43,12 +40,6 @@ export function isMarkdownAiSectionSuccess(
   data: MarkdownAiResponse | undefined,
 ): data is MarkdownAiSectionSuccess {
   return !!data && (data as MarkdownAiSectionSuccess).scope === "section";
-}
-
-export function isMarkdownAiDocumentSuccess(
-  data: MarkdownAiResponse | undefined,
-): data is MarkdownAiDocumentSuccess {
-  return !!data && (data as MarkdownAiDocumentSuccess).scope === "document";
 }
 
 export function isMarkdownAiError(

@@ -114,6 +114,7 @@ Utilisez le template suivant :
 | [ADR-016](./ADR-016-elimination-loaders-redondants.md)              | Élimination des loaders redondants via middleware de contexte         | 2026-03-18 | Proposé 🔄 |
 | [ADR-017](./ADR-017-openapi-documentation.md)                       | Auto-generated OpenAPI documentation with Scalar                      | 2026-03-20 | Accepté ✅ |
 | [ADR-018](./ADR-018-suppression-traductions-branches.md)            | Suppression de traductions dans les branches (soft-delete)            | 2026-03-21 | Accepté ✅ |
+| [ADR-019](./ADR-019-interface-traduction-markdown-mdx.md)           | Interface de traduction côte-à-côte pour les documents Markdown / MDX | 2026-04-29 | Accepté ✅ |
 
 ## Références
 

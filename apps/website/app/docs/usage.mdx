@@ -2,6 +2,7 @@ import { TranslationsMockup } from "~/components/docs/ui-mockups/TranslationsMoc
 import { BranchesMockup } from "~/components/docs/ui-mockups/BranchesMockup";
 import { IcuEditorMockup } from "~/components/docs/ui-mockups/IcuEditorMockup";
 import { AiSuggestionsMockup } from "~/components/docs/ui-mockups/AiSuggestionsMockup";
+import { MarkdownTranslateMockup } from "~/components/docs/ui-mockups/MarkdownTranslateMockup";
 
 ## Getting Started
 
@@ -57,6 +58,64 @@ Use the search bar to filter keys by name or value. You can also filter by:
 
 - **Untranslated** — keys missing translations in one or more locales
 - **Locale** — filter the view to show a specific language pair
+
+---
+
+## Translating Markdown / MDX documents (two-side mode)
+
+Some content is too long-form for a key/value table — product pages, guides,
+release notes. Whenever a project file uses one of the document formats
+(`.md`, `.markdown`, `.mdx`), transi-store opens it in a dedicated **two-side
+editor** instead of the regular translations table.
+
+<MarkdownTranslateMockup />
+
+### Layout at a glance
+
+- **Two full-width editors**, one per language, with markdown syntax
+  highlighting (light & dark themes).
+- **Free language picker** on each side — translate `en → fr`, compare
+  `fr ↔ es`, or any other pair you have configured.
+- **Center action bar** that operates on the section your cursor is in.
+
+### Section alignment
+
+The document is split into sections by heading (and fenced code blocks),
+and each section is keyed by its position in the heading tree — not by
+its text. As a result:
+
+- Headings can be fully translated on each side: the editor still pairs
+  them up correctly.
+- Moving the cursor on one side scrolls the other side and briefly
+  highlights the **counterpart section**.
+- A section that exists on one side but not the other (you haven't
+  translated it yet, or you added a heading in only one language) is
+  flagged as **unmatched** in the badge near the language picker.
+  The down-arrow button jumps to the next unmatched section.
+
+### Center action bar
+
+| Icon | Action |
+|------|--------|
+| Copy section | Copy the current section's source to the other side. |
+| Copy document | Copy the entire document to the other side. |
+| AI translate section | Generate AI suggestions for the current section, with the existing target draft used as a tone reference. |
+| AI translate document | Translate the full document with AI in one shot. |
+| Mark fuzzy | Flag the current section as needing review. The flag is stable across heading translation and only cleared when you toggle it back or run AI translation. |
+| Next unmatched | Jump to the next section without a counterpart. |
+| Swap sides | Swap the two languages. |
+
+### Saving and concurrency
+
+Every change is auto-saved (debounced) per side. If two browser tabs edit
+the same document at the same time, the second save is rejected with a
+clear message and you are prompted to reload — your work is never
+overwritten silently.
+
+> **Tip:** sectional fuzzy flags and "last AI translated" timestamps are
+> stored independently from the document body, so they survive heading
+> translation. They are dropped only when the structure of the section
+> itself changes (for example, you delete the heading entirely).
 
 ---
 
@@ -122,6 +181,8 @@ Go to **Import / Export** in your project and choose the format:
 | YAML | `.yaml` | Popular in Ruby on Rails |
 | CSV | `.csv` | Spreadsheet-friendly |
 | PO | `.po` | GNU gettext format |
+| Markdown | `.md`, `.markdown` | Long-form document, edited in two-side mode |
+| MDX | `.mdx` | Markdown + JSX, edited in two-side mode |
 
 You can also export via the **REST API** using your organization's API key.
 First, list the project's files to get their IDs:

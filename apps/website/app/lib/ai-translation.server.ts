@@ -15,7 +15,7 @@ const SuggestionSchema = z.object({
   ),
 });
 
-export type TranslationFormat = "icu" | "markdown" | "mdx";
+type TranslationFormat = "icu" | "markdown" | "mdx";
 
 type TranslationContext = {
   sourceText: string;

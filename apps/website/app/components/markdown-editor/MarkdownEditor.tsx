@@ -13,7 +13,7 @@
 import { useEffect, useRef } from "react";
 import { Box } from "@chakra-ui/react";
 import { basicSetup } from "codemirror";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView } from "@codemirror/view";
 import {
   EditorState,
   StateEffect,
@@ -21,7 +21,6 @@ import {
   Compartment,
   type Extension,
 } from "@codemirror/state";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { Decoration, type DecorationSet } from "@codemirror/view";
 import { languages } from "@codemirror/language-data";
@@ -171,6 +170,7 @@ export function MarkdownEditor({
     const extensions: Extension[] = [
       basicSetup,
       markdown({
+        base: markdownLanguage,
         codeLanguages: languages,
       }),
       themeCompartment.current.of(markdownEditorTheme(initialColorMode)),

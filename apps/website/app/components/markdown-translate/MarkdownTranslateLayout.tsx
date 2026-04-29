@@ -52,7 +52,7 @@ import { AiSectionSuggestionsDialog } from "./AiSectionSuggestionsDialog";
 
 const SAVE_DEBOUNCE_MS = 600;
 
-export type MarkdownTranslateLayoutProps = {
+type MarkdownTranslateLayoutProps = {
   organizationSlug: string;
   projectSlug: string;
   fileId: number;
@@ -331,6 +331,9 @@ function MarkdownTranslateInner({
   // shows 2-3 ranked suggestions (same UX as the per-key translate flow).
   // The user picks one, which is then injected at the counterpart range.
   const [aiSectionDialogOpen, setAiSectionDialogOpen] = useState(false);
+  const [aiSectionTargetLocale, setAiSectionTargetLocale] = useState<
+    string | null
+  >(null);
   const aiSectionContextRef = useRef<{
     targetLocale: string;
     structuralPath: string;
@@ -363,6 +366,7 @@ function MarkdownTranslateInner({
       structuralPath: activeSection.structuralPath,
       requestKey: `section:${activeSection.structuralPath}:${activeLocale}:${otherLocale}:${Date.now()}`,
     };
+    setAiSectionTargetLocale(otherLocale);
     setAiSectionDialogOpen(true);
     aiFetcher.submit(formData, { method: "post" });
   }, [
@@ -598,7 +602,7 @@ function MarkdownTranslateInner({
 
       <AiSectionSuggestionsDialog
         open={aiSectionDialogOpen}
-        targetLocale={aiSectionContextRef.current?.targetLocale ?? null}
+        targetLocale={aiSectionTargetLocale}
         onClose={() => setAiSectionDialogOpen(false)}
         onSelect={handleSelectSectionSuggestion}
         fetcher={aiFetcher}

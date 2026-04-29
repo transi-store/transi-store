@@ -6,7 +6,7 @@
 import { NativeSelect } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
-export type LanguagePickerProps = {
+type LanguagePickerProps = {
   value: string;
   onChange: (locale: string) => void;
   languages: ReadonlyArray<{ locale: string }>;
