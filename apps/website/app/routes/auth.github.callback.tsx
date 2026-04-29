@@ -1,3 +1,4 @@
+import { OAuthProvider } from "~/lib/auth-providers";
 import type { Route } from "./+types/auth.github.callback";
 import { exchangeCodeForUser } from "~/lib/auth.server";
 import { getOAuthState, clearOAuthState } from "~/lib/oauth-state.server";
@@ -24,7 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     undefined,
     oauthState.state,
     redirectTo,
-    "github",
+    OAuthProvider.GITHUB,
   );
 
   // Supprimer le cookie d'état OAuth

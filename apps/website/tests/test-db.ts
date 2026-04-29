@@ -7,6 +7,7 @@ import * as schema from "../drizzle/schema";
 import { relations } from "../drizzle/relations";
 import { incrementQueryCount } from "../app/lib/query-counter.server";
 import { SupportedFormat } from "@transi-store/common";
+import type { OAuthProvider } from "~/lib/auth-providers";
 
 export type TestDb = Awaited<ReturnType<typeof initTestDb>>;
 
@@ -76,7 +77,7 @@ export async function createApiKey(
     .values({
       email: `user${Math.random()}@example.com`,
       name: "Test User",
-      oauthProvider: "test",
+      oauthProvider: "test" as OAuthProvider, // Cast to OAuthProvider to satisfy type, even though "test" is not a real provider
       oauthSubject: `user-${Math.random()}`,
     })
     .returning();

@@ -1,5 +1,6 @@
 import { GitHub, Google, OAuth2Client } from "arctic";
 import crypto from "node:crypto";
+import { OAuthProvider } from "./auth-providers";
 
 // Configuration OAuth2 générique (existant)
 const MAPADO_AUTHORIZATION_URL = "https://oauth2.mapado.com/oauth/v2/auth";
@@ -18,8 +19,6 @@ const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const GITHUB_REDIRECT_URI = `${process.env.DOMAIN_ROOT}/auth/github/callback`;
 
-export type OAuthProvider = "mapado" | "google" | "github";
-
 export type ProviderConfig = {
   type: OAuthProvider;
   name: string;
@@ -28,17 +27,17 @@ export type ProviderConfig = {
 
 export const AVAILABLE_PROVIDERS: Array<ProviderConfig> = [
   {
-    type: "mapado",
+    type: OAuthProvider.MAPADO,
     name: "Mapado",
     enabled: !!(MAPADO_CLIENT_ID && MAPADO_CLIENT_SECRET),
   },
   {
-    type: "google",
+    type: OAuthProvider.GOOGLE,
     name: "Google",
     enabled: !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET),
   },
   {
-    type: "github",
+    type: OAuthProvider.GITHUB,
     name: "GitHub",
     enabled: !!(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET),
   },

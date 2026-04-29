@@ -47,7 +47,7 @@ export default [
     route("orgs", "routes/orgs._index.tsx"),
     route("orgs/new", "routes/orgs.new.tsx"),
     route("orgs/:orgSlug", "routes/orgs.$orgSlug.tsx", [
-      index("routes/orgs.$orgSlug._index.tsx"),
+      index("routes/orgs.$orgSlug/index.tsx"),
       route("members", "routes/orgs.$orgSlug.members/index.tsx"),
       route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
     ]),

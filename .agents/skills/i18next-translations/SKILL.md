@@ -59,6 +59,25 @@ const i18next = getInstance(context);
 const pathError = validateOutputPath(filePath, i18next.t);
 ```
 
+## Interpolation syntax
+
+This project uses **i18next-icu**, which means variable interpolation follows ICU format — **single braces**, not double:
+
+```json
+// CORRECT — single braces
+"projects.updatedAt": "Updated {date}"
+
+// WRONG — double braces (default i18next, not used here)
+"projects.updatedAt": "Updated {{date}}"
+```
+
+Call site: `t("projects.updatedAt", { date: formattedDate })` — same as standard i18next, only the JSON syntax differs.
+
+ICU also supports plurals and selects with the same single-brace format:
+```json
+"projects.keyCount": "{count, plural, one {# key} other {# keys}}"
+```
+
 ## Locale files
 
 - Live in `apps/website/app/locales/<lang>/translation.json` as a **flat** `"a.b.c": "value"` JSON file.

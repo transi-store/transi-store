@@ -1,90 +1,93 @@
 .PHONY: help up down restart logs ps shell install dev build test db-generate db-push db-studio db-setup-search lint-types knip clean
 
-# Couleurs pour l'aide
+# Colors for help
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-help: ## Affiche cette aide
-	@echo "$(BLUE)Commandes disponibles :$(NC)"
+help: ## Display this help
+	@echo "$(BLUE)Available commands:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(BLUE)%-20s$(NC) %s\n", $$1, $$2}'
 
 ## Docker
-up: ## Démarre les services Docker
+up: ## Start Docker services
 	docker compose up -d
 
-down: ## Arrête les services Docker
+down: ## Stop Docker services
 	docker compose down
 
-restart: ## Redémarre les services Docker
+restart: ## Restart Docker services
 	docker compose restart
 
-logs: ## Affiche les logs (Ctrl+C pour quitter)
+logs: ## Display logs (Ctrl+C to quit)
 	docker compose logs -f
 
-logs-app: ## Affiche les logs de l'application uniquement
+logs-app: ## Display application logs only
 	docker compose logs -f app
 
-logs-db: ## Affiche les logs de la base de données uniquement
+logs-db: ## Display database logs only
 	docker compose logs -f postgres
 
-ps: ## Liste les conteneurs actifs
+ps: ## List active containers
 	docker compose ps
 
-shell: ## Ouvre un shell dans le conteneur app
+shell: ## Open a shell in the app container
 	docker compose exec app sh
 
-## Développement
-install: ## Installe les dépendances
+## Development
+install: ## Install dependencies
 	docker compose exec app yarn install
 
-dev: ## Lance le serveur de développement
+dev: ## Start the development server
 	docker compose exec app yarn dev
 
-build: ## Build l'application
+build: ## Build the application
 	docker compose exec app yarn build
 
-start: ## Démarre l'application en production
+build-common: ## Build the common package
+	docker compose exec app yarn build:common
+
+start: ## Start the application in production
 	docker compose exec app yarn start
 
-test: ## Lance les tests
+test: ## Run tests
 	docker compose exec app yarn test --run
 
-lint-types: ## Vérifie les types TypeScript
+lint-types: ## Check TypeScript types
 	docker compose exec app yarn lint:types
 
-knip: ## Analyse les imports/exports non utilisés
+knip: ## Analyze unused imports/exports
 	docker compose exec app yarn knip
 
-## Base de données
-db-generate: ## Génère les migrations de la base de données
+## Database
+db-generate: ## Generate database migrations
 	docker compose exec app yarn db:generate
 
-db-push: ## Pousse les modifications du schéma vers la base de données
+db-push: ## Push schema changes to the database
 	docker compose exec app yarn db:push
 
-db-studio: ## Ouvre Drizzle Studio
+db-studio: ## Open Drizzle Studio
 	docker compose exec app yarn db:studio
 
-db-setup-search: ## Configure la recherche fuzzy dans PostgreSQL
+db-setup-search: ## Configure fuzzy search in PostgreSQL
 	sh scripts/enable-fuzzy-search.sh
 
-db-reset: ## Recrée la base de données (ATTENTION: supprime toutes les données!)
+db-reset: ## Recreate the database (WARNING: deletes all data!)
 	docker compose down -v
 	docker compose up -d postgres
-	@echo "Attente du démarrage de PostgreSQL..."
+	@echo "Waiting for PostgreSQL to start..."
 	@sleep 5
 	$(MAKE) db-push
 
-## Nettoyage
-clean: ## Nettoie les conteneurs, volumes et images
+## Cleanup
+clean: ## Clean containers, volumes and images
 	docker compose down -v
 	docker system prune -f
 
-clean-all: ## Nettoie tout (conteneurs, volumes, images, node_modules)
+clean-all: ## Clean all (containers, volumes, images, node_modules)
 	docker compose down -v
 	docker system prune -af
 	rm -rf node_modules .yarn/cache
 
-## Setup initial
-setup: up install db-push ## Setup initial du projet (démarre Docker, installe les dépendances, crée la DB)
-	@echo "$(BLUE)✓ Setup terminé! Lancez 'make dev' pour démarrer le serveur de développement.$(NC)"
+## Initial setup
+setup: up install build-common db-push ## Initial project setup (starts Docker, installs dependencies, creates the DB)
+	@echo "$(BLUE)✓ Setup done! Run \"make dev\" to start the development server.$(NC)"

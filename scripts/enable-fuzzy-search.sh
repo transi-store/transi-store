@@ -37,8 +37,9 @@ EOF
 )
 
 # Déterminer comment se connecter à la base de données
+# TODO : use `DATABASE_URL` instead ? 
 
-  # Utiliser Docker Compose (défaut)
+# Utiliser Docker Compose (défaut)
 echo "🐳 Connexion à la base de données via Docker Compose..."
 DB_USER=${DB_USER:-transi-store}
 DB_NAME=${DB_DATABASE:-transi-store}

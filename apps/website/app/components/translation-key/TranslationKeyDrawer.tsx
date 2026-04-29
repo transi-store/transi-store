@@ -37,6 +37,8 @@ type TranslationKeyDrawerProps = {
   keyId: number;
   organizationSlug: string;
   projectSlug: string;
+  /** URL to redirect to after deletion (typically the page hosting the drawer). */
+  redirectUrl: string;
   /** Called when the drawer is closed. */
   onClosed: () => void;
 };
@@ -45,6 +47,7 @@ export function TranslationKeyDrawer({
   keyId,
   organizationSlug,
   projectSlug,
+  redirectUrl,
   onClosed,
 }: TranslationKeyDrawerProps) {
   const { t } = useTranslation();
@@ -65,7 +68,10 @@ export function TranslationKeyDrawer({
     dataFetcher.state === "submitting" && dataFetcher.formMethod === "DELETE";
 
   const handleDelete = async () => {
-    await dataFetcher.submit({}, { method: "delete", action: keyUrl });
+    await dataFetcher.submit(
+      { redirectUrl },
+      { method: "delete", action: keyUrl },
+    );
 
     // Close drawer after successful deletion
     onClosed();

@@ -84,7 +84,7 @@ Au moins un des deux providers doit être configuré pour que l'application fonc
 
 Le schéma existant supporte déjà plusieurs providers grâce aux champs :
 
-- `oauthProvider` : "google" ou "mapado"
+- `oauthProvider` : "github", "google" ou "mapado"
 - `oauthSubject` : identifiant unique fourni par le provider
 - Index unique sur `(oauthProvider, oauthSubject)`
 
