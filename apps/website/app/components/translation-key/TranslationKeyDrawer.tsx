@@ -25,7 +25,7 @@ import {
   Box,
   IconButton,
 } from "@chakra-ui/react";
-import { Link, useFetcher } from "react-router";
+import { Link, useFetcher, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuExternalLink, LuTrash2 } from "react-icons/lu";
 import { getKeyUrl } from "~/lib/routes-helpers";
@@ -48,6 +48,7 @@ export function TranslationKeyDrawer({
   onClosed,
 }: TranslationKeyDrawerProps) {
   const { t } = useTranslation();
+  const location = useLocation();
 
   // Fetcher for loading key data
   const dataFetcher = useFetcher<KeyLoaderData>();
@@ -65,7 +66,12 @@ export function TranslationKeyDrawer({
     dataFetcher.state === "submitting" && dataFetcher.formMethod === "DELETE";
 
   const handleDelete = async () => {
-    await dataFetcher.submit({}, { method: "delete", action: keyUrl });
+    const redirectUrl = `${location.pathname}${location.search}`;
+
+    await dataFetcher.submit(
+      { redirectUrl },
+      { method: "delete", action: keyUrl },
+    );
 
     // Close drawer after successful deletion
     onClosed();
