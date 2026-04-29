@@ -774,6 +774,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
             keyId={drawerKeyId}
             organizationSlug={organization.slug}
             projectSlug={project.slug}
+            redirectUrl={currentUrl}
             onClosed={handleDrawerClosed}
           />
         )}
