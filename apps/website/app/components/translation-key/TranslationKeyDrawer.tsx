@@ -39,6 +39,8 @@ type TranslationKeyDrawerProps = {
   projectSlug: string;
   /** Called when the drawer is closed. */
   onClosed: () => void;
+  /** URL to redirect to after deletion. */
+  redirectTo: string;
 };
 
 export function TranslationKeyDrawer({
@@ -46,6 +48,7 @@ export function TranslationKeyDrawer({
   organizationSlug,
   projectSlug,
   onClosed,
+  redirectTo,
 }: TranslationKeyDrawerProps) {
   const { t } = useTranslation();
 
@@ -65,7 +68,10 @@ export function TranslationKeyDrawer({
     dataFetcher.state === "submitting" && dataFetcher.formMethod === "DELETE";
 
   const handleDelete = async () => {
-    await dataFetcher.submit({}, { method: "delete", action: keyUrl });
+    await dataFetcher.submit(
+      { redirectUrl: redirectTo },
+      { method: "delete", action: keyUrl },
+    );
 
     // Close drawer after successful deletion
     onClosed();

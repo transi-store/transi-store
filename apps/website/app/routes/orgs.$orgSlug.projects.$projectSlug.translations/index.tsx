@@ -647,6 +647,7 @@ export default function ProjectTranslations({
           organizationSlug={organization.slug}
           projectSlug={project.slug}
           onClosed={handleDrawerClosed}
+          redirectTo={currentUrl}
         />
       )}
 

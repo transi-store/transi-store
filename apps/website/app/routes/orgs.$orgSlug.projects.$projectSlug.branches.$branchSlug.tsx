@@ -775,6 +775,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
             organizationSlug={organization.slug}
             projectSlug={project.slug}
             onClosed={handleDrawerClosed}
+            redirectTo={currentUrl}
           />
         )}
 
