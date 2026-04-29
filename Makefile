@@ -52,6 +52,9 @@ start: ## Start the application in production
 test: ## Run tests
 	docker compose exec app yarn test --run
 
+lint: ## Check lint
+	docker compose exec app yarn turbo lint
+
 lint-types: ## Check TypeScript types
 	docker compose exec app yarn lint:types
 

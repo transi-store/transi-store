@@ -12,6 +12,7 @@
  */
 import { useEffect, useRef } from "react";
 import { Box } from "@chakra-ui/react";
+import { basicSetup } from "codemirror";
 import { EditorView, keymap } from "@codemirror/view";
 import {
   EditorState,
@@ -23,6 +24,7 @@ import {
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { Decoration, type DecorationSet } from "@codemirror/view";
+import { languages } from "@codemirror/language-data";
 import { useColorMode } from "../ui/color-mode";
 import { markdownEditorTheme } from "./themes";
 
@@ -112,7 +114,7 @@ export function MarkdownEditor({
 }: MarkdownEditorProps) {
   const { colorMode } = useColorMode();
   const containerRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<EditorView | null>(null);
+  const editorRef = useRef<EditorView | null>(null);
   const themeCompartment = useRef(new Compartment());
   const editableCompartment = useRef(new Compartment());
 
@@ -127,7 +129,7 @@ export function MarkdownEditor({
 
   // Sync external value into the editor without rebuilding the view.
   useEffect(() => {
-    const view = viewRef.current;
+    const view = editorRef.current;
     if (!view) return;
     const current = view.state.doc.toString();
     if (current !== value) {
@@ -139,8 +141,9 @@ export function MarkdownEditor({
 
   // React to color mode changes by reconfiguring the theme compartment.
   useEffect(() => {
-    const view = viewRef.current;
+    const view = editorRef.current;
     if (!view) return;
+
     view.dispatch({
       effects: themeCompartment.current.reconfigure(
         markdownEditorTheme(colorMode === "dark" ? "dark" : "light"),
@@ -150,7 +153,7 @@ export function MarkdownEditor({
 
   // React to disabled changes.
   useEffect(() => {
-    const view = viewRef.current;
+    const view = editorRef.current;
     if (!view) return;
     view.dispatch({
       effects: editableCompartment.current.reconfigure(
@@ -166,11 +169,9 @@ export function MarkdownEditor({
     const initialColorMode = colorMode === "dark" ? "dark" : "light";
 
     const extensions: Extension[] = [
-      history(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
+      basicSetup,
       markdown({
-        base: markdownLanguage,
-        addKeymap: true,
+        codeLanguages: languages,
       }),
       themeCompartment.current.of(markdownEditorTheme(initialColorMode)),
       editableCompartment.current.of(EditorView.editable.of(!disabled)),
@@ -196,12 +197,13 @@ export function MarkdownEditor({
 
     const state = EditorState.create({ doc: value, extensions });
     const view = new EditorView({ state, parent: containerRef.current });
-    viewRef.current = view;
+
+    editorRef.current = view;
     onViewReadyRef.current?.(view);
 
     return () => {
       view.destroy();
-      viewRef.current = null;
+      editorRef.current = null;
     };
     // Initialize once; subsequent prop changes are handled in dedicated effects.
     // eslint-disable-next-line react-hooks/exhaustive-deps
