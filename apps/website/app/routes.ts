@@ -67,6 +67,10 @@ export default [
           "routes/orgs.$orgSlug.projects.$projectSlug.translations/index.tsx",
         ),
         route(
+          "translations/files",
+          "routes/orgs.$orgSlug.projects.$projectSlug.translations.files/index.tsx",
+        ),
+        route(
           "settings",
           "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
         ),
