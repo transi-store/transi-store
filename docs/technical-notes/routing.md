@@ -1,65 +1,65 @@
-# Gestion des Routes - React Router 7
+# Routes — React Router 7
 
 ## Configuration
 
-Ce projet utilise **une configuration manuelle des routes** via le fichier `apps/website/app/routes.ts`, plutôt que le routing automatique par convention de fichiers de React Router 7.
+This project uses **manual route configuration** via `apps/website/app/routes.ts`, rather than React Router 7's automatic file-based routing.
 
-## Comment ajouter une nouvelle route
+## How to add a new route
 
-### Étape 1: Créer le fichier de route
+### Step 1: Create the route file
 
-Créer le fichier dans `apps/website/app/routes/` avec la convention de nommage:
+Create the file in `apps/website/app/routes/` using the naming convention:
 
-- Points (`.`) pour les segments dynamiques: `orgs.$orgSlug.tsx`
-- Underscores (`_`) pour les routes index: `orgs._index.tsx`
-- Tirets (`-`) pour les segments normaux: `auth.complete-profile.tsx`
+- Dots (`.`) for dynamic segments: `orgs.$orgSlug.tsx`
+- Underscores (`_`) for index routes: `orgs._index.tsx`
+- Hyphens (`-`) for regular segments: `auth.complete-profile.tsx`
 
-### Étape 2: Déclarer la route dans routes.ts ⚠️
+### Step 2: Declare the route in routes.ts ⚠️
 
-**IMPORTANT:** Le simple fait de créer le fichier ne suffit PAS. Il faut également ajouter la route dans `apps/website/app/routes.ts`:
+**IMPORTANT:** Creating the file alone is NOT enough. You must also add the route in `apps/website/app/routes.ts`:
 
 ```typescript
 // apps/website/app/routes.ts
 export default [
-  // ... autres routes
+  // ... other routes
   route("auth/complete-profile", "routes/auth.complete-profile.tsx"),
 ];
 ```
 
-**Sans cette déclaration, vous obtiendrez l'erreur:**
+**Without this declaration, you will get the error:**
 
 ```
 Error: No route matches URL "/auth/complete-profile"
 ```
 
-### Étape 3: Redémarrer le serveur
+### Step 3: Restart the server
 
-Après avoir ajouté la route dans `apps/website/app/routes.ts`, redémarrer le serveur de développement:
+After adding the route in `apps/website/app/routes.ts`, restart the development server:
 
 ```bash
 make dev
-# ou sans Make:
+# or without Make:
 docker compose exec app yarn dev
 ```
 
-React Router générera alors automatiquement les types TypeScript dans `.react-router/types/app/routes/+types/`.
+React Router will then automatically generate the TypeScript types in `.react-router/types/app/routes/+types/`.
 
-## Structure des routes
+## Route structure
 
 ```typescript
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
-  // Route index (page d'accueil)
+  // Index route (home page)
   index("routes/_index.tsx"),
 
-  // Route simple
+  // Simple route
   route("auth/login", "routes/auth.login.tsx"),
 
-  // Route avec paramètre
+  // Route with parameter
   route("orgs/:orgSlug", "routes/orgs.$orgSlug._index.tsx"),
 
-  // Routes imbriquées
+  // Nested routes
   route(
     "orgs/:orgSlug/projects/:projectSlug",
     "routes/orgs.$orgSlug.projects.$projectSlug.tsx",
@@ -78,9 +78,9 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-## Mapping chemin URL → fichier
+## URL path → file mapping
 
-| URL                                | Déclaration dans routes.ts                            | Fichier                                          |
+| URL                                | Declaration in routes.ts                              | File                                             |
 | ---------------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
 | `/auth/login`                      | `route("auth/login", "...")`                          | `routes/auth.login.tsx`                          |
 | `/auth/complete-profile`           | `route("auth/complete-profile", "...")`               | `routes/auth.complete-profile.tsx`               |
@@ -88,62 +88,62 @@ export default [
 | `/orgs/my-org`                     | `route("orgs/:orgSlug", "...")`                       | `routes/orgs.$orgSlug._index.tsx`                |
 | `/orgs/my-org/projects/my-project` | `route("orgs/:orgSlug/projects/:projectSlug", "...")` | `routes/orgs.$orgSlug.projects.$projectSlug.tsx` |
 
-## Convention `/api` : routes publiques uniquement
+## `/api` convention: public routes only
 
-Le préfixe `/api/...` est **réservé aux routes exposées au public** (consommables par des intégrations externes via clé API ou navigateur), comme les endpoints documentés dans OpenAPI :
+The `/api/...` prefix is **reserved for publicly exposed routes** (consumable by external integrations via API key or browser), such as endpoints documented in OpenAPI:
 
-- ✅ `/api/orgs/:orgSlug/projects/:projectSlug/files/:fileId/translations` — endpoint d'export public
-- ✅ `/api/locales/:lng/:ns` — chargement des traductions client-side
+- ✅ `/api/orgs/:orgSlug/projects/:projectSlug/files/:fileId/translations` — public export endpoint
+- ✅ `/api/locales/:lng/:ns` — client-side translation loading
 - ✅ `/api/doc.json`, `/api/doc/viewer`
 
-**Ne PAS préfixer par `/api`** les actions internes utilisées uniquement par l'UI (auth-session, non documentées) :
+**Do NOT prefix with `/api`** internal actions used only by the UI (auth-session, undocumented):
 
-- ❌ Mauvais : `/api/orgs/:orgSlug/projects/:projectSlug/markdown-translate-section`
-- ✅ Bon (cas classique) : ajouter l'action directement dans le `action()` de la route page existante via un discriminateur `_action` sur le formData. Voir les variantes `SaveContent` / `ToggleFuzzy` / `TranslateSection` / `TranslateDocument` dans `routes/orgs.$orgSlug.projects.$projectSlug.translations/runMarkdownAction.server.ts`.
-- ✅ Bon (resource route dédiée) : créer une route sibling sans `default export` qui n'expose qu'une `action`. Les formulaires y soumettent via `<fetcher.Form action="...">` ou `fetcher.submit(..., { action: "..." })`. Exemple : `routes/orgs.$orgSlug.projects.$projectSlug.translations.files/index.tsx` gère les `FileAction.Create | Edit | Delete` séparément du flux `_action` principal des traductions. À utiliser quand le découpage allège significativement la route page (action volumineuse, contrats de retour distincts) sans avoir à introduire une nouvelle URL utilisateur.
+- ❌ Wrong: `/api/orgs/:orgSlug/projects/:projectSlug/markdown-translate-section`
+- ✅ Correct (typical case): add the action directly in the `action()` of the existing page route via a `_action` discriminator on the formData. See the `SaveContent` / `ToggleFuzzy` / `TranslateSection` / `TranslateDocument` variants in `routes/orgs.$orgSlug.projects.$projectSlug.translations/runMarkdownAction.server.ts`.
+- ✅ Correct (dedicated resource route): create a sibling route with no `default export` that only exposes an `action`. Forms submit to it via `<fetcher.Form action="...">` or `fetcher.submit(..., { action: "..." })`. Example: `routes/orgs.$orgSlug.projects.$projectSlug.translations.files/index.tsx` handles `FileAction.Create | Edit | Delete` separately from the main translations `_action` flow. Use this when the split significantly lightens the page route (large action, distinct return contracts) without introducing a new user-facing URL.
 
-Si une action interne nécessite vraiment sa propre route, elle doit vivre sous `app-layout` à un chemin **non préfixé** par `/api`. Le bundle OpenAPI ne doit jamais l'enregistrer.
+If an internal action truly needs its own route, it must live under `app-layout` at a path **not prefixed** by `/api`. The OpenAPI bundle must never register it.
 
-## Conventions de nommage des fichiers
+## File naming conventions
 
-- **Segments dynamiques**: Utiliser `$` → `orgs.$orgSlug.tsx` pour `/orgs/:orgSlug`
-- **Routes index**: Utiliser `_index` → `orgs._index.tsx` pour `/orgs` (index)
-- **Segments normaux**: Utiliser `.` ou `-` → `auth.login.tsx` ou `auth.complete-profile.tsx`
+- **Dynamic segments**: Use `$` → `orgs.$orgSlug.tsx` for `/orgs/:orgSlug`
+- **Index routes**: Use `_index` → `orgs._index.tsx` for `/orgs` (index)
+- **Regular segments**: Use `.` or `-` → `auth.login.tsx` or `auth.complete-profile.tsx`
 
-## Pourquoi cette configuration manuelle?
+## Why manual configuration?
 
-React Router 7 supporte deux modes:
+React Router 7 supports two modes:
 
-1. **File-based routing** (par défaut): Les routes sont automatiquement déduites de la structure des fichiers
-2. **Manual routing** (ce projet): Les routes sont explicitement déclarées dans `apps/website/app/routes.ts`
+1. **File-based routing** (default): Routes are automatically inferred from file structure
+2. **Manual routing** (this project): Routes are explicitly declared in `apps/website/app/routes.ts`
 
-Ce projet utilise le mode manuel, probablement pour:
+This project uses manual mode for:
 
-- Plus de contrôle sur la structure des routes
-- Éviter les conventions de nommage parfois complexes
-- Centraliser la configuration des routes
+- More control over route structure
+- Avoiding sometimes complex naming conventions
+- Centralizing route configuration
 
-## Checklist pour ajouter une route
+## Checklist for adding a route
 
-- [ ] Créer le fichier dans `apps/website/app/routes/` avec la bonne convention de nommage
-- [ ] Ajouter la déclaration dans `apps/website/app/routes.ts`
-- [ ] Redémarrer le serveur de développement
-- [ ] Vérifier que les types TypeScript sont générés dans `.react-router/types/`
-- [ ] Tester l'accès à la route dans le navigateur
+- [ ] Create the file in `apps/website/app/routes/` with the correct naming convention
+- [ ] Add the declaration in `apps/website/app/routes.ts`
+- [ ] Restart the development server
+- [ ] Verify TypeScript types are generated in `.react-router/types/`
+- [ ] Test the route in the browser
 
-## Rendu avec chakra-ui
+## Rendering with Chakra UI
 
-Lors de la création de liens de navigation, utiliser le composant `Button` avec la prop `asChild` pour envelopper le composant `Link` de React Router. Cela permet de conserver le style du bouton tout en utilisant la navigation de React Router.
+When creating navigation links, use the `Button` component with the `asChild` prop to wrap React Router's `Link` component. This preserves button styling while using React Router navigation.
 
-Exemple:
+Example:
 
 ```tsx
 <Button asChild variant="outline" size="sm">
-  <Link to={`/orgs/${organization.slug}`}>Retour</Link>
+  <Link to={`/orgs/${organization.slug}`}>Back</Link>
 </Button>
 ```
 
-## Références
+## References
 
 - [React Router 7 - Route Configuration](https://reactrouter.com/start/framework/routing)
 - [React Router 7 - Manual Route Configuration](https://reactrouter.com/start/framework/route-module)

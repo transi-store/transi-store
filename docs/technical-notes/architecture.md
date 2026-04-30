@@ -1,52 +1,52 @@
-# Architecture générale
+# General architecture
 
-## Vue d'ensemble
+## Overview
 
-transi-store est un **monorepo Yarn Berry v4** contenant une application full-stack React Router v7 avec SSR (Server-Side Rendering), un CLI et un package de code partagé. L'architecture suit un pattern classique de framework full-stack où les routes gèrent à la fois le rendu côté serveur et les interactions client.
+transi-store is a **Yarn Berry v4 monorepo** containing a full-stack React Router v7 application with SSR (Server-Side Rendering), a CLI, and a shared code package. The architecture follows a classic full-stack framework pattern where routes handle both server-side rendering and client interactions.
 
-## Structure du projet
+## Project structure
 
 ```
-transi-store/                    # Racine du monorepo
+transi-store/                    # Monorepo root
 ├── apps/
-│   └── website/                # Application web principale
-│       ├── app/                # Code applicatif React Router
-│       │   ├── routes.ts      # Configuration centralisée des routes
-│       │   ├── root.tsx       # Layout principal (header, session)
-│       │   ├── routes/        # Route handlers (loaders, actions, composants)
-│       │   ├── components/    # Composants React réutilisables
-│       │   ├── lib/           # Utilitaires et logique serveur (*.server.ts)
-│       │   └── entry.server.tsx # Point d'entrée SSR
-│       ├── server/            # Point d'entrée serveur (app.ts)
-│       ├── drizzle/           # Schéma et relations Drizzle ORM
-│       │   ├── schema.ts     # Définitions des tables PostgreSQL
-│       │   └── relations.ts  # Relations entre tables
-│       └── tests/             # Setup de tests (PGlite)
+│   └── website/                # Main web application
+│       ├── app/                # React Router application code
+│       │   ├── routes.ts      # Centralized route configuration
+│       │   ├── root.tsx       # Main layout (header, session)
+│       │   ├── routes/        # Route handlers (loaders, actions, components)
+│       │   ├── components/    # Reusable React components
+│       │   ├── lib/           # Utilities and server logic (*.server.ts)
+│       │   └── entry.server.tsx # SSR entry point
+│       ├── server/            # Server entry point (app.ts)
+│       ├── drizzle/           # Drizzle ORM schema and relations
+│       │   ├── schema.ts     # PostgreSQL table definitions
+│       │   └── relations.ts  # Table relations
+│       └── tests/             # Test setup (PGlite)
 ├── packages/
-│   ├── cli/                   # CLI pour télécharger les traductions
-│   └── common/                # Types et utilitaires partagés
+│   ├── cli/                   # CLI to download translations
+│   └── common/                # Shared types and utilities
 ├── docs/                      # Documentation
 │   ├── decisions/             # Architecture Decision Records
-│   └── technical-notes/       # Notes techniques détaillées
-├── scripts/                   # Scripts utilitaires (setup DB, etc.)
-├── package.json               # Workspace root + tooling partagé
-├── eslint.config.js           # ESLint config (racine, couvre tout le monorepo)
-├── knip.jsonc                 # Knip config (racine, workspaces)
-└── docker-compose.yml         # Orchestration Docker (PostgreSQL + app)
+│   └── technical-notes/       # Detailed technical notes
+├── scripts/                   # Utility scripts (DB setup, etc.)
+├── package.json               # Workspace root + shared tooling
+├── eslint.config.js           # ESLint config (root, covers the whole monorepo)
+├── knip.jsonc                 # Knip config (root, workspaces)
+└── docker-compose.yml         # Docker orchestration (PostgreSQL + app)
 ```
 
-## Pattern architectural
+## Architectural pattern
 
-### React Router v7 avec SSR
+### React Router v7 with SSR
 
-Le projet utilise React Router v7 en mode "framework" qui fournit :
+The project uses React Router v7 in "framework" mode, which provides:
 
-- **SSR complet** : Rendu côté serveur de toutes les pages
-- **Loaders** : Chargement de données serveur avant le rendu
-- **Actions** : Mutations de données via form submissions
-- **File-based + configuration** : Routes définies dans `apps/website/app/routes.ts`
+- **Full SSR**: Server-side rendering of all pages
+- **Loaders**: Server data loading before rendering
+- **Actions**: Data mutations via form submissions
+- **File-based + configuration**: Routes defined in `apps/website/app/routes.ts`
 
-### Séparation client/serveur
+### Client/server separation
 
 ```
 Route component (client + server)
@@ -56,48 +56,48 @@ Route component (client + server)
     └─→ Component (client render)
 ```
 
-**Fichiers `.server.ts`** : Code qui ne sera JAMAIS envoyé au client
+**`.server.ts` files**: Code that will NEVER be sent to the client
 
-- Logique métier
-- Accès base de données
-- Secrets (clés API, tokens OAuth)
+- Business logic
+- Database access
+- Secrets (API keys, OAuth tokens)
 
-**Fichiers `.tsx` dans routes/** : Peuvent contenir du code client et serveur
+**`.tsx` files in routes/**: May contain both client and server code
 
-- Loaders et actions = serveur
-- Composant React = client (après hydratation)
+- Loaders and actions = server
+- React component = client (after hydration)
 
-## Hiérarchie des entités
+## Entity hierarchy
 
 ```
 Organization (tenant/workspace)
   │
-  ├─→ OrganizationMembers (utilisateurs avec accès)
-  ├─→ OrganizationInvitations (invitations en attente)
-  ├─→ ApiKeys (clés pour export programmatique)
+  ├─→ OrganizationMembers (users with access)
+  ├─→ OrganizationInvitations (pending invitations)
+  ├─→ ApiKeys (keys for programmatic export)
   │
-  └─→ Projects (projets de traduction)
+  └─→ Projects (translation projects)
         │
-        ├─→ ProjectLanguages (locales supportées)
+        ├─→ ProjectLanguages (supported locales)
         │
-        ├─→ Branches (branches de modification)
+        ├─→ Branches (modification branches)
         │     │
-        │     └─→ BranchKeyDeletions (clés marquées pour suppression)
+        │     └─→ BranchKeyDeletions (keys marked for deletion)
         │
-        └─→ TranslationKeys (clés de traduction, avec soft-delete via deletedAt)
+        └─→ TranslationKeys (translation keys, with soft-delete via deletedAt)
               │
-              └─→ Translations (valeurs traduites par locale)
+              └─→ Translations (translated values per locale)
 ```
 
-### Multi-tenant via organisations
+### Multi-tenant via organizations
 
-- Chaque utilisateur peut appartenir à plusieurs organisations
-- Les données sont isolées par organisation
-- Toutes les opérations vérifient l'appartenance à l'organisation via `requireOrganizationMembership()`
+- Each user can belong to multiple organizations
+- Data is isolated per organization
+- All operations verify organization membership via `requireOrganizationMembership()`
 
-## Flow de données
+## Data flow
 
-### 1. Requête entrante
+### 1. Incoming request
 
 ```
 User Request → React Router → Route Loader → Server logic → Database
@@ -107,7 +107,7 @@ User Request → React Router → Route Loader → Server logic → Database
                            Send HTML to client
 ```
 
-### 2. Mutation (formulaire)
+### 2. Mutation (form)
 
 ```
 Form Submit → React Router → Route Action → Server logic → Database
@@ -117,61 +117,61 @@ Form Submit → React Router → Route Action → Server logic → Database
                          Client updates or navigates
 ```
 
-## Technologies clés
+## Key technologies
 
 ### Frontend
 
-- **React 19** : Bibliothèque UI avec hooks modernes
-- **Chakra UI v3** : Système de design avec composants accessibles
-- **CodeMirror 6** : Éditeur de code pour syntaxe ICU
+- **React 19**: UI library with modern hooks
+- **Chakra UI v3**: Design system with accessible components
+- **CodeMirror 6**: Code editor for ICU syntax
 
 ### Backend
 
-- **React Router v7** : Framework full-stack avec SSR
-- **Drizzle ORM** : ORM TypeScript-first pour PostgreSQL
-- **Arctic** : Client OAuth2/OIDC pour authentification
-- **Jose** : Manipulation de JWT (pour provider Mapado)
+- **React Router v7**: Full-stack framework with SSR
+- **Drizzle ORM**: TypeScript-first ORM for PostgreSQL
+- **Arctic**: OAuth2/OIDC client for authentication
+- **Jose**: JWT manipulation (for Mapado provider)
 
-### Base de données
+### Database
 
-- **PostgreSQL 18** : Base de données relationnelle
-- **pg_trgm** : Extension pour recherche floue
-- **GIN indexes** : Index pour optimiser la recherche
+- **PostgreSQL 18**: Relational database
+- **pg_trgm**: Extension for fuzzy search
+- **GIN indexes**: Indexes to optimize search
 
 ### Build & Dev
 
-- **Vite** : Build tool rapide
-- **Yarn Berry (v4)** : Gestionnaire de paquets avec PnP
-- **TypeScript** : Type-safety complet
+- **Vite**: Fast build tool
+- **Yarn Berry (v4)**: Package manager with PnP
+- **TypeScript**: Full type safety
 
-## Principes de conception
+## Design principles
 
 ### 1. Type Safety
 
-- Typage complet avec TypeScript
-- Inférence automatique depuis le schéma Drizzle
-- Types générés par React Router pour les routes
+- Full TypeScript typing
+- Automatic inference from the Drizzle schema
+- Types generated by React Router for routes
 
-### 2. Sécurité
+### 2. Security
 
-- Authentification OAuth2 avec PKCE
-- Cookies httpOnly + signed pour les sessions
-- Validation de l'appartenance organisation sur toutes les routes protégées
-- API keys pour accès programmatique avec last_used tracking
+- OAuth2 with PKCE
+- httpOnly + signed cookies for sessions
+- Organization membership validation on all protected routes
+- API keys for programmatic access with last_used tracking
 
 ### 3. Performance
 
-- SSR pour le first paint rapide
-- Index GIN pour recherche floue performante
-- Pagination sur les listes de traductions
+- SSR for fast first paint
+- GIN indexes for performant fuzzy search
+- Pagination on translation lists
 
-### 4. Simplicité
+### 4. Simplicity
 
-- Pas de migrations Drizzle : `db:push` pour l'instant (early dev)
-- Routes déclaratives centralisées
-- Pas d'abstraction excessive
+- No Drizzle migrations: `db:push` for now (early dev)
+- Declarative centralized routes
+- No excessive abstraction
 
-## Références
+## References
 
 - [React Router v7 Documentation](https://reactrouter.com/start/framework/installation)
 - [Drizzle ORM](https://orm.drizzle.team/)

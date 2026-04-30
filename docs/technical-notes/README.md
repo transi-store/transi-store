@@ -1,47 +1,47 @@
-# Notes techniques
+# Technical notes
 
-Documentation technique détaillée de l'implémentation de transi-store.
+Detailed technical documentation for the transi-store implementation.
 
-## Vue d'ensemble
+## Overview
 
-| Fichier                                                | Description                                                              |
-| ------------------------------------------------------ | ------------------------------------------------------------------------ |
-| [architecture.md](./architecture.md)                   | Architecture générale du projet, stack technique, hiérarchie des entités |
-| [routing.md](./routing.md)                             | Configuration des routes React Router v7 (manuel, pas file-based)        |
-| [authentication.md](./authentication.md)               | Système OAuth2/OIDC avec PKCE, multi-provider, gestion des sessions      |
-| [database-schema.md](./database-schema.md)             | Schéma PostgreSQL complet, contraintes, relations, types TypeScript      |
-| [export-api.md](./export-api.md)                       | API d'export JSON/XLIFF, authentification par clé ou session             |
-| [import-system.md](./import-system.md)                 | Import JSON en masse, stratégies overwrite/skip, validation              |
-| [code-patterns.md](./code-patterns.md)                 | Patterns courants (routes, queries Drizzle, formulaires, auth)           |
-| [code-formatting.md](./code-formatting.md)             | Règles de formatage Prettier                                             |
-| [traductions.md](./traductions.md)                     | Gestion des traductions du site (i18next, i18n)                          |
-| [dev-setup-and-testing.md](./dev-setup-and-testing.md) | Setup développement local et tests                                       |
-| [openapi-documentation.md](./openapi-documentation.md) | Documentation OpenAPI auto-générée depuis Zod, rendu Redoc               |
-| [docs-pages.md](./docs-pages.md)                       | Pages de documentation utilisateur (MDX), maintenance et structure       |
+| File                                                   | Description                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| [architecture.md](./architecture.md)                   | General project architecture, tech stack, entity hierarchy          |
+| [routing.md](./routing.md)                             | React Router v7 route configuration (manual, not file-based)        |
+| [authentication.md](./authentication.md)               | OAuth2/OIDC with PKCE, multi-provider, session management           |
+| [database-schema.md](./database-schema.md)             | Full PostgreSQL schema, constraints, relations, TypeScript types    |
+| [export-api.md](./export-api.md)                       | JSON/XLIFF export API, authentication by key or session             |
+| [import-system.md](./import-system.md)                 | Bulk import, overwrite/skip strategies, validation                  |
+| [code-patterns.md](./code-patterns.md)                 | Common patterns (routes, Drizzle queries, forms, auth)              |
+| [code-formatting.md](./code-formatting.md)             | Prettier formatting rules                                           |
+| [traductions.md](./traductions.md)                     | Website translation management (i18next)                            |
+| [dev-setup-and-testing.md](./dev-setup-and-testing.md) | Local development setup and testing                                 |
+| [openapi-documentation.md](./openapi-documentation.md) | Auto-generated OpenAPI documentation from Zod, rendered with Scalar |
+| [docs-pages.md](./docs-pages.md)                       | User documentation pages (MDX), maintenance and structure           |
 
-## Ordre de lecture recommandé
+## Recommended reading order
 
-### Pour comprendre le projet
+### To understand the project
 
-1. **architecture.md** - Vue d'ensemble de la structure
-2. **database-schema.md** - Comprendre le modèle de données
-3. **authentication.md** - Flow d'authentification OAuth
+1. **architecture.md** — Overview of the structure
+2. **database-schema.md** — Understanding the data model
+3. **authentication.md** — OAuth authentication flow
 
-### Pour développer une feature
+### To develop a feature
 
-1. **routing.md** - Comment ajouter une nouvelle route
-2. **code-patterns.md** - Patterns à suivre
-3. **database-schema.md** - Structures de données disponibles
-4. **traductions.md** - Gestion des traductions
+1. **routing.md** — How to add a new route
+2. **code-patterns.md** — Patterns to follow
+3. **database-schema.md** — Available data structures
+4. **traductions.md** — Translation management
 
-### Pour intégrer avec l'API
+### To integrate with the API
 
-1. **export-api.md** - Documentation complète de l'endpoint d'export
-2. **import-system.md** - Comment importer des traductions
-3. **openapi-documentation.md** - Documentation OpenAPI auto-générée
+1. **export-api.md** — Full documentation of the export endpoint
+2. **import-system.md** — How to import translations
+3. **openapi-documentation.md** — Auto-generated OpenAPI documentation
 
-## Voir aussi
+## See also
 
-- **[Architecture Decision Records](../decisions/)** - Historique des décisions architecturales
-- **[Architecture IA-friendly](../ai/README.md)** - Structure des instructions, skills et specs pour les agents IA
-- **[README principal](../../README.md)** - Guide de démarrage rapide
+- **[Architecture Decision Records](../decisions/)** — History of architectural decisions
+- **[AI-friendly architecture](../ai/README.md)** — Structure of instructions, skills and specs for AI agents
+- **[Main README](../../README.md)** — Quick start guide

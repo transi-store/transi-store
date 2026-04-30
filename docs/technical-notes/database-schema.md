@@ -1,18 +1,18 @@
-# Schéma de base de données
+# Database schema
 
-## Vue d'ensemble
+## Overview
 
-transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
+transi-store uses **PostgreSQL 18** with **Drizzle ORM v1.0.0-beta**.
 
-**Source de vérité** : Le schéma est défini dans `apps/website/drizzle/schema.ts`
+**Source of truth**: The schema is defined in `apps/website/drizzle/schema.ts`
 
-**Application** : Via `make db-push` ou `docker compose exec app yarn db:push` (pas de migrations pour l'instant, adapté au développement early-stage)
+**Applying changes**: Via `make db-push` or `docker compose exec app yarn db:push` (no migrations for now, suited to early-stage development)
 
-## Hiérarchie des entités
+## Entity hierarchy
 
 ```
 ┌─────────────────────┐
-│   users             │  (Utilisateurs OAuth)
+│   users             │  (OAuth users)
 └─────────────────────┘
           │
           │ lastOrganizationId (FK)
@@ -43,99 +43,99 @@ transi-store utilise **PostgreSQL 18** avec **Drizzle ORM v1.0.0-beta**.
                                                                 └──────────────────┘
 ```
 
-## Concepts clés
+## Key concepts
 
-### Multi-tenant (organisations)
+### Multi-tenant (organizations)
 
-- **Isolation** : Toutes les données sont isolées par organisation
-- **Membership** : Table `organization_members` (N-N entre users et organizations)
-- **Cascade delete** : Suppression d'une organisation supprime tous ses projets, clés API, etc.
+- **Isolation**: All data is isolated per organization
+- **Membership**: `organization_members` table (N-N between users and organizations)
+- **Cascade delete**: Deleting an organization deletes all its projects, API keys, etc.
 
-### Contraintes d'unicité importantes
+### Important unique constraints
 
-| Table                      | Contrainte                                | Raison                                |
-| -------------------------- | ----------------------------------------- | ------------------------------------- |
-| `users`                    | `(oauth_provider, oauth_subject)` unique  | Un compte OAuth = un utilisateur      |
-| `organizations`            | `slug` unique global                      | URLs uniques                          |
-| `organization_members`     | `(organization_id, user_id)` unique       | Pas de doublons                       |
-| `organization_invitations` | `(organization_id, invited_email)` unique | Une seule invitation active par email |
-| `projects`                 | `(organization_id, slug)` unique          | Slug unique par org uniquement        |
-| `translation_keys`         | `(project_id, key_name)` unique           | Une seule clé par nom dans un projet  |
-| `translations`             | `(key_id, locale)` unique                 | Une seule traduction par clé-locale   |
-| `branch_key_deletions`     | `(branch_id, translation_key_id)` unique  | Une suppression par clé par branche   |
+| Table                      | Constraint                                | Reason                          |
+| -------------------------- | ----------------------------------------- | ------------------------------- |
+| `users`                    | `(oauth_provider, oauth_subject)` unique  | One OAuth account = one user    |
+| `organizations`            | `slug` globally unique                    | Unique URLs                     |
+| `organization_members`     | `(organization_id, user_id)` unique       | No duplicates                   |
+| `organization_invitations` | `(organization_id, invited_email)` unique | One active invitation per email |
+| `projects`                 | `(organization_id, slug)` unique          | Slug unique per org only        |
+| `translation_keys`         | `(project_id, key_name)` unique           | One key per name per project    |
+| `translations`             | `(key_id, locale)` unique                 | One translation per key-locale  |
+| `branch_key_deletions`     | `(branch_id, translation_key_id)` unique  | One deletion per key per branch |
 
-### Relations importantes
+### Important relations
 
-- **Users** ↔ **Organizations** : N-N via `organization_members`
-- **Organizations** → **Projects** : 1-N (cascade delete)
-- **Projects** → **TranslationKeys** : 1-N (cascade delete)
-- **Projects** → **Branches** : 1-N (cascade delete)
-- **TranslationKeys** → **Translations** : 1-N (cascade delete)
-- **Branches** → **BranchKeyDeletions** : 1-N (cascade delete)
+- **Users** ↔ **Organizations**: N-N via `organization_members`
+- **Organizations** → **Projects**: 1-N (cascade delete)
+- **Projects** → **TranslationKeys**: 1-N (cascade delete)
+- **Projects** → **Branches**: 1-N (cascade delete)
+- **TranslationKeys** → **Translations**: 1-N (cascade delete)
+- **Branches** → **BranchKeyDeletions**: 1-N (cascade delete)
 
-### Branches de traduction
+### Translation branches
 
-Les branches permettent d'isoler des modifications de traductions (ajouts et suppressions) avant de les fusionner vers main.
+Branches allow isolating translation changes (additions and deletions) before merging them to main.
 
-- **Ajouts** : Les clés de traduction ont un champ `branchId` nullable. `NULL` = main, valeur = branche.
-- **Suppressions** : La table `branch_key_deletions` stocke les clés de main marquées pour suppression dans une branche.
-- **Merge** : Déplace les ajouts vers main (`branchId = NULL`) et soft-delete les clés marquées (`deletedAt = now()`).
-- **Soft-delete** : Les clés avec `deletedAt` non-null sont exclues des exports, de la recherche, et de la vue main.
+- **Additions**: Translation keys have a nullable `branchId` field. `NULL` = main, value = branch.
+- **Deletions**: The `branch_key_deletions` table stores main keys marked for deletion in a branch.
+- **Merge**: Moves additions to main (`branchId = NULL`) and soft-deletes marked keys (`deletedAt = now()`).
+- **Soft-delete**: Keys with a non-null `deletedAt` are excluded from exports, search, and the main view.
 
-Voir [ADR-018](../decisions/ADR-018-suppression-traductions-branches.md) pour les détails de conception.
+See [ADR-018](../decisions/ADR-018-suppression-traductions-branches.md) for design details.
 
 ### Invitations
 
-Workflow :
+Workflow:
 
-1. Admin crée invitation avec email → génère code aléatoire unique
-2. Lien envoyé avec le code
-3. Utilisateur clique, s'authentifie avec cet email
-4. Ajout automatique à l'organisation + suppression de l'invitation
+1. Admin creates invitation with email → generates unique random code
+2. Link sent with the code
+3. User clicks, authenticates with that email
+4. Automatically added to the organization + invitation deleted
 
-### Clés d'API
+### API keys
 
-- Générées avec `base64url(crypto.randomBytes(24))` → 32 caractères
-- Scope : une organisation
-- Usage : Header `Authorization: Bearer <key>`
-- Tracking : `last_used_at` mis à jour à chaque appel
+- Generated with `base64url(crypto.randomBytes(24))` → 32 characters
+- Scope: one organization
+- Usage: `Authorization: Bearer <key>` header
+- Tracking: `last_used_at` updated on every call
 
-## Recherche floue (pg_trgm)
+## Fuzzy search (pg_trgm)
 
-**Setup** : `make db-setup-search` ou `docker compose exec app yarn db:setup-search` (à exécuter une seule fois)
+**Setup**: `make db-setup-search` or `docker compose exec app yarn db:setup-search` (run once)
 
-Ce script :
+This script:
 
-1. Active l'extension PostgreSQL `pg_trgm`
-2. Crée des index GIN trigram sur :
+1. Enables the PostgreSQL `pg_trgm` extension
+2. Creates GIN trigram indexes on:
    - `translation_keys.key_name`
    - `translation_keys.description`
    - `translations.value`
 
-**Utilisation** : L'opérateur `%` permet la recherche par similarité (seuil : 0.3)
+**Usage**: The `%` operator enables similarity search (threshold: 0.3)
 
-**Implémentation** : Voir `app/lib/search.server.ts`
+**Implementation**: See `app/lib/search.server.ts`
 
 ---
 
-## Types TypeScript
+## TypeScript types
 
-Drizzle infère automatiquement les types depuis `apps/website/drizzle/schema.ts` :
+Drizzle automatically infers types from `apps/website/drizzle/schema.ts`:
 
 ```typescript
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 ```
 
-**Disponibles pour toutes les tables** : User, Organization, Project, TranslationKey, Translation, etc.
+**Available for all tables**: User, Organization, Project, TranslationKey, Translation, etc.
 
 ---
 
-## Relations Drizzle
+## Drizzle relations
 
-Définies dans `apps/website/drizzle/relations.ts` pour charger les données liées en une seule query.
+Defined in `apps/website/drizzle/relations.ts` for eager data loading in a single query.
 
-**Exemple** : Charger une organisation avec ses projets
+**Example**: Load an organization with its projects
 
 ```typescript
 const org = await db.query.organizations.findFirst({
@@ -146,26 +146,26 @@ const org = await db.query.organizations.findFirst({
 
 ---
 
-## Gestion du schéma
+## Schema management
 
-**Appliquer les changements** : `make db-push` ou `docker compose exec app yarn db:push`
+**Apply changes**: `make db-push` or `docker compose exec app yarn db:push`
 
-- Applique `apps/website/drizzle/schema.ts` directement à la base de données
-- Pas de fichiers de migration (adapté pour développement early-stage)
+- Applies `apps/website/drizzle/schema.ts` directly to the database
+- No migration files (suited for early-stage development)
 
-**Visualiser** : `make db-studio` ou `docker compose exec app yarn db:studio`
+**Browse**: `make db-studio` or `docker compose exec app yarn db:studio`
 
-- Interface web Drizzle Studio pour explorer tables et données
+- Drizzle Studio web interface to explore tables and data
 
 ---
 
-## Fichiers sources
+## Source files
 
-- **Schéma** : `apps/website/drizzle/schema.ts`
-- **Relations** : `apps/website/drizzle/relations.ts`
-- **Configuration** : `apps/website/app/lib/db.server.ts`
+- **Schema**: `apps/website/drizzle/schema.ts`
+- **Relations**: `apps/website/drizzle/relations.ts`
+- **Configuration**: `apps/website/app/lib/db.server.ts`
 
-## Références
+## References
 
 - [Drizzle ORM - PostgreSQL](https://orm.drizzle.team/docs/get-started-postgresql)
 - [PostgreSQL pg_trgm](https://www.postgresql.org/docs/current/pgtrgm.html)

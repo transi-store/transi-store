@@ -1,10 +1,10 @@
-# Note technique : Séparation code serveur / client dans React Router v7
+# Technical note: Server / client code separation in React Router v7
 
-## Date : 2026-01-26
+## Date: 2026-01-26
 
-## Problème rencontré
+## Problem encountered
 
-Lors de l'implémentation de la traduction IA, erreur :
+While implementing AI translation, error:
 
 ```
 Server-only module referenced by client
@@ -13,20 +13,20 @@ Server-only module referenced by client
 
 ## Cause
 
-Dans React Router v7, les fichiers `.server.ts` ne peuvent être importés **QUE** dans :
+In React Router v7, `.server.ts` files can ONLY be imported in:
 
 - `loader`
 - `action`
 - `headers`
 - `middleware`
 
-Ils **NE PEUVENT PAS** être importés dans les composants React côté client.
+They CANNOT be imported in client-side React components.
 
 ## Solution
 
-**Séparer les constantes/types partagés du code serveur :**
+**Separate shared constants/types from server code:**
 
-### ❌ Avant (incorrect)
+### ❌ Before (incorrect)
 
 ```typescript
 // app/lib/ai-providers.server.ts
@@ -35,17 +35,17 @@ export const AI_PROVIDERS = [...];
 export async function saveAiProvider() { ... }
 
 // app/routes/some-route.tsx
-import { AI_PROVIDERS, type AiProvider } from "~/lib/ai-providers.server"; // ❌ ERREUR!
+import { AI_PROVIDERS, type AiProvider } from "~/lib/ai-providers.server"; // ❌ ERROR!
 
 function Component() {
-  return AI_PROVIDERS.map(...); // ❌ Import serveur dans composant client
+  return AI_PROVIDERS.map(...); // ❌ Server import in client component
 }
 ```
 
-### ✅ Après (correct)
+### ✅ After (correct)
 
 ```typescript
-// app/lib/ai-providers.ts (SANS .server)
+// app/lib/ai-providers.ts (WITHOUT .server)
 export type AiProvider = "openai" | "gemini";
 export const AI_PROVIDERS = [...];
 
@@ -55,10 +55,10 @@ export async function saveAiProvider() { ... }
 
 // app/routes/some-route.tsx
 import { AI_PROVIDERS, type AiProvider } from "~/lib/ai-providers"; // ✅ OK
-import { saveAiProvider } from "~/lib/ai-providers.server"; // ✅ Utilisé seulement dans loader/action
+import { saveAiProvider } from "~/lib/ai-providers.server"; // ✅ Used only in loader/action
 
 export async function action() {
-  await saveAiProvider(...); // ✅ OK dans action
+  await saveAiProvider(...); // ✅ OK in action
 }
 
 function Component() {
@@ -66,26 +66,26 @@ function Component() {
 }
 ```
 
-## Règle à suivre
+## Rule to follow
 
-**Dans les fichiers `.server.ts`, mettre UNIQUEMENT :**
+**In `.server.ts` files, put ONLY:**
 
-- Fonctions qui accèdent à la base de données
-- Fonctions qui utilisent des secrets (clés API, etc.)
-- Logique serveur pure (chiffrement, etc.)
+- Functions that access the database
+- Functions that use secrets (API keys, etc.)
+- Pure server logic (encryption, etc.)
 
-**Dans les fichiers `.ts` (sans .server), mettre :**
+**In `.ts` files (without .server), put:**
 
-- Types partagés
-- Constantes partagées
-- Utilitaires pure fonctions sans dépendances serveur
+- Shared types
+- Shared constants
+- Pure utility functions with no server dependencies
 
-## Fichiers concernés dans cette PR
+## Files affected in this PR
 
-- ✅ `app/lib/ai-providers.ts` - Types et constantes partagés
-- ✅ `app/lib/ai-providers.server.ts` - Fonctions CRUD avec DB
-- ✅ `app/routes/orgs.$orgSlug.settings.tsx` - Import corrigé
+- ✅ `app/lib/ai-providers.ts` — Shared types and constants
+- ✅ `app/lib/ai-providers.server.ts` — CRUD functions with DB
+- ✅ `app/routes/orgs.$orgSlug.settings.tsx` — Fixed import
 
-## Documentation officielle
+## Official documentation
 
 https://reactrouter.com/explanation/code-splitting#removal-of-server-code

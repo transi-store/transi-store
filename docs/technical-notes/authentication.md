@@ -1,156 +1,156 @@
-# Système d'authentification
+# Authentication system
 
-## Vue d'ensemble
+## Overview
 
-transi-store utilise OAuth2/OIDC pour l'authentification des utilisateurs avec support multi-provider. L'implémentation utilise la bibliothèque **Arctic** et le flow **PKCE** (Proof Key for Code Exchange) pour sécuriser les échanges.
+transi-store uses OAuth2/OIDC for user authentication with multi-provider support. The implementation uses the **Arctic** library and the **PKCE** (Proof Key for Code Exchange) flow to secure exchanges.
 
-## Providers supportés
+## Supported providers
 
 ### Google OAuth2
 
-- Provider standard via Arctic
-- Récupération des infos utilisateur depuis l'API Google
-- Scopes : `openid`, `email`, `profile`
+- Standard provider via Arctic
+- User info fetched from the Google API
+- Scopes: `openid`, `email`, `profile`
 
 ### Mapado OAuth2
 
-- Provider custom via `OAuth2Client` d'Arctic
-- Utilise JWT pour les access tokens
-- Décodage du JWT pour extraire l'ID utilisateur
+- Custom provider via Arctic's `OAuth2Client`
+- Uses JWT for access tokens
+- JWT decoded to extract the user ID
 
-## Flow d'authentification complet
+## Full authentication flow
 
 ### 1. Initiation (`/auth/{provider}/login`)
 
-1. Génère `code_verifier` + `state` (PKCE)
-2. Stocke dans cookie `oauth_state` chiffré (TTL: 10 min)
-3. Redirige vers le provider avec challenge PKCE
+1. Generate `code_verifier` + `state` (PKCE)
+2. Store in encrypted `oauth_state` cookie (TTL: 10 min)
+3. Redirect to provider with PKCE challenge
 
-**Fichier** : `apps/website/app/routes/auth.{provider}.login.tsx`
+**File**: `apps/website/app/routes/auth.{provider}.login.tsx`
 
 ### 2. Callback (`/auth/{provider}/callback`)
 
-1. Vérifie que le `state` correspond au cookie
-2. Échange le code + code_verifier contre un access token
-3. Récupère les infos utilisateur :
-   - **Google** : Appel API `openidconnect.googleapis.com/v1/userinfo`
-   - **Mapado** : Décodage du JWT access token
-4. Upsert utilisateur par `(oauthProvider, oauthSubject)` unique
-5. Crée la session (cookie signé)
-6. Redirige vers `/auth/complete-profile` si pas de nom, sinon `/`
+1. Verify `state` matches the cookie
+2. Exchange code + code_verifier for an access token
+3. Fetch user info:
+   - **Google**: API call to `openidconnect.googleapis.com/v1/userinfo`
+   - **Mapado**: Decode the JWT access token
+4. Upsert user by unique `(oauthProvider, oauthSubject)`
+5. Create session (signed cookie)
+6. Redirect to `/auth/complete-profile` if no name, otherwise `/`
 
-**Fichiers** :
+**Files**:
 
 - `apps/website/app/routes/auth.{provider}.callback.tsx`
 - `apps/website/app/lib/auth-providers.server.ts`
 - `apps/website/app/lib/auth.server.ts`
 
-### 3. Upsert utilisateur
+### 3. User upsert
 
-**Logique** :
+**Logic**:
 
-- Recherche par `(oauthProvider, oauthSubject)` (constraint unique)
-- Si existe : met à jour email uniquement (préserve le nom)
-- Si nouveau : crée l'utilisateur (name peut être null)
+- Look up by `(oauthProvider, oauthSubject)` (unique constraint)
+- If exists: update email only (preserve name)
+- If new: create user (name can be null)
 
-**Fichier** : `apps/website/app/lib/auth.server.ts` → `upsertUser()`
+**File**: `apps/website/app/lib/auth.server.ts` → `upsertUser()`
 
-### 4. Complétion du profil
+### 4. Profile completion
 
-Si l'utilisateur n'a pas de `name` après l'upsert :
+If the user has no `name` after upsert:
 
-- Redirige vers `/auth/complete-profile`
-- Formulaire pour saisir le nom
-- Mise à jour en base + création session
+- Redirect to `/auth/complete-profile`
+- Form to enter name
+- Update in DB + create session
 
-**Fichier** : `apps/website/app/routes/auth.complete-profile.tsx`
+**File**: `apps/website/app/routes/auth.complete-profile.tsx`
 
-### 5. Gestion de session
+### 5. Session management
 
-**Cookie de session** :
+**Session cookie**:
 
-- Contenu : `{ userId, email, name, lastOrganizationId, lastOrganizationSlug }`
-- Signé avec `SESSION_SECRET`
-- `httpOnly`, `sameSite: 'lax'`, `secure` en production
-- TTL : 30 jours
+- Content: `{ userId, email, name, lastOrganizationId, lastOrganizationSlug }`
+- Signed with `SESSION_SECRET`
+- `httpOnly`, `sameSite: 'lax'`, `secure` in production
+- TTL: 30 days
 
-**Fonctions** :
+**Functions**:
 
-- `getUserFromSession(request)` : Récupère l'utilisateur depuis le cookie (retourne `null` si non connecté)
+- `getUserFromSession(request)`: Retrieves the user from the cookie (returns `null` if not logged in)
 
-**Middleware (voir ADR-015)** :
+**Middleware (see ADR-015)**:
 
-- `sessionAuthMiddleware` : Middleware pour les routes app, redirige vers `/auth/login` si pas connecté. Place le user dans `userContext`.
-- `apiAuthMiddleware` : Middleware pour les routes API, accepte Bearer API key ou session cookie. Place le résultat dans `apiAuthContext`.
+- `sessionAuthMiddleware`: Middleware for app routes, redirects to `/auth/login` if not logged in. Places the user in `userContext`.
+- `apiAuthMiddleware`: Middleware for API routes, accepts Bearer API key or session cookie. Places the result in `apiAuthContext`.
 
-**Fichiers** : `apps/website/app/lib/session.server.ts`, `apps/website/app/middleware/auth.ts`, `apps/website/app/middleware/api-auth.ts`
+**Files**: `apps/website/app/lib/session.server.ts`, `apps/website/app/middleware/auth.ts`, `apps/website/app/middleware/api-auth.ts`
 
-## Sécurité
+## Security
 
 ### PKCE (Proof Key for Code Exchange)
 
-- **code_verifier** : Chaîne aléatoire (43-128 chars)
-- **code_challenge** : `BASE64URL(SHA256(code_verifier))`
-- Empêche les attaques par interception du code d'autorisation
+- **code_verifier**: Random string (43–128 chars)
+- **code_challenge**: `BASE64URL(SHA256(code_verifier))`
+- Prevents authorization code interception attacks
 
-### Cookies sécurisés
+### Secure cookies
 
 ```typescript
 {
-  httpOnly: true,        // Inaccessible depuis JS
-  secure: true,          // HTTPS uniquement (production)
-  sameSite: 'lax',       // Protection CSRF
-  signed: true           // Signature avec SESSION_SECRET
+  httpOnly: true,        // Inaccessible from JS
+  secure: true,          // HTTPS only (production)
+  sameSite: 'lax',       // CSRF protection
+  signed: true           // Signature with SESSION_SECRET
 }
 ```
 
 ### State parameter
 
-- Valeur aléatoire stockée dans le cookie `oauth_state`
-- Vérifiée au callback pour prévenir les attaques CSRF
-- TTL court (10 minutes)
+- Random value stored in the `oauth_state` cookie
+- Verified at callback to prevent CSRF attacks
+- Short TTL (10 minutes)
 
-### Constraint unique
+### Unique constraint
 
 ```sql
 CREATE UNIQUE INDEX unique_oauth
 ON users (oauth_provider, oauth_subject);
 ```
 
-Empêche les doublons d'utilisateurs pour un même compte OAuth.
+Prevents duplicate users for the same OAuth account.
 
-## Vérification de l'appartenance organisation
+## Organization membership check
 
-Toutes les routes sous `/orgs/:orgSlug` vérifient l'appartenance via `requireOrganizationMembership()` :
+All routes under `/orgs/:orgSlug` verify membership via `requireOrganizationMembership()`:
 
-**Logique** :
+**Logic**:
 
-1. Récupère l'organisation par slug
-2. Vérifie que l'utilisateur est membre (table `organization_members`)
-3. Lance 404 si org inexistante, 403 si pas membre
-4. Retourne l'organisation si OK
+1. Fetch organization by slug
+2. Verify the user is a member (table `organization_members`)
+3. Throw 404 if org doesn't exist, 403 if not a member
+4. Return the organization if OK
 
-**Fichier** : `apps/website/app/lib/organizations.server.ts`
+**File**: `apps/website/app/lib/organizations.server.ts`
 
-## Déconnexion
+## Logout
 
-Route `/auth/logout` : Détruit la session (cookie `maxAge: 0`) et redirige vers `/`
+Route `/auth/logout`: Destroys the session (cookie `maxAge: 0`) and redirects to `/`
 
-**Fichier** : `apps/website/app/routes/auth.logout.tsx`
+**File**: `apps/website/app/routes/auth.logout.tsx`
 
-## Variables d'environnement requises
+## Required environment variables
 
 ```bash
-# Provider OIDC (Google ou autre)
+# OIDC provider (Google or other)
 OIDC_ISSUER="https://accounts.google.com"
 OIDC_CLIENT_ID="your-client-id"
 OIDC_CLIENT_SECRET="your-client-secret"
 
-# Secret pour signer les cookies de session
+# Secret for signing session cookies
 SESSION_SECRET="random-secret-min-32-chars"
 ```
 
-## Références
+## References
 
 - [Arctic Documentation](https://arctic.js.org/)
 - [OAuth 2.0 PKCE](https://oauth.net/2/pkce/)

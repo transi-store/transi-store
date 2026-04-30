@@ -3,6 +3,8 @@ description: Guidance for technical docs, user docs, AI instructions, and execut
 applyTo: "README.md,AGENTS.md,CLAUDE.md,docs/**/*.md,apps/website/app/docs/**/*.mdx,.agents/**/*.md,.github/**/*.md,.claude/**/*.md,specs/**/*.md"
 ---
 
+All documentation files in this repository must be written in **English**, regardless of the language used in conversation with the AI agent. This applies to `docs/technical-notes/`, `.agents/`, `specs/`, and any other code file tracked in this repository.
+
 Keep the documentation layers distinct:
 
 - `docs/technical-notes/` is the durable source of truth for architecture, patterns, and implementation rules

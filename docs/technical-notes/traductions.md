@@ -1,23 +1,23 @@
-# Gestion des traductions
+# Translation management
 
-Cette note technique décrit comment les traductions sont gérées dans transi-store en utilisant i18next et i18n.
+This technical note describes how translations are managed in transi-store using i18next.
 
-## Structure des fichiers de traduction
+## Translation file structure
 
-Les fichiers de traduction sont stockés dans le répertoire `apps/website/app/locales/{lang}/{namespace}.json`, où `{lang}` est le code de langue (par exemple, `en`, `fr`) et `{namespace}` est le nom de l'espace de noms (par exemple, `common`, `dashboard`).
+Translation files are stored in `apps/website/app/locales/{lang}/{namespace}.json`, where `{lang}` is the language code (e.g. `en`, `fr`) and `{namespace}` is the namespace name (e.g. `common`, `dashboard`).
 
-Chaque fichier JSON contient des paires clé-valeur représentant les chaînes traduites. Par exemple :
+Each JSON file contains key-value pairs representing translated strings. For example:
 
 ```json
 {
-  "home.welcome_message": "Bienvenue sur transi-store",
-  "auth.logout": "Se déconnecter"
+  "home.welcome_message": "Welcome to transi-store",
+  "auth.logout": "Log out"
 }
 ```
 
-## Configuration d'i18next
+## i18next configuration
 
-Nous utilisons i18next et react-i18next pour la gestion des traductions.
+We use i18next and react-i18next for translation management.
 
-Aucun nouveau texte ne doit être écrit directement dans les composants React. Toutes les chaînes doivent être ajoutées aux fichiers de traduction appropriés, et utilisées via le hook `useTranslation` + une clé de traduction.
-La clé de traduction doit suivre la convention `{namespace}.{key}` ou `{namespace}.{context}.{key}` pour une organisation claire.
+No new text should be written directly in React components. All strings must be added to the appropriate translation files and used via the `useTranslation` hook + a translation key.
+The translation key must follow the `{namespace}.{key}` or `{namespace}.{context}.{key}` convention for clear organization.

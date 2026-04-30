@@ -1,33 +1,33 @@
-# Guide de style et architecture des fichiers
+# Style guide and file architecture
 
-Pour avoir du code maintenable, on DOIT suivre les conventions de style et d'architecture des fichiers décrites dans ce document :
+To keep the code maintainable, we MUST follow the style and file architecture conventions described in this document:
 
-- Guide de style : https://mapado.github.io/best-practices/docs/js/style
-- ReactJS : https://mapado.github.io/best-practices/docs/js/react
-- Traductions : https://mapado.github.io/best-practices/docs/js/translations
+- Style guide: https://mapado.github.io/best-practices/docs/js/style
+- ReactJS: https://mapado.github.io/best-practices/docs/js/react
+- Translations: https://mapado.github.io/best-practices/docs/js/translations
 
-Un composant React ne doit faire qu'une seule chose, et le faire bien. Si un composant devient trop gros ou complexe, il faut le diviser en plusieurs composants plus petits.
+A React component should do one thing, and do it well. If a component grows too large or complex, split it into smaller components.
 
-Par exemple, la page de paramétrage d'une organisation qui contient :
+For example, an organization settings page that contains:
 
-- la liste des clés API,
-- la liste des configrations des IA de traductions
+- the list of API keys
+- the list of AI translation configurations
 
-doit contenir au moins deux composants enfants :
+should have at least two child components:
 
-- `ApiKeysList` pour la liste des clés API
-- `TranslationAiSettings` pour la liste des configurations des IA de traductions
+- `ApiKeysList` for the list of API keys
+- `TranslationAiSettings` for the list of AI translation configurations
 
-Le composant `ApiKeysList` peut lui-même contenir un composant `ApiKeyItem` pour chaque clé API, et un composant `ApiKeyHelper` pour afficher des informations d'aide sur les clés API.
-De même, le composant `TranslationAiSettings` peut contenir un composant `TranslationAiSettingItem` pour chaque configuration d'IA de traduction.
+The `ApiKeysList` component can itself contain an `ApiKeyItem` component for each API key and an `ApiKeyHelper` component to display help information about API keys.
+Similarly, `TranslationAiSettings` can contain a `TranslationAiSettingItem` component for each AI translation configuration.
 
-## Organisation des fichiers
+## File organization
 
-Chaque composant doit être placé dans un fichier séparé, avec un nom de fichier en PascalCase correspondant au nom du composant. Par exemple, le composant `ApiKeysList` doit être placé dans un fichier `ApiKeysList.tsx`.
+Each component must be in its own file, with a PascalCase filename matching the component name. For example, the `ApiKeysList` component must be in `ApiKeysList.tsx`.
 
-Plusieurs composants très liés peuvent être regroupés dans un même dossier, avec un fichier `index.ts` pour exporter les composants.
+Several closely related components can be grouped in the same folder with an `index.ts` to export them.
 
-### Exemple simple : Composants apparentés dans un même dossier
+### Simple example: Related components in the same folder
 
 ```
 src/components/OrganizationSettings/ApiKeys/
@@ -37,35 +37,35 @@ src/components/OrganizationSettings/ApiKeys/
 └── ApiKeyHelper.tsx
 ```
 
-Le fichier `index.ts` doit exporter les composants du dossier utiles à l'extérieur du dossier :
+The `index.ts` file must export the components from the folder that are useful outside of it:
 
 ```typescript
 export { default } from "./ApiKeysList";
 ```
 
-### Exemple avec sous-dossiers : Fonctionnalités multiples
+### Example with subfolders: Multiple features
 
-Pour une page avec plusieurs fonctionnalités distinctes (ex: page de paramètres avec clés API et configuration IA), créer des sous-dossiers par fonctionnalité :
+For a page with several distinct features (e.g. a settings page with API keys and AI configuration), create subfolders per feature:
 
 ```
 app/routes/orgs.$orgSlug.settings/
-├── index.tsx (loader, action, composant principal de la route)
+├── index.tsx (loader, action, main route component)
 ├── ApiKeys/
-│   ├── index.tsx (composant principal ApiKeys)
+│   ├── index.tsx (main ApiKeys component)
 │   ├── ApiKeysList.tsx
 │   ├── ApiKeyItem.tsx
 │   ├── ApiKeyCreationDialog.tsx
 │   └── ApiKeyDocumentation.tsx
 └── AiTranslation/
-    ├── index.tsx (composant principal AiTranslation)
+    ├── index.tsx (main AiTranslation component)
     ├── AiTranslationSettings.tsx
     ├── AiTranslationProviderItem.tsx
     └── AiTranslationConfigDialog.tsx
 ```
 
-Chaque sous-dossier exporte son composant principal via `index.tsx` comme composant par défaut.
+Each subfolder exports its main component via `index.tsx` as the default export.
 
-Le fichier `index.tsx` de la route importe alors facilement ces composants :
+The route's `index.tsx` can then import these components easily:
 
 ```
 import ApiKeysList from "./ApiKeys";

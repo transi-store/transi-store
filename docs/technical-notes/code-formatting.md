@@ -1,3 +1,3 @@
-# Formattage du code
+# Code formatting
 
-Le format du code dans ce dépôt doit suivre exactement les conventions définies par [Prettier](https://prettier.io/).
+Code formatting in this repository must strictly follow the conventions defined by [Prettier](https://prettier.io/).

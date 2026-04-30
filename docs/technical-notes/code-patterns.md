@@ -1,104 +1,104 @@
-# Patterns de code
+# Code patterns
 
-## Organisation des fichiers
+## File organization
 
-### Convention `.server.ts`
+### `.server.ts` convention
 
-Tout code qui ne doit **JAMAIS** être envoyé au client utilise le suffixe `.server.ts` :
+Any code that must **NEVER** be sent to the client uses the `.server.ts` suffix:
 
 ```
 app/lib/
-├── auth.server.ts           # Logique OAuth, secrets
-├── session.server.ts        # Gestion des sessions
-├── db.server.ts             # Configuration Drizzle
-├── organizations.server.ts  # Queries organisation
+├── auth.server.ts           # OAuth logic, secrets
+├── session.server.ts        # Session management
+├── db.server.ts             # Drizzle configuration
+├── organizations.server.ts  # Organization queries
 └── export/
-    ├── json.server.ts       # Export JSON
-    └── xliff.server.ts      # Export XLIFF
+    ├── json.server.ts       # JSON export
+    └── xliff.server.ts      # XLIFF export
 ```
 
-**Avantages** :
+**Benefits**:
 
-- Vite exclut automatiquement ces fichiers du bundle client
-- Impossible d'importer accidentellement du code serveur dans un composant
-- Sécurité : secrets, clés API, logique métier protégée
+- Vite automatically excludes these files from the client bundle
+- Impossible to accidentally import server code in a component
+- Security: secrets, API keys, protected business logic
 
-### Structure des routes
+### Route structure
 
 ```
 app/routes/
-├── _index.tsx                       # Page d'accueil
+├── _index.tsx                       # Home page
 ├── auth.login.tsx                   # Login
-├── orgs._index.tsx                  # Liste des organisations
-├── orgs.$orgSlug.tsx                # Layout organisation
-├── orgs.$orgSlug._index.tsx         # Dashboard organisation
-└── orgs.$orgSlug.projects.$projectSlug.tsx  # Layout projet
+├── orgs._index.tsx                  # Organization list
+├── orgs.$orgSlug.tsx                # Organization layout
+├── orgs.$orgSlug._index.tsx         # Organization dashboard
+└── orgs.$orgSlug.projects.$projectSlug.tsx  # Project layout
 └── complex-route.$orgSlug/index.tsx  # A route can be defined in a folder with an index.tsx as entry point. This is useful when we want to have multiple sub-components related under the same route.
 ```
 
-**Conventions** :
+**Conventions**:
 
-- `$paramName` = paramètre dynamique (`:paramName` dans routes.ts)
-- `_index` = route index
-- Fichiers plats, hiérarchie définie dans `routes.ts`
+- `$paramName` = dynamic parameter (`:paramName` in routes.ts)
+- `_index` = index route
+- Flat files, hierarchy defined in `routes.ts`
 
-## Pattern Route (Loader + Action + Component)
+## Route pattern (Loader + Action + Component)
 
-### Structure typique
+### Typical structure
 
-Chaque route exporte trois éléments :
+Each route exports three elements:
 
 ```typescript
-// 1. Loader : chargement des données (serveur)
+// 1. Loader: data loading (server)
 export async function loader({ request, params }: Route.LoaderArgs) {
   const user = await requireUser(request)
   const organization = await requireOrganizationMembership(user, params.orgSlug)
-  // ... charger les données
+  // ... load data
   return { organization, project, translations }
 }
 
-// 2. Action : mutation (serveur, optionnel)
+// 2. Action: mutation (server, optional)
 export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData()
-  // ... traiter la mutation
+  // ... process mutation
   return redirect('/...')
 }
 
-// 3. Composant : rendu (client + SSR)
+// 3. Component: rendering (client + SSR)
 export default function MyPage({ loaderData }: Route.ComponentProps) {
   return <div>...</div>
 }
 ```
 
-## Authentification et autorisation
+## Authentication and authorization
 
-### Pattern de vérification
+### Verification pattern
 
-**Ordre systématique** dans les loaders :
+**Systematic order** in loaders:
 
 ```typescript
 export async function loader({ request, params }: Route.LoaderArgs) {
-  // 1. Auth : requireUser(request) → throw redirect si non connecté
+  // 1. Auth: requireUser(request) → throw redirect if not logged in
   const user = await requireUser(request);
 
-  // 2. Org membership : requireOrganizationMembership(user, orgSlug)
-  // → throw 404 si org inexistante, 403 si pas membre
+  // 2. Org membership: requireOrganizationMembership(user, orgSlug)
+  // → throw 404 if org doesn't exist, 403 if not a member
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
   );
 
-  // 3. Charger les données spécifiques
+  // 3. Load specific data
   // ...
 }
 ```
 
-**Fichiers** :
+**Files**:
 
 - `apps/website/app/lib/session.server.ts` → `requireUser()`
 - `apps/website/app/lib/organizations.server.ts` → `requireOrganizationMembership()`
 
-## Queries Drizzle
+## Drizzle queries
 
 ### Imports
 
@@ -107,9 +107,9 @@ import { db, schema } from "~/lib/db.server";
 import { eq, and, desc } from "drizzle-orm";
 ```
 
-### Patterns courants
+### Common patterns
 
-**Query simple** :
+**Simple query**:
 
 ```typescript
 db.query.users.findFirst({
@@ -117,7 +117,7 @@ db.query.users.findFirst({
 });
 ```
 
-**Query avec relations** (chargement eager) :
+**Query with relations** (eager loading):
 
 ```typescript
 db.query.organizations.findFirst({
@@ -126,7 +126,7 @@ db.query.organizations.findFirst({
 });
 ```
 
-**Insert avec returning** :
+**Insert with returning**:
 
 ```typescript
 const [project] = await db.insert(schema.projects)
@@ -134,7 +134,7 @@ const [project] = await db.insert(schema.projects)
   .returning()
 ```
 
-**Update** :
+**Update**:
 
 ```typescript
 db.update(schema.organizations)
@@ -142,13 +142,13 @@ db.update(schema.organizations)
   .where(eq(schema.organizations.id, id));
 ```
 
-**Delete** (cascade automatique si défini dans le schéma) :
+**Delete** (automatic cascade if defined in the schema):
 
 ```typescript
 db.delete(schema.projects).where(eq(schema.projects.id, projectId));
 ```
 
-**Transaction** (opérations atomiques) :
+**Transaction** (atomic operations):
 
 ```typescript
 await db.transaction(async (tx) => {
@@ -157,23 +157,23 @@ await db.transaction(async (tx) => {
 })
 ```
 
-## Gestion des formulaires
+## Form management
 
-### Pattern formulaire + action
+### Form + action pattern
 
-**Composant** :
+**Component**:
 
 ```tsx
 <Form method="post">
-  <Field label="Nom">
+  <Field label="Name">
     <Input name="name" required />
   </Field>
-  <Button type="submit">Créer</Button>
+  <Button type="submit">Create</Button>
   {actionData?.error && <Text color="red.500">{actionData.error}</Text>}
 </Form>
 ```
 
-**Action** :
+**Action**:
 
 ```typescript
 export async function action({ request }: Route.ActionArgs) {
@@ -182,22 +182,22 @@ export async function action({ request }: Route.ActionArgs) {
 
   // Validation
   if (!name || name.length < 3) {
-    return { error: "Le nom doit contenir au moins 3 caractères" };
+    return { error: "Name must be at least 3 characters" };
   }
 
   // Mutation
   await createProject({ name });
 
-  // Redirection
+  // Redirect
   return redirect("/projects");
 }
 ```
 
-### Routes avec plusieurs actions
+### Routes with multiple actions
 
-Quand une route expose plusieurs actions (via un champ `_action`), les valeurs doivent être des **constantes d'enum** définies dans un fichier dédié à côté de la route, jamais des chaînes littérales éparpillées.
+When a route exposes multiple actions (via an `_action` field), values must be **enum constants** defined in a dedicated file next to the route, never scattered string literals.
 
-**Fichier `FileAction.ts`** (à côté de la route) :
+**`FileAction.ts` file** (next to the route):
 
 ```typescript
 export enum FileAction {
@@ -207,13 +207,13 @@ export enum FileAction {
 }
 ```
 
-**Dans le formulaire** :
+**In the form**:
 
 ```tsx
 <input type="hidden" name="_action" value={FileAction.Create} />
 ```
 
-**Dans l'action** :
+**In the action**:
 
 ```typescript
 import { FileAction } from "./FileAction";
@@ -224,44 +224,62 @@ if (action === FileAction.Create) { ... }
 if (action === FileAction.Edit) { ... }
 ```
 
-**Dans le composant** (vérification de `useActionData`) :
+**In the component** (checking `useActionData`):
 
 ```tsx
 error={actionData?.action === FileAction.Create ? actionData.error : undefined}
 ```
 
+## TypeScript conventions
+
+### Array types
+
+Always use the generic form `Array<Foo>`, never the shorthand `Foo[]`.
+
+```typescript
+// ✅ Correct
+const items: Array<string> = [];
+function getUsers(): Array<User> { ... }
+type Props = { tags: Array<string> };
+
+// ❌ Incorrect
+const items: string[] = [];
+function getUsers(): User[] { ... }
+type Props = { tags: string[] };
+```
+
 ## Type inference
 
-### Types Drizzle
+### Drizzle types
 
-Inférence automatique depuis le schéma :
+Automatic inference from the schema:
 
 ```typescript
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 ```
 
-Disponibles pour toutes les tables dans `apps/website/drizzle/schema.ts`.
+Available for all tables in `apps/website/drizzle/schema.ts`.
 
-### Types de route
+### Route types
 
-React Router génère les types automatiquement :
+React Router generates types automatically:
 
 ```typescript
 import type { Route } from "./+types/orgs.$orgSlug";
 
 export async function loader({ params }: Route.LoaderArgs) {
-  // params.orgSlug typé automatiquement
+  // params.orgSlug automatically typed
 }
 
 export default function OrgPage({ loaderData }: Route.ComponentProps) {
-  // loaderData typé selon le retour du loader
+  // loaderData typed according to the loader return value
 }
 ```
 
-## Gestion des erreurs
+## Error handling
 
-**Throw Response pour erreurs HTTP** :
+**Throw Response for HTTP errors**:
 
 ```typescript
 throw new Response("Not found", { status: 404 });
@@ -269,7 +287,7 @@ throw new Response("Forbidden", { status: 403 });
 throw redirect("/auth/login"); // 401
 ```
 
-**Try-catch pour erreurs métier** :
+**Try-catch for business errors**:
 
 ```typescript
 try {
@@ -277,32 +295,32 @@ try {
   return { success: true };
 } catch (error) {
   console.error(error);
-  return { error: "Une erreur est survenue" };
+  return { error: "An error occurred" };
 }
 ```
 
 ## UI (Chakra UI v3)
 
-**Composants courants** : `Container`, `Heading`, `Button`, `Input`, `VStack`, `Field`
+**Common components**: `Container`, `Heading`, `Button`, `Input`, `VStack`, `Field`
 
-**Form avec Field** :
+**Form with Field**:
 
 ```tsx
-<Field label="Nom du projet" required>
+<Field label="Project name" required>
   <Input name="name" />
 </Field>
 ```
 
 ## Navigation
 
-**Lien simple** :
+**Simple link**:
 
 ```tsx
 import { Link } from "react-router";
 <Link to={`/orgs/${slug}`}>...</Link>;
 ```
 
-**NavLink avec style actif** :
+**NavLink with active style**:
 
 ```tsx
 import { NavLink } from "react-router";
@@ -310,11 +328,11 @@ import { NavLink } from "react-router";
   to="/orgs"
   style={({ isActive }) => ({ fontWeight: isActive ? "bold" : "normal" })}
 >
-  Organisations
+  Organizations
 </NavLink>;
 ```
 
-## Références
+## References
 
 - [React Router v7 - Routes](https://reactrouter.com/start/framework/routing)
 - [Drizzle ORM - Queries](https://orm.drizzle.team/docs/rqb)
