@@ -60,7 +60,7 @@ import {
 import { TranslationsTable } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsTable";
 import { TranslationsPagination } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsPagination";
 import { TranslationsSearchBar } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsSearchBar";
-import { resolveSort } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/index";
+import { resolveSort } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/loadTranslationKeys.server";
 import { getInstance } from "~/middleware/i18next";
 import {
   getBranchesUrl,

@@ -1,6 +1,6 @@
 /**
  * Action discriminator strings posted to the markdown translation route.
- * Mirrors the `FileAction` / `KeyAction` pattern used in the classic UI.
+ * Mirrors the `FileAction` / `KeyAction` pattern used in the translation key UI.
  */
 export const MarkdownTranslateAction = {
   SaveContent: "saveContent",

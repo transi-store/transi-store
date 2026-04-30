@@ -17,6 +17,7 @@ import { TranslationProgress } from "./TranslationProgress";
 import type { RegularDataRow, SearchDataRow } from "~/lib/translation-helper";
 import { getKeyUrl } from "~/lib/routes-helpers";
 import CopyButton from "~/components/copy-button";
+import { KeyAction } from "~/components/translation-key/KeyAction";
 
 type TranslationKeyRowProps = {
   translationKey: RegularDataRow | SearchDataRow;
@@ -135,7 +136,7 @@ export function TranslationKeyRow({
             <LuPanelRightOpen /> {t("translations.edit")}
           </Button>
           <Form method="post">
-            <input type="hidden" name="_action" value="duplicate" />
+            <input type="hidden" name="_action" value={KeyAction.Duplicate} />
             <input type="hidden" name="keyId" value={key.id} />
             <Button type="submit" size="sm" variant="outline">
               <LuCopy /> {t("translations.duplicate")}

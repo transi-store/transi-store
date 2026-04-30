@@ -45,6 +45,30 @@ export function getTranslationsUrl(
   return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
 }
 
+export function getTranslationsFilesUrl(
+  orgSlug: string,
+  projectSlug: string,
+  queryParams?: {
+    search?: string | null;
+    page?: string | null;
+    sort?: string | null;
+    highlight?: string | null;
+    fileId?: string | number | null;
+  },
+): string {
+  const params = new URLSearchParams(removeUndefinedValues(queryParams));
+
+  const baseUrl = generatePath(
+    `/orgs/:orgSlug/projects/:projectSlug/translations/files`,
+    {
+      orgSlug,
+      projectSlug,
+    },
+  );
+
+  return params.size > 0 ? `${baseUrl}?${params.toString()}` : baseUrl;
+}
+
 export function getKeyUrl(
   orgSlug: string,
   projectSlug: string,

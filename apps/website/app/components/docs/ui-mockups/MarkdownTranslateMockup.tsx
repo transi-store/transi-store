@@ -44,7 +44,7 @@ const INITIAL_CONTENT: Record<string, string> = {
 
 export function MarkdownTranslateMockup() {
   return (
-    <MockupContainer url="transi-store.com/orgs/acme/projects/docs/files/12/translations/markdown">
+    <MockupContainer url="transi-store.com/orgs/acme/projects/docs/translations?fileId=12">
       <Box p={4} pointerEvents="none" minH="420px">
         <MarkdownTranslateLayout
           organizationSlug="acme"

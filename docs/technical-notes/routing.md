@@ -99,9 +99,10 @@ Le préfixe `/api/...` est **réservé aux routes exposées au public** (consomm
 **Ne PAS préfixer par `/api`** les actions internes utilisées uniquement par l'UI (auth-session, non documentées) :
 
 - ❌ Mauvais : `/api/orgs/:orgSlug/projects/:projectSlug/markdown-translate-section`
-- ✅ Bon : ajouter l'action directement dans le `action()` de la route page existante (via un discriminateur `_action` sur le formData), comme `SaveContent` / `ToggleFuzzy` / `TranslateSection` dans `routes/orgs.$orgSlug.projects.$projectSlug.translations.markdown/index.tsx`
+- ✅ Bon (cas classique) : ajouter l'action directement dans le `action()` de la route page existante via un discriminateur `_action` sur le formData. Voir les variantes `SaveContent` / `ToggleFuzzy` / `TranslateSection` / `TranslateDocument` dans `routes/orgs.$orgSlug.projects.$projectSlug.translations/runMarkdownAction.server.ts`.
+- ✅ Bon (resource route dédiée) : créer une route sibling sans `default export` qui n'expose qu'une `action`. Les formulaires y soumettent via `<fetcher.Form action="...">` ou `fetcher.submit(..., { action: "..." })`. Exemple : `routes/orgs.$orgSlug.projects.$projectSlug.translations.files/index.tsx` gère les `FileAction.Create | Edit | Delete` séparément du flux `_action` principal des traductions. À utiliser quand le découpage allège significativement la route page (action volumineuse, contrats de retour distincts) sans avoir à introduire une nouvelle URL utilisateur.
 
-Si une action interne nécessite vraiment sa propre route (cas rare : besoin d'une URL distincte côté client), elle doit vivre sous `app-layout` à un chemin **non préfixé** par `/api`. Le bundle OpenAPI ne doit jamais l'enregistrer.
+Si une action interne nécessite vraiment sa propre route, elle doit vivre sous `app-layout` à un chemin **non préfixé** par `/api`. Le bundle OpenAPI ne doit jamais l'enregistrer.
 
 ## Conventions de nommage des fichiers
 

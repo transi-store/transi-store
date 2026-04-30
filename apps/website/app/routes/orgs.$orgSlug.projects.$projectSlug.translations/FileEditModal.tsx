@@ -19,42 +19,45 @@ import {
   VStack,
   createListCollection,
 } from "@chakra-ui/react";
-import { Form, useFetcher, useNavigation } from "react-router";
+import { useFetcher } from "react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SupportedFormat, FORMAT_LABELS } from "@transi-store/common";
 import { FileAction } from "./FileAction";
+import type { FileActionData } from "../orgs.$orgSlug.projects.$projectSlug.translations.files/index";
 import type { ProjectFile } from "../../../drizzle/schema";
 
 type FileEditModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  /** When provided, the modal opens in edit mode for that file. When undefined, it opens in create mode. */
-  file?: ProjectFile;
-  /** Validation error from the route's action, passed by the parent. */
-  error?: string;
-};
-
-type DeleteActionData = {
-  error?: string;
+  /** When provided, the modal opens in edit mode for that file. When null, it opens in create mode. */
+  file: ProjectFile | null;
+  /** URL of the resource route handling create/edit/delete. */
+  actionUrl: string;
 };
 
 export function FileEditModal({
   isOpen,
   onOpenChange,
   file,
-  error,
+  actionUrl,
 }: FileEditModalProps) {
-  const deleteFetcher = useFetcher<DeleteActionData>();
-  const navigation = useNavigation();
+  const formFetcher = useFetcher<FileActionData>();
+  const deleteFetcher = useFetcher<FileActionData>();
   const { t } = useTranslation();
-  const isEditMode = file !== undefined;
+  const isEditMode = file !== null;
   const formAction = isEditMode ? FileAction.Edit : FileAction.Create;
-  const isSubmitting =
-    navigation.state === "submitting" &&
-    navigation.formData?.get("_action") === formAction;
+  const isSubmitting = formFetcher.state !== "idle";
   const isDeleting = deleteFetcher.state !== "idle";
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const formError =
+    formFetcher.data?.error && formFetcher.data.action === formAction
+      ? formFetcher.data.error
+      : undefined;
+  const deleteError =
+    deleteFetcher.data?.error && deleteFetcher.data.action === FileAction.Delete
+      ? deleteFetcher.data.error
+      : undefined;
 
   const formatCollection = createListCollection({
     items: Object.values(SupportedFormat).map((value) => ({
@@ -76,7 +79,7 @@ export function FileEditModal({
         <DialogBackdrop />
         <DialogPositioner>
           <DialogContent>
-            <Form method="post">
+            <formFetcher.Form method="post" action={actionUrl}>
               <input type="hidden" name="_action" value={formAction} />
               {isEditMode && (
                 <input type="hidden" name="fileId" value={String(file.id)} />
@@ -91,14 +94,14 @@ export function FileEditModal({
               </DialogHeader>
               <DialogBody>
                 <VStack align="stretch" gap={4}>
-                  {error && (
+                  {formError && (
                     <Box p={3} bg="red.subtle" color="red.fg" borderRadius="md">
-                      <Text>{error}</Text>
+                      <Text>{formError}</Text>
                     </Box>
                   )}
-                  {deleteFetcher.data?.error && (
+                  {deleteError && (
                     <Box p={3} bg="red.subtle" color="red.fg" borderRadius="md">
-                      <Text>{deleteFetcher.data.error}</Text>
+                      <Text>{deleteError}</Text>
                     </Box>
                   )}
                   <Field.Root required>
@@ -166,7 +169,7 @@ export function FileEditModal({
                             _action: FileAction.Delete,
                             fileId: String(file.id),
                           },
-                          { method: "post" },
+                          { method: "post", action: actionUrl },
                         );
                       } else {
                         setIsConfirmingDelete(true);
@@ -201,7 +204,7 @@ export function FileEditModal({
                   </Button>
                 </Box>
               </DialogFooter>
-            </Form>
+            </formFetcher.Form>
           </DialogContent>
         </DialogPositioner>
       </Portal>
