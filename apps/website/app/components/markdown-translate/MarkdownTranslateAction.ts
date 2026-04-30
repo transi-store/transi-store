@@ -35,15 +35,3 @@ export type MarkdownAiResponse =
   | MarkdownAiSectionSuccess
   | MarkdownAiDocumentSuccess
   | MarkdownAiError;
-
-export function isMarkdownAiSectionSuccess(
-  data: MarkdownAiResponse | undefined,
-): data is MarkdownAiSectionSuccess {
-  return !!data && (data as MarkdownAiSectionSuccess).scope === "section";
-}
-
-export function isMarkdownAiError(
-  data: MarkdownAiResponse | undefined,
-): data is MarkdownAiError {
-  return !!data && (data as MarkdownAiError).error !== undefined;
-}

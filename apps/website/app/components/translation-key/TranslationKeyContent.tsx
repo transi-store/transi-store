@@ -22,26 +22,15 @@ import {
   IconButton,
   SimpleGrid,
   GridItem,
-  Spinner,
-  DialogRoot,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  DialogCloseTrigger,
-  DialogBackdrop,
-  DialogPositioner,
-  Portal,
   Separator,
   Flex,
 } from "@chakra-ui/react";
 import { Switch } from "@chakra-ui/react/switch";
-import { Link, type FetcherWithComponents } from "react-router";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPencil, LuSparkles, LuCircleAlert } from "react-icons/lu";
 import { IcuEditorClient } from "~/components/icu-editor";
-import { getAiProvider } from "~/lib/ai-providers";
+import AiSuggestionsDialog from "~/components/ai-suggestions-dialog";
 import {
   TranslationKeyModal,
   TRANSLATIONS_KEY_MODEL_MODE,
@@ -56,11 +45,6 @@ import type {
   Organization,
   Project,
 } from "../../../drizzle/schema";
-import {
-  isErrorReturnType,
-  isSuggestionsReturnType,
-  type TranslateAction,
-} from "~/routes/api.orgs.$orgSlug.projects.$projectSlug.translate";
 import { TranslationPreview } from "./TranslationPreview";
 import { useCallback, useState, type JSX } from "react";
 import { KeyAction } from "./KeyAction";
@@ -219,10 +203,14 @@ export function TranslationKeyContent({
 
       {/* AI suggestions dialog */}
       <AiSuggestionsDialog
-        locale={aiDialogLocale}
+        open={aiDialogLocale !== null}
+        targetLocale={aiDialogLocale}
         onClose={() => setAiDialogLocale(null)}
         onSelect={handleSelectSuggestion}
-        aiFetcher={aiFetcher}
+        isLoading={
+          aiFetcher.state === "submitting" || aiFetcher.state === "loading"
+        }
+        data={aiFetcher.data}
       />
     </VStack>
   );
@@ -412,115 +400,5 @@ function LanguageEditor({
         </Box>
       )}
     </Field.Root>
-  );
-}
-
-type AiSuggestionsDialogProps = {
-  locale: string | null;
-  onClose: () => void;
-  onSelect: (text: string) => void;
-  aiFetcher: FetcherWithComponents<TranslateAction>;
-};
-
-function AiSuggestionsDialog({
-  locale,
-  onClose,
-  onSelect,
-  aiFetcher,
-}: AiSuggestionsDialogProps) {
-  const { t } = useTranslation();
-
-  return (
-    <DialogRoot
-      open={locale !== null}
-      onOpenChange={(e) => {
-        if (!e.open) onClose();
-      }}
-    >
-      <Portal>
-        <DialogBackdrop />
-        <DialogPositioner>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                <HStack>
-                  <LuSparkles />
-                  <Text>{t("keys.translateWithAI.suggestionsTitle")}</Text>
-                  {locale && (
-                    <Badge colorPalette="purple">{locale.toUpperCase()}</Badge>
-                  )}
-                </HStack>
-              </DialogTitle>
-            </DialogHeader>
-            <DialogCloseTrigger />
-            <DialogBody pb={6}>
-              {aiFetcher.state === "submitting" ||
-              aiFetcher.state === "loading" ? (
-                <VStack py={8}>
-                  <Spinner size="lg" />
-                  <Text color="fg.muted">
-                    {t("keys.translateWithAI.generating")}
-                  </Text>
-                </VStack>
-              ) : isErrorReturnType(aiFetcher.data) ? (
-                <Box p={4} bg="red.subtle" borderRadius="md">
-                  <Text color="red.fg">
-                    {aiFetcher.data.error}
-                    <br />
-                    {aiFetcher.data.originalError}
-                  </Text>
-                </Box>
-              ) : isSuggestionsReturnType(aiFetcher.data) ? (
-                <VStack align="stretch" gap={3}>
-                  {aiFetcher.data.provider && (
-                    <Text fontSize="xs" color="fg.subtle">
-                      {t("keys.translateWithAI.generatedBy", {
-                        provider: getAiProvider(aiFetcher.data.provider).name,
-                        model: aiFetcher.data.providerModel,
-                      })}
-                    </Text>
-                  )}
-                  {aiFetcher.data.suggestions?.map((suggestion, index) => (
-                    <Box
-                      key={index}
-                      p={4}
-                      borderWidth={1}
-                      borderRadius="md"
-                      _hover={{ bg: "bg.muted", cursor: "pointer" }}
-                      onClick={() => onSelect(suggestion.text)}
-                    >
-                      <Text fontFamily="mono" fontSize="sm">
-                        {suggestion.text}
-                      </Text>
-                      {suggestion.confidence && (
-                        <Text fontSize="xs" color="fg.subtle" mt={1}>
-                          {t("keys.translateWithAI.confidence")}
-                          {Math.round(suggestion.confidence * 100)}%
-                        </Text>
-                      )}
-                      {suggestion.notes && (
-                        <Box mt={2} p={2} bg="bg.subtle" borderRadius="sm">
-                          <Text fontSize="xs" color="fg.muted">
-                            {suggestion.notes}
-                          </Text>
-                        </Box>
-                      )}
-                    </Box>
-                  ))}
-                  <Text fontSize="xs" color="fg.subtle" mt={2}>
-                    {t("keys.translateWithAI.clickOnSuggestion")}
-                  </Text>
-                </VStack>
-              ) : null}
-            </DialogBody>
-            <DialogFooter>
-              <Button variant="outline" onClick={onClose}>
-                {t("common.close")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </DialogPositioner>
-      </Portal>
-    </DialogRoot>
   );
 }

@@ -48,7 +48,7 @@ import {
   MarkdownTranslateAction,
   type MarkdownAiResponse,
 } from "./MarkdownTranslateAction";
-import { AiSectionSuggestionsDialog } from "./AiSectionSuggestionsDialog";
+import AiSuggestionsDialog from "~/components/ai-suggestions-dialog";
 
 const SAVE_DEBOUNCE_MS = 600;
 
@@ -600,12 +600,16 @@ function MarkdownTranslateInner({
         />
       </Flex>
 
-      <AiSectionSuggestionsDialog
+      <AiSuggestionsDialog
         open={aiSectionDialogOpen}
         targetLocale={aiSectionTargetLocale}
         onClose={() => setAiSectionDialogOpen(false)}
         onSelect={handleSelectSectionSuggestion}
-        fetcher={aiFetcher}
+        size="lg"
+        isLoading={
+          aiFetcher.state === "submitting" || aiFetcher.state === "loading"
+        }
+        data={aiFetcher.data}
       />
     </Stack>
   );
