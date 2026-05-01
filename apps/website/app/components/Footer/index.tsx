@@ -1,5 +1,4 @@
 import { Box, Container, HStack, Text, VStack } from "@chakra-ui/react";
-import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 
 export function Footer() {
@@ -25,21 +24,21 @@ export function Footer() {
             </Text>
 
             <HStack as="nav" gap={4} flexWrap="wrap" justify="center">
-              <Link to="/docs/usage">
+              <a href="/docs/usage">
                 <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
                   {t("header.docs")}
                 </Text>
-              </Link>
-              <Link to="/api/doc">
+              </a>
+              <a href="/api/doc">
                 <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
                   {t("header.api-doc")}
                 </Text>
-              </Link>
-              <Link to="/pricing">
+              </a>
+              <a href="/pricing">
                 <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
                   {t("header.pricing")}
                 </Text>
-              </Link>
+              </a>
               <a
                 href="https://github.com/transi-store/transi-store"
                 target="_blank"
