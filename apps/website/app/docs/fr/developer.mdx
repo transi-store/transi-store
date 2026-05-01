@@ -1,0 +1,216 @@
+## Aperçu de l'auto-hébergement
+
+Transi-Store est entièrement open-source et peut être auto-hébergé sur votre propre infrastructure. Vous bénéficiez des mêmes fonctionnalités que la version cloud, sans aucune limite d'utilisation.
+
+L'application est une application SSR **React Router v7** s'appuyant sur **PostgreSQL**. La méthode recommandée pour l'exécuter est **Docker Compose**.
+
+---
+
+## Prérequis
+
+| Prérequis | Version |
+|-------------|---------|
+| Docker | 24+ |
+| Docker Compose | v2+ |
+| RAM | 512 Mo minimum |
+| Disque | 1 Go minimum |
+
+Vous n'avez **pas** besoin de Node.js ou Yarn sur la machine hôte — tout s'exécute à l'intérieur de Docker.
+
+Au moins un **fournisseur OAuth** (Google ou GitHub) doit être configuré pour l'authentification.
+
+---
+
+## Installation
+
+### 1. Cloner le dépôt
+
+```bash
+git clone https://github.com/transi-store/transi-store.git
+cd transi-store
+```
+
+### 2. Configurer les variables d'environnement
+
+Copiez l'exemple de fichier d'environnement et renseignez les valeurs requises :
+
+```bash
+cp .env.example .env
+```
+
+Ouvrez `.env` et configurez au minimum :
+
+```bash
+# Requis — générer avec : openssl rand -hex 32
+SESSION_SECRET=a-long-random-string
+
+# Requis — générer avec : openssl rand -hex 32
+ENCRYPTION_KEY=64-char-hex-string
+
+# Requis — au moins un fournisseur OAuth
+GOOGLE_CLIENT_ID=votre-id-client-google
+GOOGLE_CLIENT_SECRET=votre-secret-client-google
+
+# Requis — URL publique utilisée pour les URI de redirection OAuth
+DOMAIN_ROOT=https://votre-domaine.com
+```
+
+> **Note :** `DATABASE_URL` est pré-configuré pour Docker Compose et n'a pas besoin d'être modifié, sauf si vous utilisez une base de données externe.
+
+### 3. Démarrer l'application
+
+```bash
+make setup   # Première fois uniquement — installe les dépendances et crée le schéma de base de données
+make dev     # Serveur de développement sur http://localhost:5173
+```
+
+Pour une **version de production** :
+
+```bash
+make build   # Compiler l'application
+make up      # Démarrer les conteneurs Docker de production
+```
+
+---
+
+## Configuration
+
+### Variables d'environnement
+
+| Variable | Requis | Description |
+|----------|----------|-------------|
+| `SESSION_SECRET` | Oui | Secret utilisé pour signer les cookies de session |
+| `ENCRYPTION_KEY` | Oui | Clé hexadécimale de 64 caractères pour chiffrer les clés API |
+| `DATABASE_URL` | Oui | Chaîne de connexion PostgreSQL |
+| `GOOGLE_CLIENT_ID` | Au moins un fournisseur | ID client Google OAuth |
+| `GOOGLE_CLIENT_SECRET` | Au moins un fournisseur | Secret client Google OAuth |
+| `GITHUB_CLIENT_ID` | Au moins un fournisseur | ID client application GitHub OAuth |
+| `GITHUB_CLIENT_SECRET` | Au moins un fournisseur | Secret client application GitHub OAuth |
+| `DOMAIN_ROOT` | Oui | URL publique de votre instance (utilisée pour les URI de redirection OAuth) |
+
+### Configuration des fournisseurs OAuth
+
+**Google OAuth :**
+
+1. Accédez à la [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+2. Créez un nouvel ID client OAuth 2.0 (type : Application Web).
+3. Ajoutez `https://votre-domaine.com/auth/google/callback` comme URI de redirection autorisée.
+4. Copiez l'ID client et le Secret client dans votre fichier `.env`.
+
+**GitHub OAuth :**
+
+1. Accédez aux [Paramètres développeur GitHub](https://github.com/settings/developers).
+2. Créez une nouvelle application OAuth.
+3. Définissez l'**URL de rappel d'autorisation** sur `https://votre-domaine.com/auth/github/callback`.
+4. Copiez l'ID client et générez un Secret client pour votre fichier `.env`.
+
+---
+
+## Exécution en production
+
+### Docker Compose (recommandé)
+
+Le dépôt fournit un fichier `docker-compose.yml` prêt pour la production. Après avoir configuré votre fichier `.env` :
+
+```bash
+make up    # Démarrer tous les services (application + PostgreSQL)
+make logs  # Suivre les logs
+make down  # Arrêter tous les services
+```
+
+L'application écoute par défaut sur le port `5173`. Utilisez un proxy inverse (nginx, Caddy, Traefik) pour l'exposer sur le port 443 avec HTTPS.
+
+### Exemple de proxy inverse (nginx)
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name transi.example.com;
+
+    location / {
+        proxy_pass http://localhost:5173;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+```
+
+### Gestion de la base de données
+
+```bash
+make db-push    # Appliquer les changements de schéma après une mise à jour de version
+make db-studio  # Ouvrir l'interface graphique Drizzle Studio dans votre navigateur
+make db-reset   # Attention : efface et recrée la base de données (destructif !)
+```
+
+> **Mise à jour :** après avoir récupéré une nouvelle version, exécutez `make db-push` pour appliquer les changements de schéma avant de redémarrer.
+
+---
+
+## Outil CLI
+
+Le package `@transi-store/cli` fournit une interface de ligne de commande pour synchroniser les traductions dans les pipelines CI/CD.
+
+### Installation
+
+```bash
+npm install -g @transi-store/cli
+# ou ajouter à votre projet
+npm install --save-dev @transi-store/cli
+```
+
+### Configuration
+
+Créez un fichier `transi-store.config.json` à la racine de votre projet :
+
+```json
+{
+  "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+  "org": "acme",
+  "projects": [
+    {
+      "project": "webapp",
+      "langs": ["en", "fr", "de"],
+      "format": "json",
+      "output": "./src/locales/<lang>/translations.json"
+    }
+  ]
+}
+```
+
+Définissez la variable d'environnement `TRANSI_STORE_API_KEY` avec votre clé API, puis exécutez :
+
+### Téléchargement des traductions
+
+```bash
+# Télécharger toutes les traductions en utilisant le fichier de configuration
+transi-store download:config
+
+# Télécharger pour une branche spécifique
+transi-store download:config --branch feature/my-feature
+
+# Télécharger pour un seul projet/locale sans fichier de configuration
+transi-store download --org acme --project webapp --locale fr --output ./locales/fr.json
+```
+
+> **Détection automatique de branche Git :** lorsque `--branch` n'est pas fourni, le CLI détecte automatiquement la branche git actuelle et l'utilise. Sur `main`/`master`, aucun filtre de branche n'est appliqué (les traductions principales sont récupérées).
+
+### Chargement (upload) des traductions
+
+```bash
+# Téléverser tous les fichiers de traduction en utilisant le fichier de configuration
+transi-store upload:config
+
+# Téléverser pour une branche spécifique
+transi-store upload:config --branch feature/my-feature
+
+# Téléverser un seul fichier sans fichier de configuration
+transi-store upload --org acme --project webapp --locale fr --input ./locales/fr.json
+```
+
+> **Détection automatique de branche Git :** lorsque `--branch` n'est pas fourni, le CLI détecte automatiquement la branche git actuelle et l'utilise. Sur `main`/`master`, aucun filtre de branche n'est appliqué (les clés sont téléversées vers le projet principal).
+
+> **Optimisation Git :** `upload:config` ignore également les fichiers qui n'ont pas changé par rapport à la branche par défaut (`main`/`master`) lors de l'exécution dans un dépôt git, afin d'éviter les appels API inutiles.
+
+Ceci est idéal pour l'intégration en CI/CD — téléchargez les chaînes traduites au moment de la compilation et téléversez les nouvelles chaînes sources après que les développeurs les aient ajoutées.

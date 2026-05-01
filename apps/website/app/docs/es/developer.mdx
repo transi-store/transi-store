@@ -1,0 +1,216 @@
+## Descripción general de la autoalojamiento
+
+Transi-Store es totalmente de código abierto y puede alojarse en su propia infraestructura. Obtiene las mismas funciones que la versión en la nube, sin límites de uso.
+
+La aplicación es una aplicación SSR de **React Router v7** respaldada por **PostgreSQL**. La forma recomendada de ejecutarla es con **Docker Compose**.
+
+---
+
+## Requisitos
+
+| Requisito | Versión |
+|-------------|---------|
+| Docker | 24+ |
+| Docker Compose | v2+ |
+| RAM | 512 MB mínimo |
+| Disco | 1 GB mínimo |
+
+No necesita Node.js o Yarn en la máquina host; todo se ejecuta dentro de Docker.
+
+Se debe configurar al menos un **proveedor de OAuth** (Google o GitHub) para la autenticación.
+
+---
+
+## Instalación
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/transi-store/transi-store.git
+cd transi-store
+```
+
+### 2. Configurar variables de entorno
+
+Copie el archivo de ejemplo de entorno y complete los valores requeridos:
+
+```bash
+cp .env.example .env
+```
+
+Abra `.env` y configure como mínimo:
+
+```bash
+# Requerido — generar con: openssl rand -hex 32
+SESSION_SECRET=a-long-random-string
+
+# Requerido — generar con: openssl rand -hex 32
+ENCRYPTION_KEY=64-char-hex-string
+
+# Requerido — al menos un proveedor de OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Requerido — URL pública utilizada para las URI de redirección de OAuth
+DOMAIN_ROOT=https://your-domain.com
+```
+
+> **Nota:** `DATABASE_URL` está preconfigurado para la configuración de Docker Compose y no necesita cambiarse a menos que utilice una base de datos externa.
+
+### 3. Iniciar la aplicación
+
+```bash
+make setup   # Solo la primera vez — instala dependencias y crea el esquema de la base de datos
+make dev     # Servidor de desarrollo en http://localhost:5173
+```
+
+Para una **compilación de producción**:
+
+```bash
+make build   # Compilar la aplicación
+make up      # Iniciar contenedores Docker de producción
+```
+
+---
+
+## Configuración
+
+### Variables de entorno
+
+| Variable | Requerido | Descripción |
+|----------|----------|-------------|
+| `SESSION_SECRET` | Sí | Secreto utilizado para firmar cookies de sesión |
+| `ENCRYPTION_KEY` | Sí | Clave hexadecimal de 64 caracteres para cifrar claves de API |
+| `DATABASE_URL` | Sí | Cadena de conexión a PostgreSQL |
+| `GOOGLE_CLIENT_ID` | Al menos un proveedor | ID de cliente de Google OAuth |
+| `GOOGLE_CLIENT_SECRET` | Al menos un proveedor | Secreto de cliente de Google OAuth |
+| `GITHUB_CLIENT_ID` | Al menos un proveedor | ID de cliente de aplicación de GitHub OAuth |
+| `GITHUB_CLIENT_SECRET` | Al menos un proveedor | Secreto de cliente de aplicación de GitHub OAuth |
+| `DOMAIN_ROOT` | Sí | URL pública de su instancia (utilizada para las URI de redirección de OAuth) |
+
+### Configuración de proveedores de OAuth
+
+**Google OAuth:**
+
+1. Vaya a [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+2. Cree un nuevo ID de cliente de OAuth 2.0 (tipo: Aplicación web).
+3. Añada `https://your-domain.com/auth/google/callback` como URI de redirección autorizada.
+4. Copie el ID de cliente y el secreto de cliente en su archivo `.env`.
+
+**GitHub OAuth:**
+
+1. Vaya a [GitHub Developer Settings](https://github.com/settings/developers).
+2. Cree una nueva OAuth App.
+3. Establezca la **Authorization callback URL** en `https://your-domain.com/auth/github/callback`.
+4. Copie el ID de cliente y genere un secreto de cliente para su archivo `.env`.
+
+---
+
+## Ejecución en producción
+
+### Docker Compose (recomendado)
+
+El repositorio incluye un `docker-compose.yml` listo para producción. Después de configurar su archivo `.env`:
+
+```bash
+make up    # Iniciar todos los servicios (aplicación + PostgreSQL)
+make logs  # Seguir los registros (logs)
+make down  # Detener todos los servicios
+```
+
+La aplicación escucha en el puerto `5173` por defecto. Utilice un proxy inverso (nginx, Caddy, Traefik) para exponerla en el puerto 443 con HTTPS.
+
+### Ejemplo de proxy inverso (nginx)
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name transi.example.com;
+
+    location / {
+        proxy_pass http://localhost:5173;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+```
+
+### Gestión de bases de datos
+
+```bash
+make db-push    # Aplicar cambios al esquema después de actualizar a una nueva versión
+make db-studio  # Abrir la interfaz gráfica de Drizzle Studio en su navegador
+make db-reset   # Advertencia: borrar y recrear la base de datos (¡destructivo!)
+```
+
+> **Actualización:** después de descargar una nueva versión, ejecute `make db-push` para aplicar cualquier cambio en el esquema antes de reiniciar.
+
+---
+
+## Herramienta CLI
+
+El paquete `@transi-store/cli` proporciona una interfaz de línea de comandos para sincronizar traducciones en pipelines de CI/CD.
+
+### Instalación
+
+```bash
+npm install -g @transi-store/cli
+# o añadir a su proyecto
+npm install --save-dev @transi-store/cli
+```
+
+### Configuración
+
+Cree un archivo `transi-store.config.json` en la raíz de su proyecto:
+
+```json
+{
+  "$schema": "https://unpkg.com/@transi-store/cli/schema.json",
+  "org": "acme",
+  "projects": [
+    {
+      "project": "webapp",
+      "langs": ["en", "fr", "de"],
+      "format": "json",
+      "output": "./src/locales/<lang>/translations.json"
+    }
+  ]
+}
+```
+
+Establezca la variable de entorno `TRANSI_STORE_API_KEY` con su clave de API y luego ejecute:
+
+### Descarga de traducciones
+
+```bash
+# Descargar todas las traducciones usando el archivo de configuración
+transi-store download:config
+
+# Descargar para una rama específica
+transi-store download:config --branch feature/my-feature
+
+# Descargar para un solo proyecto/idioma sin un archivo de configuración
+transi-store download --org acme --project webapp --locale fr --output ./locales/fr.json
+```
+
+> **Detección automática de rama de Git:** cuando no se proporciona `--branch`, la CLI detecta automáticamente la rama de git actual y la utiliza. En `main`/`master`, no se aplica ningún filtro de rama (se obtienen las traducciones principales).
+
+### Carga de traducciones
+
+```bash
+# Cargar todos los archivos de traducción usando el archivo de configuración
+transi-store upload:config
+
+# Cargar para una rama específica
+transi-store upload:config --branch feature/my-feature
+
+# Cargar un solo archivo sin un archivo de configuración
+transi-store upload --org acme --project webapp --locale fr --input ./locales/fr.json
+```
+
+> **Detección automática de rama de Git:** cuando no se proporciona `--branch`, la CLI detecta automáticamente la rama de git actual y la utiliza. En `main`/`master`, no se aplica ningún filtro de rama (las claves se cargan en el proyecto principal).
+
+> **Optimización de Git:** `upload:config` también omite los archivos que no han cambiado en comparación con la rama predeterminada (`main`/`master`) al ejecutarse en un repositorio git, para evitar llamadas innecesarias a la API.
+
+Esto es ideal para integrar en CI/CD: descargue cadenas traducidas durante el tiempo de compilación y cargue nuevas cadenas de origen después de que los desarrolladores las añadan.

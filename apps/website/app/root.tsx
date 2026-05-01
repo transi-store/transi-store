@@ -40,6 +40,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   baseParams.delete("lng");
   const baseWithoutLng = `${url.origin}${url.pathname}${baseParams.size > 0 ? `?${baseParams.toString()}` : ""}`;
 
+  // TODO handle change of i18n routes to another strategy ("/fr/xxx")
   const hreflangLinks = AVAILABLE_LANGUAGES.map((lang) => ({
     hrefLang: lang.code,
     href: `${baseWithoutLng}${baseParams.size > 0 ? "&" : "?"}lng=${lang.code}`,
