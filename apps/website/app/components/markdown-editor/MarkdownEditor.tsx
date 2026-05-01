@@ -63,6 +63,8 @@ const sectionHighlightField = StateField.define<DecorationSet>({
             // (e.g. after switching to an untranslated locale whose content is
             // ""). Without this, doc.lineAt(pos) throws
             // "Invalid position N in document of length 0".
+            // Note: CodeMirror accepts positions 0..doc.length inclusive, so
+            // `from === docLength` is still valid and we use strict `>`.
             if (from > docLength) {
               next = Decoration.none;
             } else {
