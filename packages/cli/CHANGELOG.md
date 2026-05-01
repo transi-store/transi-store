@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.3.0
+
+### Minor Changes
+
+- [#179](https://github.com/transi-store/transi-store/pull/179) [`8cbb1fa`](https://github.com/transi-store/transi-store/commit/8cbb1fa1a8d0f4fb47af5d0041039daca5da628a) Thanks [@jdeniau](https://github.com/jdeniau)! - Allow downloading of .md and .mdx files
+
 ## 2.2.1
 
 ### Patch Changes
