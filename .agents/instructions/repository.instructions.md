@@ -14,4 +14,5 @@ This file is the generic repository-wide instruction source. Tool-specific entry
 - All protected operations are multi-tenant and must scope work to the current organization.
 - When changing an API endpoint, keep shared Zod schemas and OpenAPI registration in sync.
 - When changing a user-visible feature, update the MDX docs in `apps/website/app/docs/` when needed.
+- Always add or update tests when you change behavior: cover new code paths, error branches, and bug fixes. A change is not complete until it has tests, and the existing test suite (`make test`) still passes.
 - If a task brief exists in `specs/`, use it as execution context, not as the source of truth for repository rules.

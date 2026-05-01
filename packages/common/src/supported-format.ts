@@ -36,6 +36,15 @@ export function isDocumentFormat(format: string): boolean {
   return (DOCUMENT_FORMATS as ReadonlyArray<string>).includes(format);
 }
 
+/**
+ * Formats stored as a key/value bag (one row per translation key, locale,
+ * and branch). These can be converted between each other on export, unlike
+ * document formats which are tied to the file's stored format.
+ */
+export const KEYVALUE_FORMATS = Object.values(SupportedFormat).filter(
+  (f) => !isDocumentFormat(f),
+) as ReadonlyArray<SupportedFormat>;
+
 /** Formatted list of supported formats for display in error messages: `'json', 'xliff', …` */
 export const SUPPORTED_FORMATS_LIST = new Intl.ListFormat("en", {
   type: "disjunction",

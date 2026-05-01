@@ -36,6 +36,21 @@ export async function getProjectFileTranslations(
 }
 
 /**
+ * Fetch the document body for a single (projectFile, locale). Returns
+ * `undefined` when no translation has been saved yet for this locale.
+ * Callers are responsible for verifying that the project file belongs to
+ * the authenticated organization.
+ */
+export async function getDocumentTranslation(
+  projectFileId: number,
+  locale: string,
+): Promise<MarkdownDocumentTranslation | undefined> {
+  return await db.query.markdownDocumentTranslations.findFirst({
+    where: { projectFileId, locale },
+  });
+}
+
+/**
  * Bulk-fetch the section states for a list of translation rows. Returns an
  * empty array when the list is empty.
  */

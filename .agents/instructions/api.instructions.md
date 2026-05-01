@@ -14,3 +14,5 @@ When adding or changing an endpoint:
 3. Register the endpoint in `apps/website/app/lib/api-doc/openapi.server.ts`.
 
 Prefer reusing the existing import/export and format services instead of duplicating request parsing or translation-format logic inside route handlers.
+
+Every endpoint change must come with tests. Add cases for the success path, the new error branches (400/404/etc.), and any cross-cutting rules such as auth or organization scoping. Loader/action tests live next to the route file (e.g. `*.translations.export.test.ts`); helper functions get their own `*.server.test.ts` next to the implementation.
