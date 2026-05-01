@@ -19,7 +19,7 @@ const ApiReferenceReact = lazy(() =>
 export async function loader({ request, context }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
 
-  // Récupérer les clés d'API de l'organisation
+  // Retrieve the organization's API keys
   const apiKeys = user?.lastOrganizationId
     ? await getOrganizationApiKeys(user.lastOrganizationId)
     : null;
