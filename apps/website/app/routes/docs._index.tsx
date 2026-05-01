@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
 
 export function loader() {
-  throw redirect("/docs/usage");
+  throw redirect("/docs/usage", { status: 301 });
 }

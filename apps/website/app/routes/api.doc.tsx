@@ -8,6 +8,7 @@ import type { Route } from "../+types/root";
 import { getUserFromSession } from "~/lib/session.server";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
 import { useLoaderData } from "react-router";
+import { useTranslation } from "react-i18next";
 
 const ApiReferenceReact = lazy(() =>
   import("@scalar/api-reference-react").then((m) => ({
@@ -31,9 +32,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function ApiDocPage() {
   const { colorMode } = useColorMode();
   const { lastApiKeyValue } = useLoaderData<typeof loader>();
+  const { t } = useTranslation();
 
   return (
     <Box minH="80vh">
+      <title>{t("page.api.title")}</title>
+      <meta name="description" content={t("page.api.description")} />
       <Suspense
         fallback={
           <Box display="flex" justifyContent="center" py="20">

@@ -21,6 +21,7 @@ import { queryCounterMiddleware } from "~/middleware/query-counter";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
+import { Footer } from "~/components/Footer";
 import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
 import { Analytics } from "@vercel/analytics/react";
@@ -117,12 +118,14 @@ export default function App() {
         <link key={hrefLang} rel="alternate" hrefLang={hrefLang} href={href} />
       ))}
       <link rel="alternate" hrefLang="x-default" href={defaultHref} />
+      <link rel="canonical" href={defaultHref} />
 
       <Toaster />
       <Header user={user} />
       <Box as="main">
         <Outlet />
       </Box>
+      <Footer />
     </Box>
   );
 }
