@@ -57,19 +57,30 @@ const sectionHighlightField = StateField.define<DecorationSet>({
             // Use line decorations so the highlight covers the whole line(s)
             // (not just the text run), giving a stable per-row band.
             const doc = tr.state.doc;
-            const decos = [];
-            let pos = from;
-            while (pos <= to) {
-              const line = doc.lineAt(pos);
-              decos.push(
-                Decoration.line({ class: "cm-section-highlight" }).range(
-                  line.from,
-                ),
-              );
-              if (line.to >= to) break;
-              pos = line.to + 1;
+            const docLength = doc.length;
+            // Guard against stale section positions when the editor content
+            // has already been replaced with a shorter (or empty) document
+            // (e.g. after switching to an untranslated locale whose content is
+            // ""). Without this, doc.lineAt(pos) throws
+            // "Invalid position N in document of length 0".
+            if (from > docLength) {
+              next = Decoration.none;
+            } else {
+              const clampedTo = Math.min(to, docLength);
+              const decos = [];
+              let pos = from;
+              while (pos <= clampedTo) {
+                const line = doc.lineAt(pos);
+                decos.push(
+                  Decoration.line({ class: "cm-section-highlight" }).range(
+                    line.from,
+                  ),
+                );
+                if (line.to >= clampedTo) break;
+                pos = line.to + 1;
+              }
+              next = decos.length > 0 ? Decoration.set(decos) : Decoration.none;
             }
-            next = Decoration.set(decos);
           } else {
             next = Decoration.none;
           }
@@ -97,6 +108,9 @@ export function setEditorSectionHighlight(
  * viewport, with a small margin.
  */
 export function scrollEditorToOffset(view: EditorView, offset: number): void {
+  // Guard against stale offsets from deferred section data being larger than
+  // the current document length (e.g. after switching to an empty locale).
+  if (offset > view.state.doc.length) return;
   view.dispatch({
     effects: EditorView.scrollIntoView(offset, { y: "start", yMargin: 80 }),
   });
