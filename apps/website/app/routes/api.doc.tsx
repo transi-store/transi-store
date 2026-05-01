@@ -4,8 +4,8 @@ import { useColorMode } from "~/components/ui/color-mode";
 import { getUserFromSession } from "~/lib/session.server";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
 import { useLoaderData } from "react-router";
-import { getInstance } from "~/middleware/i18next";
 import type { Route } from "./+types/api.doc";
+import { useTranslation } from "react-i18next";
 import "@scalar/api-reference-react/style.css";
 
 const ApiReferenceReact = lazy(() =>
@@ -14,7 +14,7 @@ const ApiReferenceReact = lazy(() =>
   })),
 );
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
 
   // Retrieve the organization's API keys
@@ -24,28 +24,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const lastApiKeyValue = apiKeys?.[0]?.keyValue;
 
-  const i18next = getInstance(context);
-
-  return {
-    lastApiKeyValue,
-    title: i18next.t("page.api.title"),
-    description: i18next.t("page.api.description"),
-  };
-}
-
-export function meta({ loaderData }: Route.MetaArgs) {
-  return [
-    { title: loaderData?.title ?? "API Reference — Transi-Store" },
-    { name: "description", content: loaderData?.description ?? "" },
-  ];
+  return { lastApiKeyValue };
 }
 
 export default function ApiDocPage() {
   const { colorMode } = useColorMode();
   const { lastApiKeyValue } = useLoaderData<typeof loader>();
+  const { t } = useTranslation();
 
   return (
     <Box minH="80vh">
+      <title>{t("page.api.title")}</title>
+      <meta name="description" content={t("page.api.description")} />
       <Suspense
         fallback={
           <Box display="flex" justifyContent="center" py="20">

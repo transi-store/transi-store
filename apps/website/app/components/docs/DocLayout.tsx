@@ -218,6 +218,9 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
 
   return (
     <Container maxW="container.xl" py={{ base: 6, md: 10 }}>
+      <title>{title}</title>
+      {description && <meta name="description" content={description} />}
+
       <Box
         display={{ base: "block", md: "grid" }}
         gridTemplateColumns={{ md: "240px 1fr" }}

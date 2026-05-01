@@ -13,7 +13,6 @@ import type { Route } from "./+types/root";
 import { ChakraProvider, Box, Alert, Container } from "@chakra-ui/react";
 import {
   getLocale,
-  getInstance,
   i18nextMiddleware,
   localeCookie,
 } from "~/middleware/i18next";
@@ -34,7 +33,6 @@ export const middleware = [queryCounterMiddleware, i18nextMiddleware];
 export async function loader({ request, context }: Route.LoaderArgs) {
   const user = await getUserFromSession(request);
   const locale = getLocale(context);
-  const i18next = getInstance(context);
 
   const url = new URL(request.url);
 
@@ -53,18 +51,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       locale,
       hreflangLinks,
       defaultHref: baseWithoutLng,
-      websiteTitle: i18next.t("website.title"),
-      websiteDescription: i18next.t("website.description"),
     },
     { headers: { "Set-Cookie": await localeCookie.serialize(locale) } },
   );
-}
-
-export function meta({ data: loaderData }: Route.MetaArgs) {
-  return [
-    { title: loaderData?.websiteTitle ?? "Transi-Store" },
-    { name: "description", content: loaderData?.websiteDescription ?? "" },
-  ];
 }
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -117,7 +106,7 @@ export function Layout({ children }: { children: ReactNode }) {
 export default function App() {
   const { user, locale, hreflangLinks, defaultHref } =
     useLoaderData<typeof loader>();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   useEffect(() => {
     if (i18n.language !== locale) {
@@ -133,6 +122,8 @@ export default function App() {
       <link rel="alternate" hrefLang="x-default" href={defaultHref} />
       <link rel="canonical" href={defaultHref} />
 
+      <title>{t("website.title")}</title>
+      <meta name="description" content={t("website.description")} />
       <Toaster />
       <Header user={user} />
       <Box as="main" flex="1">
