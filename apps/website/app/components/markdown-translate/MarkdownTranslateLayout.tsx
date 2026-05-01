@@ -681,6 +681,7 @@ const EditorPane = memo(function EditorPane({
       </HStack>
       <Box flex="1" minH={0} display="flex">
         <MarkdownEditorClient
+          key={locale}
           value={content}
           onChange={onContentChange}
           onCursorChange={onCursor}
