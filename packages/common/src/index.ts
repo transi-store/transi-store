@@ -4,6 +4,7 @@ export {
   FORMAT_LABELS,
   SUPPORTED_FORMATS_LIST,
   DOCUMENT_FORMATS,
+  KEYVALUE_FORMATS,
   getFormatFromFilename,
   isSupportedFormat,
   isDocumentFormat,

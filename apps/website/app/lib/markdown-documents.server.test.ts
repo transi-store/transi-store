@@ -15,6 +15,7 @@ import {
   setSectionFuzzy,
   recordAiTranslation,
   getProjectFileTranslations,
+  getDocumentTranslation,
   getSectionStatesForTranslations,
   MarkdownDocumentConflictError,
   MarkdownTranslationMissingError,
@@ -374,6 +375,57 @@ describe("markdown-documents.server", () => {
       });
       expect(state.isFuzzy).toBe(false);
       expect(state.lastAiTranslatedAt).toBeInstanceOf(Date);
+    });
+  });
+
+  describe("getDocumentTranslation", () => {
+    it("returns undefined when no row exists for the (file, locale)", async () => {
+      const result = await getDocumentTranslation(projectFileId, "en");
+      expect(result).toBeUndefined();
+    });
+
+    it("returns the saved row for the requested locale", async () => {
+      await saveDocumentTranslation({
+        projectFileId,
+        locale: "en",
+        content: SOURCE_DOC,
+        format: SupportedFormat.MARKDOWN,
+      });
+
+      const result = await getDocumentTranslation(projectFileId, "en");
+      expect(result).toBeDefined();
+      expect(result?.locale).toBe("en");
+      expect(result?.content).toBe(SOURCE_DOC);
+    });
+
+    it("does not return rows from other locales", async () => {
+      await saveDocumentTranslation({
+        projectFileId,
+        locale: "en",
+        content: SOURCE_DOC,
+        format: SupportedFormat.MARKDOWN,
+      });
+
+      const result = await getDocumentTranslation(projectFileId, "fr");
+      expect(result).toBeUndefined();
+    });
+
+    it("does not return rows from other project files", async () => {
+      await saveDocumentTranslation({
+        projectFileId,
+        locale: "en",
+        content: SOURCE_DOC,
+        format: SupportedFormat.MARKDOWN,
+      });
+
+      const otherFile = await createProjectFile(db, {
+        projectId: 1,
+        format: SupportedFormat.MARKDOWN,
+        filePath: "docs/<lang>/other.md",
+      });
+
+      const result = await getDocumentTranslation(otherFile.id, "en");
+      expect(result).toBeUndefined();
     });
   });
 

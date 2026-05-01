@@ -227,6 +227,200 @@ describe("Export file-scoped loader", () => {
     },
   );
 
+  it("should still allow converting between key/value formats on a non-document file", async () => {
+    await createProjectLanguage(getTestDb(), 1);
+    await createTranslationKey(getTestDb(), 1, "test.key", {
+      fileId: projectFile.id,
+    });
+    await createTranslation(getTestDb(), 1, "en", "Test Value");
+
+    const response = await callLoader(
+      `https://example.com/api/orgs/test-org/projects/test-project/files/${projectFile.id}/translations?locale=en&format=yaml`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("yaml");
+  });
+
+  it("should return 400 when requesting markdown format on a non-document file", async () => {
+    await createProjectLanguage(getTestDb(), 1);
+
+    const response = await callLoader(
+      `https://example.com/api/orgs/test-org/projects/test-project/files/${projectFile.id}/translations?locale=en&format=markdown`,
+    );
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe(
+      "Format 'markdown' does not match the file's format 'json'. Omit the 'format' query param or set it to 'json'.",
+    );
+  });
+
+  it("should return 400 when requesting mdx format on a non-document file", async () => {
+    await createProjectLanguage(getTestDb(), 1);
+
+    const response = await callLoader(
+      `https://example.com/api/orgs/test-org/projects/test-project/files/${projectFile.id}/translations?locale=en&format=mdx`,
+    );
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe(
+      "Format 'mdx' does not match the file's format 'json'. Omit the 'format' query param or set it to 'json'.",
+    );
+  });
+
+  describe("markdown / mdx files", () => {
+    async function createMarkdownFile(
+      format: SupportedFormat,
+      filePath: string,
+    ): Promise<schema.ProjectFile> {
+      return await createProjectFile(getTestDb(), {
+        projectId: 1,
+        format,
+        filePath,
+      });
+    }
+
+    async function saveDocumentTranslation(
+      projectFileId: number,
+      locale: string,
+      content: string,
+    ): Promise<void> {
+      await getTestDb()
+        .insert(schema.markdownDocumentTranslations)
+        .values({ projectFileId, locale, content });
+    }
+
+    it("should return the markdown document body for the requested locale", async () => {
+      await createProjectLanguage(getTestDb(), 1);
+      const file = await createMarkdownFile(
+        SupportedFormat.MARKDOWN,
+        "docs/<lang>/intro.md",
+      );
+      await saveDocumentTranslation(file.id, "en", "# Hello\n\nWorld");
+
+      const response = await callLoader(
+        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=en`,
+        file.id,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe(
+        "text/markdown; charset=utf-8",
+      );
+      expect(response.headers.get("Content-Disposition")).toContain(".md");
+      expect(await response.text()).toBe("# Hello\n\nWorld");
+    });
+
+    it("should return the mdx document body for the requested locale", async () => {
+      await createProjectLanguage(getTestDb(), 1);
+      const file = await createMarkdownFile(
+        SupportedFormat.MDX,
+        "docs/<lang>/intro.mdx",
+      );
+      await saveDocumentTranslation(
+        file.id,
+        "en",
+        "# Hello\n\n<MyComponent />",
+      );
+
+      const response = await callLoader(
+        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=en`,
+        file.id,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe(
+        "text/mdx; charset=utf-8",
+      );
+      expect(response.headers.get("Content-Disposition")).toContain(".mdx");
+      expect(await response.text()).toBe("# Hello\n\n<MyComponent />");
+    });
+
+    it("should accept format=markdown when the file is a markdown file", async () => {
+      await createProjectLanguage(getTestDb(), 1);
+      const file = await createMarkdownFile(
+        SupportedFormat.MARKDOWN,
+        "docs/<lang>/intro.md",
+      );
+      await saveDocumentTranslation(file.id, "en", "# Hi");
+
+      const response = await callLoader(
+        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=en&format=markdown`,
+        file.id,
+      );
+
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("# Hi");
+    });
+
+    it("should return 400 when format=json is requested on a markdown file", async () => {
+      await createProjectLanguage(getTestDb(), 1);
+      const file = await createMarkdownFile(
+        SupportedFormat.MARKDOWN,
+        "docs/<lang>/intro.md",
+      );
+      await saveDocumentTranslation(file.id, "en", "# Hi");
+
+      const response = await callLoader(
+        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=en&format=json`,
+        file.id,
+      );
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe(
+        "Format 'json' does not match the file's format 'markdown'. Omit the 'format' query param or set it to 'markdown'.",
+      );
+    });
+
+    it("should return 400 when format=mdx is requested on a markdown file", async () => {
+      await createProjectLanguage(getTestDb(), 1);
+      const file = await createMarkdownFile(
+        SupportedFormat.MARKDOWN,
+        "docs/<lang>/intro.md",
+      );
+      await saveDocumentTranslation(file.id, "en", "# Hi");
+
+      const response = await callLoader(
+        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=en&format=mdx`,
+        file.id,
+      );
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe(
+        "Format 'mdx' does not match the file's format 'markdown'. Omit the 'format' query param or set it to 'markdown'.",
+      );
+    });
+
+    it("should return 404 when no translation row exists for the locale", async () => {
+      await createProjectLanguage(getTestDb(), 1, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(getTestDb(), 1, {
+        locale: "es",
+        isDefault: false,
+      });
+      const file = await createMarkdownFile(
+        SupportedFormat.MARKDOWN,
+        "docs/<lang>/intro.md",
+      );
+      await saveDocumentTranslation(file.id, "en", "# Hi");
+
+      const response = await callLoader(
+        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=es`,
+        file.id,
+      );
+
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data.error).toBe("No translations found for locale 'es'");
+    });
+  });
+
   it("should use the DB file id and filePath in the XLIFF export", async () => {
     const db = getTestDb();
     await createProjectLanguage(db, 1);

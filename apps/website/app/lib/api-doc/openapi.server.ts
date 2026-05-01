@@ -4,6 +4,7 @@ import {
 } from "@asteasolutions/zod-to-openapi";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+import { KEYVALUE_FORMATS, SupportedFormat } from "@transi-store/common";
 import { exportQuerySchema, exportErrorResponseSchema } from "./schemas/export";
 import {
   importFieldsSchema,
@@ -131,6 +132,7 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
     description:
       "Download translations for a single locale, scoped to one project file. " +
       "The file's stored format is used by default; pass `format` to override. " +
+      "For a document file (MDX, Markdown), it must match the file's stored format exactly. " +
       "The response is returned as a file attachment.",
     tags: ["Translations"],
     security: [{ BearerApiKey: [] }],
@@ -140,7 +142,20 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         projectSlug: projectSlugParam,
         fileId: fileIdParam,
       }),
-      query: exportQuerySchema(localeExample).partial({ format: true }),
+      query: exportQuerySchema(localeExample)
+        .partial({ format: true })
+        .extend({
+          format: z
+            .enum(KEYVALUE_FORMATS as Array<SupportedFormat>)
+            .optional()
+            .openapi({
+              description:
+                "Output format. Defaults to the file's stored format. " +
+                "Omit to use the file's format automatically. " +
+                "Markdown and MDX files are returned in their native format and do not accept any format override.",
+              example: SupportedFormat.JSON,
+            }),
+        }),
     },
     responses: {
       200: {

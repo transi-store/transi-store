@@ -1,9 +1,14 @@
-import { ALL_BRANCHES_VALUE } from "@transi-store/common";
+import {
+  ALL_BRANCHES_VALUE,
+  isDocumentFormat,
+  SupportedFormat,
+} from "@transi-store/common";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFileById } from "~/lib/project-files.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
+import { getDocumentTranslation } from "~/lib/markdown-documents.server";
 import { orgContext } from "~/middleware/api-auth";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
@@ -77,6 +82,17 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     branch: branchParam,
   } = queryParseResult.data;
 
+  const fileIsDocument = isDocumentFormat(file.format);
+  const requestIsDocument = isDocumentFormat(formatName);
+  if (fileIsDocument || requestIsDocument) {
+    if (formatName !== file.format) {
+      return jsonError(
+        400,
+        `Format '${formatName}' does not match the file's format '${file.format}'. Omit the 'format' query param or set it to '${file.format}'.`,
+      );
+    }
+  }
+
   const languages = await getProjectLanguages(project.id);
   if (languages.length === 0) {
     return jsonError(400, i18next.t("import.errors.noLanguagesConfigured"));
@@ -88,6 +104,27 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
       400,
       i18next.t("import.errors.localeNotInProject", { locale }),
     );
+  }
+
+  if (isDocumentFormat(file.format)) {
+    const translation = await getDocumentTranslation(file.id, locale);
+    if (!translation) {
+      return jsonError(404, `No translations found for locale '${locale}'`);
+    }
+
+    const isMdx = file.format === SupportedFormat.MDX;
+    const fileExtension = isMdx ? "mdx" : "md";
+    const contentType = isMdx
+      ? "text/mdx; charset=utf-8"
+      : "text/markdown; charset=utf-8";
+    const filename = `${project.slug}-${file.id}-${locale}.${fileExtension}`;
+
+    return new Response(translation.content, {
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
   }
 
   let branchId: number | undefined;
@@ -113,15 +150,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   );
 
   if (!hasTranslationsForLocale) {
-    return new Response(
-      JSON.stringify({
-        error: `No translations found for locale '${locale}'`,
-      }),
-      {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return jsonError(404, `No translations found for locale '${locale}'`);
   }
 
   const format = createTranslationFormat(formatName);

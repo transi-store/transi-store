@@ -2,9 +2,11 @@
 
 ## Overview
 
-The export API lets you download project translations in several formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, and PHP. It supports two authentication methods: user session or API key.
+The export API lets you download project translations in several formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, PHP, Markdown, and MDX. It supports two authentication methods: user session or API key.
 
 Translations are scoped to a single project file (see `project_files` table). The list of files for a project is available via `GET /api/orgs/:orgSlug/projects/:projectSlug`.
+
+Each project file has a stored format. Key/value formats (JSON, XLIFF, YAML, CSV, PO, INI, PHP) can be requested in any of those formats — the export is converted on the fly. Document formats (Markdown, MDX) are stored as a single document body per locale; the `format` query parameter, when provided, must equal the file's stored format. Mixing a key/value `format` with a document file (or vice versa) returns 400.
 
 ## Endpoint
 
@@ -50,11 +52,11 @@ Creating a key: via the web UI at `/orgs/:orgSlug/settings` (API Keys section). 
 
 ## Query parameters
 
-| Parameter | Values                               | Required | Description                                                 |
-| --------- | ------------------------------------ | -------- | ----------------------------------------------------------- |
-| `format`  | json, xliff, yaml, csv, po, ini, php | Yes      | Output format                                               |
-| `locale`  | string                               | Yes      | Language code (e.g. `fr`, `en`)                             |
-| `branch`  | string                               | No       | Branch slug (defaults to main). Use `@all` for all branches |
+| Parameter | Values                                              | Required | Description                                                                                                                                                            |
+| --------- | --------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `format`  | json, xliff, yaml, csv, po, ini, php, markdown, mdx | No       | Output format. Defaults to the file's stored format. For markdown/mdx files, must match the file's format exactly. Mixing key/value with document formats returns 400. |
+| `locale`  | string                                              | Yes      | Language code (e.g. `fr`, `en`)                                                                                                                                        |
+| `branch`  | string                                              | No       | Branch slug (defaults to main). Use `@all` for all branches                                                                                                            |
 
 ## JSON format
 
@@ -239,6 +241,28 @@ Notes:
 - On import, both single-quoted and double-quoted strings are supported
 - Single quotes in values are properly escaped with backslash
 
+## Markdown / MDX format
+
+**Example**:
+
+```bash
+GET /api/orgs/my-org/projects/app/files/1/translations?locale=fr
+```
+
+**Response** (raw markdown body for the requested locale):
+
+```markdown
+# Bienvenue
+
+Ceci est un document traduit.
+```
+
+Notes:
+
+- Markdown and MDX files store one document body per locale; the response is the raw body.
+- The `format` query parameter is optional. When set, it must equal the file's stored format (`markdown` or `mdx`); requesting `json`, `yaml`, etc. on a markdown/mdx file returns 400, and requesting `markdown`/`mdx` on a key/value file also returns 400.
+- A 404 is returned only when the locale is configured on the project but no document body has been saved yet for it.
+
 ## Response headers
 
 ### JSON
@@ -288,6 +312,20 @@ Content-Disposition: attachment; filename="project-slug-fr.ini"
 ```http
 Content-Type: text/x-php; charset=utf-8
 Content-Disposition: attachment; filename="project-slug-fr.php"
+```
+
+### Markdown
+
+```http
+Content-Type: text/markdown; charset=utf-8
+Content-Disposition: attachment; filename="project-slug-1-fr.md"
+```
+
+### MDX
+
+```http
+Content-Type: text/mdx; charset=utf-8
+Content-Disposition: attachment; filename="project-slug-1-fr.mdx"
 ```
 
 ## Error handling
