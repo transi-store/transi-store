@@ -188,6 +188,8 @@ export default function PricingPage() {
 
   return (
     <Box py={{ base: 10, md: 20 }}>
+      <title>{t("page.pricing.title")}</title>
+      <meta name="description" content={t("page.pricing.description")} />
       <Container maxW="container.xl">
         <VStack gap={4} mb={12} textAlign="center">
           <Heading

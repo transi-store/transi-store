@@ -3,6 +3,12 @@
   "workspaces": {
     "apps/website": {
       "entry": ["i18next.config.ts"],
+      "ignore": [
+        "app/docs/de/usage.mdx",
+        "app/docs/en/usage.mdx",
+        "app/docs/fr/usage.mdx",
+        "app/docs/es/usage.mdx",
+      ],
     },
     "packages/common": {},
     "packages/cli": {},

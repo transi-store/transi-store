@@ -21,6 +21,7 @@ import { queryCounterMiddleware } from "~/middleware/query-counter";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";
+import { Footer } from "~/components/Footer";
 import { Toaster } from "~/components/ui/toaster";
 import { useTranslation } from "react-i18next";
 import { Analytics } from "@vercel/analytics/react";
@@ -45,7 +46,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }));
 
   return data(
-    { user, locale, hreflangLinks, defaultHref: baseWithoutLng },
+    {
+      user,
+      locale,
+      hreflangLinks,
+      defaultHref: baseWithoutLng,
+    },
     { headers: { "Set-Cookie": await localeCookie.serialize(locale) } },
   );
 }
@@ -109,20 +115,21 @@ export default function App() {
   }, [locale, i18n]);
 
   return (
-    <Box minH="100vh" bg="surface.canvas">
-      <title>{t("website.title")}</title>
-      <meta name="description" content={t("website.description")} />
-
+    <Box minH="100vh" bg="surface.canvas" display="flex" flexDirection="column">
       {hreflangLinks.map(({ hrefLang, href }) => (
         <link key={hrefLang} rel="alternate" hrefLang={hrefLang} href={href} />
       ))}
       <link rel="alternate" hrefLang="x-default" href={defaultHref} />
+      <link rel="canonical" href={defaultHref} />
 
+      <title>{t("website.title")}</title>
+      <meta name="description" content={t("website.description")} />
       <Toaster />
       <Header user={user} />
-      <Box as="main">
+      <Box as="main" flex="1">
         <Outlet />
       </Box>
+      <Footer />
     </Box>
   );
 }

@@ -33,6 +33,9 @@ export default [
   // robots.txt (dynamic, disallow all unless on production domain)
   route("robots.txt", "routes/robots[.txt].ts"),
 
+  // sitemap.xml (dynamic, lists all public pages)
+  route("sitemap.xml", "routes/sitemap[.xml].ts"),
+
   // Public API routes (no auth required)
   route("api/locales/:lng/:ns", "routes/api.locales.$lng.$ns.ts"),
   route("api/doc.json", "routes/api.doc.json.tsx"),
