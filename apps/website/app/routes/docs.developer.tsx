@@ -1,18 +1,30 @@
-import { useTranslation } from "react-i18next";
+import type { Route } from "./+types/docs.developer";
+import { getInstance } from "~/middleware/i18next";
 import { DocLayout } from "~/components/docs/DocLayout";
 import { mdxComponents } from "~/components/docs/MdxComponents";
 import DeveloperContent from "~/docs/developer.mdx";
 
-export default function DocsDeveloperPage() {
-  const { t } = useTranslation();
+export async function loader({ context }: Route.LoaderArgs) {
+  const i18next = getInstance(context);
+  return {
+    title: i18next.t("page.docs.developer.title"),
+    description: i18next.t("page.docs.developer.description"),
+  };
+}
 
+export function meta({ data }: Route.MetaArgs) {
+  return [
+    { title: data?.title ?? "Developer Guide — Transi-Store" },
+    { name: "description", content: data?.description ?? "" },
+  ];
+}
+
+export default function DocsDeveloperPage() {
   return (
     <DocLayout
       title="Developer Guide"
       description="Self-host Transi-Store on your own infrastructure."
     >
-      <title>{t("page.docs.developer.title")}</title>
-      <meta name="description" content={t("page.docs.developer.description")} />
       <DeveloperContent components={mdxComponents} />
     </DocLayout>
   );

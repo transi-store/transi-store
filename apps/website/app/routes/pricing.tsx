@@ -20,6 +20,23 @@ import {
   neonGlowAt,
   NEON_TEXT_GLOW,
 } from "~/components/landing/neon-colors";
+import type { Route } from "./+types/pricing";
+import { getInstance } from "~/middleware/i18next";
+
+export async function loader({ context }: Route.LoaderArgs) {
+  const i18next = getInstance(context);
+  return {
+    title: i18next.t("page.pricing.title"),
+    description: i18next.t("page.pricing.description"),
+  };
+}
+
+export function meta({ data }: Route.MetaArgs) {
+  return [
+    { title: data?.title ?? "Pricing — Transi-Store" },
+    { name: "description", content: data?.description ?? "" },
+  ];
+}
 
 function PricingTierTable() {
   const { t } = useTranslation();
@@ -188,8 +205,6 @@ export default function PricingPage() {
 
   return (
     <Box py={{ base: 10, md: 20 }}>
-      <title>{t("page.pricing.title")}</title>
-      <meta name="description" content={t("page.pricing.description")} />
       <Container maxW="container.xl">
         <VStack gap={4} mb={12} textAlign="center">
           <Heading

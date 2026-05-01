@@ -40,15 +40,15 @@ export function Footer() {
                   {t("header.pricing")}
                 </Text>
               </Link>
-              <Link
-                to="https://github.com/transi-store/transi-store"
+              <a
+                href="https://github.com/transi-store/transi-store"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
                   GitHub
                 </Text>
-              </Link>
+              </a>
             </HStack>
           </HStack>
         </VStack>
