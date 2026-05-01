@@ -1,0 +1,220 @@
+import { TranslationsMockup } from "~/components/docs/ui-mockups/TranslationsMockup";
+import { BranchesMockup } from "~/components/docs/ui-mockups/BranchesMockup";
+import { IcuEditorMockup } from "~/components/docs/ui-mockups/IcuEditorMockup";
+import { AiSuggestionsMockup } from "~/components/docs/ui-mockups/AiSuggestionsMockup";
+import { MarkdownTranslateMockup } from "~/components/docs/ui-mockups/MarkdownTranslateMockup";
+
+## Primeros pasos
+
+Transi-Store es una plataforma de gestión de traducciones de código abierto para equipos. Te permite gestionar todas tus claves de traducción en un solo lugar, colaborar con tu equipo y exportar traducciones en múltiples formatos.
+
+### Crea tu organización
+
+Cuando inicies sesión por primera vez, se te pedirá que crees una **organización**. Una organización es el contenedor principal para todos tus proyectos y miembros del equipo.
+
+1. Haz clic en **Get Started** (Empezar) en la página de inicio e inicia sesión con GitHub o Google.
+2. Introduce el nombre de tu organización y el slug (usado en las URLs).
+3. Ahora eres el propietario de tu organización.
+
+### Crea un proyecto
+
+Un proyecto contiene todas las claves de traducción para una aplicación o servicio específico.
+
+1. Desde el panel de control de tu organización, haz clic en **New project** (Nuevo proyecto).
+2. Introduce un nombre y un slug para tu proyecto.
+3. Elige la **locales de origen** (el idioma en el que escribes las claves, p. ej. `en`).
+4. Añade **locales de destino** — los idiomas a los que quieres traducir (p. ej. `fr`, `de`, `es`).
+
+---
+
+## Gestión de traducciones
+
+<TranslationsMockup />
+
+El editor de traducciones es el corazón de Transi-Store. Cada fila representa una **clave** de traducción con su valor en cada idioma.
+
+### Añadir una clave
+
+1. Abre tu proyecto y ve a la pestaña **Translations** (Traducciones).
+2. Haz clic en **Add key** (Añadir clave) e introduce el nombre de la clave (p. ej. `checkout.confirm_button`).
+3. Introduce el valor para la configuración regional de origen.
+4. Añade traducciones para cada configuración regional de destino.
+
+### Formato de mensaje ICU
+
+Transi-Store admite el **formato de mensaje ICU** para pluralización, género e interpolación de variables:
+
+```
+You have {count, plural, one {# message} other {# messages}}.
+```
+
+El editor integrado valida tu sintaxis ICU en tiempo real y ofrece una vista previa donde puedes rellenar los valores de las variables para ver el resultado renderizado.
+
+<IcuEditorMockup />
+
+### Búsqueda y filtrado
+
+Usa la barra de búsqueda para filtrar claves por nombre o valor. También puedes filtrar por:
+
+- **Untranslated** (Sin traducir) — claves a las que les faltan traducciones en uno o más idiomas.
+- **Locale** (Configuración regional) — filtra la vista para mostrar un par de idiomas específico.
+
+---
+
+## Traducción de documentos Markdown / MDX (modo de doble cara)
+
+Algunos contenidos son demasiado largos para una tabla de clave/valor (páginas de producto, guías, notas de versión). Siempre que un archivo de proyecto utilice uno de los formatos de documento (`.md`, `.markdown`, `.mdx`), Transi-Store lo abre en un **editor de doble cara** dedicado en lugar de la tabla de traducciones habitual.
+
+<MarkdownTranslateMockup />
+
+### Diseño de un vistazo
+
+- **Dos editores a ancho completo**, uno por idioma, con resaltado de sintaxis markdown (temas claro y oscuro).
+- **Selector de idioma libre** en cada lado — traduce `en → fr`, compara `fr ↔ es`, o cualquier otro par que hayas configurado.
+- **Barra de acción central** que opera en la sección donde está tu cursor.
+
+### Alineación de secciones
+
+El documento se divide en secciones mediante encabezados (y bloques de código delimitados), y cada sección se identifica por su posición en el árbol de encabezados, no por su texto. Como resultado:
+
+- Los encabezados se pueden traducir completamente en cada lado: el editor sigue emparejándolos correctamente.
+- Mover el cursor en un lado desplaza el otro lado y resalta brevemente la **sección equivalente**.
+- Una sección que existe en un lado pero no en el otro (porque aún no la has traducido o porque añadiste un encabezado solo en un idioma) se marca como **sin coincidencia** en la insignia cerca del selector de idioma. El botón de flecha hacia abajo salta a la siguiente sección sin coincidencia.
+
+### Barra de acción central
+
+| Icono | Acción |
+|------|--------|
+| Copiar sección | Copia la fuente de la sección actual al otro lado. |
+| Copiar documento | Copia todo el documento al otro lado. |
+| Traducir sección con IA | Genera sugerencias de IA para la sección actual, usando el borrador de destino existente como referencia de tono. |
+| Traducir documento con IA | Traduce el documento completo con IA de una sola vez. |
+| Marcar como borroso | Marca la sección actual como pendiente de revisión. Esta marca es estable frente a cambios en los encabezados y solo se elimina al desactivarla o al ejecutar la traducción por IA. |
+| Siguiente sin coincidencia | Salta a la siguiente sección sin una contraparte. |
+| Intercambiar lados | Intercambia los dos idiomas. |
+
+### Guardado y concurrencia
+
+Cada cambio se guarda automáticamente (debounced) por lado. Si dos pestañas del navegador editan el mismo documento al mismo tiempo, el segundo guardado se rechaza con un mensaje claro y se te pide que recargues; tu trabajo nunca se sobrescribe silenciosamente.
+
+> **Consejo:** las banderas de "borroso" por secciones y las marcas de tiempo de "última traducción por IA" se almacenan independientemente del cuerpo del documento, por lo que sobreviven a la traducción de encabezados. Solo se eliminan cuando cambia la estructura de la sección en sí (por ejemplo, cuando eliminas el encabezado por completo).
+
+---
+
+## Gestión de ramas
+
+<BranchesMockup />
+
+Las ramas te permiten preparar conjuntos de cambios de traducción **sin afectar el proyecto principal** hasta que estés listo para fusionarlos. Este flujo de trabajo refleja cómo los desarrolladores usan las ramas de Git para el código.
+
+### Cómo funcionan las ramas
+
+Una rama es un espacio de trabajo aislado donde puedes:
+
+- **Añadir** nuevas claves de traducción
+- **Eliminar** claves (una eliminación se pone en espera y solo se aplica cuando se fusiona la rama)
+
+El proyecto principal permanece sin cambios hasta que **fusionas** la rama.
+
+### Creación de una rama
+
+1. Ve a tu proyecto y abre la pestaña **Branches** (Ramas).
+2. Haz clic en **New branch** (Nueva rama).
+3. Dale un nombre descriptivo (p. ej. `feature/checkout-flow` o `release/v2.0`).
+4. Ahora tienes un espacio de trabajo aislado para añadir claves o poner eliminaciones en espera.
+
+### Trabajo en una rama
+
+Cuando abres una rama, puedes añadir nuevas claves de traducción o marcar eliminaciones. Todos los cambios están limitados a la rama y no afectan al proyecto principal.
+
+La página de detalles de la rama muestra:
+
+- **Recuento de claves** — cuántas claves se han añadido o modificado en esta rama
+- **Recuento de eliminaciones** — cuántas claves están marcadas para su eliminación
+
+### Fusión de una rama
+
+Una vez que tu trabajo de traducción esté listo:
+
+1. Abre la rama y haz clic en **Merge branch** (Fusionar rama).
+2. Una vista previa de fusión muestra todas las claves que se añadirán y todas las eliminaciones que se aplicarán al proyecto principal.
+3. Si hay **conflictos** (una clave fue modificada tanto en la rama como en el proyecto principal después de crear la rama), la fusión se bloqueará y se enumerarán las claves en conflicto.
+4. Resuelve los conflictos editando las claves correspondientes y, a continuación, vuelve a intentar la fusión.
+5. Tras una fusión exitosa, la rama se marca como **fusionada** y pasa a ser de solo lectura.
+
+### Mejores prácticas
+
+- Usa una rama por función o versión para mantener los cambios aislados.
+- Nombra las ramas según la función a la que se refieren (p. ej. `feature/onboarding-flow`).
+- Fusiona las ramas con prontitud para evitar divergencias a largo plazo.
+
+---
+
+## Importación y exportación
+
+### Exportación de traducciones
+
+Ve a **Import / Export** en tu proyecto y elige el formato:
+
+| Formato | Extensión | Notas |
+|--------|-----------|-------|
+| JSON | `.json` | Estructura de claves plana o anidada |
+| XLIFF | `.xliff` | Formato XML estándar de la industria |
+| YAML | `.yaml` | Popular en Ruby on Rails |
+| CSV | `.csv` | Fácil de usar en hojas de cálculo |
+| PO | `.po` | Formato GNU gettext |
+| Markdown | `.md`, `.markdown` | Documento largo, editado en modo de doble cara |
+| MDX | `.mdx` | Markdown + JSX, editado en modo de doble cara |
+
+También puedes exportar mediante la **API REST** usando la clave API de tu organización. Primero, enumera los archivos del proyecto para obtener sus IDs:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp"
+```
+
+Luego exporta un archivo determinado para un idioma determinado:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp/files/1/translations?locale=fr&format=json"
+```
+
+### Importación de traducciones
+
+1. Ve a **Import / Export** y selecciona tu archivo.
+2. Elige una **estrategia de importación**:
+   - **Overwrite** (Sobrescribir) — reemplaza las traducciones existentes con valores del archivo
+   - **Skip** (Saltar) — conserva las traducciones existentes; solo añade las claves que aún no existen
+3. Haz clic en **Import** (Importar) para aplicar los cambios.
+
+---
+
+## Traducciones con IA
+
+Transi-Store puede sugerir traducciones usando IA (impulsada por Google Gemini u OpenAI).
+
+Para habilitar las traducciones con IA, configura tu proveedor de IA en **Organization Settings → AI** (Configuración de la organización → IA).
+
+Una vez configurado, aparecerá un botón **AI suggest** (Sugerencia de IA) en cada celda de traducción. Haz clic en él para generar una sugerencia basada en el valor del idioma de origen y el contexto de las claves circundantes.
+
+<AiSuggestionsMockup />
+
+> **Nota:** Las sugerencias de IA son un punto de partida: revísalas siempre antes de publicarlas.
+
+---
+
+## Colaboración en equipo
+
+### Invitar a miembros
+
+1. Ve a tu organización y abre la pestaña **Members** (Miembros).
+2. Haz clic en **Invite member** (Invitar miembro) e introduce su correo electrónico o comparte el enlace de invitación.
+3. El usuario invitado recibe acceso a todos los proyectos dentro de la organización.
+
+### Roles
+
+| Rol | Permisos |
+|------|-------------|
+| Propietario | Acceso total, incluyendo facturación y gestión de miembros |
+| Miembro | Puede crear/editar proyectos, claves y ramas |

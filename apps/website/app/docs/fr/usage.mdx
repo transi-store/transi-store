@@ -1,0 +1,221 @@
+import { TranslationsMockup } from "~/components/docs/ui-mockups/TranslationsMockup";
+import { BranchesMockup } from "~/components/docs/ui-mockups/BranchesMockup";
+import { IcuEditorMockup } from "~/components/docs/ui-mockups/IcuEditorMockup";
+import { AiSuggestionsMockup } from "~/components/docs/ui-mockups/AiSuggestionsMockup";
+import { MarkdownTranslateMockup } from "~/components/docs/ui-mockups/MarkdownTranslateMockup";
+
+## Démarrage
+
+Transi-Store est une plateforme open-source de gestion des traductions pour les équipes. Elle vous permet de gérer toutes vos clés de traduction au même endroit, de collaborer avec votre équipe et d'exporter vos traductions dans de multiples formats.
+
+### Créer votre organisation
+
+Lors de votre première connexion, vous serez invité à créer une **organisation**. Une organisation est le conteneur principal pour tous vos projets et membres d'équipe.
+
+1. Cliquez sur **Démarrer** sur la page d'accueil et connectez-vous avec GitHub ou Google.
+2. Saisissez le nom de votre organisation et son slug (utilisé dans les URL).
+3. Vous êtes désormais le propriétaire de votre organisation.
+
+### Créer un projet
+
+Un projet contient toutes les clés de traduction pour une application ou un service spécifique.
+
+1. Depuis le tableau de bord de votre organisation, cliquez sur **Nouveau projet**.
+2. Saisissez un nom et un slug pour votre projet.
+3. Choisissez la **langue source** (la langue dans laquelle vous écrivez les clés, par exemple `en`).
+4. Ajoutez des **langues cibles** — les langues vers lesquelles vous souhaitez traduire (par exemple `fr`, `de`, `es`).
+
+---
+
+## Gestion des traductions
+
+<TranslationsMockup />
+
+L'éditeur de traductions est le cœur de Transi-Store. Chaque ligne représente une **clé** de traduction avec sa valeur dans chaque langue.
+
+### Ajouter une clé
+
+1. Ouvrez votre projet et allez dans l'onglet **Traductions**.
+2. Cliquez sur **Ajouter une clé** et entrez le nom de la clé (par exemple `checkout.confirm_button`).
+3. Entrez la valeur pour la langue source.
+4. Ajoutez des traductions pour chaque langue cible.
+
+### Format de message ICU
+
+Transi-Store prend en charge le **format de message ICU** pour la pluralisation, le genre et l'interpolation de variables :
+
+```
+You have {count, plural, one {# message} other {# messages}}.
+```
+
+L'éditeur intégré valide votre syntaxe ICU en temps réel et propose un aperçu en direct où vous pouvez remplir les valeurs des variables pour voir le résultat rendu.
+
+<IcuEditorMockup />
+
+### Recherche et filtrage
+
+Utilisez la barre de recherche pour filtrer les clés par nom ou par valeur. Vous pouvez également filtrer par :
+
+- **Non traduit** — clés pour lesquelles il manque des traductions dans une ou plusieurs langues
+- **Langue** — filtre la vue pour afficher une paire de langues spécifique
+
+---
+
+## Traduction de documents Markdown / MDX (mode deux côtés)
+
+Certains contenus sont trop longs pour un tableau clé/valeur — pages produits, guides, notes de version. Lorsqu'un fichier de projet utilise l'un des formats de document (`.md`, `.markdown`, `.mdx`), Transi-Store l'ouvre dans un **éditeur deux côtés** dédié au lieu du tableau de traduction classique.
+
+<MarkdownTranslateMockup />
+
+### Présentation de la mise en page
+
+- **Deux éditeurs pleine largeur**, un par langue, avec coloration syntaxique Markdown (thèmes clair et sombre).
+- **Sélecteur de langue libre** de chaque côté — traduisez `en → fr`, comparez `fr ↔ es`, ou toute autre paire que vous avez configurée.
+- **Barre d'action centrale** qui opère sur la section où se trouve votre curseur.
+
+### Alignement des sections
+
+Le document est divisé en sections par les titres (et les blocs de code), et chaque section est identifiée par sa position dans l'arborescence des titres — et non par son texte. Par conséquent :
+
+- Les titres peuvent être entièrement traduits de chaque côté : l'éditeur continue de les associer correctement.
+- Déplacer le curseur d'un côté fait défiler l'autre côté et met brièvement en surbrillance la **section correspondante**.
+- Une section qui existe d'un côté mais pas de l'autre (si vous ne l'avez pas encore traduite ou si vous avez ajouté un titre dans une seule langue) est marquée comme **non appariée** dans le badge près du sélecteur de langue. Le bouton flèche vers le bas permet de passer à la section non appariée suivante.
+
+### Barre d'action centrale
+
+| Icône | Action |
+|------|--------|
+| Copier la section | Copie la source de la section actuelle vers l'autre côté. |
+| Copier le document | Copie le document entier vers l'autre côté. |
+| Traduction AI de la section | Génère des suggestions d'IA pour la section actuelle, en utilisant le brouillon cible existant comme référence de ton. |
+| Traduction AI du document | Traduit le document complet avec l'IA en une seule fois. |
+| Marquer comme flou | Marque la section actuelle comme nécessitant une révision. Le drapeau est stable lors de la traduction des titres et n'est effacé que si vous le désactivez ou si vous lancez une traduction par IA. |
+| Suivant non apparié | Saute à la section suivante sans contrepartie. |
+| Inverser les côtés | Échange les deux langues. |
+
+### Sauvegarde et concurrence
+
+Chaque modification est automatiquement sauvegardée (avec délai) par côté. Si deux onglets de navigateur modifient le même document en même temps, la seconde sauvegarde est rejetée avec un message explicite et vous êtes invité à recharger — votre travail n'est jamais écrasé silencieusement.
+
+> **Astuce :** les drapeaux de section flous et les horodatages de "dernière traduction IA" sont stockés indépendamment du corps du document, ils survivent donc à la traduction des titres. Ils ne sont supprimés que lorsque la structure de la section elle-même change (par exemple, si vous supprimez complètement le titre).
+
+---
+
+## Gestion des branches
+
+<BranchesMockup />
+
+Les branches vous permettent de préparer des ensembles de modifications de traduction **sans affecter le projet principal** tant que vous n'êtes pas prêt à fusionner. Ce flux de travail reflète la manière dont les développeurs utilisent les branches Git pour le code.
+
+### Fonctionnement des branches
+
+Une branche est un espace de travail isolé où vous pouvez :
+
+- **Ajouter** de nouvelles clés de traduction
+- **Supprimer** des clés (une suppression est mise en attente et n'est appliquée que lorsque la branche est fusionnée)
+
+Le projet principal reste inchangé jusqu'à ce que vous **fusionniez** la branche.
+
+### Créer une branche
+
+1. Allez dans votre projet et ouvrez l'onglet **Branches**.
+2. Cliquez sur **Nouvelle branche**.
+3. Donnez-lui un nom descriptif (par exemple `feature/checkout-flow` ou `release/v2.0`).
+4. Vous disposez désormais d'un espace de travail isolé pour ajouter des clés ou mettre en attente des suppressions.
+
+### Travailler sur une branche
+
+Lorsque vous ouvrez une branche, vous pouvez ajouter de nouvelles clés de traduction ou mettre en attente des suppressions. Toutes les modifications sont limitées à la branche et n'affectent pas le projet principal.
+
+La page de détail de la branche affiche :
+
+- **Nombre de clés** — combien de clés ont été ajoutées ou modifiées dans cette branche
+- **Nombre de suppressions** — combien de clés sont en attente de suppression
+
+### Fusionner une branche
+
+Une fois votre travail de traduction prêt :
+
+1. Ouvrez la branche et cliquez sur **Fusionner la branche**.
+2. Un aperçu de la fusion affiche toutes les clés qui seront ajoutées et toutes les suppressions qui seront appliquées au projet principal.
+3. S'il y a des **conflits** (une clé a été modifiée à la fois sur la branche et sur le projet principal après la création de la branche), la fusion sera bloquée et les clés en conflit seront listées.
+4. Résolvez les conflits en modifiant les clés concernées, puis réessayez la fusion.
+5. Après une fusion réussie, la branche est marquée comme **fusionnée** et devient en lecture seule.
+
+### Bonnes pratiques
+
+- Utilisez une branche par fonctionnalité ou version pour garder les modifications isolées.
+- Nommez les branches selon la fonctionnalité à laquelle elles se rapportent (par exemple `feature/onboarding-flow`).
+- Fusionnez les branches rapidement pour éviter une divergence à long terme.
+
+---
+
+## Importation et exportation
+
+### Exporter les traductions
+
+Allez dans **Importer / Exporter** dans votre projet et choisissez le format :
+
+| Format | Extension | Notes |
+|--------|-----------|-------|
+| JSON | `.json` | Structure de clé plate ou imbriquée |
+| XLIFF | `.xliff` | Format XML standard de l'industrie |
+| YAML | `.yaml` | Populaire dans Ruby on Rails |
+| CSV | `.csv` | Compatible avec les tableurs |
+| PO | `.po` | Format GNU gettext |
+| Markdown | `.md`, `.markdown` | Document long, édité en mode deux côtés |
+| MDX | `.mdx` | Markdown + JSX, édité en mode deux côtés |
+
+Vous pouvez également exporter via l'**API REST** en utilisant la clé API de votre organisation.
+Listez d'abord les fichiers du projet pour obtenir leurs ID :
+
+```bash
+curl -H "Authorization: Bearer VOTRE_CLE_API" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp"
+```
+
+Puis exportez un fichier donné pour une langue donnée :
+
+```bash
+curl -H "Authorization: Bearer VOTRE_CLE_API" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp/files/1/translations?locale=fr&format=json"
+```
+
+### Importer des traductions
+
+1. Allez dans **Importer / Exporter** et sélectionnez votre fichier.
+2. Choisissez une **stratégie d'importation** :
+   - **Remplacer** — remplace les traductions existantes par les valeurs du fichier
+   - **Ignorer** — conserve les traductions existantes ; ajoute uniquement les clés qui n'existent pas encore
+3. Cliquez sur **Importer** pour appliquer les modifications.
+
+---
+
+## Traductions par IA
+
+Transi-Store peut suggérer des traductions via l'IA (propulsée par Google Gemini ou OpenAI).
+
+Pour activer les traductions par IA, configurez votre fournisseur d'IA dans **Paramètres de l'organisation → IA**.
+
+Une fois configuré, un bouton **Suggérer par IA** apparaît dans chaque cellule de traduction. Cliquez dessus pour générer une suggestion basée sur la valeur de la langue source et le contexte des clés environnantes.
+
+<AiSuggestionsMockup />
+
+> **Remarque :** les suggestions de l'IA sont un point de départ — révisez-les toujours avant de publier.
+
+---
+
+## Collaboration d'équipe
+
+### Inviter des membres
+
+1. Allez dans votre organisation et ouvrez l'onglet **Membres**.
+2. Cliquez sur **Inviter un membre** et saisissez son e-mail ou partagez le lien d'invitation.
+3. L'utilisateur invité reçoit un accès à tous les projets de l'organisation.
+
+### Rôles
+
+| Rôle | Permissions |
+|------|-------------|
+| Propriétaire | Accès complet incluant la facturation et la gestion des membres |
+| Membre | Peut créer/modifier des projets, des clés et des branches |

@@ -1,0 +1,221 @@
+import { TranslationsMockup } from "~/components/docs/ui-mockups/TranslationsMockup";
+import { BranchesMockup } from "~/components/docs/ui-mockups/BranchesMockup";
+import { IcuEditorMockup } from "~/components/docs/ui-mockups/IcuEditorMockup";
+import { AiSuggestionsMockup } from "~/components/docs/ui-mockups/AiSuggestionsMockup";
+import { MarkdownTranslateMockup } from "~/components/docs/ui-mockups/MarkdownTranslateMockup";
+
+## Erste Schritte
+
+Transi-Store ist eine Open-Source-Plattform für das Übersetzungsmanagement für Teams. Sie ermöglicht es Ihnen, alle Ihre Übersetzungsschlüssel an einem Ort zu verwalten, mit Ihrem Team zusammenzuarbeiten und Übersetzungen in verschiedenen Formaten zu exportieren.
+
+### Organisation erstellen
+
+Wenn Sie sich zum ersten Mal anmelden, werden Sie aufgefordert, eine **Organisation** zu erstellen. Eine Organisation ist der übergeordnete Container für alle Ihre Projekte und Teammitglieder.
+
+1. Klicken Sie auf der Startseite auf **Get Started** (Erste Schritte) und melden Sie sich mit GitHub oder Google an.
+2. Geben Sie Ihren Organisationsnamen und den Slug (der in URLs verwendet wird) ein.
+3. Sie sind nun der Eigentümer Ihrer Organisation.
+
+### Projekt erstellen
+
+Ein Projekt enthält alle Übersetzungsschlüssel für eine bestimmte Anwendung oder einen bestimmten Dienst.
+
+1. Klicken Sie in Ihrem Organisations-Dashboard auf **New project** (Neues Projekt).
+2. Geben Sie einen Namen und einen Slug für Ihr Projekt ein.
+3. Wählen Sie das **Quell-Gebietsschema** (die Sprache, in der Sie Schlüssel schreiben, z. B. `en`).
+4. Fügen Sie **Ziel-Gebietsschemas** hinzu — die Sprachen, in die Sie übersetzen möchten (z. B. `fr`, `de`, `es`).
+
+---
+
+## Übersetzungen verwalten
+
+<TranslationsMockup />
+
+Der Übersetzungseditor ist das Herzstück von Transi-Store. Jede Zeile stellt einen **Schlüssel** für eine Übersetzung mit ihrem Wert in jedem Gebietsschema dar.
+
+### Hinzufügen eines Schlüssels
+
+1. Öffnen Sie Ihr Projekt und gehen Sie zum Tab **Translations** (Übersetzungen).
+2. Klicken Sie auf **Add key** (Schlüssel hinzufügen) und geben Sie den Namen des Schlüssels ein (z. B. `checkout.confirm_button`).
+3. Geben Sie den Wert für das Quell-Gebietsschema ein.
+4. Fügen Sie Übersetzungen für jedes Ziel-Gebietsschema hinzu.
+
+### ICU Message Format
+
+Transi-Store unterstützt das **ICU Message Format** für Pluralisierung, Geschlecht und Variableninterpolation:
+
+```
+You have {count, plural, one {# message} other {# messages}}.
+```
+
+Der integrierte Editor validiert Ihre ICU-Syntax in Echtzeit und bietet eine Live-Vorschau, in der Sie Variablenwerte eingeben können, um das Ergebnis zu sehen.
+
+<IcuEditorMockup />
+
+### Suchen und Filtern
+
+Verwenden Sie die Suchleiste, um Schlüssel nach Name oder Wert zu filtern. Sie können auch filtern nach:
+
+- **Untranslated** (Nicht übersetzt) — Schlüssel, bei denen in einem oder mehreren Gebietsschemas Übersetzungen fehlen
+- **Locale** (Gebietsschema) — Filtern Sie die Ansicht, um ein bestimmtes Sprachpaar anzuzeigen
+
+---
+
+## Übersetzen von Markdown / MDX-Dokumenten (Zwei-Seiten-Modus)
+
+Einige Inhalte sind zu umfangreich für eine Schlüssel/Wert-Tabelle — Produktseiten, Leitfäden, Release-Notes. Wann immer eine Projektdatei eines der Dokumentformate (`.md`, `.markdown`, `.mdx`) verwendet, öffnet Transi-Store sie in einem speziellen **Zwei-Seiten-Editor** anstelle der normalen Übersetzungstabelle.
+
+<MarkdownTranslateMockup />
+
+### Layout auf einen Blick
+
+- **Zwei Editor-Fenster in voller Breite**, eines pro Sprache, mit Markdown-Syntaxhervorhebung (helle & dunkle Designs).
+- **Freie Sprachwahl** auf jeder Seite — übersetzen Sie `en → fr`, vergleichen Sie `fr ↔ es` oder jedes andere Paar, das Sie konfiguriert haben.
+- **Zentrale Aktionsleiste**, die auf dem Abschnitt arbeitet, in dem sich Ihr Cursor befindet.
+
+### Abschnittsausrichtung
+
+Das Dokument ist durch Überschriften (und eingezäunte Codeblöcke) in Abschnitte unterteilt, und jeder Abschnitt wird durch seine Position im Überschriftenbaum identifiziert — nicht durch seinen Text. Das Ergebnis:
+
+- Überschriften können auf jeder Seite vollständig übersetzt werden: Der Editor ordnet sie trotzdem korrekt zu.
+- Wenn Sie den Cursor auf einer Seite bewegen, wird die andere Seite mitgescrollt und der **zugehörige Abschnitt** kurz hervorgehoben.
+- Ein Abschnitt, der auf einer Seite existiert, aber nicht auf der anderen (Sie haben ihn noch nicht übersetzt oder eine Überschrift nur in einer Sprache hinzugefügt), wird im Badge neben der Sprachauswahl als **unmatched** (nicht zugeordnet) gekennzeichnet. Die Pfeiltaste nach unten springt zum nächsten nicht zugeordneten Abschnitt.
+
+### Zentrale Aktionsleiste
+
+| Symbol | Aktion |
+|------|--------|
+| Abschnitt kopieren | Kopiert die Quelle des aktuellen Abschnitts auf die andere Seite. |
+| Dokument kopieren | Kopiert das gesamte Dokument auf die andere Seite. |
+| KI-Abschnitt übersetzen | Generiert KI-Vorschläge für den aktuellen Abschnitt, wobei der vorhandene Zielentwurf als Tonfallreferenz verwendet wird. |
+| KI-Dokument übersetzen | Übersetzt das gesamte Dokument auf einmal mit KI. |
+| Als "fuzzy" markieren | Markiert den aktuellen Abschnitt als "zu überprüfen". Die Markierung bleibt über Übersetzungsänderungen hinweg stabil und wird nur gelöscht, wenn Sie sie umschalten oder die KI-Übersetzung ausführen. |
+| Nächster nicht zugeordneter | Springt zum nächsten Abschnitt ohne Gegenstück. |
+| Seiten tauschen | Tauscht die beiden Sprachen. |
+
+### Speichern und Nebenläufigkeit
+
+Jede Änderung wird automatisch (debounced) pro Seite gespeichert. Wenn zwei Browser-Tabs gleichzeitig dasselbe Dokument bearbeiten, wird der zweite Speichervorgang mit einer klaren Meldung abgelehnt und Sie werden zum Neuladen aufgefordert — Ihre Arbeit wird niemals stillschweigend überschrieben.
+
+> **Tipp:** Abschnittsbezogene "Fuzzy"-Markierungen und Zeitstempel der "letzten KI-Übersetzung" werden unabhängig vom Dokumenttext gespeichert und überstehen daher Übersetzungsänderungen an den Überschriften. Sie werden nur gelöscht, wenn sich die Struktur des Abschnitts selbst ändert (z. B. wenn Sie die Überschrift vollständig löschen). |
+
+---
+
+## Branch-Verwaltung
+
+<BranchesMockup />
+
+Branches (Zweige) ermöglichen es Ihnen, Sätze von Übersetzungsänderungen vorzubereiten, **ohne das Hauptprojekt zu beeinträchtigen**, bis Sie bereit sind, sie zusammenzuführen (merge). Dieser Workflow spiegelt wider, wie Entwickler Git-Branches für Code verwenden.
+
+### Wie Branches funktionieren
+
+Ein Branch ist ein isolierter Arbeitsbereich, in dem Sie:
+
+- Neue Übersetzungsschlüssel **hinzufügen** können
+- Schlüssel **löschen** können (eine Löschung wird bereitgestellt und erst angewendet, wenn der Branch zusammengeführt wird)
+
+Das Hauptprojekt bleibt unverändert, bis Sie den Branch **zusammenführen**.
+
+### Einen Branch erstellen
+
+1. Gehen Sie zu Ihrem Projekt und öffnen Sie den Tab **Branches**.
+2. Klicken Sie auf **New branch** (Neuer Branch).
+3. Geben Sie ihm einen aussagekräftigen Namen (z. B. `feature/checkout-flow` oder `release/v2.0`).
+4. Sie verfügen nun über einen isolierten Arbeitsbereich, um Schlüssel hinzuzufügen oder Löschungen bereitzustellen.
+
+### Arbeiten an einem Branch
+
+Wenn Sie einen Branch öffnen, können Sie neue Übersetzungsschlüssel hinzufügen oder Löschungen markieren. Alle Änderungen sind auf den Branch beschränkt und wirken sich nicht auf das Hauptprojekt aus.
+
+Die Branch-Detailseite zeigt:
+
+- **Anzahl der Schlüssel** — wie viele Schlüssel in diesem Branch hinzugefügt oder geändert wurden
+- **Anzahl der Löschungen** — wie viele Schlüssel für die Löschung vorgesehen sind
+
+### Zusammenführen eines Branch
+
+Sobald Ihre Übersetzungsarbeit bereit ist:
+
+1. Öffnen Sie den Branch und klicken Sie auf **Merge branch** (Branch zusammenführen).
+2. Eine Zusammenführungsvorschau zeigt alle Schlüssel, die hinzugefügt werden, und alle Löschungen, die auf das Hauptprojekt angewendet werden.
+3. Wenn **Konflikte** auftreten (ein Schlüssel wurde sowohl im Branch als auch im Hauptprojekt nach der Erstellung des Branch geändert), wird die Zusammenführung blockiert und die widersprüchlichen Schlüssel werden aufgelistet.
+4. Lösen Sie Konflikte durch Bearbeiten der relevanten Schlüssel und versuchen Sie dann erneut, die Zusammenführung durchzuführen.
+5. Nach einer erfolgreichen Zusammenführung wird der Branch als **merged** (zusammengeführt) markiert und schreibgeschützt.
+
+### Best Practices
+
+- Verwenden Sie einen Branch pro Feature oder Release, um Änderungen isoliert zu halten.
+- Benennen Sie Branches nach dem Feature, auf das sie sich beziehen (z. B. `feature/onboarding-flow`).
+- Führen Sie Branches zeitnah zusammen, um lang anhaltende Divergenzen zu vermeiden.
+
+---
+
+## Import und Export
+
+### Übersetzungen exportieren
+
+Gehen Sie zu **Import / Export** in Ihrem Projekt und wählen Sie das Format:
+
+| Format | Erweiterung | Anmerkungen |
+|--------|-----------|-------|
+| JSON | `.json` | Flache oder verschachtelte Schlüsselstruktur |
+| XLIFF | `.xliff` | Industriestandard-XML-Format |
+| YAML | `.yaml` | Beliebt bei Ruby on Rails |
+| CSV | `.csv` | Tabellenkalkulationsfreundlich |
+| PO | `.po` | GNU gettext Format |
+| Markdown | `.md`, `.markdown` | Umfangreiches Dokument, bearbeitet im Zwei-Seiten-Modus |
+| MDX | `.mdx` | Markdown + JSX, bearbeitet im Zwei-Seiten-Modus |
+
+Sie können auch über die **REST-API** mithilfe des API-Schlüssels Ihrer Organisation exportieren.
+Listen Sie zuerst die Dateien des Projekts auf, um deren IDs zu erhalten:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp"
+```
+
+Exportieren Sie dann eine bestimmte Datei für ein bestimmtes Gebietsschema:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp/files/1/translations?locale=fr&format=json"
+```
+
+### Übersetzungen importieren
+
+1. Gehen Sie zu **Import / Export** und wählen Sie Ihre Datei aus.
+2. Wählen Sie eine **Importstrategie**:
+   - **Überschreiben** — Ersetzen Sie vorhandene Übersetzungen durch Werte aus der Datei
+   - **Überspringen** — Behalten Sie vorhandene Übersetzungen bei; fügen Sie nur Schlüssel hinzu, die noch nicht existieren
+3. Klicken Sie auf **Import** (Importieren), um die Änderungen anzuwenden.
+
+---
+
+## KI-Übersetzungen
+
+Transi-Store kann mithilfe von KI (unterstützt durch Google Gemini oder OpenAI) Übersetzungen vorschlagen.
+
+Um KI-Übersetzungen zu aktivieren, konfigurieren Sie Ihren KI-Anbieter in **Organization Settings → AI** (Organisationseinstellungen → KI).
+
+Nach der Konfiguration erscheint in jeder Übersetzungszelle eine Schaltfläche **AI suggest** (KI-Vorschlag). Klicken Sie darauf, um einen Vorschlag basierend auf dem Wert des Quell-Gebietsschemas und dem Kontext der umliegenden Schlüssel zu generieren.
+
+<AiSuggestionsMockup />
+
+> **Hinweis:** KI-Vorschläge sind ein Ausgangspunkt — überprüfen Sie diese immer, bevor Sie sie veröffentlichen.
+
+---
+
+## Teamzusammenarbeit
+
+### Mitglieder einladen
+
+1. Gehen Sie zu Ihrer Organisation und öffnen Sie den Tab **Members** (Mitglieder).
+2. Klicken Sie auf **Invite member** (Mitglied einladen) und geben Sie dessen E-Mail-Adresse ein oder teilen Sie den Einladungslink.
+3. Der eingeladene Benutzer erhält Zugriff auf alle Projekte innerhalb der Organisation.
+
+### Rollen
+
+| Rolle | Berechtigungen |
+|------|-------------|
+| Eigentümer | Voller Zugriff einschließlich Abrechnung und Mitgliederverwaltung |
+| Mitglied | Kann Projekte, Schlüssel und Branches erstellen/bearbeiten |
