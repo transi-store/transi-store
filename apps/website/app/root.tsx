@@ -126,7 +126,7 @@ export default function App() {
   }, [locale, i18n]);
 
   return (
-    <Box minH="100vh" bg="surface.canvas">
+    <Box minH="100vh" bg="surface.canvas" display="flex" flexDirection="column">
       {hreflangLinks.map(({ hrefLang, href }) => (
         <link key={hrefLang} rel="alternate" hrefLang={hrefLang} href={href} />
       ))}
@@ -135,7 +135,7 @@ export default function App() {
 
       <Toaster />
       <Header user={user} />
-      <Box as="main">
+      <Box as="main" flex="1">
         <Outlet />
       </Box>
       <Footer />

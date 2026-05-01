@@ -1,14 +1,12 @@
 import { lazy, Suspense } from "react";
 import { Box, Spinner } from "@chakra-ui/react";
 import { useColorMode } from "~/components/ui/color-mode";
-import "@scalar/api-reference-react/style.css";
-// import { getOrganizationApiKeys } from "~/lib/api-keys.server";
-// import { userContext } from "~/middleware/auth";
-import type { Route } from "../+types/root";
 import { getUserFromSession } from "~/lib/session.server";
 import { getOrganizationApiKeys } from "~/lib/api-keys.server";
 import { useLoaderData } from "react-router";
 import { getInstance } from "~/middleware/i18next";
+import type { Route } from "./+types/api.doc";
+import "@scalar/api-reference-react/style.css";
 
 const ApiReferenceReact = lazy(() =>
   import("@scalar/api-reference-react").then((m) => ({
@@ -27,6 +25,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const lastApiKeyValue = apiKeys?.[0]?.keyValue;
 
   const i18next = getInstance(context);
+
   return {
     lastApiKeyValue,
     title: i18next.t("page.api.title"),
@@ -34,10 +33,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: data?.title ?? "API Reference — Transi-Store" },
-    { name: "description", content: data?.description ?? "" },
+    { title: loaderData?.title ?? "API Reference — Transi-Store" },
+    { name: "description", content: loaderData?.description ?? "" },
   ];
 }
 

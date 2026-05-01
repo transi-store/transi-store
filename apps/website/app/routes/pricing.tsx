@@ -31,10 +31,10 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: data?.title ?? "Pricing — Transi-Store" },
-    { name: "description", content: data?.description ?? "" },
+    { title: loaderData?.title ?? "Pricing — Transi-Store" },
+    { name: "description", content: loaderData?.description ?? "" },
   ];
 }
 

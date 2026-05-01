@@ -12,10 +12,10 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: data?.title ?? "Developer Guide — Transi-Store" },
-    { name: "description", content: data?.description ?? "" },
+    { title: loaderData?.title ?? "Developer Guide — Transi-Store" },
+    { name: "description", content: loaderData?.description ?? "" },
   ];
 }
 
