@@ -25,17 +25,29 @@ export function Footer() {
 
             <HStack as="nav" gap={4} flexWrap="wrap" justify="center">
               <a href="/docs/usage">
-                <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
+                <Text
+                  textStyle="sm"
+                  color="fg.muted"
+                  _hover={{ color: "fg", textDecoration: "underline" }}
+                >
                   {t("header.docs")}
                 </Text>
               </a>
               <a href="/api/doc">
-                <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
+                <Text
+                  textStyle="sm"
+                  color="fg.muted"
+                  _hover={{ color: "fg", textDecoration: "underline" }}
+                >
                   {t("header.api-doc")}
                 </Text>
               </a>
               <a href="/pricing">
-                <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
+                <Text
+                  textStyle="sm"
+                  color="fg.muted"
+                  _hover={{ color: "fg", textDecoration: "underline" }}
+                >
                   {t("header.pricing")}
                 </Text>
               </a>
@@ -44,7 +56,11 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Text textStyle="sm" color="fg.muted" _hover={{ color: "fg" }}>
+                <Text
+                  textStyle="sm"
+                  color="fg.muted"
+                  _hover={{ color: "fg", textDecoration: "underline" }}
+                >
                   GitHub
                 </Text>
               </a>
