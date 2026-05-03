@@ -1,24 +1,39 @@
 import {
   type RouteConfig,
+  type RouteConfigEntry,
   index,
   layout,
   route,
 } from "@react-router/dev/routes";
+import { withLocalizedIds } from "./lib/localized-routes";
 
-export default [
-  // Public routes (no auth required)
+// Public routes that have a localized version available under /:lng/...
+const localizablePublicRoutes: Array<RouteConfigEntry> = [
   index("routes/_index.tsx"),
   route("pricing", "routes/pricing.tsx"),
-
-  // Documentation routes (public, no auth required)
+  route("auth/login", "routes/auth.login.tsx"),
   layout("routes/docs-layout.tsx", [
     route("docs", "routes/docs._index.tsx"),
     route("docs/usage", "routes/docs.usage.tsx"),
     route("docs/developer", "routes/docs.developer.tsx"),
   ]),
+];
+
+export default [
+  // Public routes (no auth required) — English at the root
+  ...localizablePublicRoutes,
+
+  // Same public routes prefixed with /:lng/ — the layout's loader validates :lng
+  // (404 if unsupported, 301 to the un-prefixed canonical URL if :lng is the default)
+  route(
+    ":lng",
+    "routes/locale-prefix-layout.tsx",
+    withLocalizedIds(localizablePublicRoutes),
+  ),
 
   // Authentication routes (no auth required)
-  route("auth/login", "routes/auth.login.tsx"),
+  // Note: auth/login is in `localizablePublicRoutes` above (gets a /:lng/ variant);
+  // OAuth provider URLs and the logout redirect stay un-localized.
   route("auth/google/login", "routes/auth.google.login.tsx"),
   route("auth/google/callback", "routes/auth.google.callback.tsx"),
   route("auth/github/login", "routes/auth.github.login.tsx"),

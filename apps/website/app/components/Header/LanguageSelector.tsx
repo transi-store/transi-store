@@ -4,12 +4,18 @@ import { Link, useLocation } from "react-router";
 import { LuLanguages, LuCheck } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_LANGUAGE_CODE, AVAILABLE_LANGUAGES } from "~/lib/i18n";
+import {
+  isLocalizablePublicPath,
+  stripLocalePrefix,
+} from "~/lib/localized-routes";
 
 export function LanguageSelector() {
   const { i18n, t } = useTranslation();
   const location = useLocation();
 
   const currentLang = i18n.language || DEFAULT_LANGUAGE_CODE;
+  const { pathname: pathWithoutLocale } = stripLocalePrefix(location.pathname);
+  const isPublicLocalizable = isLocalizablePublicPath(pathWithoutLocale);
 
   return (
     <Menu.Root>
@@ -27,10 +33,20 @@ export function LanguageSelector() {
         <Menu.Positioner>
           <Menu.Content>
             {AVAILABLE_LANGUAGES.map((lang) => {
-              const params = new URLSearchParams(location.search);
-              params.set("lng", lang.code);
-              const search = params.toString();
-              const to = `${location.pathname}${search ? `?${search}` : ""}${location.hash}`;
+              let to: string;
+              if (isPublicLocalizable) {
+                // URL-prefixed locale: /pricing or /fr/pricing
+                const prefix =
+                  lang.code === DEFAULT_LANGUAGE_CODE ? "" : `/${lang.code}`;
+                const path = pathWithoutLocale === "/" ? "" : pathWithoutLocale;
+                to = `${prefix}${path || "/"}${location.search}${location.hash}`;
+              } else {
+                // Legacy ?lng= behavior for non-localizable routes
+                const params = new URLSearchParams(location.search);
+                params.set("lng", lang.code);
+                const search = params.toString();
+                to = `${location.pathname}${search ? `?${search}` : ""}${location.hash}`;
+              }
 
               return (
                 <Menu.Item key={lang.code} value={lang.code} asChild>

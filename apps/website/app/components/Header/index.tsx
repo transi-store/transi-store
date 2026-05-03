@@ -1,11 +1,11 @@
 import { Box, Container, HStack, Text, Button } from "@chakra-ui/react";
-import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { SessionData } from "~/lib/session.server";
 import { Navigation } from "./Navigation";
 import { LanguageSelector } from "./LanguageSelector";
 import { UserMenu } from "./UserMenu";
 import { ColorModeButton, useColorMode } from "../ui/color-mode";
+import { LocalizedLink } from "../LocalizedLink";
 
 /** Subtle circuit-board traces as a background for the header bar. */
 function HeaderCircuitBg() {
@@ -142,7 +142,7 @@ export function Header({ user }: HeaderProps) {
             position="relative"
           >
             <HStack asChild gap={2.5} px={1} py={1}>
-              <Link to="/">
+              <LocalizedLink to="/">
                 <img
                   src={
                     colorMode === "dark"
@@ -167,7 +167,7 @@ export function Header({ user }: HeaderProps) {
                     Store
                   </Text>
                 </Text>
-              </Link>
+              </LocalizedLink>
             </HStack>
 
             {user && (
@@ -184,11 +184,13 @@ export function Header({ user }: HeaderProps) {
           >
             <Box>
               <Button asChild variant="ghost" size="sm">
-                <Link to="/docs">{t("header.docs")}</Link>
+                <LocalizedLink to="/docs">{t("header.docs")}</LocalizedLink>
               </Button>
 
               <Button asChild variant="ghost" size="sm">
-                <Link to="/api/doc">{t("header.api-doc")}</Link>
+                <LocalizedLink to="/api/doc">
+                  {t("header.api-doc")}
+                </LocalizedLink>
               </Button>
 
               <LanguageSelector />
@@ -202,7 +204,9 @@ export function Header({ user }: HeaderProps) {
               ) : (
                 <>
                   <Button asChild variant="ghost" size="sm" hideBelow="sm">
-                    <Link to="/pricing">{t("header.pricing")}</Link>
+                    <LocalizedLink to="/pricing">
+                      {t("header.pricing")}
+                    </LocalizedLink>
                   </Button>
                   <Button
                     asChild
@@ -210,7 +214,9 @@ export function Header({ user }: HeaderProps) {
                     colorPalette="accent"
                     fontWeight="bold"
                   >
-                    <Link to="/auth/login">{t("header.login")}</Link>
+                    <LocalizedLink to="/auth/login">
+                      {t("header.login")}
+                    </LocalizedLink>
                   </Button>
                 </>
               )}
