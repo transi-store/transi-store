@@ -29,7 +29,7 @@ export async function getUserOrganizations(
   return organizations;
 }
 
-async function getOrganizationBySlug(
+export async function getOrganizationBySlug(
   slug: string,
 ): Promise<Organization | undefined> {
   return await db.query.organizations.findFirst({
@@ -37,7 +37,7 @@ async function getOrganizationBySlug(
   });
 }
 
-async function isUserMemberOfOrganization(
+export async function isUserMemberOfOrganization(
   userId: number,
   organizationId: number,
 ): Promise<boolean> {

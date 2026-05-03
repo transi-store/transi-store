@@ -66,6 +66,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       translationKeyCount: project.translationKeyCount,
       locales,
       coverage: translationCoverageForProject?.coverage ?? 0,
+      visibility: project.visibility,
     };
   });
 

@@ -1,19 +1,28 @@
-import { Container, VStack, Box, Stack, Text } from "@chakra-ui/react";
-import { Outlet, useLoaderData } from "react-router";
+import { Badge, Container, VStack, Box, Stack, Text } from "@chakra-ui/react";
+import { Outlet, redirect, useLoaderData } from "react-router";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
+import { maybeUserContext } from "~/middleware/auth";
+import {
+  getOrganizationBySlug,
+  isUserMemberOfOrganization,
+} from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import {
+  PROJECT_VISIBILITY,
+  type ProjectAccessRole,
+} from "~/lib/project-visibility";
+import { useTranslation } from "react-i18next";
 
-export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const maybeUser = context.get(maybeUserContext);
+
+  const organization = await getOrganizationBySlug(params.orgSlug);
+  if (!organization) {
+    throw new Response("Organization not found", { status: 404 });
+  }
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
@@ -22,11 +31,28 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const languages = await getProjectLanguages(project.id);
 
-  return { organization, project, languages };
+  let projectAccessRole: ProjectAccessRole;
+  if (
+    maybeUser !== null &&
+    (await isUserMemberOfOrganization(maybeUser.userId, organization.id))
+  ) {
+    projectAccessRole = "member";
+  } else if (project.visibility === PROJECT_VISIBILITY.PUBLIC) {
+    projectAccessRole = "viewer";
+  } else {
+    const url = new URL(request.url);
+    throw redirect(
+      `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
+    );
+  }
+
+  return { organization, project, languages, projectAccessRole };
 }
 
 export default function ProjectLayout() {
-  const { organization, project, languages } = useLoaderData<typeof loader>();
+  const { organization, project, languages, projectAccessRole } =
+    useLoaderData<typeof loader>();
+  const { t } = useTranslation();
 
   return (
     <Container maxW="container.xl" py={5}>
@@ -48,10 +74,26 @@ export default function ProjectLayout() {
             />
           </Box>
 
-          <ProjectNav
-            organizationSlug={organization.slug}
-            projectSlug={project.slug}
-          />
+          <Box display="flex" alignItems="center" gap={2}>
+            <Badge
+              size="sm"
+              colorPalette={
+                project.visibility === PROJECT_VISIBILITY.PUBLIC
+                  ? "green"
+                  : "gray"
+              }
+              variant="subtle"
+            >
+              {project.visibility === PROJECT_VISIBILITY.PUBLIC
+                ? t("projects.visibility.public")
+                : t("projects.visibility.private")}
+            </Badge>
+
+            <ProjectNav
+              organizationSlug={organization.slug}
+              projectSlug={project.slug}
+            />
+          </Box>
         </Stack>
 
         {project.description && (
@@ -60,7 +102,7 @@ export default function ProjectLayout() {
           </Box>
         )}
 
-        <Outlet context={{ organization, project, languages }} />
+        <Outlet context={{ organization, project, languages, projectAccessRole }} />
       </VStack>
     </Container>
   );

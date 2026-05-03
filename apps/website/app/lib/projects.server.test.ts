@@ -15,6 +15,7 @@ import {
 import {
   addLanguageToProject,
   deleteProject,
+  getProjectBySlug,
   getProjectDeletionSummary,
   getProjectLanguages,
   getProjectLanguagesForProjects,
@@ -22,6 +23,7 @@ import {
   getTranslationCoverageForProjects,
   removeLanguageFromProject,
   setDefaultLanguageForProject,
+  updateProjectVisibility,
 } from "./projects.server";
 
 vi.mock("~/lib/db.server", () => ({
@@ -509,6 +511,60 @@ describe("projects.server", () => {
       const byLocale = Object.fromEntries(result.map((l) => [l.locale, l]));
       expect(byLocale["en"].isDefault).toBe(true);
       expect(byLocale["fr"].isDefault).toBe(false);
+    });
+  });
+
+  describe("getProjectBySlug", () => {
+    it("returns null when project does not exist", async () => {
+      const result = await getProjectBySlug(organizationId, "nonexistent");
+      expect(result).toBeNull();
+    });
+
+    it("returns null when project belongs to another organization", async () => {
+      const otherOrg = await createOrganization(db);
+      const otherProject = await createProject(db, otherOrg.id, {
+        slug: "other-slug",
+      });
+      const result = await getProjectBySlug(organizationId, otherProject.slug);
+      expect(result).toBeNull();
+    });
+
+    it("returns project with private visibility by default", async () => {
+      const project = await db.query.projects.findFirst({
+        where: { id: projectId },
+      });
+      const result = await getProjectBySlug(organizationId, project!.slug);
+      expect(result).not.toBeNull();
+      expect(result!.visibility).toBe("private");
+    });
+
+    it("returns project with public visibility when set", async () => {
+      const publicProject = await createProject(db, organizationId, {
+        slug: "public-project",
+        visibility: "public",
+      });
+      const result = await getProjectBySlug(organizationId, publicProject.slug);
+      expect(result).not.toBeNull();
+      expect(result!.visibility).toBe("public");
+    });
+  });
+
+  describe("updateProjectVisibility", () => {
+    it("updates project visibility to public", async () => {
+      await updateProjectVisibility(projectId, "public");
+      const updated = await db.query.projects.findFirst({
+        where: { id: projectId },
+      });
+      expect(updated!.visibility).toBe("public");
+    });
+
+    it("updates project visibility back to private", async () => {
+      await updateProjectVisibility(projectId, "public");
+      await updateProjectVisibility(projectId, "private");
+      const updated = await db.query.projects.findFirst({
+        where: { id: projectId },
+      });
+      expect(updated!.visibility).toBe("private");
     });
   });
 

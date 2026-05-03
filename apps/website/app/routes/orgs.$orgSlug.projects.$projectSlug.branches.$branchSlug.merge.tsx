@@ -21,7 +21,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { LuGitMerge, LuGitBranch, LuArrowLeft } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge";
-import { userContext } from "~/middleware/auth";
+import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
 import {
@@ -35,7 +35,8 @@ import { BRANCH_STATUS } from "~/lib/branches";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
+  const maybeUser = context.get(maybeUserContext);
+  const user = requireUserFromContext(maybeUser);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -65,7 +66,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 }
 
 export async function action({ params, context }: Route.ActionArgs) {
-  const user = context.get(userContext);
+  const maybeUser = context.get(maybeUserContext);
+  const user = requireUserFromContext(maybeUser);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

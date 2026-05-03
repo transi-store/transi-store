@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
 import { isSupportedFormat, SupportedFormat } from "@transi-store/common";
 import type { Route } from "./+types/index";
-import { userContext } from "~/middleware/auth";
+import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
 import {
@@ -29,7 +29,8 @@ export async function loader() {
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = context.get(userContext);
+  const maybeUser = context.get(maybeUserContext);
+  const user = requireUserFromContext(maybeUser);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

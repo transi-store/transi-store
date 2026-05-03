@@ -9,8 +9,8 @@ import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
 import { isDocumentFormat } from "@transi-store/common";
 import type { Route } from "./+types/index";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
+import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
+import { getOrganizationBySlug, requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
 import { getProjectFiles } from "~/lib/project-files.server";
 import { getInstance } from "~/middleware/i18next";
@@ -48,11 +48,10 @@ type EmptyLoaderData = {
 };
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
+  const organization = await getOrganizationBySlug(params.orgSlug);
+  if (!organization) {
+    throw new Response("Organization not found", { status: 404 });
+  }
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
 
@@ -113,7 +112,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = context.get(userContext);
+  const maybeUser = context.get(maybeUserContext);
+  const user = requireUserFromContext(maybeUser);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

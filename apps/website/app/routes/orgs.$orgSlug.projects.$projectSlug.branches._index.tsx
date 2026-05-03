@@ -14,7 +14,7 @@ import { LuPlus, LuGitBranch } from "react-icons/lu";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches._index";
-import { userContext } from "~/middleware/auth";
+import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
 import {
@@ -28,7 +28,8 @@ import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectN
 import { BranchList } from "~/components/branches/BranchList";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
+  const maybeUser = context.get(maybeUserContext);
+  const user = requireUserFromContext(maybeUser);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

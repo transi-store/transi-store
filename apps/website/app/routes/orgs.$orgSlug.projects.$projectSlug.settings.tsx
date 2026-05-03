@@ -18,6 +18,7 @@ import {
   Input,
   Menu,
   Portal,
+  RadioGroup,
   SimpleGrid,
   Spinner,
   Text,
@@ -34,7 +35,7 @@ import {
 import { useMemo, useState } from "react";
 import { LuEllipsis, LuPlus, LuStar, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.settings";
-import { userContext } from "~/middleware/auth";
+import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import {
   getProjectBySlug,
@@ -44,11 +45,16 @@ import {
   getProjectDeletionSummary,
   removeLanguageFromProject,
   setDefaultLanguageForProject,
+  updateProjectVisibility,
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { getInstance } from "~/middleware/i18next";
 import { ProjectSettingsAction } from "./ProjectSettingsAction";
+import {
+  PROJECT_VISIBILITY,
+  type ProjectVisibility,
+} from "~/lib/project-visibility";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -57,12 +63,14 @@ type ContextType = {
     slug: string;
     name: string;
     description: string | null;
+    visibility: ProjectVisibility;
   };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
 };
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
+  const maybeUser = context.get(maybeUserContext);
+  const user = requireUserFromContext(maybeUser);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -85,7 +93,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = context.get(userContext);
+  const maybeUser = context.get(maybeUserContext);
+  const user = requireUserFromContext(maybeUser);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -98,6 +107,26 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   const formData = await request.formData();
   const action = formData.get("_action");
+
+  if (action === ProjectSettingsAction.UpdateVisibility) {
+    const { getInstance } = await import("~/middleware/i18next");
+    const i18next = getInstance(context);
+    const visibility = formData.get("visibility");
+    if (
+      visibility !== PROJECT_VISIBILITY.PRIVATE &&
+      visibility !== PROJECT_VISIBILITY.PUBLIC
+    ) {
+      return {
+        action: ProjectSettingsAction.UpdateVisibility as const,
+        error: i18next.t("settings.visibility.invalidValue"),
+      };
+    }
+    await updateProjectVisibility(project.id, visibility);
+    return {
+      action: ProjectSettingsAction.UpdateVisibility as const,
+      success: true,
+    };
+  }
 
   if (action === ProjectSettingsAction.AddLanguage) {
     const locale = formData.get("locale");
@@ -241,6 +270,90 @@ export default function ProjectSettings() {
             </Text>
           </Box>
         </VStack>
+      </Box>
+
+      {/* Visibility */}
+      <Box>
+        <Heading as="h2" size="lg" mb={4}>
+          {t("settings.visibility.title")}
+        </Heading>
+
+        {actionData?.action === ProjectSettingsAction.UpdateVisibility &&
+          actionData.error && (
+            <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md" mb={4}>
+              {actionData.error}
+            </Box>
+          )}
+
+        {actionData?.action === ProjectSettingsAction.UpdateVisibility &&
+          actionData.success && (
+            <Box
+              p={4}
+              bg="green.subtle"
+              color="green.fg"
+              borderRadius="md"
+              mb={4}
+            >
+              {t("settings.visibility.updated")}
+            </Box>
+          )}
+
+        <Form method="post">
+          <input
+            type="hidden"
+            name="_action"
+            value={ProjectSettingsAction.UpdateVisibility}
+          />
+          <VStack align="stretch" gap={4}>
+            <RadioGroup.Root
+              name="visibility"
+              defaultValue={project.visibility}
+            >
+              <VStack align="stretch" gap={3}>
+                <RadioGroup.Item value={PROJECT_VISIBILITY.PRIVATE}>
+                  <RadioGroup.ItemHiddenInput />
+                  <RadioGroup.ItemIndicator />
+                  <RadioGroup.ItemText>
+                    <Box>
+                      <Text fontWeight="medium">
+                        {t("projects.visibility.private")}
+                      </Text>
+                      <Text fontSize="sm" color="fg.muted">
+                        {t("projects.visibility.privateDescription")}
+                      </Text>
+                    </Box>
+                  </RadioGroup.ItemText>
+                </RadioGroup.Item>
+                <RadioGroup.Item value={PROJECT_VISIBILITY.PUBLIC}>
+                  <RadioGroup.ItemHiddenInput />
+                  <RadioGroup.ItemIndicator />
+                  <RadioGroup.ItemText>
+                    <Box>
+                      <Text fontWeight="medium">
+                        {t("projects.visibility.public")}
+                      </Text>
+                      <Text fontSize="sm" color="fg.muted">
+                        {t("projects.visibility.publicDescription")}
+                      </Text>
+                    </Box>
+                  </RadioGroup.ItemText>
+                </RadioGroup.Item>
+              </VStack>
+            </RadioGroup.Root>
+            <Box>
+              <Button
+                type="submit"
+                colorPalette="brand"
+                loading={
+                  isSubmitting &&
+                  submittedAction === ProjectSettingsAction.UpdateVisibility
+                }
+              >
+                {t("files.modal.save")}
+              </Button>
+            </Box>
+          </VStack>
+        </Form>
       </Box>
 
       {/* Langues */}

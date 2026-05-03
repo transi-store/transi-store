@@ -70,11 +70,18 @@ export default [
       route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
     ]),
 
-    // Projects routes
+    // Projects routes (members-only: create new project)
     route(
       "orgs/:orgSlug/projects/new",
       "routes/orgs.$orgSlug.projects.new.tsx",
     ),
+
+    // Search
+    route("search", "routes/search/index.tsx"),
+  ]),
+
+  // Project viewer routes (optional auth: public projects readable by anyone)
+  layout("routes/project-viewer-layout.tsx", [
     route(
       "orgs/:orgSlug/projects/:projectSlug",
       "routes/orgs.$orgSlug.projects.$projectSlug.tsx",
@@ -122,9 +129,6 @@ export default [
       "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
       "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
     ),
-
-    // Search
-    route("search", "routes/search/index.tsx"),
   ]),
 
   // Authenticated API routes (dual auth: API key or session via middleware)

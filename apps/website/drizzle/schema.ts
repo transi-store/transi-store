@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { AI_PROVIDERS } from "~/lib/ai-providers";
 import { BRANCH_STATUS } from "~/lib/branches";
+import { PROJECT_VISIBILITY } from "~/lib/project-visibility";
 import { SupportedFormat } from "@transi-store/common";
 import { OAuthProvider } from "~/lib/auth-providers";
 
@@ -140,6 +141,12 @@ export const projects = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     slug: textC("slug", { length: 255 }).notNull(),
     description: text("description"),
+    visibility: varchar("visibility", {
+      length: 20,
+      enum: ensureOneItem(Object.values(PROJECT_VISIBILITY)),
+    })
+      .default(PROJECT_VISIBILITY.PRIVATE)
+      .notNull(),
     createdBy: integer("created_by").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

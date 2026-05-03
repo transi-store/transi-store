@@ -6,6 +6,8 @@ import {
   Input,
   Field,
   Box,
+  RadioGroup,
+  Text,
   Textarea,
 } from "@chakra-ui/react";
 import {
@@ -25,6 +27,7 @@ import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
 import { getInstance } from "~/middleware/i18next";
 import { getProjectUrl } from "~/lib/routes-helpers";
+import { PROJECT_VISIBILITY } from "~/lib/project-visibility";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -49,6 +52,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const name = formData.get("name");
   const customSlug = formData.get("slug");
   const description = formData.get("description");
+  const visibilityInput = formData.get("visibility");
+  const visibility =
+    visibilityInput === PROJECT_VISIBILITY.PUBLIC
+      ? PROJECT_VISIBILITY.PUBLIC
+      : PROJECT_VISIBILITY.PRIVATE;
 
   if (!name || typeof name !== "string") {
     return { error: i18next.t("projects.new.errors.nameRequired") };
@@ -75,6 +83,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     description:
       description && typeof description === "string" ? description : undefined,
     createdBy: user.userId,
+    visibility,
   });
 
   return redirect(getProjectUrl(params.orgSlug, slug));
@@ -135,6 +144,45 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
                 disabled={isSubmitting}
                 rows={3}
               />
+            </Field.Root>
+
+            <Field.Root>
+              <Field.Label>{t("projects.visibility.label")}</Field.Label>
+              <RadioGroup.Root
+                name="visibility"
+                defaultValue={PROJECT_VISIBILITY.PRIVATE}
+              >
+                <VStack align="stretch" gap={2}>
+                  <RadioGroup.Item value={PROJECT_VISIBILITY.PRIVATE}>
+                    <RadioGroup.ItemHiddenInput />
+                    <RadioGroup.ItemIndicator />
+                    <RadioGroup.ItemText>
+                      <Box>
+                        <Text fontWeight="medium">
+                          {t("projects.visibility.private")}
+                        </Text>
+                        <Text fontSize="sm" color="fg.muted">
+                          {t("projects.visibility.privateDescription")}
+                        </Text>
+                      </Box>
+                    </RadioGroup.ItemText>
+                  </RadioGroup.Item>
+                  <RadioGroup.Item value={PROJECT_VISIBILITY.PUBLIC}>
+                    <RadioGroup.ItemHiddenInput />
+                    <RadioGroup.ItemIndicator />
+                    <RadioGroup.ItemText>
+                      <Box>
+                        <Text fontWeight="medium">
+                          {t("projects.visibility.public")}
+                        </Text>
+                        <Text fontSize="sm" color="fg.muted">
+                          {t("projects.visibility.publicDescription")}
+                        </Text>
+                      </Box>
+                    </RadioGroup.ItemText>
+                  </RadioGroup.Item>
+                </VStack>
+              </RadioGroup.Root>
             </Field.Root>
 
             <Box display="flex" gap={3}>

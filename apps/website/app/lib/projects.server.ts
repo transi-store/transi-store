@@ -1,6 +1,10 @@
 import type { Project } from "../../drizzle/schema";
 import { db, schema } from "./db.server";
 import { count, eq, and, inArray, isNull, getColumns } from "drizzle-orm";
+import {
+  PROJECT_VISIBILITY,
+  type ProjectVisibility,
+} from "./project-visibility";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
@@ -20,6 +24,7 @@ type CreateProjectParams = {
   slug: string;
   description?: string;
   createdBy: number;
+  visibility?: ProjectVisibility;
 };
 
 export async function createProject(params: CreateProjectParams) {
@@ -31,6 +36,7 @@ export async function createProject(params: CreateProjectParams) {
       slug: params.slug,
       description: params.description,
       createdBy: params.createdBy,
+      visibility: params.visibility ?? PROJECT_VISIBILITY.PRIVATE,
     })
     .returning();
 
@@ -308,4 +314,14 @@ export async function deleteProject(projectId: number): Promise<void> {
       .where(eq(schema.projectLanguages.projectId, projectId));
     await tx.delete(schema.projects).where(eq(schema.projects.id, projectId));
   });
+}
+
+export async function updateProjectVisibility(
+  projectId: number,
+  visibility: ProjectVisibility,
+): Promise<void> {
+  await db
+    .update(schema.projects)
+    .set({ visibility, updatedAt: new Date() })
+    .where(eq(schema.projects.id, projectId));
 }
