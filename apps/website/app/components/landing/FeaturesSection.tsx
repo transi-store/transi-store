@@ -16,6 +16,7 @@ import {
   LuUsers,
   LuPlug,
   LuFileText,
+  LuMessageSquare,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
 import { NEON_CYCLE, neonGlowAt } from "./neon-colors";
@@ -103,6 +104,11 @@ export function FeaturesSection() {
       icon: LuFileJson,
       title: t("landing.features.export.title"),
       description: t("landing.features.export.description"),
+    },
+    {
+      icon: LuMessageSquare,
+      title: t("landing.features.strings.title"),
+      description: t("landing.features.strings.description"),
     },
     {
       icon: LuFileText,
