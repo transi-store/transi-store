@@ -55,6 +55,7 @@ import {
   PROJECT_VISIBILITY,
   type ProjectVisibility,
 } from "~/lib/project-visibility";
+import { getInstance } from "~/middleware/i18next";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -109,7 +110,6 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const action = formData.get("_action");
 
   if (action === ProjectSettingsAction.UpdateVisibility) {
-    const { getInstance } = await import("~/middleware/i18next");
     const i18next = getInstance(context);
     const visibility = formData.get("visibility");
     if (
