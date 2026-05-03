@@ -1,5 +1,6 @@
 import { Box, Container, HStack, Text, VStack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import { LocalizedLink } from "../LocalizedLink";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -24,7 +25,7 @@ export function Footer() {
             </Text>
 
             <HStack as="nav" gap={4} flexWrap="wrap" justify="center">
-              <a href="/docs/usage">
+              <LocalizedLink to="/docs/usage">
                 <Text
                   textStyle="sm"
                   color="fg.muted"
@@ -32,8 +33,8 @@ export function Footer() {
                 >
                   {t("header.docs")}
                 </Text>
-              </a>
-              <a href="/api/doc">
+              </LocalizedLink>
+              <LocalizedLink to="/api/doc">
                 <Text
                   textStyle="sm"
                   color="fg.muted"
@@ -41,8 +42,8 @@ export function Footer() {
                 >
                   {t("header.api-doc")}
                 </Text>
-              </a>
-              <a href="/pricing">
+              </LocalizedLink>
+              <LocalizedLink to="/pricing">
                 <Text
                   textStyle="sm"
                   color="fg.muted"
@@ -50,7 +51,7 @@ export function Footer() {
                 >
                   {t("header.pricing")}
                 </Text>
-              </a>
+              </LocalizedLink>
               <a
                 href="https://github.com/transi-store/transi-store"
                 target="_blank"

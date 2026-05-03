@@ -8,8 +8,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
 import { CircuitDecoration } from "~/components/CircuitDecoration";
+import { LocalizedLink } from "~/components/LocalizedLink";
 
 export function HeroSection() {
   const { t } = useTranslation();
@@ -58,10 +58,14 @@ export function HeroSection() {
             w={{ base: "full", sm: "auto" }}
           >
             <Button asChild size="lg" colorPalette="accent" fontWeight="bold">
-              <Link to="/auth/login">{t("landing.hero.cta.getStarted")}</Link>
+              <LocalizedLink to="/auth/login">
+                {t("landing.hero.cta.getStarted")}
+              </LocalizedLink>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/pricing">{t("landing.hero.cta.viewPricing")}</Link>
+              <LocalizedLink to="/pricing">
+                {t("landing.hero.cta.viewPricing")}
+              </LocalizedLink>
             </Button>
           </Stack>
         </VStack>

@@ -1,6 +1,7 @@
 import XMLBuilder from "fast-xml-builder";
 import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
-import { AVAILABLE_LANGUAGES } from "~/lib/i18n";
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "~/lib/i18n";
+import { isLocalizablePublicPath } from "~/lib/localized-routes";
 import type { Route } from "./+types/sitemap[.xml]";
 
 // Public pages to include in the sitemap
@@ -39,21 +40,30 @@ export function loader({ request }: Route.LoaderArgs) {
       "@_xmlns:xhtml": "http://www.w3.org/1999/xhtml",
       url: PUBLIC_PATHS.map((path) => {
         const canonicalHref = `${DEFAULT_DOMAIN_ROOT}${path}`;
+        const isLocalizable = isLocalizablePublicPath(path);
+        const buildLocaleHref = (code: string) => {
+          if (code === DEFAULT_LANGUAGE_CODE) {
+            return canonicalHref;
+          }
+          const suffix = path === "/" ? "" : path;
+          return `${DEFAULT_DOMAIN_ROOT}/${code}${suffix}`;
+        };
         return {
           loc: canonicalHref,
-          "xhtml:link": [
-            ...AVAILABLE_LANGUAGES.map((lang) => ({
-              "@_rel": "alternate",
-              "@_hreflang": lang.code,
-              // TODO Change this when using plain url (/fr/docs/usage instead of /docs/usage?lng=fr)
-              "@_href": `${canonicalHref}?lng=${lang.code}`,
-            })),
-            {
-              "@_rel": "alternate",
-              "@_hreflang": "x-default",
-              "@_href": canonicalHref,
-            },
-          ],
+          "xhtml:link": isLocalizable
+            ? [
+                ...AVAILABLE_LANGUAGES.map((lang) => ({
+                  "@_rel": "alternate",
+                  "@_hreflang": lang.code,
+                  "@_href": buildLocaleHref(lang.code),
+                })),
+                {
+                  "@_rel": "alternate",
+                  "@_hreflang": "x-default",
+                  "@_href": canonicalHref,
+                },
+              ]
+            : undefined,
           changefreq: "weekly",
           priority: path === "/" ? "1.0" : "0.8",
         };

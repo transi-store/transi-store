@@ -16,7 +16,11 @@ import {
   i18nextMiddleware,
   localeCookie,
 } from "~/middleware/i18next";
-import { AVAILABLE_LANGUAGES } from "~/lib/i18n";
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "~/lib/i18n";
+import {
+  isLocalizablePublicPath,
+  stripLocalePrefix,
+} from "~/lib/localized-routes";
 import { queryCounterMiddleware } from "~/middleware/query-counter";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
@@ -35,25 +39,54 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const locale = getLocale(context);
 
   const url = new URL(request.url);
+  const { pathname: pathWithoutLocale } = stripLocalePrefix(url.pathname);
+  const isPublicLocalizable = isLocalizablePublicPath(pathWithoutLocale);
 
-  const baseParams = new URLSearchParams(url.searchParams);
-  baseParams.delete("lng");
-  const baseWithoutLng = `${url.origin}${url.pathname}${baseParams.size > 0 ? `?${baseParams.toString()}` : ""}`;
+  let hreflangLinks: Array<{ hrefLang: string; href: string }> = [];
+  let canonicalHref: string;
+  let xDefaultHref: string;
 
-  // TODO handle change of i18n routes to another strategy ("/fr/xxx")
-  const hreflangLinks = AVAILABLE_LANGUAGES.map((lang) => ({
-    hrefLang: lang.code,
-    href: `${baseWithoutLng}${baseParams.size > 0 ? "&" : "?"}lng=${lang.code}`,
-  }));
+  if (isPublicLocalizable) {
+    // SEO: prefix-based hreflangs for public localizable pages
+    const buildLocaleUrl = (code: string) => {
+      const prefix = code === DEFAULT_LANGUAGE_CODE ? "" : `/${code}`;
+      const path = pathWithoutLocale === "/" ? "" : pathWithoutLocale;
+      return `${url.origin}${prefix}${path || "/"}`;
+    };
+
+    hreflangLinks = AVAILABLE_LANGUAGES.map((lang) => ({
+      hrefLang: lang.code,
+      href: buildLocaleUrl(lang.code),
+    }));
+    canonicalHref = buildLocaleUrl(locale);
+    xDefaultHref = buildLocaleUrl(DEFAULT_LANGUAGE_CODE);
+  } else {
+    // Non-public/non-localizable routes: keep a simple canonical, no hreflang
+    const baseParams = new URLSearchParams(url.searchParams);
+    baseParams.delete("lng");
+    const search = baseParams.size > 0 ? `?${baseParams.toString()}` : "";
+    canonicalHref = `${url.origin}${url.pathname}${search}`;
+    xDefaultHref = canonicalHref;
+  }
+
+  // Avoid rewriting the cookie on every navigation when it already matches
+  const existingCookie = await localeCookie.parse(
+    request.headers.get("Cookie"),
+  );
+  const headers =
+    existingCookie === locale
+      ? undefined
+      : { "Set-Cookie": await localeCookie.serialize(locale) };
 
   return data(
     {
       user,
       locale,
       hreflangLinks,
-      defaultHref: baseWithoutLng,
+      canonicalHref,
+      xDefaultHref,
     },
-    { headers: { "Set-Cookie": await localeCookie.serialize(locale) } },
+    headers ? { headers } : undefined,
   );
 }
 
@@ -105,7 +138,7 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-  const { user, locale, hreflangLinks, defaultHref } =
+  const { user, locale, hreflangLinks, canonicalHref, xDefaultHref } =
     useLoaderData<typeof loader>();
   const { i18n, t } = useTranslation();
 
@@ -120,8 +153,10 @@ export default function App() {
       {hreflangLinks.map(({ hrefLang, href }) => (
         <link key={hrefLang} rel="alternate" hrefLang={hrefLang} href={href} />
       ))}
-      <link rel="alternate" hrefLang="x-default" href={defaultHref} />
-      <link rel="canonical" href={defaultHref} />
+      {hreflangLinks.length > 0 && (
+        <link rel="alternate" hrefLang="x-default" href={xDefaultHref} />
+      )}
+      <link rel="canonical" href={canonicalHref} />
 
       <title>{t("website.title")}</title>
       <meta name="description" content={t("website.description")} />

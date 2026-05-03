@@ -8,7 +8,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { LocalizedLink } from "~/components/LocalizedLink";
 
 export function CTASection() {
   const { t } = useTranslation();
@@ -153,7 +153,9 @@ export function CTASection() {
                 fontWeight="bold"
                 _hover={{ opacity: 0.9 }}
               >
-                <Link to="/auth/login">{t("landing.cta.getStarted")}</Link>
+                <LocalizedLink to="/auth/login">
+                  {t("landing.cta.getStarted")}
+                </LocalizedLink>
               </Button>
               <Button
                 asChild
@@ -163,7 +165,9 @@ export function CTASection() {
                 color="white"
                 _hover={{ bg: "whiteAlpha.100" }}
               >
-                <Link to="/pricing">{t("landing.cta.viewPricing")}</Link>
+                <LocalizedLink to="/pricing">
+                  {t("landing.cta.viewPricing")}
+                </LocalizedLink>
               </Button>
             </Stack>
           </VStack>
