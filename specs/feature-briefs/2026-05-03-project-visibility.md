@@ -11,8 +11,6 @@ owned_paths:
   - apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.tsx
   - apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx
   - apps/website/app/routes/orgs.$orgSlug.projects.new.tsx
-  - apps/website/app/routes/api-org-layout.tsx
-  - apps/website/app/middleware/api-auth.ts
 required_docs:
   - docs/technical-notes/README.md
   - docs/technical-notes/database-schema.md
@@ -32,8 +30,9 @@ On souhaite ajouter un champ `visibility` sur les projets (`private` | `public`)
 
 - Un projet a une visibilité `private` (défaut) ou `public`.
 - La visibilité peut être choisie à la création et modifiée dans les paramètres.
-- Un projet **public** est accessible en lecture (UI + export API) sans être connecté ni membre.
+- Un projet **public** est accessible en lecture (UI) sans être connecté ni membre.
 - Les opérations d'écriture (modification de traductions, branches, paramètres, import…) restent réservées aux membres de l'organisation, sans changement.
+- L'export API reste inchangé pour l'instant (accès par session ou clé API uniquement).
 
 # Surfaces à modifier
 
@@ -41,18 +40,29 @@ On souhaite ajouter un champ `visibility` sur les projets (`private` | `public`)
 
 **`apps/website/drizzle/schema.ts`**
 
-Ajouter un champ `visibility` à la table `projects` :
+Créer un enum `PROJECT_VISIBILITY` dans un fichier dédié `apps/website/app/lib/project-visibility.ts` (même pattern que `BRANCH_STATUS` dans `apps/website/app/lib/branches.ts`) :
 
 ```typescript
-visibility: varchar("visibility", {
-  length: 20,
-  enum: ["private", "public"],
-})
-  .default("private")
-  .notNull(),
+export const PROJECT_VISIBILITY = {
+  PRIVATE: "private",
+  PUBLIC: "public",
+} as const;
+
+export type ProjectVisibility = (typeof PROJECT_VISIBILITY)[keyof typeof PROJECT_VISIBILITY];
 ```
 
-Exporter la constante `PROJECT_VISIBILITY` (comme `BRANCH_STATUS`) depuis un fichier dédié, par exemple `apps/website/app/lib/project-visibility.ts`.
+Puis ajouter le champ `visibility` à la table `projects` dans `apps/website/drizzle/schema.ts` :
+
+```typescript
+import { PROJECT_VISIBILITY } from "~/lib/project-visibility";
+
+visibility: varchar("visibility", {
+  length: 20,
+  enum: ensureOneItem(Object.values(PROJECT_VISIBILITY)),
+})
+  .default(PROJECT_VISIBILITY.PRIVATE)
+  .notNull(),
+```
 
 Mettre à jour `Project` / `NewProject` (types inférés automatiquement par Drizzle).
 
@@ -117,10 +127,18 @@ Logique du loader :
 1. Récupérer l'organisation par slug (nouvelle fonction `getOrganizationBySlug` exportée depuis `organizations.server.ts`). Retourner 404 si inconnue.
 2. Récupérer le projet par `(organizationId, projectSlug)`. Retourner 404 si inconnu.
 3. Vérifier l'accès :
-   - Si l'utilisateur est connecté ET membre → accès complet ; retourner `{ organization, project, languages, canEdit: true }`.
-   - Si le projet est `public` → accès lecture seule ; retourner `{ organization, project, languages, canEdit: false }`.
+   - Si l'utilisateur est connecté ET membre → retourner `{ organization, project, languages, projectAccessRole: "member" }`.
+   - Si le projet est `public` → retourner `{ organization, project, languages, projectAccessRole: "viewer" }`.
    - Sinon → `throw redirect('/auth/login?redirectTo=<current path>')`.
-4. Passer `canEdit` dans `useLoaderData()` et dans le contexte `<Outlet context={...} />` pour que les routes enfants puissent l'utiliser.
+4. Passer `projectAccessRole` dans `useLoaderData()` et dans le contexte `<Outlet context={...} />` pour que les routes enfants puissent l'utiliser.
+
+Le type `ProjectAccessRole` est à définir dans `project-visibility.ts` :
+
+```typescript
+export type ProjectAccessRole = "member" | "viewer";
+```
+
+Les routes enfants utilisent `projectAccessRole !== "member"` pour refuser l'accès en écriture.
 
 **Note** : `getOrganizationBySlug` est déjà définie en privée dans `organizations.server.ts` — l'exporter suffit.
 
@@ -139,7 +157,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
 Remplacer les `context.get(userContext)` par `context.get(maybeUserContext)` suivi de `requireUserFromContext(...)` dans les **actions** de toutes les routes déplacées.
 
-Pour les **loaders** des routes membres-only (settings, branches/new, branches/:slug/merge, keys/:keyId) : appliquer la même vérification — si `canEdit === false`, throw 403 ou redirect.
+Pour les **loaders** des routes membres-only (settings, branches/new, branches/:slug/merge, keys/:keyId) : appliquer la même vérification — si `projectAccessRole !== "member"`, throw 403 ou redirect.
 
 ## 7. Création de projet — champ visibilité
 
@@ -158,29 +176,13 @@ Ajouter :
 - Le handler d'action correspondant : valide la valeur, appelle `updateProjectVisibility(project.id, visibility)` (nouvelle fonction dans `projects.server.ts`), retourne `{ success: true }`.
 - La route settings est membres-only (action ET loader vérifient la membership, cf. §6).
 
-## 9. Export API public (routes `/api/…`)
-
-**`apps/website/app/middleware/api-auth.ts`** et/ou **`apps/website/app/routes/api-org-layout.tsx`**
-
-Dans `apiOrgMiddleware`, si la vérification de membership échoue (utilisateur connecté mais non membre, ou non connecté), ne pas throw immédiatement. Laisser le loader de la route finale décider selon la visibilité du projet.
-
-Alternative plus simple : dans les routes `api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations.tsx` et `api.orgs.$orgSlug.projects.$projectSlug.tsx`, après le middleware d'auth, vérifier si le projet est public et, si oui, ne pas exiger la membership.
-
-Concrètement :
-
-1. `apiAuthMiddleware` : ne plus throw 403 si ni API key ni session — poser un contexte `null` (ou un mode `anonymous`) pour laisser les routes décider.
-2. `apiOrgMiddleware` : devenir optionnel en mode anonymous — dans ce cas, résoudre l'organisation par slug et la placer dans le contexte sans vérifier la membership.
-3. Route de traduction : si `orgContext` est résolu sans membership ET projet est privé → 403 ; si projet public → OK.
-
-> **Note de portée** : si cette complexité du middleware API est jugée excessive en première itération, il est acceptable de ne pas modifier l'export API pour l'instant et de se concentrer uniquement sur l'accès lecture dans l'UI. Documenter cette limitation.
-
-## 10. Badge de visibilité dans l'UI
+## 9. Badge de visibilité dans l'UI
 
 Afficher un badge "Public" (couleur neutre) ou "Private" sur :
 - La page de liste des projets de l'organisation (`orgs.$orgSlug._index` ou équivalent).
 - Le header du layout projet.
 
-## 11. Traductions i18next
+## 10. Traductions i18next
 
 Ajouter les clés de traduction pour tous les textes nouveaux dans les 4 fichiers locales (`en`, `fr`, et les autres supportés). Lire `docs/technical-notes/traductions.md`.
 
@@ -193,7 +195,7 @@ Clés suggérées (namespace `translation`) :
 - `settings.visibility.title`
 - `settings.visibility.updated`
 
-## 12. Tests
+## 11. Tests
 
 Couvrir :
 - `getProjectBySlug` et `getOrganizationBySlug` (unitaire).
@@ -228,7 +230,6 @@ Couvrir :
 6. Un utilisateur non connecté ou non membre ne peut pas accéder en lecture à un projet privé (redirigé vers login).
 7. Aucun utilisateur non membre ne peut effectuer de mutation sur un projet (les actions retournent 403 / redirect vers login).
 8. Un badge de visibilité est affiché dans la liste des projets et dans le layout projet.
-9. L'export API (`GET /api/orgs/…/files/…/translations`) est accessible sans authentification pour un projet public. *(Peut être reporté à une itération suivante si jugé trop complexe.)*
 
 # Validation
 
