@@ -1,4 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("~/lib/session.server", () => ({
+  getUserFromSession: vi.fn(),
+}));
+
 import { requireUserFromContext } from "./auth";
 import type { SessionData } from "~/lib/session.server";
 

@@ -48,7 +48,7 @@ export async function loader({
   context,
 }: Route.LoaderArgs): Promise<KeyLoaderData> {
   const maybeUser = context.get(maybeUserContext);
-  const user = requireUserFromContext(maybeUser);
+  const user = requireUserFromContext(maybeUser, request);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

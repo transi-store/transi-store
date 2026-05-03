@@ -76,7 +76,7 @@ const LIMIT = 50;
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const maybeUser = context.get(maybeUserContext);
-  const user = requireUserFromContext(maybeUser);
+  const user = requireUserFromContext(maybeUser, request);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

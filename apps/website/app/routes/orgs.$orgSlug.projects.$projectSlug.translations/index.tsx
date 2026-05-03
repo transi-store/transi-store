@@ -10,7 +10,10 @@ import { LuPlus } from "react-icons/lu";
 import { isDocumentFormat } from "@transi-store/common";
 import type { Route } from "./+types/index";
 import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
-import { getOrganizationBySlug, requireOrganizationMembership } from "~/lib/organizations.server";
+import {
+  getOrganizationBySlug,
+  requireOrganizationMembership,
+} from "~/lib/organizations.server";
 import { getProjectBySlug } from "~/lib/projects.server";
 import { getProjectFiles } from "~/lib/project-files.server";
 import { getInstance } from "~/middleware/i18next";
@@ -47,7 +50,7 @@ type EmptyLoaderData = {
   projectFiles: Array<ProjectFile>;
 };
 
-export async function loader({ request, params, context }: Route.LoaderArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
   const organization = await getOrganizationBySlug(params.orgSlug);
   if (!organization) {
     throw new Response("Organization not found", { status: 404 });

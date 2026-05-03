@@ -27,9 +27,9 @@ import { BRANCH_STATUS } from "~/lib/branches";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { BranchList } from "~/components/branches/BranchList";
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
   const maybeUser = context.get(maybeUserContext);
-  const user = requireUserFromContext(maybeUser);
+  const user = requireUserFromContext(maybeUser, request);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

@@ -515,18 +515,18 @@ describe("projects.server", () => {
   });
 
   describe("getProjectBySlug", () => {
-    it("returns null when project does not exist", async () => {
+    it("returns undefined when project does not exist", async () => {
       const result = await getProjectBySlug(organizationId, "nonexistent");
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
-    it("returns null when project belongs to another organization", async () => {
+    it("returns undefined when project belongs to another organization", async () => {
       const otherOrg = await createOrganization(db);
       const otherProject = await createProject(db, otherOrg.id, {
         slug: "other-slug",
       });
       const result = await getProjectBySlug(organizationId, otherProject.slug);
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
 
     it("returns project with private visibility by default", async () => {

@@ -58,11 +58,19 @@ export async function optionalSessionAuthMiddleware({
 /**
  * Helper that asserts a nullable user is authenticated.
  * Throws a redirect to /auth/login if the user is null.
+ * Pass `request` to preserve the current URL in a `redirectTo` query parameter.
  */
 export function requireUserFromContext(
   maybeUser: SessionData | null,
+  request?: Request,
 ): SessionData {
   if (!maybeUser) {
+    if (request) {
+      const url = new URL(request.url);
+      throw redirect(
+        `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
+      );
+    }
     throw redirect("/auth/login");
   }
   return maybeUser;
