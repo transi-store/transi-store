@@ -1,4 +1,5 @@
 import {
+  Badge,
   Box,
   Button,
   Container,
@@ -10,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { CircuitDecoration } from "~/components/CircuitDecoration";
 import { LocalizedLink } from "~/components/LocalizedLink";
+import { NEON_TEAL } from "./neon-colors";
 
 export function HeroSection() {
   const { t } = useTranslation();
@@ -32,6 +34,23 @@ export function HeroSection() {
           animationDuration="600ms"
           animationTimingFunction="ease-out"
         >
+          <Badge
+            variant="outline"
+            colorPalette="teal"
+            size="lg"
+            px={3}
+            py={1}
+            borderRadius="full"
+            fontSize="sm"
+            fontFamily="mono"
+            letterSpacing="wide"
+            borderColor={NEON_TEAL}
+            color={NEON_TEAL}
+            boxShadow={`0 0 8px ${NEON_TEAL}40`}
+          >
+            {t("landing.hero.devBadge")}
+          </Badge>
+
           <Heading
             as="h1"
             textStyle={{ base: "4xl", md: "5xl", lg: "6xl" }}
