@@ -10,10 +10,7 @@ import {
 } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
-import {
-  PROJECT_VISIBILITY,
-  type ProjectAccessRole,
-} from "~/lib/project-visibility";
+import { ProjectVisibility, ProjectAccessRole } from "~/lib/project-visibility";
 import { useTranslation } from "react-i18next";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
@@ -36,9 +33,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     maybeUser !== null &&
     (await isUserMemberOfOrganization(maybeUser.userId, organization.id))
   ) {
-    projectAccessRole = "member";
-  } else if (project.visibility === PROJECT_VISIBILITY.PUBLIC) {
-    projectAccessRole = "viewer";
+    projectAccessRole = ProjectAccessRole.MEMBER;
+  } else if (project.visibility === ProjectVisibility.PUBLIC) {
+    projectAccessRole = ProjectAccessRole.VIEWER;
   } else {
     const url = new URL(request.url);
     throw redirect(
@@ -78,13 +75,13 @@ export default function ProjectLayout() {
             <Badge
               size="sm"
               colorPalette={
-                project.visibility === PROJECT_VISIBILITY.PUBLIC
+                project.visibility === ProjectVisibility.PUBLIC
                   ? "green"
                   : "gray"
               }
               variant="subtle"
             >
-              {project.visibility === PROJECT_VISIBILITY.PUBLIC
+              {project.visibility === ProjectVisibility.PUBLIC
                 ? t("projects.visibility.public")
                 : t("projects.visibility.private")}
             </Badge>
@@ -92,6 +89,7 @@ export default function ProjectLayout() {
             <ProjectNav
               organizationSlug={organization.slug}
               projectSlug={project.slug}
+              projectAccessRole={projectAccessRole}
             />
           </Box>
         </Stack>
@@ -102,7 +100,9 @@ export default function ProjectLayout() {
           </Box>
         )}
 
-        <Outlet context={{ organization, project, languages, projectAccessRole }} />
+        <Outlet
+          context={{ organization, project, languages, projectAccessRole }}
+        />
       </VStack>
     </Container>
   );

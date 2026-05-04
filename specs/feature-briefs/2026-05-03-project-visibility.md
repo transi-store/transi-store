@@ -132,13 +132,16 @@ Logique du loader :
    - Sinon → `throw redirect('/auth/login?redirectTo=<current path>')`.
 4. Passer `projectAccessRole` dans `useLoaderData()` et dans le contexte `<Outlet context={...} />` pour que les routes enfants puissent l'utiliser.
 
-Le type `ProjectAccessRole` est à définir dans `project-visibility.ts` :
+L'enum `ProjectAccessRole` est à définir dans `project-visibility.ts` :
 
 ```typescript
-export type ProjectAccessRole = "member" | "viewer";
+export enum ProjectAccessRole {
+  MEMBER = "member",
+  VIEWER = "viewer",
+}
 ```
 
-Les routes enfants utilisent `projectAccessRole !== "member"` pour refuser l'accès en écriture.
+Les routes enfants utilisent `projectAccessRole !== ProjectAccessRole.MEMBER` pour refuser l'accès en écriture.
 
 **Note** : `getOrganizationBySlug` est déjà définie en privée dans `organizations.server.ts` — l'exporter suffit.
 

@@ -25,6 +25,7 @@ import {
   setDefaultLanguageForProject,
   updateProjectVisibility,
 } from "./projects.server";
+import { ProjectVisibility } from "./project-visibility";
 
 vi.mock("~/lib/db.server", () => ({
   get db() {
@@ -535,36 +536,36 @@ describe("projects.server", () => {
       });
       const result = await getProjectBySlug(organizationId, project!.slug);
       expect(result).not.toBeNull();
-      expect(result!.visibility).toBe("private");
+      expect(result!.visibility).toBe(ProjectVisibility.PRIVATE);
     });
 
     it("returns project with public visibility when set", async () => {
       const publicProject = await createProject(db, organizationId, {
         slug: "public-project",
-        visibility: "public",
+        visibility: ProjectVisibility.PUBLIC,
       });
       const result = await getProjectBySlug(organizationId, publicProject.slug);
       expect(result).not.toBeNull();
-      expect(result!.visibility).toBe("public");
+      expect(result!.visibility).toBe(ProjectVisibility.PUBLIC);
     });
   });
 
   describe("updateProjectVisibility", () => {
     it("updates project visibility to public", async () => {
-      await updateProjectVisibility(projectId, "public");
+      await updateProjectVisibility(projectId, ProjectVisibility.PUBLIC);
       const updated = await db.query.projects.findFirst({
         where: { id: projectId },
       });
-      expect(updated!.visibility).toBe("public");
+      expect(updated!.visibility).toBe(ProjectVisibility.PUBLIC);
     });
 
     it("updates project visibility back to private", async () => {
-      await updateProjectVisibility(projectId, "public");
-      await updateProjectVisibility(projectId, "private");
+      await updateProjectVisibility(projectId, ProjectVisibility.PUBLIC);
+      await updateProjectVisibility(projectId, ProjectVisibility.PRIVATE);
       const updated = await db.query.projects.findFirst({
         where: { id: projectId },
       });
-      expect(updated!.visibility).toBe("private");
+      expect(updated!.visibility).toBe(ProjectVisibility.PRIVATE);
     });
   });
 

@@ -27,7 +27,7 @@ import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
 import { getInstance } from "~/middleware/i18next";
 import { getProjectUrl } from "~/lib/routes-helpers";
-import { PROJECT_VISIBILITY } from "~/lib/project-visibility";
+import { ProjectVisibility } from "~/lib/project-visibility";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -54,9 +54,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const description = formData.get("description");
   const visibilityInput = formData.get("visibility");
   const visibility =
-    visibilityInput === PROJECT_VISIBILITY.PUBLIC
-      ? PROJECT_VISIBILITY.PUBLIC
-      : PROJECT_VISIBILITY.PRIVATE;
+    visibilityInput === ProjectVisibility.PUBLIC
+      ? ProjectVisibility.PUBLIC
+      : ProjectVisibility.PRIVATE;
 
   if (!name || typeof name !== "string") {
     return { error: i18next.t("projects.new.errors.nameRequired") };
@@ -150,10 +150,10 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
               <Field.Label>{t("projects.visibility.label")}</Field.Label>
               <RadioGroup.Root
                 name="visibility"
-                defaultValue={PROJECT_VISIBILITY.PRIVATE}
+                defaultValue={ProjectVisibility.PRIVATE}
               >
                 <VStack align="stretch" gap={2}>
-                  <RadioGroup.Item value={PROJECT_VISIBILITY.PRIVATE}>
+                  <RadioGroup.Item value={ProjectVisibility.PRIVATE}>
                     <RadioGroup.ItemHiddenInput />
                     <RadioGroup.ItemIndicator />
                     <RadioGroup.ItemText>
@@ -167,7 +167,7 @@ export default function NewProject({ loaderData }: Route.ComponentProps) {
                       </Box>
                     </RadioGroup.ItemText>
                   </RadioGroup.Item>
-                  <RadioGroup.Item value={PROJECT_VISIBILITY.PUBLIC}>
+                  <RadioGroup.Item value={ProjectVisibility.PUBLIC}>
                     <RadioGroup.ItemHiddenInput />
                     <RadioGroup.ItemIndicator />
                     <RadioGroup.ItemText>

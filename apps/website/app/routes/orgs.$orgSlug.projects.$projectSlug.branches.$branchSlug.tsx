@@ -34,7 +34,7 @@ import {
 } from "react-icons/lu";
 import { useState, useEffect, useCallback } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug";
-import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import {
@@ -75,8 +75,7 @@ import { BranchAction } from "./BranchAction";
 const LIMIT = 50;
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const maybeUser = context.get(maybeUserContext);
-  const user = requireUserFromContext(maybeUser, request);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,
@@ -191,8 +190,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const maybeUser = context.get(maybeUserContext);
-  const user = requireUserFromContext(maybeUser);
+  const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
     params.orgSlug,

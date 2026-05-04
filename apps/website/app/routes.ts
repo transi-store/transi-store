@@ -70,10 +70,42 @@ export default [
       route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
     ]),
 
-    // Projects routes (members-only: create new project)
+    // Projects routes (members-only)
     route(
       "orgs/:orgSlug/projects/new",
       "routes/orgs.$orgSlug.projects.new.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/settings",
+      "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/import-export",
+      "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
+    ),
+
+    // Branches routes (members-only)
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches._index.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches/new",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches.new.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.tsx",
+    ),
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge",
+      "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx",
+    ),
+
+    // Translation keys routes (members-only)
+    route(
+      "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
+      "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
     ),
 
     // Search
@@ -95,39 +127,7 @@ export default [
           "translations/files",
           "routes/orgs.$orgSlug.projects.$projectSlug.translations.files/index.tsx",
         ),
-        route(
-          "settings",
-          "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
-        ),
-        route(
-          "import-export",
-          "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
-        ),
       ],
-    ),
-
-    // Branches routes
-    route(
-      "orgs/:orgSlug/projects/:projectSlug/branches",
-      "routes/orgs.$orgSlug.projects.$projectSlug.branches._index.tsx",
-    ),
-    route(
-      "orgs/:orgSlug/projects/:projectSlug/branches/new",
-      "routes/orgs.$orgSlug.projects.$projectSlug.branches.new.tsx",
-    ),
-    route(
-      "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug",
-      "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.tsx",
-    ),
-    route(
-      "orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge",
-      "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx",
-    ),
-
-    // Translation keys routes
-    route(
-      "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
-      "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
     ),
   ]),
 

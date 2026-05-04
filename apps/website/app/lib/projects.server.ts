@@ -1,10 +1,7 @@
 import type { Project } from "../../drizzle/schema";
 import { db, schema } from "./db.server";
 import { count, eq, and, inArray, isNull, getColumns } from "drizzle-orm";
-import {
-  PROJECT_VISIBILITY,
-  type ProjectVisibility,
-} from "./project-visibility";
+import { type ProjectVisibility } from "./project-visibility";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
@@ -36,7 +33,7 @@ export async function createProject(params: CreateProjectParams) {
       slug: params.slug,
       description: params.description,
       createdBy: params.createdBy,
-      visibility: params.visibility ?? PROJECT_VISIBILITY.PRIVATE,
+      ...(params.visibility !== undefined && { visibility: params.visibility }),
     })
     .returning();
 
