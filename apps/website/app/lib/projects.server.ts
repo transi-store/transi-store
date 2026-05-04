@@ -33,7 +33,7 @@ export async function createProject(params: CreateProjectParams) {
       slug: params.slug,
       description: params.description,
       createdBy: params.createdBy,
-      ...(params.visibility !== undefined && { visibility: params.visibility }),
+      visibility: params.visibility,
     })
     .returning();
 
