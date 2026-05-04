@@ -124,6 +124,11 @@ export function Layout({ children }: { children: ReactNode }) {
 
         <Meta />
         <Links />
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="b20960d7-ca91-4a6b-b42e-91ad22b5c921"
+        />
       </head>
       <body>
         <Analytics />
