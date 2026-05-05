@@ -71,6 +71,7 @@
   "copy": "Kopieren",
   "copy.error.title": "Text konnte nicht kopiert werden",
   "copy.success.title": "In die Zwischenablage kopiert",
+  "docs.nav.toggle": "Navigation",
   "error": "Fehler",
   "export.description": "Exportieren Sie Ihre Übersetzungen in JSON, XLIFF, YAML, CSV, Gettext PO, INI oder PHP",
   "export.formatLabel": "Format",

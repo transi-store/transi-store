@@ -53,6 +53,7 @@
   "copy": "Copiar",
   "copy.error.title": "No se pudo copiar el texto",
   "copy.success.title": "Texto copiado al portapapeles",
+  "docs.nav.toggle": "Navegación",
   "error": "Error",
   "export.description": "Exporte sus traducciones en JSON, XLIFF, YAML, CSV, Gettext PO, INI o PHP",
   "export.formatLabel": "Formato",

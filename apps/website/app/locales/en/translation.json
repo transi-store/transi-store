@@ -71,6 +71,7 @@
   "copy": "Copy",
   "copy.error.title": "Failed to copy text",
   "copy.success.title": "Copied to clipboard",
+  "docs.nav.toggle": "Navigation",
   "error": "Error",
   "export.description": "Export your translations in JSON, XLIFF, YAML, CSV, Gettext PO, INI or PHP format",
   "export.formatLabel": "Format",

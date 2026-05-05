@@ -32,7 +32,7 @@ export function AiSuggestionsMockup() {
        * own, which lets `AiSuggestionsCard` sit inline inside the mockup
        * frame while still picking up the real dialog theme tokens.
        */}
-      <DialogRoot open lazyMount={false}>
+      <DialogRoot open lazyMount={false} modal={false}>
         <Box pointerEvents="none">
           <AiSuggestionsDialogContent
             targetLocale="fr"
