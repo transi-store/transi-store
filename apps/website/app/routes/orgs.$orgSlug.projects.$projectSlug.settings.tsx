@@ -16,6 +16,7 @@ import {
   Heading,
   HStack,
   Input,
+  Menu,
   Portal,
   SimpleGrid,
   Spinner,
@@ -31,7 +32,7 @@ import {
   redirect,
 } from "react-router";
 import { useMemo, useState } from "react";
-import { LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuEllipsis, LuPlus, LuStar, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.settings";
 import { userContext } from "~/middleware/auth";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
@@ -42,6 +43,7 @@ import {
   deleteProject,
   getProjectDeletionSummary,
   removeLanguageFromProject,
+  setDefaultLanguageForProject,
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
@@ -128,6 +130,18 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true };
   }
 
+  if (action === "set_default_language") {
+    const locale = formData.get("locale");
+
+    if (!locale || typeof locale !== "string") {
+      return { error: "Le code de langue est requis" };
+    }
+
+    await setDefaultLanguageForProject(project.id, locale);
+
+    return { success: true };
+  }
+
   if (action === "delete_project") {
     await deleteProject(project.id);
 
@@ -151,7 +165,8 @@ export default function ProjectSettings() {
   const isLanguageSubmitting =
     isSubmitting &&
     (submittedAction === "add_language" ||
-      submittedAction === "remove_language");
+      submittedAction === "remove_language" ||
+      submittedAction === "set_default_language");
   const isDeleteSubmitting =
     isSubmitting && submittedAction === "delete_project";
   const expectedDeleteValue = `${organization.slug}/${project.slug}`;
@@ -266,23 +281,68 @@ export default function ProjectSettings() {
                         </Badge>
                       )}
                     </Box>
-                    <Form method="post">
-                      <input
-                        type="hidden"
-                        name="_action"
-                        value="remove_language"
-                      />
-                      <input type="hidden" name="locale" value={lang.locale} />
-                      <Button
-                        type="submit"
-                        size="xs"
-                        variant="ghost"
-                        colorPalette="red"
-                        disabled={isLanguageSubmitting}
-                      >
-                        <LuTrash2 />
-                      </Button>
-                    </Form>
+                    <Menu.Root>
+                      <Menu.Trigger asChild>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          aria-label={t("settings.languageMenu.label")}
+                          disabled={isLanguageSubmitting}
+                        >
+                          <LuEllipsis />
+                        </Button>
+                      </Menu.Trigger>
+                      <Portal>
+                        <Menu.Positioner>
+                          <Menu.Content>
+                            <Form method="post">
+                              <input
+                                type="hidden"
+                                name="_action"
+                                value="set_default_language"
+                              />
+                              <input
+                                type="hidden"
+                                name="locale"
+                                value={lang.locale}
+                              />
+                              <Menu.Item
+                                value="set_default"
+                                asChild
+                                disabled={lang.isDefault}
+                              >
+                                <button
+                                  type="submit"
+                                  style={{ width: "100%" }}
+                                  disabled={lang.isDefault}
+                                >
+                                  <LuStar />
+                                  {t("settings.languageMenu.setAsDefault")}
+                                </button>
+                              </Menu.Item>
+                            </Form>
+                            <Form method="post">
+                              <input
+                                type="hidden"
+                                name="_action"
+                                value="remove_language"
+                              />
+                              <input
+                                type="hidden"
+                                name="locale"
+                                value={lang.locale}
+                              />
+                              <Menu.Item value="remove" asChild color="red.fg">
+                                <button type="submit" style={{ width: "100%" }}>
+                                  <LuTrash2 />
+                                  {t("settings.languageMenu.remove")}
+                                </button>
+                              </Menu.Item>
+                            </Form>
+                          </Menu.Content>
+                        </Menu.Positioner>
+                      </Portal>
+                    </Menu.Root>
                   </HStack>
                 </Card.Body>
               </Card.Root>
