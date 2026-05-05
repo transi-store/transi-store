@@ -47,6 +47,8 @@ import {
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { getInstance } from "~/middleware/i18next";
+import { ProjectSettingsAction } from "./ProjectSettingsAction";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -82,6 +84,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
   const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
@@ -96,17 +99,19 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const action = formData.get("_action");
 
-  if (action === "add_language") {
+  if (action === ProjectSettingsAction.AddLanguage) {
     const locale = formData.get("locale");
 
     if (!locale || typeof locale !== "string") {
-      return { error: "Le code de langue est requis" };
+      return { error: i18next.t("settings.errors.localeRequired") };
     }
 
     // Vérifier que la langue n'existe pas déjà
     const existingLanguages = await getProjectLanguages(project.id);
     if (existingLanguages.some((l) => l.locale === locale)) {
-      return { error: `La langue "${locale}" existe deja` };
+      return {
+        error: i18next.t("settings.errors.localeAlreadyExists", { locale }),
+      };
     }
 
     await addLanguageToProject({
@@ -118,11 +123,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true };
   }
 
-  if (action === "remove_language") {
+  if (action === ProjectSettingsAction.RemoveLanguage) {
     const locale = formData.get("locale");
 
     if (!locale || typeof locale !== "string") {
-      return { error: "Le code de langue est requis" };
+      return { error: i18next.t("settings.errors.localeRequired") };
     }
 
     await removeLanguageFromProject(project.id, locale);
@@ -130,16 +135,18 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true };
   }
 
-  if (action === "set_default_language") {
+  if (action === ProjectSettingsAction.SetDefaultLanguage) {
     const locale = formData.get("locale");
 
     if (!locale || typeof locale !== "string") {
-      return { error: "Le code de langue est requis" };
+      return { error: i18next.t("settings.errors.localeRequired") };
     }
 
     const existingLanguages = await getProjectLanguages(project.id);
     if (!existingLanguages.some((l) => l.locale === locale)) {
-      return { error: `La langue "${locale}" n'existe pas dans ce projet` };
+      return {
+        error: i18next.t("settings.errors.localeNotFound", { locale }),
+      };
     }
 
     await setDefaultLanguageForProject(project.id, locale);
@@ -147,13 +154,13 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true };
   }
 
-  if (action === "delete_project") {
+  if (action === ProjectSettingsAction.DeleteProject) {
     await deleteProject(project.id);
 
     return redirect(`/orgs/${params.orgSlug}`);
   }
 
-  return { error: "Action invalide" };
+  return { error: i18next.t("settings.errors.invalidIntent") };
 }
 
 export default function ProjectSettings() {
@@ -169,11 +176,11 @@ export default function ProjectSettings() {
   const isSubmitting = navigation.state === "submitting";
   const isLanguageSubmitting =
     isSubmitting &&
-    (submittedAction === "add_language" ||
-      submittedAction === "remove_language" ||
-      submittedAction === "set_default_language");
+    (submittedAction === ProjectSettingsAction.AddLanguage ||
+      submittedAction === ProjectSettingsAction.RemoveLanguage ||
+      submittedAction === ProjectSettingsAction.SetDefaultLanguage);
   const isDeleteSubmitting =
-    isSubmitting && submittedAction === "delete_project";
+    isSubmitting && submittedAction === ProjectSettingsAction.DeleteProject;
   const expectedDeleteValue = `${organization.slug}/${project.slug}`;
   const deleteSummaryUrl = useMemo(
     () =>
@@ -304,7 +311,7 @@ export default function ProjectSettings() {
                               <input
                                 type="hidden"
                                 name="_action"
-                                value="set_default_language"
+                                value={ProjectSettingsAction.SetDefaultLanguage}
                               />
                               <input
                                 type="hidden"
@@ -326,7 +333,7 @@ export default function ProjectSettings() {
                               <input
                                 type="hidden"
                                 name="_action"
-                                value="remove_language"
+                                value={ProjectSettingsAction.RemoveLanguage}
                               />
                               <input
                                 type="hidden"
@@ -352,7 +359,11 @@ export default function ProjectSettings() {
         )}
 
         <Form method="post">
-          <input type="hidden" name="_action" value="add_language" />
+          <input
+            type="hidden"
+            name="_action"
+            value={ProjectSettingsAction.AddLanguage}
+          />
           <HStack>
             <Field.Root flex={1}>
               <Input
@@ -455,7 +466,11 @@ export default function ProjectSettings() {
                   {t("settings.cancel")}
                 </Button>
                 <Form method="post">
-                  <input type="hidden" name="_action" value="delete_project" />
+                  <input
+                    type="hidden"
+                    name="_action"
+                    value={ProjectSettingsAction.DeleteProject}
+                  />
                   <Button
                     type="submit"
                     colorPalette="red"
