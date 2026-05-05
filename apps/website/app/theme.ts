@@ -30,6 +30,10 @@ const config = defineConfig({
     html: {
       bg: "surface.canvas",
       color: "fg",
+      // Offset anchor-link scrolling so the sticky header never hides the target.
+      // On mobile, the fixed bottom nav adds extra visual context so we use a
+      // larger value to keep targets clearly visible.
+      scrollPaddingTop: { base: "162px", md: "80px" },
     },
     body: {
       bg: "surface.canvas",
