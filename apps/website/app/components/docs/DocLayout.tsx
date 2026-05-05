@@ -1,11 +1,16 @@
 import {
   Box,
+  Button,
+  Collapsible,
   Container,
   Heading,
   Separator,
   Text,
   VStack,
 } from "@chakra-ui/react";
+import { useState } from "react";
+import { LuChevronDown, LuChevronUp } from "react-icons/lu";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router";
 
 /** Subtle circuit-board traces as a background for the doc sidebar. */
@@ -207,6 +212,65 @@ const NAV_SECTIONS: DocNavSection[] = [
   },
 ];
 
+/** Shared nav items rendered inside both the desktop sidebar and the mobile collapsible. */
+function DocNavContent() {
+  const location = useLocation();
+
+  return (
+    <VStack gap={5} align="stretch" position="relative">
+      {NAV_SECTIONS.map((section) => (
+        <Box key={section.title}>
+          <Text
+            fontSize="xs"
+            fontWeight="bold"
+            textTransform="uppercase"
+            letterSpacing="0.15em"
+            color="neon.fg"
+            textShadow="0 0 8px rgba(67,174,206,0.3)"
+            mb={2}
+          >
+            {section.title}
+          </Text>
+          <VStack gap={0.5} align="stretch">
+            {section.items.map((item) => {
+              const itemPath = item.href.split("#")[0];
+              const itemHash = item.href.includes("#")
+                ? `#${item.href.split("#")[1]}`
+                : "";
+              const isActive =
+                location.pathname === itemPath && location.hash === itemHash;
+              return (
+                <Box
+                  key={item.href}
+                  asChild
+                  px={3}
+                  py={1.5}
+                  borderRadius="md"
+                  fontSize="sm"
+                  bg={isActive ? "surface.highlight" : "transparent"}
+                  color={isActive ? "fg" : "fg.muted"}
+                  fontWeight={isActive ? "medium" : "normal"}
+                  borderLeft="2px solid"
+                  borderColor={isActive ? "brand.solid" : "transparent"}
+                  _hover={{ bg: "surface.panelMuted", color: "fg" }}
+                  transition="all 0.15s"
+                  boxShadow={
+                    isActive
+                      ? "inset 2px 0 8px rgba(59,130,246,0.2)"
+                      : undefined
+                  }
+                >
+                  <Link to={item.href}>{item.label}</Link>
+                </Box>
+              );
+            })}
+          </VStack>
+        </Box>
+      ))}
+    </VStack>
+  );
+}
+
 interface DocLayoutProps {
   title: string;
   description?: string;
@@ -214,7 +278,8 @@ interface DocLayoutProps {
 }
 
 export function DocLayout({ title, description, children }: DocLayoutProps) {
-  const location = useLocation();
+  const { t } = useTranslation();
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   return (
     <Container maxW="container.xl" py={{ base: 6, md: 10 }}>
@@ -227,72 +292,69 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
         gap={8}
         alignItems="start"
       >
-        <Box
-          as="aside"
-          position={{ base: "relative", md: "sticky" }}
-          top={{ md: 20 }}
-          mb={{ base: 6, md: 0 }}
-          bg="surface.panel"
-          border="1px solid"
-          borderColor="surface.border"
-          borderRadius="lg"
-          p={4}
-          boxShadow="0 0 12px rgba(67,174,206,0.08)"
-          overflow="hidden"
-        >
-          <SidebarCircuitBg />
-          <VStack gap={5} align="stretch" position="relative">
-            {NAV_SECTIONS.map((section) => (
-              <Box key={section.title}>
-                <Text
-                  fontSize="xs"
-                  fontWeight="bold"
-                  textTransform="uppercase"
-                  letterSpacing="0.15em"
-                  color="neon.fg"
-                  textShadow="0 0 8px rgba(67,174,206,0.3)"
-                  mb={2}
-                >
-                  {section.title}
-                </Text>
-                <VStack gap={0.5} align="stretch">
-                  {section.items.map((item) => {
-                    const itemPath = item.href.split("#")[0];
-                    const itemHash = item.href.includes("#")
-                      ? `#${item.href.split("#")[1]}`
-                      : "";
-                    const isActive =
-                      location.pathname === itemPath &&
-                      location.hash === itemHash;
-                    return (
-                      <Box
-                        key={item.href}
-                        asChild
-                        px={3}
-                        py={1.5}
-                        borderRadius="md"
-                        fontSize="sm"
-                        bg={isActive ? "surface.highlight" : "transparent"}
-                        color={isActive ? "fg" : "fg.muted"}
-                        fontWeight={isActive ? "medium" : "normal"}
-                        borderLeft="2px solid"
-                        borderColor={isActive ? "brand.solid" : "transparent"}
-                        _hover={{ bg: "surface.panelMuted", color: "fg" }}
-                        transition="all 0.15s"
-                        boxShadow={
-                          isActive
-                            ? "inset 2px 0 8px rgba(59,130,246,0.2)"
-                            : undefined
-                        }
-                      >
-                        <Link to={item.href}>{item.label}</Link>
-                      </Box>
-                    );
-                  })}
-                </VStack>
+        {/* Nav column: collapsible on mobile, sticky sidebar on desktop */}
+        <Box mb={{ base: 4, md: 0 }}>
+          {/* Desktop sidebar — always visible, sticky */}
+          <Box
+            as="aside"
+            hideBelow="md"
+            position="sticky"
+            top={20}
+            bg="surface.panel"
+            border="1px solid"
+            borderColor="surface.border"
+            borderRadius="lg"
+            p={4}
+            boxShadow="0 0 12px rgba(67,174,206,0.08)"
+            overflow="hidden"
+          >
+            <SidebarCircuitBg />
+            <DocNavContent />
+          </Box>
+
+          {/* Mobile collapsible nav — collapsed by default */}
+          <Box display={{ base: "block", md: "none" }}>
+            <Collapsible.Root
+              open={isMobileNavOpen}
+              onOpenChange={({ open }) => setIsMobileNavOpen(open)}
+            >
+              <Box
+                bg="surface.panel"
+                border="1px solid"
+                borderColor="surface.border"
+                borderRadius="lg"
+                overflow="hidden"
+                boxShadow="0 0 12px rgba(67,174,206,0.08)"
+                position="relative"
+              >
+                <SidebarCircuitBg />
+                <Collapsible.Trigger asChild>
+                  <Button
+                    variant="ghost"
+                    w="100%"
+                    px={4}
+                    py={3}
+                    h="auto"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    borderRadius="none"
+                    position="relative"
+                  >
+                    <Text fontSize="sm" fontWeight="medium">
+                      {t("docs.nav.toggle")}
+                    </Text>
+                    {isMobileNavOpen ? <LuChevronUp /> : <LuChevronDown />}
+                  </Button>
+                </Collapsible.Trigger>
+                <Collapsible.Content>
+                  <Box p={4} borderTop="1px solid" borderColor="surface.border">
+                    <DocNavContent />
+                  </Box>
+                </Collapsible.Content>
               </Box>
-            ))}
-          </VStack>
+            </Collapsible.Root>
+          </Box>
         </Box>
 
         <Box as="main" minW={0}>
