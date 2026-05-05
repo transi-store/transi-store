@@ -8,6 +8,7 @@ import {
   index,
   serial,
   integer,
+  customType,
 } from "drizzle-orm/pg-core";
 import { AI_PROVIDERS } from "~/lib/ai-providers";
 import { BRANCH_STATUS } from "~/lib/branches";
@@ -21,6 +22,15 @@ function ensureOneItem<T>(arr: T[]): [T, ...T[]] {
 
   return arr as [T, ...T[]];
 }
+
+/**
+ * Collation "C" for text fields used in key and value searches.
+ */
+const textC = customType<{ data: string }>({
+  dataType() {
+    return 'text COLLATE "C"';
+  },
+});
 
 // Utilisateurs (lies a OAuth)
 export const users = pgTable(
@@ -49,7 +59,7 @@ export const users = pgTable(
 export const organizations = pgTable("organizations", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  slug: textC("slug", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -128,7 +138,7 @@ export const projects = pgTable(
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
-    slug: varchar("slug", { length: 255 }).notNull(),
+    slug: textC("slug", { length: 255 }).notNull(),
     description: text("description"),
     createdBy: integer("created_by").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -165,7 +175,7 @@ export const branches = pgTable(
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
-    slug: varchar("slug", { length: 255 }).notNull(),
+    slug: textC("slug", { length: 255 }).notNull(),
     description: text("description"),
     status: varchar("status", {
       length: 20,
@@ -223,7 +233,7 @@ export const translationKeys = pgTable(
       .references(() => projectFiles.id, {
         onDelete: "cascade",
       }),
-    keyName: varchar("key_name", { length: 500 }).notNull(),
+    keyName: textC("key_name", { length: 500 }).notNull(),
     description: text("description"),
     deletedAt: timestamp("deleted_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -403,5 +413,4 @@ export type NewMarkdownDocumentTranslation =
   typeof markdownDocumentTranslations.$inferInsert;
 
 export type MarkdownSectionState = typeof markdownSectionStates.$inferSelect;
-export type NewMarkdownSectionState =
-  typeof markdownSectionStates.$inferInsert;
+export type NewMarkdownSectionState = typeof markdownSectionStates.$inferInsert;
