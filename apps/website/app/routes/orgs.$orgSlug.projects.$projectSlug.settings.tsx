@@ -137,6 +137,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       return { error: "Le code de langue est requis" };
     }
 
+    const existingLanguages = await getProjectLanguages(project.id);
+    if (!existingLanguages.some((l) => l.locale === locale)) {
+      return { error: `La langue "${locale}" n'existe pas dans ce projet` };
+    }
+
     await setDefaultLanguageForProject(project.id, locale);
 
     return { success: true };
@@ -311,11 +316,7 @@ export default function ProjectSettings() {
                                 asChild
                                 disabled={lang.isDefault}
                               >
-                                <button
-                                  type="submit"
-                                  style={{ width: "100%" }}
-                                  disabled={lang.isDefault}
-                                >
+                                <button type="submit" style={{ width: "100%" }}>
                                   <LuStar />
                                   {t("settings.languageMenu.setAsDefault")}
                                 </button>
