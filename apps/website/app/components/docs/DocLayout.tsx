@@ -213,7 +213,7 @@ const NAV_SECTIONS: DocNavSection[] = [
 ];
 
 /** Shared nav items rendered inside both the desktop sidebar and the mobile collapsible. */
-function DocNavContent() {
+function DocNavContent({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
 
   return (
@@ -260,7 +260,9 @@ function DocNavContent() {
                       : undefined
                   }
                 >
-                  <Link to={item.href}>{item.label}</Link>
+                  <Link to={item.href} onClick={onClose}>
+                    {item.label}
+                  </Link>
                 </Box>
               );
             })}
@@ -282,18 +284,21 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   return (
-    <Container maxW="container.xl" py={{ base: 6, md: 10 }}>
-      <title>{title}</title>
-      {description && <meta name="description" content={description} />}
-
-      <Box
-        display={{ base: "block", md: "grid" }}
-        gridTemplateColumns={{ md: "240px 1fr" }}
-        gap={8}
-        alignItems="start"
+    <>
+      <Container
+        maxW="container.xl"
+        py={{ base: 6, md: 10 }}
+        pb={{ base: 16, md: 10 }}
       >
-        {/* Nav column: collapsible on mobile, sticky sidebar on desktop */}
-        <Box mb={{ base: 4, md: 0 }}>
+        <title>{title}</title>
+        {description && <meta name="description" content={description} />}
+
+        <Box
+          display={{ base: "block", md: "grid" }}
+          gridTemplateColumns={{ md: "240px 1fr" }}
+          gap={8}
+          alignItems="start"
+        >
           {/* Desktop sidebar — always visible, sticky */}
           <Box
             as="aside"
@@ -312,74 +317,86 @@ export function DocLayout({ title, description, children }: DocLayoutProps) {
             <DocNavContent />
           </Box>
 
-          {/* Mobile collapsible nav — collapsed by default */}
-          <Box display={{ base: "block", md: "none" }}>
-            <Collapsible.Root
-              open={isMobileNavOpen}
-              onOpenChange={({ open }) => setIsMobileNavOpen(open)}
+          <Box as="main" minW={0}>
+            <Box mb={8}>
+              <Heading as="h1" size="2xl" mb={2} fontFamily="heading">
+                {title}
+              </Heading>
+              {description && (
+                <Text color="fg.muted" textStyle="lg">
+                  {description}
+                </Text>
+              )}
+            </Box>
+
+            <Separator mb={8} />
+
+            <Box
+              css={{
+                "& h1:first-child, & h2:first-child": { marginTop: 0 },
+              }}
             >
-              <Box
-                bg="surface.panel"
-                border="1px solid"
-                borderColor="surface.border"
-                borderRadius="lg"
-                overflow="hidden"
-                boxShadow="0 0 12px rgba(67,174,206,0.08)"
-                position="relative"
-              >
-                <SidebarCircuitBg />
-                <Collapsible.Trigger asChild>
-                  <Button
-                    variant="ghost"
-                    w="100%"
-                    px={4}
-                    py={3}
-                    h="auto"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    borderRadius="none"
-                    position="relative"
-                  >
-                    <Text fontSize="sm" fontWeight="medium">
-                      {t("docs.nav.toggle")}
-                    </Text>
-                    {isMobileNavOpen ? <LuChevronUp /> : <LuChevronDown />}
-                  </Button>
-                </Collapsible.Trigger>
-                <Collapsible.Content>
-                  <Box p={4} borderTop="1px solid" borderColor="surface.border">
-                    <DocNavContent />
-                  </Box>
-                </Collapsible.Content>
+              {children}
+            </Box>
+          </Box>
+        </Box>
+      </Container>
+
+      {/* Mobile fixed bottom nav — opens upward */}
+      <Box
+        display={{ base: "block", md: "none" }}
+        position="fixed"
+        bottom={0}
+        left={0}
+        right={0}
+        zIndex={100}
+      >
+        <Collapsible.Root
+          open={isMobileNavOpen}
+          onOpenChange={({ open }) => setIsMobileNavOpen(open)}
+        >
+          <Collapsible.Content>
+            <Box
+              bg="surface.panel"
+              borderTop="1px solid"
+              borderLeft="1px solid"
+              borderRight="1px solid"
+              borderColor="surface.border"
+              maxH="60vh"
+              overflowY="auto"
+              position="relative"
+              boxShadow="0 -4px 16px rgba(67,174,206,0.12)"
+            >
+              <SidebarCircuitBg />
+              <Box p={4}>
+                <DocNavContent onClose={() => setIsMobileNavOpen(false)} />
               </Box>
-            </Collapsible.Root>
-          </Box>
-        </Box>
-
-        <Box as="main" minW={0}>
-          <Box mb={8}>
-            <Heading as="h1" size="2xl" mb={2} fontFamily="heading">
-              {title}
-            </Heading>
-            {description && (
-              <Text color="fg.muted" textStyle="lg">
-                {description}
+            </Box>
+          </Collapsible.Content>
+          <Collapsible.Trigger asChild>
+            <Button
+              variant="ghost"
+              w="100%"
+              px={4}
+              py={3}
+              h="auto"
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              borderRadius="none"
+              bg="surface.panel"
+              border="1px solid"
+              borderColor="surface.border"
+              _hover={{ bg: "surface.panelMuted" }}
+            >
+              <Text fontSize="sm" fontWeight="medium">
+                {t("docs.nav.toggle")}
               </Text>
-            )}
-          </Box>
-
-          <Separator mb={8} />
-
-          <Box
-            css={{
-              "& h1:first-child, & h2:first-child": { marginTop: 0 },
-            }}
-          >
-            {children}
-          </Box>
-        </Box>
+              {isMobileNavOpen ? <LuChevronDown /> : <LuChevronUp />}
+            </Button>
+          </Collapsible.Trigger>
+        </Collapsible.Root>
       </Box>
-    </Container>
+    </>
   );
 }
