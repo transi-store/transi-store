@@ -1,13 +1,6 @@
 import type { Project } from "../../drizzle/schema";
 import { db, schema } from "./db.server";
-import {
-  count,
-  eq,
-  and,
-  inArray,
-  isNull,
-  getColumns,
-} from "drizzle-orm";
+import { count, eq, and, inArray, isNull, getColumns } from "drizzle-orm";
 
 export async function getProjectBySlug(organizationId: number, slug: string) {
   return await db.query.projects.findFirst({
@@ -222,6 +215,28 @@ export async function removeLanguageFromProject(
         eq(schema.projectLanguages.locale, locale),
       ),
     );
+}
+
+export async function setDefaultLanguageForProject(
+  projectId: number,
+  locale: string,
+) {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.projectLanguages)
+      .set({ isDefault: false })
+      .where(eq(schema.projectLanguages.projectId, projectId));
+
+    await tx
+      .update(schema.projectLanguages)
+      .set({ isDefault: true })
+      .where(
+        and(
+          eq(schema.projectLanguages.projectId, projectId),
+          eq(schema.projectLanguages.locale, locale),
+        ),
+      );
+  });
 }
 
 export async function getProjectDeletionSummary(

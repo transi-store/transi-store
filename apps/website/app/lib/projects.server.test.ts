@@ -13,11 +13,15 @@ import {
   type TestDb,
 } from "../../tests/test-db";
 import {
+  addLanguageToProject,
   deleteProject,
   getProjectDeletionSummary,
+  getProjectLanguages,
   getProjectLanguagesForProjects,
   getProjectsForOrganization,
   getTranslationCoverageForProjects,
+  removeLanguageFromProject,
+  setDefaultLanguageForProject,
 } from "./projects.server";
 
 vi.mock("~/lib/db.server", () => ({
@@ -335,6 +339,176 @@ describe("projects.server", () => {
           coverage: 1,
         },
       ]);
+    });
+  });
+
+  describe("getProjectLanguages", () => {
+    it("returns empty array when no languages exist", async () => {
+      const result = await getProjectLanguages(projectId);
+      expect(result).toEqual([]);
+    });
+
+    it("returns all languages for the project", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+
+      const result = await getProjectLanguages(projectId);
+
+      expect(result).toHaveLength(2);
+      expect(result.map((l) => l.locale)).toContain("en");
+      expect(result.map((l) => l.locale)).toContain("fr");
+    });
+
+    it("does not return languages from other projects", async () => {
+      const otherProject = await createProject(db, organizationId, {
+        slug: "other-project",
+      });
+      await createProjectLanguage(db, otherProject.id, {
+        locale: "de",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+
+      const result = await getProjectLanguages(projectId);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].locale).toBe("en");
+    });
+  });
+
+  describe("addLanguageToProject", () => {
+    it("adds a language to the project", async () => {
+      await addLanguageToProject({
+        projectId,
+        locale: "en",
+        isDefault: true,
+      });
+
+      const result = await getProjectLanguages(projectId);
+      expect(result).toHaveLength(1);
+      expect(result[0].locale).toBe("en");
+      expect(result[0].isDefault).toBe(true);
+    });
+
+    it("defaults isDefault to false when not provided", async () => {
+      await addLanguageToProject({ projectId, locale: "fr" });
+
+      const result = await getProjectLanguages(projectId);
+      expect(result).toHaveLength(1);
+      expect(result[0].isDefault).toBe(false);
+    });
+  });
+
+  describe("removeLanguageFromProject", () => {
+    it("removes the specified language", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+
+      await removeLanguageFromProject(projectId, "fr");
+
+      const result = await getProjectLanguages(projectId);
+      expect(result).toHaveLength(1);
+      expect(result[0].locale).toBe("en");
+    });
+
+    it("does not affect languages from other projects", async () => {
+      const otherProject = await createProject(db, organizationId, {
+        slug: "other-project",
+      });
+      await createProjectLanguage(db, otherProject.id, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+
+      await removeLanguageFromProject(projectId, "en");
+
+      const result = await getProjectLanguages(otherProject.id);
+      expect(result).toHaveLength(1);
+      expect(result[0].locale).toBe("en");
+    });
+  });
+
+  describe("setDefaultLanguageForProject", () => {
+    it("sets the target locale as default and clears all others", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "fr",
+        isDefault: false,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "de",
+        isDefault: false,
+      });
+
+      await setDefaultLanguageForProject(projectId, "fr");
+
+      const result = await getProjectLanguages(projectId);
+      const byLocale = Object.fromEntries(result.map((l) => [l.locale, l]));
+
+      expect(byLocale["en"].isDefault).toBe(false);
+      expect(byLocale["fr"].isDefault).toBe(true);
+      expect(byLocale["de"].isDefault).toBe(false);
+    });
+
+    it("keeps the existing default when setting it again", async () => {
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+
+      await setDefaultLanguageForProject(projectId, "en");
+
+      const result = await getProjectLanguages(projectId);
+      expect(result).toHaveLength(1);
+      expect(result[0].isDefault).toBe(true);
+    });
+
+    it("does not affect languages from other projects", async () => {
+      const otherProject = await createProject(db, organizationId, {
+        slug: "other-project",
+      });
+      await createProjectLanguage(db, otherProject.id, {
+        locale: "en",
+        isDefault: true,
+      });
+      await createProjectLanguage(db, otherProject.id, {
+        locale: "fr",
+        isDefault: false,
+      });
+      await createProjectLanguage(db, projectId, {
+        locale: "en",
+        isDefault: true,
+      });
+
+      await setDefaultLanguageForProject(projectId, "en");
+
+      // Other project's languages must be unchanged
+      const result = await getProjectLanguages(otherProject.id);
+      const byLocale = Object.fromEntries(result.map((l) => [l.locale, l]));
+      expect(byLocale["en"].isDefault).toBe(true);
+      expect(byLocale["fr"].isDefault).toBe(false);
     });
   });
 
