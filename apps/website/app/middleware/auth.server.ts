@@ -9,7 +9,7 @@ export const userContext = createContext<SessionData>();
 
 /**
  * Context that holds the authenticated user session data, or null if not authenticated.
- * Set by the optional session auth middleware in project-viewer-layout.
+ * Set by the optional session auth middleware in project-optional-user-layout.
  */
 export const maybeUserContext = createContext<SessionData | null>();
 
@@ -26,7 +26,7 @@ export const sessionAuthMiddleware: MiddlewareFunction = async ({
   if (!user) {
     const url = new URL(request.url);
     throw redirect(
-      `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
+      `/auth/login?redirectTo=${encodeURIComponent(url.pathname + url.search)}`,
     );
   }
 
@@ -58,7 +58,7 @@ export function requireUserFromContext(
     if (request) {
       const url = new URL(request.url);
       throw redirect(
-        `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
+        `/auth/login?redirectTo=${encodeURIComponent(url.pathname + url.search)}`,
       );
     }
     throw redirect("/auth/login");

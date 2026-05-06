@@ -12,9 +12,9 @@ import type { Route } from "./+types/index";
 import {
   organizationContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import { getProjectFiles } from "~/lib/project-files.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import {
   getTranslationsFilesUrl,
   getTranslationsUrl,

@@ -15,13 +15,13 @@ import {
   getLocale,
   i18nextMiddleware,
   localeCookie,
-} from "~/middleware/i18next";
+} from "~/middleware/i18next.server";
 import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "~/lib/i18n";
 import {
   isLocalizablePublicPath,
   stripLocalePrefix,
 } from "~/lib/localized-routes";
-import { queryCounterMiddleware } from "~/middleware/query-counter";
+import { queryCounterMiddleware } from "~/middleware/query-counter.server";
 import { system } from "~/theme";
 import { getUserFromSession } from "~/lib/session.server";
 import { Header } from "~/components/Header";

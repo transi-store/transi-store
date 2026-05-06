@@ -19,14 +19,14 @@ import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
 import { useState } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.new";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import {
   organizationContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import { createBranch, isBranchSlugAvailable } from "~/lib/branches.server";
 import { generateSlug } from "~/lib/slug";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
 
 export async function loader({ context }: Route.LoaderArgs) {

@@ -1,6 +1,6 @@
 import { Container, VStack, Box } from "@chakra-ui/react";
 import type { Route } from "./+types";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
 import { globalSearch, type SearchResult } from "~/lib/search.server";
 import SearchHeader from "./SearchHeader";

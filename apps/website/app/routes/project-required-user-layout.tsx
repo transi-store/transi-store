@@ -1,6 +1,6 @@
 import { Outlet } from "react-router";
-import { sessionAuthMiddleware } from "~/middleware/auth";
-import { projectMemberAccessMiddleware } from "~/middleware/project-access";
+import { sessionAuthMiddleware } from "~/middleware/auth.server";
+import { projectMemberAccessMiddleware } from "~/middleware/project-access.server";
 import type { Route } from "./+types/project-required-user-layout";
 
 export const middleware = [

@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { sessionAuthMiddleware } from "~/middleware/auth";
+import { sessionAuthMiddleware } from "~/middleware/auth.server";
 import type { Route } from "./+types/app-layout";
 
 export const middleware = [sessionAuthMiddleware];

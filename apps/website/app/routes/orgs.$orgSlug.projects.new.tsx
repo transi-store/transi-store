@@ -20,12 +20,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.new";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { createProject, isProjectSlugAvailable } from "~/lib/projects.server";
 import { generateSlug } from "~/lib/slug";
 import { useState } from "react";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { getProjectUrl } from "~/lib/routes-helpers";
 import { ProjectVisibility } from "~/lib/project-visibility";
 

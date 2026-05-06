@@ -9,8 +9,8 @@ import {
   translateWithAI,
   type TranslationSuggestion,
 } from "~/lib/ai-translation.server";
-import { getInstance } from "~/middleware/i18next";
-import { orgContext } from "~/middleware/api-auth";
+import { getInstance } from "~/middleware/i18next.server";
+import { orgContext } from "~/middleware/api-auth.server";
 import type { AiProviderEnum } from "~/lib/ai-providers";
 
 type SuggestionsReturnType = {

@@ -37,7 +37,7 @@ or re-fetching:
 | `projectContext`           | `Project`           | The project resolved from `params.projectSlug`.  |
 
 ```typescript
-// app/middleware/project-access.ts
+// app/middleware/project-access.server.ts
 export const projectAccessRoleContext = createContext<ProjectAccessRole>();
 export const organizationContext = createContext<Organization>();
 export const projectContext = createContext<Project>();
@@ -99,9 +99,9 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 The component then forwards `projectAccessRole` to UI helpers such as
 `<ProjectNav />` and `<ProjectFileTabs />`, which gate write affordances
-(`projectAccessRole === ProjectAccessRole.MEMBER`). Inside the project
-viewer layout, the role is also forwarded through
-`<Outlet context={...} />` so nested routes can read it via
+(`projectAccessRole === ProjectAccessRole.MEMBER`). The project route module
+(`orgs.$orgSlug.projects.$projectSlug.tsx`) also forwards `projectAccessRole`
+through `<Outlet context={...} />` so nested routes can read it via
 `useOutletContext()` without re-reading the request context.
 
 **Never hardcode `ProjectAccessRole.MEMBER`** in a loader or component

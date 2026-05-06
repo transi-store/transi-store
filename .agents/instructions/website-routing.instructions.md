@@ -21,4 +21,4 @@ For any project-scoped page, the layout middleware exposes three precomputed con
 
 Actions need no inline role guard: both project layouts ensure that any mutating request reaching an action came from a MEMBER. The optional-user layout chains `rejectViewerMutationsMiddleware` after the access role middleware, which throws 403 on POST/PUT/PATCH/DELETE when the role is VIEWER. Loaders under that layout continue to serve VIEWERs read-only data.
 
-Keep route files focused. Move server-only queries and secrets into `*.server.ts` files when needed.
+Keep route files focused. Move server-only queries and secrets into `*.server.ts` files when needed. Middleware files live in `apps/website/app/middleware/` and must also use the `*.server.ts` suffix when they import server-only modules (which is almost always — every middleware file in this repo does).

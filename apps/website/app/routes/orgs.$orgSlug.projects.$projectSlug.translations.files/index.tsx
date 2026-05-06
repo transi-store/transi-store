@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
 import { isSupportedFormat, SupportedFormat } from "@transi-store/common";
 import type { Route } from "./+types/index";
-import { projectContext } from "~/middleware/project-access";
+import { projectContext } from "~/middleware/project-access.server";
 import {
   createProjectFile,
   deleteProjectFile,
@@ -9,7 +9,7 @@ import {
   updateProjectFile,
 } from "~/lib/project-files.server";
 import { validateOutputPath } from "~/lib/path-utils";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { getTranslationsUrl } from "~/lib/routes-helpers";
 import { FileAction } from "../orgs.$orgSlug.projects.$projectSlug.translations/FileAction";
 

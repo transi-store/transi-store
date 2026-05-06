@@ -2,7 +2,7 @@ import { Heading, VStack, Box } from "@chakra-ui/react";
 import { useLoaderData, useActionData, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Route } from "./+types";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import {
   getOrganizationApiKeys,
@@ -19,7 +19,7 @@ import {
 import type { AiProviderEnum } from "~/lib/ai-providers";
 import { redirect } from "react-router";
 import { getOrigin } from "~/lib/origin.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import ApiKeys from "./ApiKeys";
 import AiTranslation from "./AiTranslation";
 

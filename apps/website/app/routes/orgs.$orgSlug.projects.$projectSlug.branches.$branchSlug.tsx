@@ -37,7 +37,7 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branche
 import {
   organizationContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import { getProjectLanguages } from "~/lib/projects.server";
 import {
   getBranchBySlug,
@@ -63,7 +63,7 @@ import { TranslationsTable } from "~/routes/orgs.$orgSlug.projects.$projectSlug.
 import { TranslationsPagination } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsPagination";
 import { TranslationsSearchBar } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsSearchBar";
 import { resolveSort } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/loadTranslationKeys.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import {
   getBranchesUrl,
   getBranchMergeUrl,

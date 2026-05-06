@@ -18,10 +18,10 @@ import {
 } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { Route } from "./+types/auth.complete-profile";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { updateUserName, getUserById } from "~/lib/auth.server";
 import { createUserSession } from "~/lib/session.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const sessionUser = context.get(userContext);

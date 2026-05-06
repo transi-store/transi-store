@@ -3,7 +3,7 @@ import { useLoaderData, useActionData } from "react-router";
 import { eq, inArray } from "drizzle-orm";
 import { redirect } from "react-router";
 import type { Route } from "./+types/index";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import {
   createInvitation,
@@ -16,7 +16,7 @@ import {
 } from "~/lib/invitations.server";
 import { db, schema } from "~/lib/db.server";
 import { getOrigin } from "~/lib/origin.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import MembersList from "./Members";
 import Invitations from "./Invitations";
 import type { OrganizationMember, User } from "../../../drizzle/schema";

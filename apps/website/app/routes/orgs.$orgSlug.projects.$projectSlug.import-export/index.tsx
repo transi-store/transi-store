@@ -5,7 +5,7 @@ import { getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFiles } from "~/lib/project-files.server";
 import type { ImportStats } from "~/lib/import/import-translations.server";
 import { processImport } from "~/lib/import/process-import.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import ImportSection from "./Import";
 import ExportSection from "./Export";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
@@ -14,7 +14,7 @@ import {
   organizationContext,
   projectAccessRoleContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import { useTranslation } from "react-i18next";
 
 export type ImportActionData =

@@ -6,7 +6,7 @@ import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$k
 import {
   organizationContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import { getProjectLanguages } from "~/lib/projects.server";
 import {
   getTranslationKeyById,
@@ -22,7 +22,7 @@ import {
   getRedirectUrlFromRequest,
   getRedirectUrlFromFormData,
 } from "~/lib/routes-helpers";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { TranslationKeyContent } from "~/components/translation-key";
 import type {
   Organization,

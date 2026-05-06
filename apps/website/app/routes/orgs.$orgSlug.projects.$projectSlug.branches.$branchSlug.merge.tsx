@@ -21,11 +21,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { LuGitMerge, LuGitBranch, LuArrowLeft } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import {
   organizationContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import {
   getBranchBySlug,
   getBranchKeys,

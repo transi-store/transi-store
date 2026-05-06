@@ -6,7 +6,7 @@ import {
 import { getProjectBySlug } from "~/lib/projects.server";
 import { ProjectAccessRole, ProjectVisibility } from "~/lib/project-visibility";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
-import { maybeUserContext, userContext } from "./auth";
+import { maybeUserContext, userContext } from "./auth.server";
 import type { Organization, Project } from "../../drizzle/schema";
 
 /**
@@ -99,7 +99,9 @@ export const projectOptionalAccessMiddleware: MiddlewareFunction = async ({
   }
 
   const url = new URL(request.url);
-  throw redirect(`/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`);
+  throw redirect(
+    `/auth/login?redirectTo=${encodeURIComponent(url.pathname + url.search)}`,
+  );
 };
 
 /**

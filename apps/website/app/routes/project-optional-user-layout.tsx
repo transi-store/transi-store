@@ -1,9 +1,9 @@
 import { Outlet } from "react-router";
-import { optionalSessionAuthMiddleware } from "~/middleware/auth";
+import { optionalSessionAuthMiddleware } from "~/middleware/auth.server";
 import {
   projectOptionalAccessMiddleware,
   rejectViewerMutationsMiddleware,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import type { Route } from "./+types/project-optional-user-layout";
 
 export const middleware = [

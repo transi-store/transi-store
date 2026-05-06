@@ -1,8 +1,8 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFiles } from "~/lib/project-files.server";
-import { orgContext } from "~/middleware/api-auth";
+import { orgContext } from "~/middleware/api-auth.server";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const i18next = getInstance(context);

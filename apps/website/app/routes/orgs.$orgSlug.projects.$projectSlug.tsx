@@ -9,7 +9,7 @@ import {
   organizationContext,
   projectAccessRoleContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import { useTranslation } from "react-i18next";
 
 export async function loader({ context }: Route.LoaderArgs) {

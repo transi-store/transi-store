@@ -18,7 +18,7 @@ import {
   organizationContext,
   projectAccessRoleContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 import {
   getBranchesByProject,
   getBranchKeyCount,

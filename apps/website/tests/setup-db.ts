@@ -9,7 +9,7 @@ beforeEach(async () => {
   await cleanupDb();
 });
 
-vi.mock("~/middleware/i18next", async () => {
+vi.mock("~/middleware/i18next.server", async () => {
   const { i18nextModuleMock } = await import("../tests/i18n-mock");
 
   return i18nextModuleMock;

@@ -14,8 +14,8 @@ import {
   projectMemberAccessMiddleware,
   projectOptionalAccessMiddleware,
   rejectViewerMutationsMiddleware,
-} from "./project-access";
-import { maybeUserContext, userContext } from "./auth";
+} from "./project-access.server";
+import { maybeUserContext, userContext } from "./auth.server";
 import { ProjectAccessRole, ProjectVisibility } from "~/lib/project-visibility";
 import type { OAuthProvider } from "~/lib/auth-providers";
 import type { SessionData } from "~/lib/session.server";

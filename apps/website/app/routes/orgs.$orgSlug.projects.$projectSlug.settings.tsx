@@ -48,14 +48,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { ProjectSettingsAction } from "./ProjectSettingsAction";
 import { ProjectVisibility } from "~/lib/project-visibility";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
 import {
   organizationContext,
   projectAccessRoleContext,
   projectContext,
-} from "~/middleware/project-access";
+} from "~/middleware/project-access.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const organization = context.get(organizationContext);
