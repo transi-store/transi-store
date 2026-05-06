@@ -65,6 +65,7 @@ type MarkdownTranslateLayoutProps = {
   fuzzyByLocale: Record<string, Record<string, boolean>>;
   initialLeftLocale: string;
   initialRightLocale: string;
+  hasAiProvider: boolean;
 };
 
 export function MarkdownTranslateLayout(props: MarkdownTranslateLayoutProps) {
@@ -83,6 +84,7 @@ function MarkdownTranslateInner({
   fuzzyByLocale,
   initialLeftLocale,
   initialRightLocale,
+  hasAiProvider,
 }: MarkdownTranslateLayoutProps) {
   const { t } = useTranslation();
   const sync = useSectionSync();
@@ -568,6 +570,7 @@ function MarkdownTranslateInner({
           hasCurrentSection={activeSection !== undefined}
           isCurrentSectionFuzzy={isCurrentSectionFuzzy}
           isAiBusy={isAiBusy}
+          hasAiProvider={hasAiProvider}
           onCopySectionToCounterpart={handleCopySection}
           onCopyDocumentToCounterpart={handleCopyDocument}
           onTranslateSectionWithAi={handleAiTranslateSection}

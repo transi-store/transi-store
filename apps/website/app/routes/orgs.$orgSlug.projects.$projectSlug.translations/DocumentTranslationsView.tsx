@@ -80,6 +80,7 @@ export function DocumentTranslationsView({
           fuzzyByLocale={markdownData.fuzzyByLocale}
           initialLeftLocale={initialLeftLocale}
           initialRightLocale={initialRightLocale}
+          hasAiProvider={data.hasAiProvider}
         />
       )}
     </Stack>

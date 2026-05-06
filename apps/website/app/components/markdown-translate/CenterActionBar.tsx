@@ -5,6 +5,7 @@
  */
 import { IconButton, Stack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "~/components/ui/tooltip";
 import {
   LuArrowLeftRight,
   LuCopy,
@@ -19,6 +20,7 @@ type CenterActionBarProps = {
   hasCurrentSection: boolean;
   isCurrentSectionFuzzy: boolean;
   isAiBusy: boolean;
+  hasAiProvider: boolean;
   onCopySectionToCounterpart: () => void;
   onCopyDocumentToCounterpart: () => void;
   onTranslateSectionWithAi: () => void;
@@ -32,6 +34,7 @@ export function CenterActionBar({
   hasCurrentSection,
   isCurrentSectionFuzzy,
   isAiBusy,
+  hasAiProvider,
   onCopySectionToCounterpart,
   onCopyDocumentToCounterpart,
   onTranslateSectionWithAi,
@@ -76,28 +79,38 @@ export function CenterActionBar({
       >
         <LuFiles />
       </IconButton>
-      <IconButton
-        aria-label={t("markdownTranslate.actions.aiTranslateSection")}
-        title={t("markdownTranslate.actions.aiTranslateSection")}
-        size="sm"
-        variant="ghost"
-        disabled={!hasCurrentSection || isAiBusy}
-        loading={isAiBusy && hasCurrentSection}
-        onClick={onTranslateSectionWithAi}
+      <Tooltip
+        content={t("keys.translateWithAI.noProvider")}
+        present={!hasAiProvider}
       >
-        <LuSparkles />
-      </IconButton>
-      <IconButton
-        aria-label={t("markdownTranslate.actions.aiTranslateDocument")}
-        title={t("markdownTranslate.actions.aiTranslateDocument")}
-        size="sm"
-        variant="ghost"
-        disabled={isAiBusy}
-        loading={isAiBusy && !hasCurrentSection}
-        onClick={onTranslateDocumentWithAi}
+        <IconButton
+          aria-label={t("markdownTranslate.actions.aiTranslateSection")}
+          title={t("markdownTranslate.actions.aiTranslateSection")}
+          size="sm"
+          variant="ghost"
+          disabled={!hasAiProvider || !hasCurrentSection || isAiBusy}
+          loading={isAiBusy && hasCurrentSection}
+          onClick={onTranslateSectionWithAi}
+        >
+          <LuSparkles />
+        </IconButton>
+      </Tooltip>
+      <Tooltip
+        content={t("keys.translateWithAI.noProvider")}
+        present={!hasAiProvider}
       >
-        <LuFileText />
-      </IconButton>
+        <IconButton
+          aria-label={t("markdownTranslate.actions.aiTranslateDocument")}
+          title={t("markdownTranslate.actions.aiTranslateDocument")}
+          size="sm"
+          variant="ghost"
+          disabled={!hasAiProvider || isAiBusy}
+          loading={isAiBusy && !hasCurrentSection}
+          onClick={onTranslateDocumentWithAi}
+        >
+          <LuFileText />
+        </IconButton>
+      </Tooltip>
       <IconButton
         aria-label={
           isCurrentSectionFuzzy

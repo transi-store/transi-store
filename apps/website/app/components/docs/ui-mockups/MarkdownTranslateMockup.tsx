@@ -57,6 +57,7 @@ export function MarkdownTranslateMockup() {
           fuzzyByLocale={{}}
           initialLeftLocale="en"
           initialRightLocale="fr"
+          hasAiProvider={true}
         />
       </Box>
     </MockupContainer>

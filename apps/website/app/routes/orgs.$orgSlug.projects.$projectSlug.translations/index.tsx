@@ -85,7 +85,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   if (isDocumentFormat(selectedFile.format)) {
+    const organization = context.get(organizationContext);
     return loadDocumentTranslations({
+      organizationId: organization.id,
       projectId: project.id,
       projectFiles,
       selectedFile,

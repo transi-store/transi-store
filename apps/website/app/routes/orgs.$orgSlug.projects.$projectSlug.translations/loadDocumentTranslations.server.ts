@@ -3,6 +3,7 @@ import {
   getProjectFileTranslations,
   getSectionStatesForTranslations,
 } from "~/lib/markdown-documents.server";
+import { hasActiveAiProvider } from "~/lib/ai-providers.server";
 import type { ProjectFile } from "../../../drizzle/schema";
 import { DocumentMode } from "./constants";
 
@@ -10,6 +11,7 @@ export type DocumentTranslationsLoaderData = {
   mode: DocumentMode.Document;
   projectFiles: ProjectFile[];
   selectedFileId: number;
+  hasAiProvider: boolean;
   markdownData: {
     contentByLocale: Record<string, string>;
     fuzzyByLocale: Record<string, Record<string, boolean>>;
@@ -19,11 +21,12 @@ export type DocumentTranslationsLoaderData = {
 };
 
 export async function loadDocumentTranslations(args: {
+  organizationId: number;
   projectId: number;
   projectFiles: ProjectFile[];
   selectedFile: ProjectFile;
 }): Promise<DocumentTranslationsLoaderData> {
-  const { projectId, projectFiles, selectedFile } = args;
+  const { organizationId, projectId, projectFiles, selectedFile } = args;
   const languages = await getProjectLanguages(projectId);
   const normalizedLanguages = languages.map((l) => ({
     id: String(l.id),
@@ -66,10 +69,13 @@ export async function loadDocumentTranslations(args: {
     }
   }
 
+  const hasAiProvider = await hasActiveAiProvider(organizationId);
+
   return {
     mode: DocumentMode.Document,
     projectFiles,
     selectedFileId: selectedFile.id,
+    hasAiProvider,
     markdownData: {
       contentByLocale,
       fuzzyByLocale,
