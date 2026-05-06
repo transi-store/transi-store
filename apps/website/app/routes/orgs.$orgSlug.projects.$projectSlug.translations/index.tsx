@@ -37,12 +37,14 @@ import {
 } from "./runMarkdownAction.server";
 import { isKeyAction, runKeyAction } from "./runKeyAction.server";
 import type { ProjectFile } from "../../../drizzle/schema";
+import { ProjectAccessRole } from "~/lib/project-visibility";
 import { DocumentMode } from "./constants";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
   project: { id: string; slug: string; name: string };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
+  projectAccessRole: ProjectAccessRole;
 };
 
 type EmptyLoaderData = {
@@ -209,6 +211,8 @@ export default function ProjectTranslations({
       ? undefined
       : loaderData.projectFiles.find((f) => f.id === loaderData.selectedFileId);
 
+  const canEdit = context.projectAccessRole === ProjectAccessRole.MEMBER;
+
   return (
     <VStack gap={6} align="stretch">
       {loaderData.mode === DocumentMode.Empty ? (
@@ -229,12 +233,14 @@ export default function ProjectTranslations({
             <Text color="fg.muted" mb={4}>
               {t("files.noFiles")}
             </Text>
-            <Button
-              colorPalette="accent"
-              onClick={() => openFileModal("create-file")}
-            >
-              <LuPlus /> {t("files.addFile")}
-            </Button>
+            {canEdit && (
+              <Button
+                colorPalette="accent"
+                onClick={() => openFileModal("create-file")}
+              >
+                <LuPlus /> {t("files.addFile")}
+              </Button>
+            )}
           </Box>
         </>
       ) : (
@@ -242,6 +248,7 @@ export default function ProjectTranslations({
           <ProjectFileTabs
             files={loaderData.projectFiles}
             selectedFileId={loaderData.selectedFileId}
+            projectAccessRole={context.projectAccessRole}
             onFileClick={(file) => {
               if (file.id === loaderData.selectedFileId) return;
               navigate(

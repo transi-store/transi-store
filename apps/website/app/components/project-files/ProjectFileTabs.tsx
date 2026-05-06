@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { LuPlus, LuPencil } from "react-icons/lu";
 import { FORMAT_LABELS, SupportedFormat } from "@transi-store/common";
 import type { ProjectFile } from "../../../drizzle/schema";
+import { ProjectAccessRole } from "~/lib/project-visibility";
 
 type ProjectFileTabsProps = {
   files: Array<ProjectFile>;
   selectedFileId: number | null;
+  projectAccessRole: ProjectAccessRole;
   onFileClick: (file: ProjectFile) => void;
   onEditFile: (file: ProjectFile) => void;
   onAddFile: () => void;
@@ -15,11 +17,13 @@ type ProjectFileTabsProps = {
 export function ProjectFileTabs({
   files,
   selectedFileId,
+  projectAccessRole,
   onFileClick,
   onEditFile,
   onAddFile,
 }: ProjectFileTabsProps) {
   const { t } = useTranslation();
+  const canEdit = projectAccessRole === ProjectAccessRole.MEMBER;
 
   return (
     <Tabs.Root
@@ -41,25 +45,29 @@ export function ProjectFileTabs({
                   {FORMAT_LABELS[file.format as SupportedFormat] ?? file.format}
                 </Badge>
               </Tabs.Trigger>
-              <IconButton
-                aria-label={t("files.editFile")}
-                size="xs"
-                variant="ghost"
-                onClick={() => onEditFile(file)}
-              >
-                <LuPencil />
-              </IconButton>
+              {canEdit && (
+                <IconButton
+                  aria-label={t("files.editFile")}
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => onEditFile(file)}
+                >
+                  <LuPencil />
+                </IconButton>
+              )}
             </HStack>
           ))}
         </Tabs.List>
-        <IconButton
-          aria-label={t("files.addFile")}
-          size="xs"
-          variant="ghost"
-          onClick={onAddFile}
-        >
-          <LuPlus />
-        </IconButton>
+        {canEdit && (
+          <IconButton
+            aria-label={t("files.addFile")}
+            size="xs"
+            variant="ghost"
+            onClick={onAddFile}
+          >
+            <LuPlus />
+          </IconButton>
+        )}
       </HStack>
     </Tabs.Root>
   );
