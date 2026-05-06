@@ -24,7 +24,7 @@ Toutes les routes protégées de l'application appelaient individuellement `requ
 Utilisation de l'API middleware de React Router v7 (`future.v8_middleware`, déjà activé) avec `createContext` pour le passage type-safe des données d'authentification :
 
 ```typescript
-// app/middleware/auth.ts
+// app/middleware/auth.server.ts
 export const userContext = createContext<SessionData>();
 
 export async function sessionAuthMiddleware({ request, context }) {
@@ -37,7 +37,7 @@ export async function sessionAuthMiddleware({ request, context }) {
 ```
 
 ```typescript
-// app/middleware/api-auth.ts
+// app/middleware/api-auth.server.ts
 export const apiAuthContext = createContext<ApiAuthResult>();
 
 export async function apiAuthMiddleware({ request, context }) {
@@ -130,8 +130,8 @@ route("api/locales/:lng/:ns", ...);
 
 ## Fichiers créés
 
-- `app/middleware/auth.ts` — Middleware session + userContext
-- `app/middleware/api-auth.ts` — Middleware double auth API + apiAuthContext
+- `app/middleware/auth.server.ts` — Middleware session + userContext
+- `app/middleware/api-auth.server.ts` — Middleware double auth API + apiAuthContext
 - `app/routes/app-layout.tsx` — Layout pathless pour les routes web authentifiées
 - `app/routes/api-layout.tsx` — Layout pathless pour les routes API authentifiées
 

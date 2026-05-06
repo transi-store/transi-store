@@ -6,6 +6,7 @@ import {
 } from "~/lib/api-keys.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import type { MiddlewareFunction } from "react-router";
+import { apiError } from "~/lib/api-response.server";
 
 enum AuthMode {
   Session = "session",
@@ -51,10 +52,7 @@ export const apiAuthMiddleware: MiddlewareFunction = async ({
     const org = await getOrganizationByApiKey(apiKey);
 
     if (!org) {
-      throw new Response(JSON.stringify({ error: "Invalid API key" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      throw apiError(401, "Invalid API key");
     }
 
     updateApiKeyLastUsed(apiKey).catch((err) => {
@@ -69,10 +67,7 @@ export const apiAuthMiddleware: MiddlewareFunction = async ({
   const user = await getUserFromSession(request);
 
   if (!user) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
+    throw apiError(403, "Unauthorized");
   }
 
   context.set(apiAuthContext, { mode: AuthMode.Session, user });
@@ -92,21 +87,12 @@ export const apiOrgMiddleware: MiddlewareFunction = async ({
   const auth = context.get(apiAuthContext);
 
   if (!params.orgSlug) {
-    throw new Response(
-      JSON.stringify({ error: "Organization slug is required" }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    throw apiError(400, "Organization slug is required");
   }
 
   if (auth.mode === AuthMode.ApiKey) {
     if (auth.organization.slug !== params.orgSlug) {
-      throw new Response(
-        JSON.stringify({ error: "API key does not match organization" }),
-        { status: 403, headers: { "Content-Type": "application/json" } },
-      );
+      throw apiError(403, "API key does not match organization");
     }
     context.set(orgContext, auth.organization);
     return;

@@ -21,7 +21,7 @@ type CreateProjectParams = {
   slug: string;
   description?: string;
   createdBy: number;
-  visibility?: ProjectVisibility;
+  visibility: ProjectVisibility;
 };
 
 export async function createProject(params: CreateProjectParams) {

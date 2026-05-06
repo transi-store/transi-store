@@ -6,7 +6,7 @@ owned_paths:
   - apps/website/drizzle/schema.ts
   - apps/website/app/lib/projects.server.ts
   - apps/website/app/lib/organizations.server.ts
-  - apps/website/app/middleware/auth.ts
+  - apps/website/app/middleware/auth.server.ts
   - apps/website/app/routes.ts
   - apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.tsx
   - apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx
@@ -48,7 +48,8 @@ export const PROJECT_VISIBILITY = {
   PUBLIC: "public",
 } as const;
 
-export type ProjectVisibility = (typeof PROJECT_VISIBILITY)[keyof typeof PROJECT_VISIBILITY];
+export type ProjectVisibility =
+  (typeof PROJECT_VISIBILITY)[keyof typeof PROJECT_VISIBILITY];
 ```
 
 Puis ajouter le champ `visibility` à la table `projects` dans `apps/website/drizzle/schema.ts` :
@@ -68,7 +69,7 @@ Mettre à jour `Project` / `NewProject` (types inférés automatiquement par Dri
 
 ## 2. Middleware optionnel d'authentification
 
-**`apps/website/app/middleware/auth.ts`**
+**`apps/website/app/middleware/auth.server.ts`**
 
 Ajouter :
 
@@ -90,6 +91,7 @@ Ce layout utilise `optionalSessionAuthMiddleware` (liste `middleware`). Il doit 
 Déplacer les routes `orgs/:orgSlug/projects/:projectSlug/…` (layout projet et ses enfants, branches, keys) **hors** de `layout("routes/app-layout.tsx", […])` et les placer sous le nouveau `layout("routes/project-viewer-layout.tsx", […])`.
 
 Laisser dans `app-layout` :
+
 - `orgs/:orgSlug/projects/new` (création, toujours membres-only)
 - Toutes les autres routes organisations et auth
 
@@ -153,7 +155,10 @@ Toutes les routes enfants qui contiennent une `action()` (settings, translations
 export async function action({ request, params, context }: Route.ActionArgs) {
   const maybeUser = context.get(maybeUserContext);
   const user = requireUserFromContext(maybeUser);
-  const organization = await requireOrganizationMembership(user, params.orgSlug);
+  const organization = await requireOrganizationMembership(
+    user,
+    params.orgSlug,
+  );
   // ...
 }
 ```
@@ -175,6 +180,7 @@ Mettre à jour `createProject` dans `projects.server.ts` pour accepter et persis
 **`apps/website/app/routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx`**
 
 Ajouter :
+
 - Une section "Visibilité" dans l'UI affichant la visibilité actuelle et un bouton/formulaire pour changer (`_action: "update_visibility"`).
 - Le handler d'action correspondant : valide la valeur, appelle `updateProjectVisibility(project.id, visibility)` (nouvelle fonction dans `projects.server.ts`), retourne `{ success: true }`.
 - La route settings est membres-only (action ET loader vérifient la membership, cf. §6).
@@ -182,6 +188,7 @@ Ajouter :
 ## 9. Badge de visibilité dans l'UI
 
 Afficher un badge "Public" (couleur neutre) ou "Private" sur :
+
 - La page de liste des projets de l'organisation (`orgs.$orgSlug._index` ou équivalent).
 - Le header du layout projet.
 
@@ -190,6 +197,7 @@ Afficher un badge "Public" (couleur neutre) ou "Private" sur :
 Ajouter les clés de traduction pour tous les textes nouveaux dans les 4 fichiers locales (`en`, `fr`, et les autres supportés). Lire `docs/technical-notes/traductions.md`.
 
 Clés suggérées (namespace `translation`) :
+
 - `projects.visibility.label`
 - `projects.visibility.private`
 - `projects.visibility.public`
@@ -201,6 +209,7 @@ Clés suggérées (namespace `translation`) :
 ## 11. Tests
 
 Couvrir :
+
 - `getProjectBySlug` et `getOrganizationBySlug` (unitaire).
 - Loader du layout projet : accès membre, accès public non membre, accès privé non membre (redirect login).
 - Action `update_visibility` dans settings : succès, valeur invalide, non-membre.

@@ -74,6 +74,7 @@ This project uses **i18next-icu**, which means variable interpolation follows IC
 Call site: `t("projects.updatedAt", { date: formattedDate })` — same as standard i18next, only the JSON syntax differs.
 
 ICU also supports plurals and selects with the same single-brace format:
+
 ```json
 "projects.keyCount": "{count, plural, one {# key} other {# keys}}"
 ```
@@ -81,7 +82,7 @@ ICU also supports plurals and selects with the same single-brace format:
 ## Locale files
 
 - Live in `apps/website/app/locales/<lang>/translation.json` as a **flat** `"a.b.c": "value"` JSON file.
-- `en` is the source of truth for the TypeScript key type (see `app/middleware/i18next.ts`). If a key exists in `fr` but not in `en`, it is not typed.
+- `en` is the source of truth for the TypeScript key type (see `app/middleware/i18next.server.ts`). If a key exists in `fr` but not in `en`, it is not typed.
 - When adding a key, add it in **all** locales in the same PR. Keep them alphabetically sorted — that's how the existing entries are maintained, and it makes diffs readable.
 - Naming convention: `{namespace}.{group}.{key}`, e.g. `files.errors.path.notRelative`. Stay consistent with nearby entries.
 

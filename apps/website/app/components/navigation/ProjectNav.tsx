@@ -8,7 +8,7 @@ import { ProjectAccessRole } from "~/lib/project-visibility";
 type ProjectNavProps = {
   organizationSlug: string;
   projectSlug: string;
-  projectAccessRole?: ProjectAccessRole;
+  projectAccessRole: ProjectAccessRole;
 };
 
 export function ProjectNav({

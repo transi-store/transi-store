@@ -84,7 +84,7 @@ If the user has no `name` after upsert:
 - `optionalSessionAuthMiddleware`: Middleware for routes accessible to both authenticated and anonymous users. Places the user (or `null`) in `maybeUserContext`. Used to power the project viewer layout.
 - `apiAuthMiddleware`: Middleware for API routes, accepts Bearer API key or session cookie. Places the result in `apiAuthContext`.
 
-**Files**: `apps/website/app/lib/session.server.ts`, `apps/website/app/middleware/auth.ts`, `apps/website/app/middleware/api-auth.ts`
+**Files**: `apps/website/app/lib/session.server.ts`, `apps/website/app/middleware/auth.server.ts`, `apps/website/app/middleware/api-auth.server.ts`
 
 ## Security
 

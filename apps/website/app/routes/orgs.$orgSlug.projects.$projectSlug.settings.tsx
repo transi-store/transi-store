@@ -87,7 +87,6 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const action = formData.get("_action");
 
   if (action === ProjectSettingsAction.UpdateVisibility) {
-    const i18next = getInstance(context);
     const visibility = formData.get("visibility");
     if (
       visibility !== ProjectVisibility.PRIVATE &&

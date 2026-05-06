@@ -135,7 +135,7 @@ file that wires it up tells you who can do it.
 
 ## Files
 
-- `apps/website/app/middleware/project-access.ts` — contexts and the
+- `apps/website/app/middleware/project-access.server.ts` — contexts and the
   three middleware functions (member access, optional access, viewer
   mutation reject)
 - `apps/website/app/routes/project-required-user-layout.tsx`
