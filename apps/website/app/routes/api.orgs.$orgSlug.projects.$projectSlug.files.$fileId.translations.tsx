@@ -9,11 +9,11 @@ import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { getDocumentTranslation } from "~/lib/markdown-documents.server";
-import { orgContext } from "~/middleware/api-auth";
+import { orgContext } from "~/middleware/api-auth.server";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
 import { processImport } from "~/lib/import/process-import.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 
 function jsonError(status: number, error: string): Response {
   return new Response(JSON.stringify({ error }), {

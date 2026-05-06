@@ -21,9 +21,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { LuGitMerge, LuGitBranch, LuArrowLeft } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug } from "~/lib/projects.server";
+import { userContext } from "~/middleware/auth.server";
+import {
+  organizationContext,
+  projectContext,
+} from "~/middleware/project-access.server";
 import {
   getBranchBySlug,
   getBranchKeys,
@@ -32,19 +34,10 @@ import {
 } from "~/lib/branches.server";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
 
   const branch = await getBranchBySlug(project.id, params.branchSlug);
   if (!branch) {
@@ -66,15 +59,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
 export async function action({ params, context }: Route.ActionArgs) {
   const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const project = context.get(projectContext);
 
   const branch = await getBranchBySlug(project.id, params.branchSlug);
   if (!branch) {

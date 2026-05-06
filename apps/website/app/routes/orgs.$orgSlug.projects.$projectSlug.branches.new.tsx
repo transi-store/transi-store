@@ -19,26 +19,19 @@ import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
 import { useState } from "react";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches.new";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug } from "~/lib/projects.server";
+import { userContext } from "~/middleware/auth.server";
+import {
+  organizationContext,
+  projectContext,
+} from "~/middleware/project-access.server";
 import { createBranch, isBranchSlugAvailable } from "~/lib/branches.server";
 import { generateSlug } from "~/lib/slug";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { getBranchesUrl, getBranchUrl } from "~/lib/routes-helpers";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 
-export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+export async function loader({ context }: Route.LoaderArgs) {
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
 
   return { organization, project };
 }
@@ -46,15 +39,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
   const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const project = context.get(projectContext);
 
   const formData = await request.formData();
   const name = formData.get("name");

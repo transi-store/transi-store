@@ -11,7 +11,7 @@ import {
 import { Link, useLoaderData } from "react-router";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs._index";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { getUserOrganizations } from "~/lib/organizations.server";
 import { useTranslation } from "react-i18next";
 import { AppBreadcrumb } from "~/components/navigation/AppBreadcrumb";

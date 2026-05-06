@@ -1,44 +1,43 @@
 import { VStack, Container, Stack, Box } from "@chakra-ui/react";
 import { useActionData, useNavigation } from "react-router";
 import type { Route } from "./+types/index";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
+import { getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFiles } from "~/lib/project-files.server";
 import type { ImportStats } from "~/lib/import/import-translations.server";
 import { processImport } from "~/lib/import/process-import.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import ImportSection from "./Import";
 import ExportSection from "./Export";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
-import { ProjectAccessRole } from "~/lib/project-visibility";
+import {
+  organizationContext,
+  projectAccessRoleContext,
+  projectContext,
+} from "~/middleware/project-access.server";
 import { useTranslation } from "react-i18next";
 
 export type ImportActionData =
   | { success: true; importStats: ImportStats; actionTimestamp: number }
   | { success: false; error: string; details?: string };
 
-export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+export async function loader({ context }: Route.LoaderArgs) {
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
+  const projectAccessRole = context.get(projectAccessRoleContext);
 
   const [languages, projectFiles] = await Promise.all([
     getProjectLanguages(project.id),
     getProjectFiles(project.id),
   ]);
 
-  return { organization, project, languages, projectFiles };
+  return {
+    organization,
+    project,
+    languages,
+    projectFiles,
+    projectAccessRole,
+  };
 }
 
 export async function action({
@@ -46,13 +45,8 @@ export async function action({
   params,
   context,
 }: Route.ActionArgs): Promise<ImportActionData> {
-  const user = context.get(userContext);
   const i18next = getInstance(context);
-
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
+  const organization = context.get(organizationContext);
 
   const formData = await request.formData();
   const formAction = formData.get("_action");
@@ -98,7 +92,8 @@ export async function action({
 export default function ProjectImportExport({
   loaderData,
 }: Route.ComponentProps) {
-  const { organization, project, languages, projectFiles } = loaderData;
+  const { organization, project, languages, projectFiles, projectAccessRole } =
+    loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -132,7 +127,7 @@ export default function ProjectImportExport({
           <ProjectNav
             organizationSlug={organization.slug}
             projectSlug={project.slug}
-            projectAccessRole={ProjectAccessRole.MEMBER}
+            projectAccessRole={projectAccessRole}
           />
         </Stack>
 

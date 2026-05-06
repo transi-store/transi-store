@@ -9,19 +9,16 @@ import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
 import { isDocumentFormat } from "@transi-store/common";
 import type { Route } from "./+types/index";
-import { maybeUserContext, requireUserFromContext } from "~/middleware/auth";
 import {
-  getOrganizationBySlug,
-  requireOrganizationMembership,
-} from "~/lib/organizations.server";
-import { getProjectBySlug } from "~/lib/projects.server";
+  organizationContext,
+  projectContext,
+} from "~/middleware/project-access.server";
 import { getProjectFiles } from "~/lib/project-files.server";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import {
   getTranslationsFilesUrl,
   getTranslationsUrl,
 } from "~/lib/routes-helpers";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { ProjectFileTabs } from "~/components/project-files/ProjectFileTabs";
 import { FileEditModal } from "./FileEditModal";
 import { TranslationKeysView } from "./TranslationKeysView";
@@ -52,17 +49,8 @@ type EmptyLoaderData = {
   projectFiles: Array<ProjectFile>;
 };
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const organization = await getOrganizationBySlug(params.orgSlug);
-  if (!organization) {
-    throw new Response("Organization not found", { status: 404 });
-  }
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const project = context.get(projectContext);
 
   const url = new URL(request.url);
   const search = url.searchParams.get("search") || undefined;
@@ -117,18 +105,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const maybeUser = context.get(maybeUserContext);
-  const user = requireUserFromContext(maybeUser);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
 
   const formData = await request.formData();
   const action = formData.get("_action");

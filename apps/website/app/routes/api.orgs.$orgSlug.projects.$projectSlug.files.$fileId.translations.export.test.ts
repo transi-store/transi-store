@@ -3,7 +3,7 @@ import { SupportedFormat } from "@transi-store/common";
 import * as schema from "../../drizzle/schema";
 import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { RouterContextProvider } from "react-router";
-import { orgContext } from "~/middleware/api-auth";
+import { orgContext } from "~/middleware/api-auth.server";
 import {
   cleanupDb,
   createBranch,

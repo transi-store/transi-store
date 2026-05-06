@@ -3,7 +3,7 @@ import { RouterContextProvider } from "react-router";
 import { SupportedFormat } from "@transi-store/common";
 import * as schema from "../../drizzle/schema";
 import { loader } from "./api.orgs.$orgSlug.projects.$projectSlug";
-import { orgContext } from "~/middleware/api-auth";
+import { orgContext } from "~/middleware/api-auth.server";
 import {
   cleanupDb,
   createOrganization,

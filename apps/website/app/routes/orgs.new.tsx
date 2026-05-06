@@ -16,7 +16,7 @@ import {
 } from "react-router";
 import { LuPlus } from "react-icons/lu";
 import type { Route } from "./+types/orgs.new";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import {
   createOrganization,
   isSlugAvailable,

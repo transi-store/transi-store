@@ -70,11 +70,20 @@ export default [
       route("settings", "routes/orgs.$orgSlug.settings/index.tsx"),
     ]),
 
-    // Projects routes (members-only)
+    // New project (no project context yet — only org membership is checked)
     route(
       "orgs/:orgSlug/projects/new",
       "routes/orgs.$orgSlug.projects.new.tsx",
     ),
+
+    // Search
+    route("search", "routes/search/index.tsx"),
+  ]),
+
+  // Project routes that require organization membership.
+  // Both sessionAuthMiddleware and projectMemberAccessMiddleware run here,
+  // which precomputes ProjectAccessRole.MEMBER into projectAccessRoleContext.
+  layout("routes/project-required-user-layout.tsx", [
     route(
       "orgs/:orgSlug/projects/:projectSlug/settings",
       "routes/orgs.$orgSlug.projects.$projectSlug.settings.tsx",
@@ -84,7 +93,7 @@ export default [
       "routes/orgs.$orgSlug.projects.$projectSlug.import-export/index.tsx",
     ),
 
-    // Branches routes (members-only)
+    // Branches routes
     route(
       "orgs/:orgSlug/projects/:projectSlug/branches",
       "routes/orgs.$orgSlug.projects.$projectSlug.branches._index.tsx",
@@ -102,18 +111,17 @@ export default [
       "routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx",
     ),
 
-    // Translation keys routes (members-only)
+    // Translation keys routes
     route(
       "orgs/:orgSlug/projects/:projectSlug/keys/:keyId",
       "routes/orgs.$orgSlug.projects.$projectSlug.keys.$keyId.tsx",
     ),
-
-    // Search
-    route("search", "routes/search/index.tsx"),
   ]),
 
-  // Project viewer routes (optional auth: public projects readable by anyone)
-  layout("routes/project-viewer-layout.tsx", [
+  // Project routes accessible without authentication for public projects.
+  // optionalSessionAuthMiddleware + projectOptionalAccessMiddleware compute
+  // the access role (MEMBER, VIEWER, or redirect) into projectAccessRoleContext.
+  layout("routes/project-optional-user-layout.tsx", [
     route(
       "orgs/:orgSlug/projects/:projectSlug",
       "routes/orgs.$orgSlug.projects.$projectSlug.tsx",

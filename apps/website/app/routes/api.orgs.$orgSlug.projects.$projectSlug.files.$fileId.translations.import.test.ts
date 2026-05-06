@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RouterContextProvider } from "react-router";
 import * as schema from "../../drizzle/schema";
 import { action } from "./api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
-import { orgContext } from "~/middleware/api-auth";
+import { orgContext } from "~/middleware/api-auth.server";
 import {
   cleanupDb,
   createApiKey,

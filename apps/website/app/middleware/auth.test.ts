@@ -4,7 +4,7 @@ vi.mock("~/lib/session.server", () => ({
   getUserFromSession: vi.fn(),
 }));
 
-import { requireUserFromContext } from "./auth";
+import { requireUserFromContext } from "./auth.server";
 import type { SessionData } from "~/lib/session.server";
 
 describe("requireUserFromContext", () => {

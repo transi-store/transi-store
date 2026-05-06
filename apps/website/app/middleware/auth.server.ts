@@ -1,4 +1,4 @@
-import { createContext, redirect, type RouterContext } from "react-router";
+import { createContext, redirect, type MiddlewareFunction } from "react-router";
 import { getUserFromSession, type SessionData } from "~/lib/session.server";
 
 /**
@@ -9,7 +9,7 @@ export const userContext = createContext<SessionData>();
 
 /**
  * Context that holds the authenticated user session data, or null if not authenticated.
- * Set by the optional session auth middleware in project-viewer-layout.
+ * Set by the optional session auth middleware in project-optional-user-layout.
  */
 export const maybeUserContext = createContext<SessionData | null>();
 
@@ -17,43 +17,33 @@ export const maybeUserContext = createContext<SessionData | null>();
  * Middleware that requires a valid user session.
  * Redirects to /auth/login if the user is not authenticated.
  */
-export async function sessionAuthMiddleware({
+export const sessionAuthMiddleware: MiddlewareFunction = async ({
   request,
   context,
-}: {
-  request: Request;
-  context: {
-    set: <T>(ctx: RouterContext<T>, value: T) => void;
-  };
-}) {
+}) => {
   const user = await getUserFromSession(request);
 
   if (!user) {
     const url = new URL(request.url);
     throw redirect(
-      `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
+      `/auth/login?redirectTo=${encodeURIComponent(url.pathname + url.search)}`,
     );
   }
 
   context.set(userContext, user);
-}
+};
 
 /**
  * Middleware that attempts to retrieve the session but does NOT redirect on null.
  * Sets maybeUserContext to the user or null.
  */
-export async function optionalSessionAuthMiddleware({
+export const optionalSessionAuthMiddleware: MiddlewareFunction = async ({
   request,
   context,
-}: {
-  request: Request;
-  context: {
-    set: <T>(ctx: RouterContext<T>, value: T) => void;
-  };
-}) {
+}) => {
   const user = await getUserFromSession(request);
   context.set(maybeUserContext, user ?? null);
-}
+};
 
 /**
  * Helper that asserts a nullable user is authenticated.
@@ -68,7 +58,7 @@ export function requireUserFromContext(
     if (request) {
       const url = new URL(request.url);
       throw redirect(
-        `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
+        `/auth/login?redirectTo=${encodeURIComponent(url.pathname + url.search)}`,
       );
     }
     throw redirect("/auth/login");

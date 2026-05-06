@@ -1,47 +1,23 @@
 import { Badge, Container, VStack, Box, Stack, Text } from "@chakra-ui/react";
-import { Outlet, redirect, useLoaderData } from "react-router";
+import { Outlet, useLoaderData } from "react-router";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
-import { maybeUserContext } from "~/middleware/auth";
+import { getProjectLanguages } from "~/lib/projects.server";
+import { ProjectVisibility } from "~/lib/project-visibility";
 import {
-  getOrganizationBySlug,
-  isUserMemberOfOrganization,
-} from "~/lib/organizations.server";
-import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
-import { ProjectVisibility, ProjectAccessRole } from "~/lib/project-visibility";
+  organizationContext,
+  projectAccessRoleContext,
+  projectContext,
+} from "~/middleware/project-access.server";
 import { useTranslation } from "react-i18next";
 
-export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const maybeUser = context.get(maybeUserContext);
-
-  const organization = await getOrganizationBySlug(params.orgSlug);
-  if (!organization) {
-    throw new Response("Organization not found", { status: 404 });
-  }
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+export async function loader({ context }: Route.LoaderArgs) {
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
+  const projectAccessRole = context.get(projectAccessRoleContext);
 
   const languages = await getProjectLanguages(project.id);
-
-  let projectAccessRole: ProjectAccessRole;
-  if (
-    maybeUser !== null &&
-    (await isUserMemberOfOrganization(maybeUser.userId, organization.id))
-  ) {
-    projectAccessRole = ProjectAccessRole.MEMBER;
-  } else if (project.visibility === ProjectVisibility.PUBLIC) {
-    projectAccessRole = ProjectAccessRole.VIEWER;
-  } else {
-    const url = new URL(request.url);
-    throw redirect(
-      `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`,
-    );
-  }
 
   return { organization, project, languages, projectAccessRole };
 }

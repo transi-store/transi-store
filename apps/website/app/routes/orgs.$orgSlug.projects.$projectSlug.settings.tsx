@@ -36,10 +36,7 @@ import {
 import { useMemo, useState } from "react";
 import { LuEllipsis, LuPlus, LuStar, LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.settings";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
 import {
-  getProjectBySlug,
   getProjectLanguages,
   addLanguageToProject,
   deleteProject,
@@ -49,25 +46,21 @@ import {
   updateProjectVisibility,
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { ProjectSettingsAction } from "./ProjectSettingsAction";
 import { ProjectVisibility } from "~/lib/project-visibility";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
-import { ProjectAccessRole } from "~/lib/project-visibility";
+import {
+  organizationContext,
+  projectAccessRoleContext,
+  projectContext,
+} from "~/middleware/project-access.server";
 
-export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
+  const projectAccessRole = context.get(projectAccessRoleContext);
 
   const languages = await getProjectLanguages(project.id);
 
@@ -77,21 +70,18 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
       ? await getProjectDeletionSummary(project.id)
       : null;
 
-  return { organization, project, languages, deleteSummary };
+  return {
+    organization,
+    project,
+    languages,
+    deleteSummary,
+    projectAccessRole,
+  };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const project = context.get(projectContext);
 
   const formData = await request.formData();
   const action = formData.get("_action");
@@ -180,7 +170,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function ProjectSettings({ loaderData }: Route.ComponentProps) {
-  const { organization, project, languages } = loaderData;
+  const { organization, project, languages, projectAccessRole } = loaderData;
   const actionData = useActionData<typeof action>();
   const deleteSummaryFetcher = useFetcher<typeof loader>();
   const navigation = useNavigation();
@@ -254,7 +244,7 @@ export default function ProjectSettings({ loaderData }: Route.ComponentProps) {
           <ProjectNav
             organizationSlug={organization.slug}
             projectSlug={project.slug}
-            projectAccessRole={ProjectAccessRole.MEMBER}
+            projectAccessRole={projectAccessRole}
           />
         </Stack>
 

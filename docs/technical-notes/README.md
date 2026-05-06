@@ -9,6 +9,7 @@ Detailed technical documentation for the transi-store implementation.
 | [architecture.md](./architecture.md)                   | General project architecture, tech stack, entity hierarchy          |
 | [routing.md](./routing.md)                             | React Router v7 route configuration (manual, not file-based)        |
 | [authentication.md](./authentication.md)               | OAuth2/OIDC with PKCE, multi-provider, session management           |
+| [routes-access.md](./routes-access.md)                 | Project access roles (MEMBER/VIEWER), middleware, project layouts   |
 | [database-schema.md](./database-schema.md)             | Full PostgreSQL schema, constraints, relations, TypeScript types    |
 | [export-api.md](./export-api.md)                       | JSON/XLIFF export API, authentication by key or session             |
 | [import-system.md](./import-system.md)                 | Bulk import, overwrite/skip strategies, validation                  |

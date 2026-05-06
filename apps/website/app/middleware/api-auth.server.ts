@@ -5,7 +5,7 @@ import {
   updateApiKeyLastUsed,
 } from "~/lib/api-keys.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import type { RouterContext } from "react-router";
+import type { MiddlewareFunction } from "react-router";
 
 enum AuthMode {
   Session = "session",
@@ -34,24 +34,16 @@ const apiAuthContext = createContext<ApiAuthResult>();
  */
 export const orgContext = createContext<ApiOrganization>();
 
-type MiddlewareContext = {
-  get: <T>(ctx: RouterContext<T>) => T;
-  set: <T>(ctx: RouterContext<T>, value: T) => void;
-};
-
 /**
  * Middleware that accepts dual authentication: Bearer API key or session cookie.
  * - If Bearer token is present and valid → sets apiKey mode with organization
  * - If session cookie is valid → sets session mode with user
  * - Otherwise → returns 403 JSON error
  */
-export async function apiAuthMiddleware({
+export const apiAuthMiddleware: MiddlewareFunction = async ({
   request,
   context,
-}: {
-  request: Request;
-  context: MiddlewareContext;
-}) {
+}) => {
   const authHeader = request.headers.get("Authorization");
 
   if (authHeader?.startsWith("Bearer ")) {
@@ -84,7 +76,7 @@ export async function apiAuthMiddleware({
   }
 
   context.set(apiAuthContext, { mode: AuthMode.Session, user });
-}
+};
 
 /**
  * Middleware for individual API routes that validates org-slug access.
@@ -93,14 +85,21 @@ export async function apiAuthMiddleware({
  *
  * Requires apiAuthMiddleware to have run first (via api-layout).
  */
-export async function apiOrgMiddleware({
+export const apiOrgMiddleware: MiddlewareFunction = async ({
   params,
   context,
-}: {
-  params: { orgSlug: string };
-  context: MiddlewareContext;
-}) {
+}) => {
   const auth = context.get(apiAuthContext);
+
+  if (!params.orgSlug) {
+    throw new Response(
+      JSON.stringify({ error: "Organization slug is required" }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
 
   if (auth.mode === AuthMode.ApiKey) {
     if (auth.organization.slug !== params.orgSlug) {
@@ -118,4 +117,4 @@ export async function apiOrgMiddleware({
     params.orgSlug,
   );
   context.set(orgContext, organization);
-}
+};
