@@ -1,4 +1,4 @@
-import { createContext, redirect, type RouterContext } from "react-router";
+import { createContext, redirect, type MiddlewareFunction } from "react-router";
 import { getUserFromSession, type SessionData } from "~/lib/session.server";
 
 /**
@@ -17,15 +17,10 @@ export const maybeUserContext = createContext<SessionData | null>();
  * Middleware that requires a valid user session.
  * Redirects to /auth/login if the user is not authenticated.
  */
-export async function sessionAuthMiddleware({
+export const sessionAuthMiddleware: MiddlewareFunction = async ({
   request,
   context,
-}: {
-  request: Request;
-  context: {
-    set: <T>(ctx: RouterContext<T>, value: T) => void;
-  };
-}) {
+}) => {
   const user = await getUserFromSession(request);
 
   if (!user) {
@@ -36,24 +31,19 @@ export async function sessionAuthMiddleware({
   }
 
   context.set(userContext, user);
-}
+};
 
 /**
  * Middleware that attempts to retrieve the session but does NOT redirect on null.
  * Sets maybeUserContext to the user or null.
  */
-export async function optionalSessionAuthMiddleware({
+export const optionalSessionAuthMiddleware: MiddlewareFunction = async ({
   request,
   context,
-}: {
-  request: Request;
-  context: {
-    set: <T>(ctx: RouterContext<T>, value: T) => void;
-  };
-}) {
+}) => {
   const user = await getUserFromSession(request);
   context.set(maybeUserContext, user ?? null);
-}
+};
 
 /**
  * Helper that asserts a nullable user is authenticated.

@@ -14,9 +14,11 @@ import { LuPlus, LuGitBranch } from "react-icons/lu";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.branches._index";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug } from "~/lib/projects.server";
+import {
+  organizationContext,
+  projectAccessRoleContext,
+  projectContext,
+} from "~/middleware/project-access";
 import {
   getBranchesByProject,
   getBranchKeyCount,
@@ -24,20 +26,12 @@ import {
 } from "~/lib/branches.server";
 import { createNewBranchUrl, getBranchesUrl } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { BranchList } from "~/components/branches/BranchList";
 
-export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+export async function loader({ context }: Route.LoaderArgs) {
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
+  const projectAccessRole = context.get(projectAccessRoleContext);
 
   const branches = await getBranchesByProject(project.id);
 
@@ -56,11 +50,16 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     })),
   );
 
-  return { organization, project, branches: branchesWithCounts };
+  return {
+    organization,
+    project,
+    branches: branchesWithCounts,
+    projectAccessRole,
+  };
 }
 
 export default function BranchesList({ loaderData }: Route.ComponentProps) {
-  const { organization, project, branches } = loaderData;
+  const { organization, project, branches, projectAccessRole } = loaderData;
   const { t } = useTranslation();
 
   return (
@@ -91,6 +90,7 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
           <ProjectNav
             organizationSlug={organization.slug}
             projectSlug={project.slug}
+            projectAccessRole={projectAccessRole}
           />
         </Stack>
 

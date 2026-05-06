@@ -81,6 +81,7 @@ If the user has no `name` after upsert:
 **Middleware (see ADR-015)**:
 
 - `sessionAuthMiddleware`: Middleware for app routes, redirects to `/auth/login` if not logged in. Places the user in `userContext`.
+- `optionalSessionAuthMiddleware`: Middleware for routes accessible to both authenticated and anonymous users. Places the user (or `null`) in `maybeUserContext`. Used to power the project viewer layout.
 - `apiAuthMiddleware`: Middleware for API routes, accepts Bearer API key or session cookie. Places the result in `apiAuthContext`.
 
 **Files**: `apps/website/app/lib/session.server.ts`, `apps/website/app/middleware/auth.ts`, `apps/website/app/middleware/api-auth.ts`
@@ -131,6 +132,10 @@ All routes under `/orgs/:orgSlug` verify membership via `requireOrganizationMemb
 4. Return the organization if OK
 
 **File**: `apps/website/app/lib/organizations.server.ts`
+
+For project-scoped pages (members-only vs. public-readable), authentication
+hooks into a separate access-role layer that computes the role once per
+request in middleware. See [routes-access.md](./routes-access.md).
 
 ## Logout
 
