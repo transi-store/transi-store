@@ -1,6 +1,6 @@
 {
   "name": "@transi-store/cli",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "type": "module",
   "repository": {
     "url": "git+https://github.com/transi-store/transi-store.git"
