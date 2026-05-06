@@ -104,6 +104,27 @@ The `/api/...` prefix is **reserved for publicly exposed routes** (consumable by
 
 If an internal action truly needs its own route, it must live under `app-layout` at a path **not prefixed** by `/api`. The OpenAPI bundle must never register it.
 
+## Layout hierarchy
+
+The route tree relies on **pathless `layout()` wrappers** to attach middleware
+once per group instead of duplicating logic in every loader.
+
+| Layout                                         | Middleware                                                          | What lives under it                                                                                       |
+| ---------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `routes/app-layout.tsx`                        | `sessionAuthMiddleware`                                             | Authenticated app pages with no project scope: orgs management, `projects/new`, `search`, profile.        |
+| `routes/project-required-user-layout.tsx`      | `sessionAuthMiddleware` + `projectMemberAccessMiddleware`           | Member-only project pages: `settings`, `import-export`, `branches/...`, `keys/:keyId`.                    |
+| `routes/project-optional-user-layout.tsx`      | `optionalSessionAuthMiddleware` + `projectOptionalAccessMiddleware` | Project viewer pages readable by anyone for public projects: `:projectSlug` index, `translations`, files. |
+| `routes/api-layout.tsx` → `api-org-layout.tsx` | `apiAuthMiddleware` then `apiOrgMiddleware`                         | Authenticated API endpoints under `/api/orgs/:orgSlug/...`.                                               |
+
+The two project layouts both populate `projectAccessRoleContext` so loaders
+never recompute the access role. See [routes-access.md](./routes-access.md)
+for the full contract.
+
+**Adding a new project-scoped page**: pick the layout that matches the access
+model (members-only vs. public-readable), then add the route inside its
+layout block in `routes.ts`. Do not place project pages directly under
+`app-layout` — they need the `projectAccessRoleContext`.
+
 ## File naming conventions
 
 - **Dynamic segments**: Use `$` → `orgs.$orgSlug.tsx` for `/orgs/:orgSlug`

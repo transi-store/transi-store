@@ -9,18 +9,12 @@ import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
 import { getDocumentTranslation } from "~/lib/markdown-documents.server";
-import { orgContext } from "~/middleware/api-auth";
+import { orgContext } from "~/middleware/api-auth.server";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
 import { processImport } from "~/lib/import/process-import.server";
-import { getInstance } from "~/middleware/i18next";
-
-function jsonError(status: number, error: string): Response {
-  return new Response(JSON.stringify({ error }), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
+import { getInstance } from "~/middleware/i18next.server";
+import { apiError } from "~/lib/api-response.server";
 
 function parseFileId(raw: string): number | undefined {
   const n = Number.parseInt(raw, 10);
@@ -33,7 +27,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    return jsonError(
+    return apiError(
       404,
       i18next.t("projects.errors.notFound", {
         projectSlug: params.projectSlug,
@@ -43,7 +37,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const fileId = parseFileId(params.fileId);
   if (fileId === undefined) {
-    return jsonError(
+    return apiError(
       400,
       i18next.t("files.errors.invalidFileId", { fileId: params.fileId }),
     );
@@ -51,7 +45,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const file = await getProjectFileById(project.id, fileId);
   if (!file) {
-    return jsonError(
+    return apiError(
       404,
       i18next.t("files.errors.fileNotFound", {
         fileId: params.fileId,
@@ -68,7 +62,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   });
 
   if (!queryParseResult.success) {
-    return jsonError(
+    return apiError(
       400,
       queryParseResult.error.issues
         .map((i) => `${i.path.join(".")}: ${i.message}`)
@@ -86,7 +80,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const requestIsDocument = isDocumentFormat(formatName);
   if (fileIsDocument || requestIsDocument) {
     if (formatName !== file.format) {
-      return jsonError(
+      return apiError(
         400,
         `Format '${formatName}' does not match the file's format '${file.format}'. Omit the 'format' query param or set it to '${file.format}'.`,
       );
@@ -95,12 +89,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const languages = await getProjectLanguages(project.id);
   if (languages.length === 0) {
-    return jsonError(400, i18next.t("import.errors.noLanguagesConfigured"));
+    return apiError(400, i18next.t("import.errors.noLanguagesConfigured"));
   }
 
   const availableLocales = languages.map((l) => l.locale);
   if (!availableLocales.includes(locale)) {
-    return jsonError(
+    return apiError(
       400,
       i18next.t("import.errors.localeNotInProject", { locale }),
     );
@@ -109,7 +103,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   if (isDocumentFormat(file.format)) {
     const translation = await getDocumentTranslation(file.id, locale);
     if (!translation) {
-      return jsonError(404, `No translations found for locale '${locale}'`);
+      return apiError(404, `No translations found for locale '${locale}'`);
     }
 
     const isMdx = file.format === SupportedFormat.MDX;
@@ -150,7 +144,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   );
 
   if (!hasTranslationsForLocale) {
-    return jsonError(404, `No translations found for locale '${locale}'`);
+    return apiError(404, `No translations found for locale '${locale}'`);
   }
 
   const format = createTranslationFormat(formatName);
@@ -174,14 +168,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
   if (request.method !== "POST") {
-    return jsonError(405, i18next.t("api.methodNotAllowed"));
+    return apiError(405, i18next.t("api.methodNotAllowed"));
   }
 
   const organization = context.get(orgContext);
 
   const project = await getProjectBySlug(organization.id, params.projectSlug);
   if (!project) {
-    return jsonError(
+    return apiError(
       404,
       i18next.t("projects.errors.notFound", {
         projectSlug: params.projectSlug,
@@ -191,7 +185,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   const fileId = parseFileId(params.fileId);
   if (fileId === undefined) {
-    return jsonError(
+    return apiError(
       400,
       i18next.t("files.errors.invalidFileId", { fileId: params.fileId }),
     );
@@ -199,7 +193,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   const file = await getProjectFileById(project.id, fileId);
   if (!file) {
-    return jsonError(
+    return apiError(
       404,
       i18next.t("files.errors.fileNotFound", {
         fileId: params.fileId,
@@ -218,20 +212,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   });
 
   if (!result.success) {
-    return new Response(
-      JSON.stringify({ error: result.error, details: result.details }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
+    return Response.json(
+      { error: result.error, details: result.details },
+      { status: 400 },
     );
   }
 
-  return new Response(
-    JSON.stringify({ success: true, stats: result.importStats }),
-    {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+  return Response.json({ success: true, stats: result.importStats });
 }

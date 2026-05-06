@@ -1,4 +1,4 @@
-import { apiAuthMiddleware } from "~/middleware/api-auth";
+import { apiAuthMiddleware } from "~/middleware/api-auth.server";
 
 export const middleware = [apiAuthMiddleware];
 

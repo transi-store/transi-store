@@ -3,9 +3,11 @@ import { Form, useNavigation, redirect, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuTrash2 } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug.keys.$keyId";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
+import {
+  organizationContext,
+  projectContext,
+} from "~/middleware/project-access.server";
+import { getProjectLanguages } from "~/lib/projects.server";
 import {
   getTranslationKeyById,
   getTranslationsForKey,
@@ -20,7 +22,7 @@ import {
   getRedirectUrlFromRequest,
   getRedirectUrlFromFormData,
 } from "~/lib/routes-helpers";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { TranslationKeyContent } from "~/components/translation-key";
 import type {
   Organization,
@@ -29,7 +31,6 @@ import type {
   Translation,
   TranslationKey,
 } from "../../drizzle/schema";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { KeyAction } from "~/components/translation-key/KeyAction";
 
 export type KeyLoaderData = {
@@ -47,17 +48,8 @@ export async function loader({
   params,
   context,
 }: Route.LoaderArgs): Promise<KeyLoaderData> {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
 
   const key = await getTranslationKeyById(parseInt(params.keyId, 10));
 
@@ -90,17 +82,7 @@ export async function loader({
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const project = context.get(projectContext);
 
   const key = await getTranslationKeyById(parseInt(params.keyId, 10));
 

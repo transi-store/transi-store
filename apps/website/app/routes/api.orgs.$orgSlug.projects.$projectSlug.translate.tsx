@@ -9,9 +9,10 @@ import {
   translateWithAI,
   type TranslationSuggestion,
 } from "~/lib/ai-translation.server";
-import { getInstance } from "~/middleware/i18next";
-import { orgContext } from "~/middleware/api-auth";
+import { getInstance } from "~/middleware/i18next.server";
+import { orgContext } from "~/middleware/api-auth.server";
 import type { AiProviderEnum } from "~/lib/ai-providers";
+import { apiError } from "~/lib/api-response.server";
 
 type SuggestionsReturnType = {
   suggestions?: Array<TranslationSuggestion>;
@@ -51,10 +52,7 @@ export async function action({
   const project = await getProjectBySlug(organization.id, projectSlug);
 
   if (!project) {
-    return Response.json(
-      { error: i18next.t("api.translate.projectNotFound") },
-      { status: 404 },
-    );
+    return apiError(404, i18next.t("api.translate.projectNotFound"));
   }
 
   const formData = await request.formData();
@@ -62,52 +60,31 @@ export async function action({
   const targetLocale = formData.get("targetLocale") as string;
 
   if (!keyId || !targetLocale) {
-    return Response.json(
-      {
-        error: i18next.t("api.translate.missingParams"),
-      },
-      { status: 400 },
-    );
+    return apiError(400, i18next.t("api.translate.missingParams"));
   }
 
   const key = await getTranslationKeyById(parseInt(keyId, 10));
 
   if (!key || key.projectId !== project.id) {
-    return Response.json(
-      { error: i18next.t("api.translate.keyNotFound") },
-      { status: 404 },
-    );
+    return apiError(404, i18next.t("api.translate.keyNotFound"));
   }
 
-  // Récupérer le provider IA actif
   const activeProvider = await getActiveAiProvider(organization.id);
 
   if (!activeProvider) {
-    return Response.json(
-      {
-        error: i18next.t("api.translate.noAiProvider"),
-      },
-      { status: 400 },
-    );
+    return apiError(400, i18next.t("api.translate.noAiProvider"));
   }
 
-  // Récupérer les traductions existantes et les langues
   const translations = await getTranslationsForKey(key.id);
   const languages = await getProjectLanguages(project.id);
   const defaultLang = languages.find((l) => l.isDefault);
 
-  // Trouver le texte source (langue par défaut ou première langue disponible)
   const sourceTranslation =
     translations.find((t) => t.locale === defaultLang?.locale) ||
     translations[0];
 
   if (!sourceTranslation) {
-    return Response.json(
-      {
-        error: i18next.t("api.translate.noSourceTranslation"),
-      },
-      { status: 400 },
-    );
+    return apiError(400, i18next.t("api.translate.noSourceTranslation"));
   }
 
   try {
@@ -130,7 +107,7 @@ export async function action({
       providerModel: activeProvider.model,
     });
   } catch (error) {
-    console.error("Erreur lors de la traduction IA:", error);
+    console.error("AI translation error:", error);
     return Response.json(
       {
         error: i18next.t("api.translate.translateError"),

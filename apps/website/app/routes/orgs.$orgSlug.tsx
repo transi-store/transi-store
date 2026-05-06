@@ -18,7 +18,7 @@ import {
 } from "react-router";
 import { LuFolderOpen, LuUsers, LuSettings } from "react-icons/lu";
 import type { Route } from "./+types/orgs.$orgSlug";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { updateSessionLastOrganization } from "~/lib/session.server";
 import {
   requireOrganizationMembership,

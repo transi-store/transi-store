@@ -8,7 +8,7 @@ import {
 } from "@chakra-ui/react";
 import { Link, useLoaderData } from "react-router";
 import { LuPlus } from "react-icons/lu";
-import { userContext } from "~/middleware/auth";
+import { userContext } from "~/middleware/auth.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
 import { useTranslation } from "react-i18next";
 import { getProjectUrl } from "~/lib/routes-helpers";
@@ -66,6 +66,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       translationKeyCount: project.translationKeyCount,
       locales,
       coverage: translationCoverageForProject?.coverage ?? 0,
+      visibility: project.visibility,
     };
   });
 

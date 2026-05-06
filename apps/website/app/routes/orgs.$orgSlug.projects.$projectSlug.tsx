@@ -1,32 +1,31 @@
-import { Container, VStack, Box, Stack, Text } from "@chakra-ui/react";
+import { Badge, Container, VStack, Box, Stack, Text } from "@chakra-ui/react";
 import { Outlet, useLoaderData } from "react-router";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { ProjectNav } from "~/components/navigation/ProjectNav";
 import type { Route } from "./+types/orgs.$orgSlug.projects.$projectSlug";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { getProjectLanguages } from "~/lib/projects.server";
+import { ProjectVisibility } from "~/lib/project-visibility";
+import {
+  organizationContext,
+  projectAccessRoleContext,
+  projectContext,
+} from "~/middleware/project-access.server";
+import { useTranslation } from "react-i18next";
 
-export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+export async function loader({ context }: Route.LoaderArgs) {
+  const organization = context.get(organizationContext);
+  const project = context.get(projectContext);
+  const projectAccessRole = context.get(projectAccessRoleContext);
 
   const languages = await getProjectLanguages(project.id);
 
-  return { organization, project, languages };
+  return { organization, project, languages, projectAccessRole };
 }
 
 export default function ProjectLayout() {
-  const { organization, project, languages } = useLoaderData<typeof loader>();
+  const { organization, project, languages, projectAccessRole } =
+    useLoaderData<typeof loader>();
+  const { t } = useTranslation();
 
   return (
     <Container maxW="container.xl" py={5}>
@@ -48,10 +47,27 @@ export default function ProjectLayout() {
             />
           </Box>
 
-          <ProjectNav
-            organizationSlug={organization.slug}
-            projectSlug={project.slug}
-          />
+          <Box display="flex" alignItems="center" gap={2}>
+            <Badge
+              size="sm"
+              colorPalette={
+                project.visibility === ProjectVisibility.PUBLIC
+                  ? "green"
+                  : "gray"
+              }
+              variant="subtle"
+            >
+              {project.visibility === ProjectVisibility.PUBLIC
+                ? t("projects.visibility.public")
+                : t("projects.visibility.private")}
+            </Badge>
+
+            <ProjectNav
+              organizationSlug={organization.slug}
+              projectSlug={project.slug}
+              projectAccessRole={projectAccessRole}
+            />
+          </Box>
         </Stack>
 
         {project.description && (
@@ -60,7 +76,9 @@ export default function ProjectLayout() {
           </Box>
         )}
 
-        <Outlet context={{ organization, project, languages }} />
+        <Outlet
+          context={{ organization, project, languages, projectAccessRole }}
+        />
       </VStack>
     </Container>
   );

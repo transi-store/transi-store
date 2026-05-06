@@ -1,7 +1,8 @@
-import { Heading, Box, Text, HStack } from "@chakra-ui/react";
+import { Heading, Box, Text, HStack, Badge } from "@chakra-ui/react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { ProjectVisibility } from "~/lib/project-visibility";
 
 const COVERAGE_ACCENT = {
   full: { color: "#87C241", glow: "rgba(135, 194, 65, 0.28)" },
@@ -23,6 +24,7 @@ export type ProjectWithStats = {
   translationKeyCount: number;
   locales: Array<{ locale: string; isDefault: boolean }>;
   coverage: number;
+  visibility: ProjectVisibility;
 };
 
 function LocalePill({
@@ -119,9 +121,16 @@ export default function ProjectCard({
           >
             {project.slug}
           </Text>
-          <Heading as="h3" size="md" fontWeight={600} letterSpacing="-0.01em">
-            {project.name}
-          </Heading>
+          <HStack justify="space-between" alignItems="flex-start">
+            <Heading as="h3" size="md" fontWeight={600} letterSpacing="-0.01em">
+              {project.name}
+            </Heading>
+            {project.visibility === ProjectVisibility.PUBLIC && (
+              <Badge size="sm" variant="outline" colorPalette="green">
+                {t("projects.visibility.public")}
+              </Badge>
+            )}
+          </HStack>
         </Box>
 
         {/* Locale pills */}

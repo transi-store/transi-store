@@ -1,9 +1,7 @@
 import { redirect } from "react-router";
 import { isSupportedFormat, SupportedFormat } from "@transi-store/common";
 import type { Route } from "./+types/index";
-import { userContext } from "~/middleware/auth";
-import { requireOrganizationMembership } from "~/lib/organizations.server";
-import { getProjectBySlug } from "~/lib/projects.server";
+import { projectContext } from "~/middleware/project-access.server";
 import {
   createProjectFile,
   deleteProjectFile,
@@ -11,9 +9,8 @@ import {
   updateProjectFile,
 } from "~/lib/project-files.server";
 import { validateOutputPath } from "~/lib/path-utils";
-import { getInstance } from "~/middleware/i18next";
+import { getInstance } from "~/middleware/i18next.server";
 import { getTranslationsUrl } from "~/lib/routes-helpers";
-import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
 import { FileAction } from "../orgs.$orgSlug.projects.$projectSlug.translations/FileAction";
 
 export type FileActionData = {
@@ -29,17 +26,7 @@ export async function loader() {
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const i18next = getInstance(context);
-  const user = context.get(userContext);
-  const organization = await requireOrganizationMembership(
-    user,
-    params.orgSlug,
-  );
-
-  const project = await getProjectBySlug(organization.id, params.projectSlug);
-
-  if (!project) {
-    throw createProjectNotFoundResponse(params.projectSlug);
-  }
+  const project = context.get(projectContext);
 
   const formData = await request.formData();
   const action = formData.get("_action");

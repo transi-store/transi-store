@@ -3,4 +3,5 @@ export enum ProjectSettingsAction {
   RemoveLanguage = "remove_language",
   SetDefaultLanguage = "set_default_language",
   DeleteProject = "delete_project",
+  UpdateVisibility = "update_visibility",
 }

@@ -5,7 +5,8 @@ import {
   updateApiKeyLastUsed,
 } from "~/lib/api-keys.server";
 import { requireOrganizationMembership } from "~/lib/organizations.server";
-import type { RouterContext } from "react-router";
+import type { MiddlewareFunction } from "react-router";
+import { apiError } from "~/lib/api-response.server";
 
 enum AuthMode {
   Session = "session",
@@ -34,24 +35,16 @@ const apiAuthContext = createContext<ApiAuthResult>();
  */
 export const orgContext = createContext<ApiOrganization>();
 
-type MiddlewareContext = {
-  get: <T>(ctx: RouterContext<T>) => T;
-  set: <T>(ctx: RouterContext<T>, value: T) => void;
-};
-
 /**
  * Middleware that accepts dual authentication: Bearer API key or session cookie.
  * - If Bearer token is present and valid → sets apiKey mode with organization
  * - If session cookie is valid → sets session mode with user
  * - Otherwise → returns 403 JSON error
  */
-export async function apiAuthMiddleware({
+export const apiAuthMiddleware: MiddlewareFunction = async ({
   request,
   context,
-}: {
-  request: Request;
-  context: MiddlewareContext;
-}) {
+}) => {
   const authHeader = request.headers.get("Authorization");
 
   if (authHeader?.startsWith("Bearer ")) {
@@ -59,10 +52,7 @@ export async function apiAuthMiddleware({
     const org = await getOrganizationByApiKey(apiKey);
 
     if (!org) {
-      throw new Response(JSON.stringify({ error: "Invalid API key" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      throw apiError(401, "Invalid API key");
     }
 
     updateApiKeyLastUsed(apiKey).catch((err) => {
@@ -77,14 +67,11 @@ export async function apiAuthMiddleware({
   const user = await getUserFromSession(request);
 
   if (!user) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
+    throw apiError(403, "Unauthorized");
   }
 
   context.set(apiAuthContext, { mode: AuthMode.Session, user });
-}
+};
 
 /**
  * Middleware for individual API routes that validates org-slug access.
@@ -93,21 +80,19 @@ export async function apiAuthMiddleware({
  *
  * Requires apiAuthMiddleware to have run first (via api-layout).
  */
-export async function apiOrgMiddleware({
+export const apiOrgMiddleware: MiddlewareFunction = async ({
   params,
   context,
-}: {
-  params: { orgSlug: string };
-  context: MiddlewareContext;
-}) {
+}) => {
   const auth = context.get(apiAuthContext);
+
+  if (!params.orgSlug) {
+    throw apiError(400, "Organization slug is required");
+  }
 
   if (auth.mode === AuthMode.ApiKey) {
     if (auth.organization.slug !== params.orgSlug) {
-      throw new Response(
-        JSON.stringify({ error: "API key does not match organization" }),
-        { status: 403, headers: { "Content-Type": "application/json" } },
-      );
+      throw apiError(403, "API key does not match organization");
     }
     context.set(orgContext, auth.organization);
     return;
@@ -118,4 +103,4 @@ export async function apiOrgMiddleware({
     params.orgSlug,
   );
   context.set(orgContext, organization);
-}
+};

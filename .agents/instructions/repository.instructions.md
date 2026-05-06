@@ -1,3 +1,8 @@
+---
+description: This file contains repository-wide instructions and guidelines for contributors and AI agents.
+applyTo: "**/*.ts, **/*.tsx, **/*.md"
+---
+
 # transi-store repository instructions
 
 This file is the generic repository-wide instruction source. Tool-specific entry points may symlink to it.
