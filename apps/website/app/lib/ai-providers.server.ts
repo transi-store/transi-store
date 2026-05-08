@@ -108,17 +108,13 @@ export async function isAiProviderConfiguredForOrganization(
   return providers.length > 0;
 }
 
-/**
- * Récupère le provider actif pour une organisation.
- */
-export async function getActiveAiProvider(
+async function fetchActiveAiProviderRow(
   organizationId: number,
-): Promise<{
-  provider: AiProviderEnum;
-  apiKey: string;
-  model: string | null;
-} | null> {
-  const [result] = await db
+): Promise<Pick<
+  OrganizationAiProvider,
+  "provider" | "encryptedApiKey" | "model"
+> | null> {
+  const [row] = await db
     .select({
       provider: schema.organizationAiProviders.provider,
       encryptedApiKey: schema.organizationAiProviders.encryptedApiKey,
@@ -133,23 +129,40 @@ export async function getActiveAiProvider(
     )
     .limit(1);
 
-  if (!result) {
+  return row;
+}
+
+/**
+ * Récupère le provider actif pour une organisation.
+ */
+export async function getActiveAiProvider(organizationId: number): Promise<{
+  provider: AiProviderEnum;
+  apiKey: string;
+  model: string | null;
+} | null> {
+  const row = await fetchActiveAiProviderRow(organizationId);
+
+  if (!row) {
     return null;
   }
 
   return {
-    provider: result.provider,
-    apiKey: decrypt(result.encryptedApiKey),
-    model: result.model,
+    provider: row.provider,
+    apiKey: decrypt(row.encryptedApiKey),
+    model: row.model,
   };
 }
 
+/**
+ * Returns whether the organization has an active AI provider row.
+ * Does not decrypt the API key — safe for loaders and UI gating.
+ */
 export async function hasActiveAiProvider(
   organizationId: number,
 ): Promise<boolean> {
-  const activeProvider = await getActiveAiProvider(organizationId);
+  const row = await fetchActiveAiProviderRow(organizationId);
 
-  return activeProvider !== null;
+  return row !== undefined;
 }
 
 /**
