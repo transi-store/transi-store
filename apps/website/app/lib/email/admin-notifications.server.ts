@@ -75,7 +75,7 @@ export async function sendAdminUserJoinedPlatformEmail(
   });
 
   const subject = "[transi-store] New user joined the platform";
-  const displayName = payload.name ?? "Unknown";
+  const displayName = payload.name ?? "No name provided";
 
   await transporter.sendMail({
     from: config.fromEmail,
