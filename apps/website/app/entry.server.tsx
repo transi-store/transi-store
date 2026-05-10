@@ -7,6 +7,9 @@ import type { RenderToPipeableStreamOptions } from "react-dom/server";
 import { renderToPipeableStream } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { getInstance } from "./middleware/i18next.server";
+import { initializeEmailEventHandlers } from "~/lib/email/initialize-email-events.server";
+
+initializeEmailEventHandlers();
 
 // Reject all pending promises from handler functions after 10 seconds
 export const streamTimeout = 5_000;
