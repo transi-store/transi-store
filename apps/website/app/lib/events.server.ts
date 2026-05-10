@@ -1,4 +1,4 @@
-import type { OAuthProvider } from "./auth-providers";
+import type { AppEventMap } from "./app-events";
 
 type EventHandler<EventPayload> = (
   payload: EventPayload,
@@ -70,15 +70,6 @@ export function createEventBus<
     },
   };
 }
-
-export type AppEventMap = {
-  "user.joined_platform": {
-    userId: number;
-    email: string;
-    name: string | null;
-    oauthProvider: OAuthProvider;
-  };
-};
 
 const appEventBus = createEventBus<AppEventMap>();
 

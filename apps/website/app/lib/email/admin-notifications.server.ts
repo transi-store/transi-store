@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import type { AppEventMap } from "../events.server";
+import type { AppEventMap } from "../app-events";
 
 const DEFAULT_BREVO_SMTP_HOST = "smtp-relay.brevo.com";
 const DEFAULT_BREVO_SMTP_PORT = 587;

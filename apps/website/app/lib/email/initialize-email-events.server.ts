@@ -8,6 +8,10 @@ type GlobalWithEmailEventsFlag = typeof globalThis & {
   [EMAIL_EVENT_HANDLERS_INITIALIZED]?: boolean;
 };
 
+enum EmailListenerEventName {
+  UserJoinedPlatform = "user.joined_platform",
+}
+
 export function initializeEmailEventHandlers(): void {
   const globalState = globalThis as GlobalWithEmailEventsFlag;
   if (globalState[EMAIL_EVENT_HANDLERS_INITIALIZED]) {
@@ -16,7 +20,7 @@ export function initializeEmailEventHandlers(): void {
 
   globalState[EMAIL_EVENT_HANDLERS_INITIALIZED] = true;
 
-  onAppEvent("user.joined_platform", async (payload) => {
+  onAppEvent(EmailListenerEventName.UserJoinedPlatform, async (payload) => {
     await sendAdminUserJoinedPlatformEmail(payload);
   });
 }
