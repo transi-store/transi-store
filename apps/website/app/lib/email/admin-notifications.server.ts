@@ -3,6 +3,7 @@ import type { AppEventMap } from "../app-events";
 
 const DEFAULT_BREVO_SMTP_HOST = "smtp-relay.brevo.com";
 const DEFAULT_BREVO_SMTP_PORT = 587;
+const NO_NAME_FALLBACK = "No name provided";
 
 type EmailNotificationConfig = {
   adminNotificationEmail: string;
@@ -75,7 +76,7 @@ export async function sendAdminUserJoinedPlatformEmail(
   });
 
   const subject = "[transi-store] New user joined the platform";
-  const displayName = payload.name ?? "No name provided";
+  const displayName = payload.name ?? NO_NAME_FALLBACK;
 
   await transporter.sendMail({
     from: config.fromEmail,
