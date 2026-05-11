@@ -51,8 +51,10 @@ describe("admin-notifications.server", () => {
     expect(createTransportMock).not.toHaveBeenCalled();
   });
 
-  it("returns false when SMTP credentials are missing", async () => {
+  it("returns false when required SMTP settings are missing", async () => {
     process.env.ADMIN_NOTIFICATION_EMAIL = "admin@example.com";
+    process.env.SMTP_USER = "smtp-user";
+    process.env.SMTP_PASSWORD = "smtp-password";
 
     const sent = await sendAdminUserJoinedPlatformEmail({
       userId: 1,

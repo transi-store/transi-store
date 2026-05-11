@@ -10,7 +10,7 @@ transi-store currently has no email delivery stack and no reusable mechanism for
 cross-cutting side effects triggered by domain events.
 
 We need to send an email to the server administrator when a new user joins the
-platform. The destination email and Brevo credentials must stay optional so that
+platform. The destination email and SMTP credentials must stay optional so that
 local development and trial environments can run with empty values.
 
 This requirement also opens the door to future notifications based on other
@@ -21,14 +21,14 @@ OAuth callback flow.
 
 1. Introduce a global server-side event bus (`app/lib/events.server.ts`).
 2. Emit a `user.joined_platform` event when `auth.server.ts` creates a new user.
-3. Implement Brevo SMTP delivery with Nodemailer in a dedicated email module
+3. Implement SMTP delivery with Nodemailer in a dedicated email module
    (`app/lib/email/admin-notifications.server.ts`).
 4. Register email listeners once at server startup
    (`app/lib/email/initialize-email-events.server.ts`, called from
    `entry.server.tsx`).
 5. Keep email configuration optional:
    - If `ADMIN_NOTIFICATION_EMAIL` is empty, no notification is sent.
-   - If Brevo credentials are missing, email sending is skipped.
+   - If required SMTP settings are missing, email sending is skipped.
 
 ## Reasons
 
@@ -49,7 +49,7 @@ OAuth callback flow.
    - Rejected: adds delay and complexity for an immediate notification use case.
 3. **Webhook-only notifications**
    - Rejected: does not satisfy the immediate requirement of sending email
-     directly through Brevo.
+     directly through SMTP.
 
 ## Consequences
 

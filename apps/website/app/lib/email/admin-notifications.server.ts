@@ -1,7 +1,6 @@
 import nodemailer from "nodemailer";
 import type { AppEventMap } from "../app-events";
 
-const DEFAULT_SMTP_HOST = "localhost";
 const DEFAULT_SMTP_PORT = 587;
 const NO_NAME_FALLBACK = "No name provided";
 
@@ -41,7 +40,8 @@ function getEmailNotificationConfig(): EmailNotificationConfig | null {
 
   const user = getOptionalEnvVar("SMTP_USER");
   const password = getOptionalEnvVar("SMTP_PASSWORD");
-  if (!user || !password) {
+  const host = getOptionalEnvVar("SMTP_HOST");
+  if (!host || !user || !password) {
     return null;
   }
 
@@ -49,7 +49,7 @@ function getEmailNotificationConfig(): EmailNotificationConfig | null {
 
   return {
     adminNotificationEmail,
-    host: getOptionalEnvVar("SMTP_HOST") ?? DEFAULT_SMTP_HOST,
+    host,
     port: getSmtpPort(),
     user,
     password,

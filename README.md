@@ -73,6 +73,7 @@ ENCRYPTION_KEY=a-64-character-hexadecimal-key # generate one with `openssl rand 
 
 # Optional admin email notifications (SMTP)
 # If ADMIN_NOTIFICATION_EMAIL is empty, no notification is sent.
+# SMTP_HOST, SMTP_USER and SMTP_PASSWORD are required when enabled.
 ADMIN_NOTIFICATION_EMAIL=
 SMTP_HOST=
 SMTP_PORT=587
