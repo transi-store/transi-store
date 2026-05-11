@@ -38,7 +38,9 @@ export async function saveAiProvider(
     const [updated] = await db
       .update(schema.organizationAiProviders)
       .set({
-        ...(params.apiKey ? { encryptedApiKey: encrypt(params.apiKey) } : {}),
+        ...(params.apiKey !== undefined && params.apiKey !== null
+          ? { encryptedApiKey: encrypt(params.apiKey) }
+          : {}),
         model: params.model !== undefined ? params.model : existing.model,
         isActive: params.isActive ?? existing.isActive,
         updatedAt: new Date(),
@@ -162,7 +164,7 @@ export async function hasActiveAiProvider(
 ): Promise<boolean> {
   const row = await fetchActiveAiProviderRow(organizationId);
 
-  return row !== undefined;
+  return row !== null;
 }
 
 /**
@@ -172,22 +174,35 @@ export async function setActiveAiProvider(
   organizationId: number,
   provider: AiProviderEnum,
 ): Promise<void> {
-  // Désactiver tous les providers
-  await db
-    .update(schema.organizationAiProviders)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(schema.organizationAiProviders.organizationId, organizationId));
+  await db.transaction(async (tx) => {
+    // Désactiver tous les providers
+    await tx
+      .update(schema.organizationAiProviders)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(schema.organizationAiProviders.organizationId, organizationId));
 
-  // Activer le provider sélectionné
-  await db
-    .update(schema.organizationAiProviders)
-    .set({ isActive: true, updatedAt: new Date() })
-    .where(
-      and(
-        eq(schema.organizationAiProviders.organizationId, organizationId),
-        eq(schema.organizationAiProviders.provider, provider),
-      ),
-    );
+    // Activer le provider sélectionné
+    const activationResult = await tx
+      .update(schema.organizationAiProviders)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(
+        and(
+          eq(schema.organizationAiProviders.organizationId, organizationId),
+          eq(schema.organizationAiProviders.provider, provider),
+        ),
+      );
+
+    const affectedRows =
+      typeof activationResult === "number"
+        ? activationResult
+        : (activationResult as { rowCount?: number })?.rowCount ?? 0;
+
+    if (affectedRows < 1) {
+      throw new Error(
+        `Cannot activate AI provider "${provider}" for organization ${organizationId}: provider not found.`,
+      );
+    }
+  });
 }
 
 /**
