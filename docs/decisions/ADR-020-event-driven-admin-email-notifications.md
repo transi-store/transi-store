@@ -83,4 +83,4 @@ OAuth callback flow.
 ## References
 
 - [Nodemailer documentation](https://nodemailer.com/)
-- [Brevo SMTP relay documentation](https://developers.brevo.com/docs/send-a-transactional-email)
+- [Nodemailer SMTP transport configuration](https://nodemailer.com/smtp/)

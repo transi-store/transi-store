@@ -28,10 +28,10 @@ describe("admin-notifications.server", () => {
     vi.clearAllMocks();
     process.env = { ...originalEnv };
     delete process.env.ADMIN_NOTIFICATION_EMAIL;
-    delete process.env.BREVO_SMTP_HOST;
-    delete process.env.BREVO_SMTP_PORT;
-    delete process.env.BREVO_SMTP_USER;
-    delete process.env.BREVO_SMTP_PASSWORD;
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_PORT;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASSWORD;
     delete process.env.EMAIL_FROM;
   });
 
@@ -51,7 +51,7 @@ describe("admin-notifications.server", () => {
     expect(createTransportMock).not.toHaveBeenCalled();
   });
 
-  it("returns false when Brevo credentials are missing", async () => {
+  it("returns false when SMTP credentials are missing", async () => {
     process.env.ADMIN_NOTIFICATION_EMAIL = "admin@example.com";
 
     const sent = await sendAdminUserJoinedPlatformEmail({
@@ -65,12 +65,12 @@ describe("admin-notifications.server", () => {
     expect(createTransportMock).not.toHaveBeenCalled();
   });
 
-  it("sends the email when Brevo and admin settings are configured", async () => {
+  it("sends the email when SMTP and admin settings are configured", async () => {
     process.env.ADMIN_NOTIFICATION_EMAIL = "admin@example.com";
-    process.env.BREVO_SMTP_USER = "smtp-user";
-    process.env.BREVO_SMTP_PASSWORD = "smtp-password";
-    process.env.BREVO_SMTP_HOST = "smtp.example.com";
-    process.env.BREVO_SMTP_PORT = "2525";
+    process.env.SMTP_USER = "smtp-user";
+    process.env.SMTP_PASSWORD = "smtp-password";
+    process.env.SMTP_HOST = "smtp.example.com";
+    process.env.SMTP_PORT = "2525";
     process.env.EMAIL_FROM = "no-reply@example.com";
 
     const sent = await sendAdminUserJoinedPlatformEmail({

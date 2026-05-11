@@ -71,13 +71,13 @@ DATABASE_URL=postgresql://transi-store:transi-store@localhost:5432/transi-store
 SESSION_SECRET=a-long-random-secret-string
 ENCRYPTION_KEY=a-64-character-hexadecimal-key # generate one with `openssl rand -hex 32`
 
-# Optional admin email notifications (Brevo SMTP)
+# Optional admin email notifications (SMTP)
 # If ADMIN_NOTIFICATION_EMAIL is empty, no notification is sent.
 ADMIN_NOTIFICATION_EMAIL=
-BREVO_SMTP_HOST=smtp-relay.brevo.com
-BREVO_SMTP_PORT=587
-BREVO_SMTP_USER=
-BREVO_SMTP_PASSWORD=
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
 EMAIL_FROM=
 
 # At least one OAuth provider is required for authentication.

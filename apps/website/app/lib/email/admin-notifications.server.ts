@@ -1,8 +1,8 @@
 import nodemailer from "nodemailer";
 import type { AppEventMap } from "../app-events";
 
-const DEFAULT_BREVO_SMTP_HOST = "smtp-relay.brevo.com";
-const DEFAULT_BREVO_SMTP_PORT = 587;
+const DEFAULT_SMTP_HOST = "localhost";
+const DEFAULT_SMTP_PORT = 587;
 const NO_NAME_FALLBACK = "No name provided";
 
 type EmailNotificationConfig = {
@@ -19,15 +19,15 @@ function getOptionalEnvVar(name: string): string | null {
   return value ? value : null;
 }
 
-function getBrevoPort(): number {
-  const rawPort = process.env.BREVO_SMTP_PORT;
+function getSmtpPort(): number {
+  const rawPort = process.env.SMTP_PORT;
   if (!rawPort) {
-    return DEFAULT_BREVO_SMTP_PORT;
+    return DEFAULT_SMTP_PORT;
   }
 
   const parsedPort = Number(rawPort);
   if (Number.isNaN(parsedPort)) {
-    return DEFAULT_BREVO_SMTP_PORT;
+    return DEFAULT_SMTP_PORT;
   }
 
   return parsedPort;
@@ -39,8 +39,8 @@ function getEmailNotificationConfig(): EmailNotificationConfig | null {
     return null;
   }
 
-  const user = getOptionalEnvVar("BREVO_SMTP_USER");
-  const password = getOptionalEnvVar("BREVO_SMTP_PASSWORD");
+  const user = getOptionalEnvVar("SMTP_USER");
+  const password = getOptionalEnvVar("SMTP_PASSWORD");
   if (!user || !password) {
     return null;
   }
@@ -49,8 +49,8 @@ function getEmailNotificationConfig(): EmailNotificationConfig | null {
 
   return {
     adminNotificationEmail,
-    host: getOptionalEnvVar("BREVO_SMTP_HOST") ?? DEFAULT_BREVO_SMTP_HOST,
-    port: getBrevoPort(),
+    host: getOptionalEnvVar("SMTP_HOST") ?? DEFAULT_SMTP_HOST,
+    port: getSmtpPort(),
     user,
     password,
     fromEmail,
