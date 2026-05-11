@@ -1,5 +1,16 @@
 import type { AppEventMap } from "./app-events";
 
+/**
+ * Lightweight in-memory event bus for server-side domain events.
+ *
+ * Usage:
+ * - Register listeners at startup (for example in entry.server.tsx) with `onAppEvent`.
+ * - Emit events from domain flows with `emitAppEvent`.
+ * - Keep listeners side-effect oriented and non-blocking for core user flows.
+ *
+ * Listener failures are isolated: all listeners run via `Promise.allSettled`, and
+ * rejections are logged without throwing to the emitter.
+ */
 type EventHandler<EventPayload> = (
   payload: EventPayload,
 ) => void | Promise<void>;
@@ -21,6 +32,7 @@ export type EventBus<EventMap extends Record<string, unknown>> = {
   clear(): void;
 };
 
+/** Creates a typed event bus instance for a specific event map. */
 export function createEventBus<
   EventMap extends Record<string, unknown>,
 >(): EventBus<EventMap> {
@@ -73,6 +85,7 @@ export function createEventBus<
 
 const appEventBus = createEventBus<AppEventMap>();
 
+/** Registers a listener for a global application event. */
 export function onAppEvent<EventName extends keyof AppEventMap>(
   eventName: EventName,
   handler: EventHandler<AppEventMap[EventName]>,
@@ -80,6 +93,7 @@ export function onAppEvent<EventName extends keyof AppEventMap>(
   return appEventBus.on(eventName, handler);
 }
 
+/** Emits a global application event with a typed payload. */
 export async function emitAppEvent<EventName extends keyof AppEventMap>(
   eventName: EventName,
   payload: AppEventMap[EventName],
@@ -87,6 +101,7 @@ export async function emitAppEvent<EventName extends keyof AppEventMap>(
   await appEventBus.emit(eventName, payload);
 }
 
+/** Clears all registered global event listeners (tests only). */
 export function resetAppEventBusForTests(): void {
   appEventBus.clear();
 }
