@@ -148,4 +148,25 @@ program
     );
   });
 
+program
+  .command("merge:config")
+  .description(
+    "Merge an open translation branch into main using configuration from config file",
+  )
+  .option(
+    "-c, --config <config>",
+    "Path to config file",
+    "transi-store.config.json",
+  )
+  .requiredOption(
+    "-b, --branch <branch>",
+    "Branch slug to merge (e.g. Git head ref used with upload:config)",
+  )
+  .addOption(apiKeyOption)
+  .action((options) => {
+    console.log(
+      `[transi-store] merge:config is not implemented yet (branch: ${options.branch}, config: ${options.config}). No API call was made.`,
+    );
+  });
+
 program.parse();

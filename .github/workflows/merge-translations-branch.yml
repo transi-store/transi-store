@@ -1,0 +1,42 @@
+name: Merge translations branch
+
+# When a PR is merged into main, merge the matching transi-store branch into main.
+# Fork PRs: head.ref may not exist in transi-store; adjust with a same-repo guard if needed.
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Git branch slug matching the transi-store branch to merge"
+        required: true
+        type: string
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - run: corepack enable
+
+      - name: setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - run: yarn install
+
+      - name: Merge translation branch
+        env:
+          TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
+        run: yarn turbo run merge-translations -- --branch "${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.event.pull_request.head.ref }}"
