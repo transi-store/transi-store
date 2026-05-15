@@ -80,7 +80,7 @@ export async function getTranslationKeys(
   >;
   let count: number;
 
-  const locale =
+  const effectiveLocale =
     options?.locale ??
     (
       await db.query.projectLanguages.findFirst({
@@ -93,9 +93,9 @@ export async function getTranslationKeys(
 
   // Build the filter condition (missing / fuzzy) if needed
   let filterCondition: SQL | undefined;
-  let earlyEmpty = false;
+  let noMatchingKeys = false;
 
-  if (options?.filter === TranslationFilter.MISSING && locale) {
+  if (options?.filter === TranslationFilter.MISSING && effectiveLocale) {
     // Keys that already have a translation in the selected locale
     const translated = await db
       .select({ keyId: schema.translations.keyId })
@@ -107,7 +107,7 @@ export async function getTranslationKeys(
       .where(
         and(
           eq(schema.translationKeys.projectId, projectId),
-          eq(schema.translations.locale, locale),
+          eq(schema.translations.locale, effectiveLocale),
         ),
       );
     if (translated.length > 0) {
@@ -117,7 +117,7 @@ export async function getTranslationKeys(
       );
     }
     // If translated is empty, all keys are "missing" → no extra WHERE needed
-  } else if (options?.filter === TranslationFilter.FUZZY && locale) {
+  } else if (options?.filter === TranslationFilter.FUZZY && effectiveLocale) {
     // Keys that have a fuzzy translation in the selected locale
     const fuzzy = await db
       .select({ keyId: schema.translations.keyId })
@@ -129,12 +129,12 @@ export async function getTranslationKeys(
       .where(
         and(
           eq(schema.translationKeys.projectId, projectId),
-          eq(schema.translations.locale, locale),
+          eq(schema.translations.locale, effectiveLocale),
           eq(schema.translations.isFuzzy, true),
         ),
       );
     if (fuzzy.length === 0) {
-      earlyEmpty = true;
+      noMatchingKeys = true;
     } else {
       filterCondition = inArray(
         schema.translationKeys.id,
@@ -143,7 +143,7 @@ export async function getTranslationKeys(
     }
   }
 
-  if (earlyEmpty) {
+  if (noMatchingKeys) {
     return { data: [], count: 0 };
   }
 
@@ -239,7 +239,7 @@ export async function getTranslationKeys(
         : [],
       defaultTranslation:
         translationsByKey[key.id]?.find(
-          (t) => t.keyId === key.id && t.locale === locale,
+          (t) => t.keyId === key.id && t.locale === effectiveLocale,
         )?.value ?? null,
     })),
   };
