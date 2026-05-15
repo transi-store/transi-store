@@ -31,7 +31,7 @@ type Props = {
 
 export function TranslationKeysView({ data, context }: Props) {
   const { t } = useTranslation();
-  const { keys, selectedFileId, search, highlight, page, sort } = data;
+  const { keys, selectedFileId, search, highlight, page, sort, locale, filter } = data;
   const { organization, project, languages } = context;
   const actionData = useActionData<KeyActionData | undefined>();
   const navigation = useNavigation();
@@ -57,6 +57,8 @@ export function TranslationKeysView({ data, context }: Props) {
     sort,
     highlight,
     fileId: selectedFileId,
+    locale,
+    filter,
   });
 
   useEffect(() => {
@@ -134,6 +136,9 @@ export function TranslationKeysView({ data, context }: Props) {
         organizationSlug={organization.slug}
         projectSlug={project.slug}
         fileId={selectedFileId ?? undefined}
+        languages={languages}
+        selectedLocale={locale}
+        filter={filter}
       />
 
       {languages.length === 0 ? (
@@ -167,6 +172,7 @@ export function TranslationKeysView({ data, context }: Props) {
             projectSlug={project.slug}
             currentUrl={currentUrl}
             onEditInDrawer={handleEditInDrawer}
+            selectedLocale={locale}
           />
 
           <TranslationsPagination
@@ -178,6 +184,8 @@ export function TranslationKeysView({ data, context }: Props) {
             organizationSlug={organization.slug}
             projectSlug={project.slug}
             fileId={selectedFileId ?? undefined}
+            locale={locale}
+            filter={filter}
           />
         </>
       )}

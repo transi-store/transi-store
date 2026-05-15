@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
-import { TranslationKeysSort } from "./sort/keySort";
+import { TranslationFilter, TranslationKeysSort } from "./sort/keySort";
 import type { TranslationKey } from "../../drizzle/schema";
 
 type TranslationKeysReturnType = {
@@ -68,6 +68,8 @@ export async function getTranslationKeys(
     branchId?: number;
     branchOnly?: boolean;
     fileId?: number;
+    locale?: string;
+    filter?: TranslationFilter;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -78,12 +80,72 @@ export async function getTranslationKeys(
   >;
   let count: number;
 
-  const defaultLocale = await db.query.projectLanguages.findFirst({
-    where: {
-      projectId,
-      isDefault: true,
-    },
-  });
+  const locale =
+    options?.locale ??
+    (
+      await db.query.projectLanguages.findFirst({
+        where: {
+          projectId,
+          isDefault: true,
+        },
+      })
+    )?.locale;
+
+  // Build the filter condition (missing / fuzzy) if needed
+  let filterCondition: SQL | undefined;
+  let earlyEmpty = false;
+
+  if (options?.filter === TranslationFilter.MISSING && locale) {
+    // Keys that already have a translation in the selected locale
+    const translated = await db
+      .select({ keyId: schema.translations.keyId })
+      .from(schema.translations)
+      .innerJoin(
+        schema.translationKeys,
+        eq(schema.translations.keyId, schema.translationKeys.id),
+      )
+      .where(
+        and(
+          eq(schema.translationKeys.projectId, projectId),
+          eq(schema.translations.locale, locale),
+        ),
+      );
+    if (translated.length > 0) {
+      filterCondition = notInArray(
+        schema.translationKeys.id,
+        translated.map((t) => t.keyId),
+      );
+    }
+    // If translated is empty, all keys are "missing" → no extra WHERE needed
+  } else if (options?.filter === TranslationFilter.FUZZY && locale) {
+    // Keys that have a fuzzy translation in the selected locale
+    const fuzzy = await db
+      .select({ keyId: schema.translations.keyId })
+      .from(schema.translations)
+      .innerJoin(
+        schema.translationKeys,
+        eq(schema.translations.keyId, schema.translationKeys.id),
+      )
+      .where(
+        and(
+          eq(schema.translationKeys.projectId, projectId),
+          eq(schema.translations.locale, locale),
+          eq(schema.translations.isFuzzy, true),
+        ),
+      );
+    if (fuzzy.length === 0) {
+      earlyEmpty = true;
+    } else {
+      filterCondition = inArray(
+        schema.translationKeys.id,
+        fuzzy.map((t) => t.keyId),
+      );
+    }
+  }
+
+  if (earlyEmpty) {
+    return { data: [], count: 0 };
+  }
 
   const branchCondition = branchFilter({
     branchId: options?.branchId,
@@ -102,6 +164,7 @@ export async function getTranslationKeys(
         branchId: options?.branchId,
         branchOnly: options?.branchOnly,
         fileId: options?.fileId,
+        filterCondition,
       },
     );
     keys = keysWithSimilarity.map(
@@ -123,6 +186,7 @@ export async function getTranslationKeys(
       options?.fileId !== undefined
         ? eq(schema.translationKeys.fileId, options.fileId)
         : undefined,
+      filterCondition,
     );
 
     keys = await db
@@ -175,7 +239,7 @@ export async function getTranslationKeys(
         : [],
       defaultTranslation:
         translationsByKey[key.id]?.find(
-          (t) => t.keyId === key.id && t.locale === defaultLocale?.locale,
+          (t) => t.keyId === key.id && t.locale === locale,
         )?.value ?? null,
     })),
   };

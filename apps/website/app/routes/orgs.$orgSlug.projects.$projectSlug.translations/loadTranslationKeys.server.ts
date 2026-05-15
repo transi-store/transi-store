@@ -1,8 +1,10 @@
 import { getTranslationKeys } from "~/lib/translation-keys.server";
-import { TranslationKeysSort } from "~/lib/sort/keySort";
+import { TranslationFilter, TranslationKeysSort } from "~/lib/sort/keySort";
 import { TRANSLATIONS_LIMIT } from "./constants";
 import type { ProjectFile } from "../../../drizzle/schema";
 import { DocumentMode } from "./constants";
+
+export { resolveFilter } from "~/lib/sort/keySort";
 
 export function resolveSort(
   sortParam: string | null,
@@ -33,6 +35,8 @@ export type TranslationKeysLoaderData = {
   highlight: string | undefined;
   page: number;
   sort: TranslationKeysSort;
+  locale: string | undefined;
+  filter: TranslationFilter;
 };
 
 export async function translationKeysLoader(args: {
@@ -43,6 +47,8 @@ export async function translationKeysLoader(args: {
   highlight: string | undefined;
   page: number;
   sort: TranslationKeysSort;
+  locale: string | undefined;
+  filter: TranslationFilter;
 }): Promise<TranslationKeysLoaderData> {
   const {
     projectId,
@@ -52,6 +58,8 @@ export async function translationKeysLoader(args: {
     highlight,
     page,
     sort,
+    locale,
+    filter,
   } = args;
   const offset = (page - 1) * TRANSLATIONS_LIMIT;
 
@@ -61,6 +69,8 @@ export async function translationKeysLoader(args: {
     offset,
     sort,
     fileId: selectedFileId,
+    locale,
+    filter,
   });
 
   return {
@@ -72,5 +82,7 @@ export async function translationKeysLoader(args: {
     highlight,
     page,
     sort,
+    locale,
+    filter,
   };
 }
