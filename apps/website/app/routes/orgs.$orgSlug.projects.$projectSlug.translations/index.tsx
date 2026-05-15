@@ -83,6 +83,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         sort,
         highlight,
         page: page > 1 ? String(page) : undefined,
+        locale,
+        filter,
       }),
     );
   }
@@ -253,6 +255,14 @@ export default function ProjectTranslations({
                     highlight:
                       loaderData.mode === DocumentMode.TranslationKeys
                         ? loaderData.highlight
+                        : undefined,
+                    locale:
+                      loaderData.mode === DocumentMode.TranslationKeys
+                        ? loaderData.locale
+                        : undefined,
+                    filter:
+                      loaderData.mode === DocumentMode.TranslationKeys
+                        ? loaderData.filter
                         : undefined,
                   },
                 ),

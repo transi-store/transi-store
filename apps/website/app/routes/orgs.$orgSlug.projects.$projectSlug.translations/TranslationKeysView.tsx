@@ -79,6 +79,8 @@ export function TranslationKeysView({ data, context }: Props) {
           highlight: highlight
             ? `${highlight},${actionData.keyName}`
             : actionData.keyName,
+          locale,
+          filter,
         }),
       );
 

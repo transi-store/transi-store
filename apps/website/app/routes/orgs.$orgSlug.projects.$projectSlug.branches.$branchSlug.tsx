@@ -135,6 +135,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         sort,
         highlight,
         page: page > 1 ? String(page) : undefined,
+        locale,
+        filter,
       }),
     );
   }
@@ -471,6 +473,8 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                           search,
                           sort,
                           highlight,
+                          locale,
+                          filter,
                         },
                       ),
                     );

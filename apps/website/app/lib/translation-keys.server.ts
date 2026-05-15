@@ -7,6 +7,7 @@ import {
   isNull,
   notInArray,
   or,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
@@ -91,60 +92,25 @@ export async function getTranslationKeys(
       })
     )?.locale;
 
-  // Build the filter condition (missing / fuzzy) if needed
+  // Build the filter condition (missing / fuzzy) using correlated subqueries
+  // to avoid large IN (...) lists that hurt performance and may exceed DB limits.
   let filterCondition: SQL | undefined;
-  let noMatchingKeys = false;
 
   if (options?.filter === TranslationFilter.MISSING && effectiveLocale) {
-    // Keys that already have a translation in the selected locale
-    const translated = await db
-      .select({ keyId: schema.translations.keyId })
-      .from(schema.translations)
-      .innerJoin(
-        schema.translationKeys,
-        eq(schema.translations.keyId, schema.translationKeys.id),
-      )
-      .where(
-        and(
-          eq(schema.translationKeys.projectId, projectId),
-          eq(schema.translations.locale, effectiveLocale),
-        ),
-      );
-    if (translated.length > 0) {
-      filterCondition = notInArray(
-        schema.translationKeys.id,
-        translated.map((t) => t.keyId),
-      );
-    }
-    // If translated is empty, all keys are "missing" → no extra WHERE needed
+    // Keys that have NO translation row for the selected locale
+    filterCondition = sql`NOT EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${effectiveLocale}
+    )`;
   } else if (options?.filter === TranslationFilter.FUZZY && effectiveLocale) {
-    // Keys that have a fuzzy translation in the selected locale
-    const fuzzy = await db
-      .select({ keyId: schema.translations.keyId })
-      .from(schema.translations)
-      .innerJoin(
-        schema.translationKeys,
-        eq(schema.translations.keyId, schema.translationKeys.id),
-      )
-      .where(
-        and(
-          eq(schema.translationKeys.projectId, projectId),
-          eq(schema.translations.locale, effectiveLocale),
-          eq(schema.translations.isFuzzy, true),
-        ),
-      );
-    if (fuzzy.length === 0) {
-      noMatchingKeys = true;
-    } else {
-      filterCondition = inArray(
-        schema.translationKeys.id,
-        fuzzy.map((t) => t.keyId),
-      );
-    }
-  }
-
-  if (noMatchingKeys) {
-    return { data: [], count: 0 };
+    // Keys that have a fuzzy translation for the selected locale
+    filterCondition = sql`EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${effectiveLocale}
+        AND ${schema.translations.isFuzzy} = true
+    )`;
   }
 
   const branchCondition = branchFilter({
