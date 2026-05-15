@@ -97,7 +97,7 @@ export async function getTranslationKeys(
   let filterCondition: SQL | undefined;
 
   if (options?.filter === TranslationFilter.MISSING && effectiveLocale) {
-    // Keys that have NO translation row for the selected locale
+    // Keys with no translation for the selected locale
     filterCondition = sql`NOT EXISTS (
       SELECT 1 FROM ${schema.translations}
       WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}

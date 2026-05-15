@@ -66,8 +66,10 @@ export function TranslationsSearchBar({
     const params = {
       search: queryParams?.search !== undefined ? queryParams.search : search,
       sort: queryParams?.sort !== undefined ? queryParams.sort : sort,
-      locale: queryParams?.locale ?? activeLocale,
-      filter: queryParams?.filter ?? filter,
+      locale:
+        queryParams?.locale !== undefined ? queryParams.locale : activeLocale,
+      filter:
+        queryParams?.filter !== undefined ? queryParams.filter : filter,
       fileId,
     };
     if (branchSlug) {
