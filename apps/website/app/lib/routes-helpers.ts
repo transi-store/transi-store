@@ -30,6 +30,8 @@ export function getTranslationsUrl(
     sort?: string | null;
     highlight?: string | null;
     fileId?: string | number | null;
+    locale?: string | null;
+    filter?: string | null;
   },
 ): string {
   const params = new URLSearchParams(removeUndefinedValues(queryParams));
@@ -116,6 +118,8 @@ export function getBranchUrl(
     sort?: string | null;
     highlight?: string | null;
     fileId?: string | number | null;
+    locale?: string | null;
+    filter?: string | null;
   },
 ): string {
   const params = new URLSearchParams(removeUndefinedValues(queryParams));
