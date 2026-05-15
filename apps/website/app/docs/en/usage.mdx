@@ -54,10 +54,13 @@ The built-in editor validates your ICU syntax in real time and provides a live p
 
 ### Searching and filtering
 
-Use the search bar to filter keys by name or value. You can also filter by:
+Use the search bar to filter keys by name or value. Below the search bar, two additional controls let you refine the view:
 
-- **Untranslated** — keys missing translations in one or more locales
-- **Locale** — filter the view to show a specific language pair
+- **Language** — choose which project language's translation is shown in the "Default translation" column. Defaults to the project's default language.
+- **Show** — filter the key list to one of:
+  - **All** — every key in the file
+  - **Missing** — keys that have no translation for the selected language
+  - **Fuzzy** — keys whose translation is marked as uncertain (flagged for review)
 
 ---
 
