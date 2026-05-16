@@ -31,7 +31,16 @@ type Props = {
 
 export function TranslationKeysView({ data, context }: Props) {
   const { t } = useTranslation();
-  const { keys, selectedFileId, search, highlight, page, sort } = data;
+  const {
+    keys,
+    selectedFileId,
+    search,
+    highlight,
+    page,
+    sort,
+    locale,
+    filter,
+  } = data;
   const { organization, project, languages } = context;
   const actionData = useActionData<KeyActionData | undefined>();
   const navigation = useNavigation();
@@ -51,12 +60,18 @@ export function TranslationKeysView({ data, context }: Props) {
 
   const totalLanguages = languages.length;
   const count = keys.count;
+  const effectiveLocale =
+    locale ??
+    languages.find((l) => l.isDefault)?.locale ??
+    languages[0]?.locale;
 
   const currentUrl = getTranslationsUrl(organization.slug, project.slug, {
     search,
     sort,
     highlight,
     fileId: selectedFileId,
+    locale,
+    filter,
   });
 
   useEffect(() => {
@@ -77,6 +92,8 @@ export function TranslationKeysView({ data, context }: Props) {
           highlight: highlight
             ? `${highlight},${actionData.keyName}`
             : actionData.keyName,
+          locale,
+          filter,
         }),
       );
 
@@ -134,6 +151,9 @@ export function TranslationKeysView({ data, context }: Props) {
         organizationSlug={organization.slug}
         projectSlug={project.slug}
         fileId={selectedFileId ?? undefined}
+        languages={languages}
+        selectedLocale={locale}
+        filter={filter}
       />
 
       {languages.length === 0 ? (
@@ -167,6 +187,7 @@ export function TranslationKeysView({ data, context }: Props) {
             projectSlug={project.slug}
             currentUrl={currentUrl}
             onEditInDrawer={handleEditInDrawer}
+            selectedLocale={effectiveLocale}
           />
 
           <TranslationsPagination
@@ -178,6 +199,8 @@ export function TranslationKeysView({ data, context }: Props) {
             organizationSlug={organization.slug}
             projectSlug={project.slug}
             fileId={selectedFileId ?? undefined}
+            locale={locale}
+            filter={filter}
           />
         </>
       )}

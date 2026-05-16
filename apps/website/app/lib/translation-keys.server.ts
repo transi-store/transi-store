@@ -7,11 +7,12 @@ import {
   isNull,
   notInArray,
   or,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
-import { TranslationKeysSort } from "./sort/keySort";
+import { TranslationFilter, TranslationKeysSort } from "./sort/keySort";
 import type { TranslationKey } from "../../drizzle/schema";
 
 type TranslationKeysReturnType = {
@@ -68,6 +69,8 @@ export async function getTranslationKeys(
     branchId?: number;
     branchOnly?: boolean;
     fileId?: number;
+    locale?: string;
+    filter?: TranslationFilter;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -78,12 +81,37 @@ export async function getTranslationKeys(
   >;
   let count: number;
 
-  const defaultLocale = await db.query.projectLanguages.findFirst({
-    where: {
-      projectId,
-      isDefault: true,
-    },
-  });
+  const effectiveLocale =
+    options?.locale ??
+    (
+      await db.query.projectLanguages.findFirst({
+        where: {
+          projectId,
+          isDefault: true,
+        },
+      })
+    )?.locale;
+
+  // Build the filter condition (missing / fuzzy) using correlated subqueries
+  // to avoid large IN (...) lists that hurt performance and may exceed DB limits.
+  let filterCondition: SQL | undefined;
+
+  if (options?.filter === TranslationFilter.MISSING && effectiveLocale) {
+    // Keys with no translation for the selected locale
+    filterCondition = sql`NOT EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${effectiveLocale}
+    )`;
+  } else if (options?.filter === TranslationFilter.FUZZY && effectiveLocale) {
+    // Keys that have a fuzzy translation for the selected locale
+    filterCondition = sql`EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${effectiveLocale}
+        AND ${schema.translations.isFuzzy} IS TRUE
+    )`;
+  }
 
   const branchCondition = branchFilter({
     branchId: options?.branchId,
@@ -102,6 +130,7 @@ export async function getTranslationKeys(
         branchId: options?.branchId,
         branchOnly: options?.branchOnly,
         fileId: options?.fileId,
+        filterCondition,
       },
     );
     keys = keysWithSimilarity.map(
@@ -123,6 +152,7 @@ export async function getTranslationKeys(
       options?.fileId !== undefined
         ? eq(schema.translationKeys.fileId, options.fileId)
         : undefined,
+      filterCondition,
     );
 
     keys = await db
@@ -175,7 +205,7 @@ export async function getTranslationKeys(
         : [],
       defaultTranslation:
         translationsByKey[key.id]?.find(
-          (t) => t.keyId === key.id && t.locale === defaultLocale?.locale,
+          (t) => t.keyId === key.id && t.locale === effectiveLocale,
         )?.value ?? null,
     })),
   };

@@ -1,4 +1,4 @@
-import { Table } from "@chakra-ui/react";
+import { Table, Badge } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { TranslationKeyRow } from "./TranslationKeyRow";
 import type { RegularDataRow, SearchDataRow } from "~/lib/translation-helper";
@@ -11,6 +11,7 @@ type TranslationsTableProps = {
   projectSlug: string;
   currentUrl: string;
   onEditInDrawer: (keyId: number) => void;
+  selectedLocale?: string;
 };
 
 export function TranslationsTable({
@@ -21,6 +22,7 @@ export function TranslationsTable({
   projectSlug,
   currentUrl,
   onEditInDrawer,
+  selectedLocale,
 }: TranslationsTableProps) {
   const { t } = useTranslation();
 
@@ -32,7 +34,12 @@ export function TranslationsTable({
             {t("translations.table.keyName")}
           </Table.ColumnHeader>
           <Table.ColumnHeader maxW="500px">
-            {t("translations.table.defaultTranslation")}
+            {t("translations.table.translation")}
+            {selectedLocale && (
+              <Badge size="sm" colorPalette="brand" ml={2}>
+                {selectedLocale.toUpperCase()}
+              </Badge>
+            )}
           </Table.ColumnHeader>
           <Table.ColumnHeader w="150px">
             {t("translations.table.translations")}

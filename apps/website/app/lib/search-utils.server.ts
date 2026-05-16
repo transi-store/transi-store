@@ -1,4 +1,4 @@
-import { eq, sql, and, or, inArray, desc, isNull } from "drizzle-orm";
+import { eq, sql, and, or, inArray, desc, isNull, type SQL } from "drizzle-orm";
 import { db, schema } from "./db.server";
 import { TranslationKeysSort } from "./sort/keySort";
 
@@ -46,6 +46,7 @@ export async function searchTranslationKeys(
     branchId?: number;
     branchOnly?: boolean;
     fileId?: number;
+    filterCondition?: SQL;
   },
 ): Promise<Array<SearchTranslationKeyResult>> {
   const limit = options?.limit ?? 50;
@@ -103,6 +104,7 @@ export async function searchTranslationKeys(
         branchCondition,
         notDeleted,
         fileCondition,
+        options?.filterCondition,
         or(
           sql`${maxSimilarity(schema.translationKeys.keyName, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
           sql`${maxSimilarity(schema.translationKeys.description, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
@@ -119,6 +121,7 @@ export async function searchTranslationKeys(
     branchCondition,
     notDeleted,
     fileCondition,
+    options?.filterCondition,
     sql`${maxSimilarity(schema.translations.value, searchQuery)} > ${SIMILARITY_THRESHOLD}`,
   ];
   if (options?.locale) {

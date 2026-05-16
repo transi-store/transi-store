@@ -26,6 +26,7 @@ import { DocumentTranslationsView } from "./DocumentTranslationsView";
 import {
   translationKeysLoader,
   resolveSort,
+  resolveFilter,
 } from "./loadTranslationKeys.server";
 import { loadDocumentTranslations } from "./loadDocumentTranslations.server";
 import {
@@ -57,6 +58,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const highlight = url.searchParams.get("highlight") || undefined;
   const sort = resolveSort(url.searchParams.get("sort"), Boolean(search));
   const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const locale = url.searchParams.get("locale") || undefined;
+  const filter = resolveFilter(url.searchParams.get("filter"));
 
   const projectFiles = await getProjectFiles(project.id);
 
@@ -80,6 +83,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         sort,
         highlight,
         page: page > 1 ? String(page) : undefined,
+        locale,
+        filter,
       }),
     );
   }
@@ -102,6 +107,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     highlight,
     page,
     sort,
+    locale,
+    filter,
   });
 }
 
@@ -248,6 +255,14 @@ export default function ProjectTranslations({
                     highlight:
                       loaderData.mode === DocumentMode.TranslationKeys
                         ? loaderData.highlight
+                        : undefined,
+                    locale:
+                      loaderData.mode === DocumentMode.TranslationKeys
+                        ? loaderData.locale
+                        : undefined,
+                    filter:
+                      loaderData.mode === DocumentMode.TranslationKeys
+                        ? loaderData.filter
                         : undefined,
                   },
                 ),

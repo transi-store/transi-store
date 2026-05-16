@@ -62,7 +62,7 @@ import {
 import { TranslationsTable } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsTable";
 import { TranslationsPagination } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsPagination";
 import { TranslationsSearchBar } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsSearchBar";
-import { resolveSort } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/loadTranslationKeys.server";
+import { resolveSort, resolveFilter } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/loadTranslationKeys.server";
 import { getInstance } from "~/middleware/i18next.server";
 import {
   getBranchesUrl,
@@ -97,6 +97,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const offset = (page - 1) * LIMIT;
   const deletionSearch = url.searchParams.get("deletionSearch") || undefined;
+  const locale = url.searchParams.get("locale") || undefined;
+  const filter = resolveFilter(url.searchParams.get("filter"));
 
   const projectFiles = await getProjectFiles(project.id);
 
@@ -133,6 +135,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         sort,
         highlight,
         page: page > 1 ? String(page) : undefined,
+        locale,
+        filter,
       }),
     );
   }
@@ -145,6 +149,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     branchId: branch.id,
     branchOnly: true,
     fileId: selectedFile.id,
+    locale,
+    filter,
   });
 
   const deletionCount = await getBranchKeyDeletionCount(branch.id, {
@@ -174,6 +180,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     highlight,
     page,
     sort,
+    locale,
+    filter,
     deletionCount,
     keyDeletions,
     deletionSearch,
@@ -290,6 +298,8 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
     highlight,
     page,
     sort,
+    locale,
+    filter,
     deletionCount,
     keyDeletions,
     deletionSearch,
@@ -324,6 +334,8 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
       sort,
       highlight,
       fileId: selectedFileId,
+      locale,
+      filter,
     },
   );
 
@@ -461,6 +473,8 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                           search,
                           sort,
                           highlight,
+                          locale,
+                          filter,
                         },
                       ),
                     );
@@ -501,15 +515,25 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
             {/* Additions tab */}
             <Tabs.Content value="additions">
               <VStack gap={4} align="stretch" pt={4}>
-                <HStack justify="space-between">
-                  <TranslationsSearchBar
-                    search={search}
-                    sort={sort}
-                    organizationSlug={organization.slug}
-                    projectSlug={project.slug}
-                    branchSlug={branch.slug}
-                    fileId={selectedFileId ?? undefined}
-                  />
+                <Stack
+                  direction={{ base: "column", sm: "row" }}
+                  align={{ base: "stretch", sm: "start" }}
+                  justify="space-between"
+                  gap={3}
+                >
+                  <Box flex="1">
+                    <TranslationsSearchBar
+                      search={search}
+                      sort={sort}
+                      organizationSlug={organization.slug}
+                      projectSlug={project.slug}
+                      branchSlug={branch.slug}
+                      fileId={selectedFileId ?? undefined}
+                      languages={languages}
+                      selectedLocale={locale}
+                      filter={filter}
+                    />
+                  </Box>
                   {languages.length > 0 && projectFiles.length > 0 && (
                     <Button
                       colorPalette="accent"
@@ -520,7 +544,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                       <LuPlus /> {t("translations.newKey")}
                     </Button>
                   )}
-                </HStack>
+                </Stack>
 
                 {languages.length === 0 ? (
                   <Box
@@ -556,6 +580,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                       projectSlug={project.slug}
                       currentUrl={currentUrl}
                       onEditInDrawer={handleEditInDrawer}
+                      selectedLocale={locale}
                     />
 
                     <TranslationsPagination
@@ -568,6 +593,8 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                       projectSlug={project.slug}
                       branchSlug={branch.slug}
                       fileId={selectedFileId ?? undefined}
+                      locale={locale}
+                      filter={filter}
                     />
                   </>
                 )}
