@@ -11,7 +11,7 @@ type TranslationsTableProps = {
   projectSlug: string;
   currentUrl: string;
   onEditInDrawer: (keyId: number) => void;
-  selectedLocale?: string;
+  selectedLocale: string;
 };
 
 export function TranslationsTable({
@@ -35,11 +35,9 @@ export function TranslationsTable({
           </Table.ColumnHeader>
           <Table.ColumnHeader maxW="500px">
             {t("translations.table.translation")}
-            {selectedLocale && (
-              <Badge size="sm" colorPalette="brand" ml={2}>
-                {selectedLocale.toUpperCase()}
-              </Badge>
-            )}
+            <Badge size="sm" colorPalette="brand" ml={2}>
+              {selectedLocale.toUpperCase()}
+            </Badge>
           </Table.ColumnHeader>
           <Table.ColumnHeader w="150px">
             {t("translations.table.translations")}

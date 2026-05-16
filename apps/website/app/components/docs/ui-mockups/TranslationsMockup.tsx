@@ -70,6 +70,7 @@ export function TranslationsMockup() {
           projectSlug="webapp"
           currentUrl="/orgs/acme/projects/webapp/translations"
           onEditInDrawer={() => {}}
+          selectedLocale="en"
         />
       </Box>
     </MockupContainer>

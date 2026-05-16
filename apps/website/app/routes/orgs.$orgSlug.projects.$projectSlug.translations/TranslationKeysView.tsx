@@ -63,7 +63,8 @@ export function TranslationKeysView({ data, context }: Props) {
   const effectiveLocale =
     locale ??
     languages.find((l) => l.isDefault)?.locale ??
-    languages[0]?.locale;
+    languages[0]?.locale ??
+    "";
 
   const currentUrl = getTranslationsUrl(organization.slug, project.slug, {
     search,

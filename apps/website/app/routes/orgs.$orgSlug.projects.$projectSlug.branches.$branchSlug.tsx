@@ -324,6 +324,11 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
   }, []);
 
   const totalLanguages = languages.length;
+  const effectiveLocale =
+    locale ??
+    languages.find((l) => l.isDefault)?.locale ??
+    languages[0]?.locale ??
+    "";
 
   const currentUrl = getBranchUrl(
     organization.slug,
@@ -580,7 +585,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                       projectSlug={project.slug}
                       currentUrl={currentUrl}
                       onEditInDrawer={handleEditInDrawer}
-                      selectedLocale={locale}
+                      selectedLocale={effectiveLocale}
                     />
 
                     <TranslationsPagination
