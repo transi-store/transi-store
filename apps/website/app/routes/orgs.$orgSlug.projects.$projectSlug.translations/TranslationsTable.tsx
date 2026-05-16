@@ -34,7 +34,7 @@ export function TranslationsTable({
             {t("translations.table.keyName")}
           </Table.ColumnHeader>
           <Table.ColumnHeader maxW="500px">
-            {t("translations.table.defaultTranslation")}
+            {t("translations.table.translation")}
             {selectedLocale && (
               <Badge size="sm" colorPalette="brand" ml={2}>
                 {selectedLocale.toUpperCase()}

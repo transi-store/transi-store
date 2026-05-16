@@ -109,7 +109,7 @@ export async function getTranslationKeys(
       SELECT 1 FROM ${schema.translations}
       WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
         AND ${schema.translations.locale} = ${effectiveLocale}
-        AND ${eq(schema.translations.isFuzzy, true)}
+        AND ${schema.translations.isFuzzy} IS TRUE
     )`;
   }
 
