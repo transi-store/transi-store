@@ -17,10 +17,7 @@ import {
   getTranslationsUrl,
   removeUndefinedValues,
 } from "~/lib/routes-helpers";
-import {
-  TranslationFilter,
-  TranslationKeysSort,
-} from "~/lib/sort/keySort";
+import { TranslationFilter, TranslationKeysSort } from "~/lib/sort/keySort";
 import type { FormEvent } from "react";
 
 type Language = { id: string; locale: string; isDefault: boolean };
@@ -64,17 +61,17 @@ export function TranslationsSearchBar({
     filter?: string | null;
   }) => {
     const params = {
-      search: queryParams?.search !== undefined ? queryParams.search : search,
-      sort: queryParams?.sort !== undefined ? queryParams.sort : sort,
-      locale:
-        queryParams?.locale !== undefined ? queryParams.locale : activeLocale,
-      filter:
-        queryParams?.filter !== undefined ? queryParams.filter : filter,
+      search,
+      sort,
+      locale: activeLocale,
+      filter,
+      ...queryParams,
       fileId,
     };
     if (branchSlug) {
       return getBranchUrl(organizationSlug, projectSlug, branchSlug, params);
     }
+
     return getTranslationsUrl(organizationSlug, projectSlug, params);
   };
 
@@ -100,7 +97,7 @@ export function TranslationsSearchBar({
     })
     .filter(
       (option) => search || option.value !== TranslationKeysSort.RELEVANCE,
-    );
+    ); // Do not display "Relevance" in the sort options, as it is an implicit sort when a search is performed
 
   const sortCollection = createListCollection({ items: sortOptions });
 
