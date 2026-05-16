@@ -31,6 +31,10 @@
     "//#upload-translations": {
       "dependsOn": ["@transi-store/cli#build"],
       "env": ["TRANSI_STORE_API_KEY"]
+    },
+    "//#merge-translations": {
+      "dependsOn": ["@transi-store/cli#build"],
+      "env": ["TRANSI_STORE_API_KEY"]
     }
   }
 }
