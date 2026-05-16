@@ -493,7 +493,7 @@
   "translations.sort": "{sortValue, select, alphabetical {alphabetisch} createdAt {Erstellungsdatum} relevance {Relevanz} other {translations.sort}}",
   "translations.sort.label": "Sortieren nach",
   "translations.table.actions": "Aktionen",
-  "translations.table.defaultTranslation": "Standardübersetzung",
+  "translations.table.defaultTranslation": "Übersetzung",
   "translations.table.keyName": "Name des Schlüssels",
   "translations.table.translations": "Übersetzungen",
   "translations.title": "Übersetzungsschlüssel",
