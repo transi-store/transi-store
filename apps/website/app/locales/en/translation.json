@@ -1,5 +1,6 @@
 {
   "api.methodNotAllowed": "Method not allowed",
+  "api.methodNotAllowed (copy)": "Method not allowed",
   "api.translate.keyNotFound": "Key not found",
   "api.translate.missingParams": "keyId and targetLocale are required",
   "api.translate.noAiProvider": "No AI service configured. Configure it in the organization settings.",
@@ -236,7 +237,7 @@
   "markdownTranslate.actions.markFuzzy": "Mark current section as fuzzy",
   "markdownTranslate.actions.nextOrphan": "Jump to next unmatched section",
   "markdownTranslate.actions.swapSides": "Swap left and right languages",
-  "markdownTranslate.actions.unmarkFuzzy": "Unmark current section as fuzzy",
+  "markdownTranslate.actions.unmarkFuzzy": "Remove fuzzy marker for current section",
   "markdownTranslate.backToTranslations": "Back to translations",
   "markdownTranslate.badges.active": "Active",
   "markdownTranslate.badges.fuzzy": "Fuzzy",
