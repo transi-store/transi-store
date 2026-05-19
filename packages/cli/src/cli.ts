@@ -10,6 +10,7 @@ import {
   uploadOne,
   type UploadOneOptions,
 } from "./uploadTranslations.ts";
+import { mergeBranchCommand } from "./branchMerge.ts";
 import {
   DEFAULT_DOMAIN_ROOT,
   ALL_BRANCHES_VALUE,
@@ -146,6 +147,28 @@ program
       validateStrategy(options.strategy),
       options.branch,
     );
+  });
+
+program
+  .command("branch:merge")
+  .description("Merge a project branch into main")
+  .addOption(apiKeyOption)
+  .requiredOption(
+    "-d, --domain-root <domainRoot>",
+    "Root domain of the Transi-Store instance (default is https://transi-store.com)",
+    DEFAULT_DOMAIN_ROOT,
+  )
+  .requiredOption("-o, --org <org>", "Organization slug")
+  .requiredOption("-p, --project <project>", "Project slug")
+  .requiredOption("-b, --branch <branch>", "Branch slug to merge")
+  .action((options) => {
+    mergeBranchCommand({
+      domainRoot: options.domainRoot,
+      apiKey: options.apiKey,
+      org: options.org,
+      project: options.project,
+      branch: options.branch,
+    });
   });
 
 program.parse();

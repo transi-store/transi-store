@@ -92,19 +92,24 @@ export async function getBranchKeyCount(branchId: number): Promise<number> {
 
 type MergeBranchResult =
   | { success: true; keysMoved: number; keysDeleted: number }
-  | { success: false; error: string; conflictingKeys?: string[] };
+  | {
+      success: false;
+      reason: "not_found" | "not_open" | "conflict";
+      error: string;
+      conflictingKeys?: string[];
+    };
 
 export async function mergeBranch(
   branchId: number,
-  mergedBy: number,
+  mergedBy: number | null,
 ): Promise<MergeBranchResult> {
   const branch = await getBranchById(branchId);
   if (!branch) {
-    return { success: false, error: "Branch not found" };
+    return { success: false, reason: "not_found", error: "Branch not found" };
   }
 
   if (branch.status !== BRANCH_STATUS.OPEN) {
-    return { success: false, error: "Branch is not open" };
+    return { success: false, reason: "not_open", error: "Branch is not open" };
   }
 
   // Get the keys on this branch
@@ -165,6 +170,7 @@ export async function mergeBranch(
     ) {
       return {
         success: false,
+        reason: "conflict",
         error: "Conflicting keys exist on main",
         conflictingKeys: branchKeys.map((k) => k.keyName),
       };

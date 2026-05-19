@@ -16,6 +16,11 @@ import {
   projectDetailErrorResponseSchema,
 } from "./schemas/project-detail";
 import {
+  branchMergeSuccessResponseSchema,
+  branchMergeErrorResponseSchema,
+  branchMergeConflictResponseSchema,
+} from "./schemas/branch-merge";
+import {
   getProjectLanguages,
   getProjectsForOrganization,
 } from "../projects.server";
@@ -70,6 +75,12 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
     param: { name: "fileId", in: "path" },
     description: "Project file identifier.",
     example: projectFileExample?.id ?? "1",
+  });
+
+  const branchSlugParam = z.string().openapi({
+    param: { name: "branchSlug", in: "path" },
+    description: "Branch slug.",
+    example: "feature-xyz",
   });
 
   const importFormSchema = importFieldsSchema(localeExample).extend({
@@ -270,6 +281,72 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         description: "Method not allowed (only POST is accepted).",
         content: {
           "application/json": { schema: importErrorResponseSchema },
+        },
+      },
+    },
+  });
+
+  // -- Branch merge endpoint --
+  registry.registerPath({
+    method: "post",
+    path: "/api/orgs/{orgSlug}/projects/{projectSlug}/branches/{branchSlug}/merge",
+    summary: "Merge a project branch into main",
+    description:
+      "Merge the branch's keys into the main branch and apply any pending key deletions. " +
+      "The branch's status is set to `merged` on success. " +
+      "When the API is called with an API key, the merge is not attributed to a specific user.",
+    tags: ["Branches"],
+    security: [{ BearerApiKey: [] }],
+    request: {
+      params: z.object({
+        orgSlug: orgSlugParam,
+        projectSlug: projectSlugParam,
+        branchSlug: branchSlugParam,
+      }),
+    },
+    responses: {
+      200: {
+        description: "Branch merged successfully.",
+        content: {
+          "application/json": { schema: branchMergeSuccessResponseSchema },
+        },
+      },
+      400: {
+        description: "Branch is already merged or closed.",
+        content: {
+          "application/json": { schema: branchMergeErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Missing or invalid API key.",
+        content: {
+          "application/json": { schema: branchMergeErrorResponseSchema },
+        },
+      },
+      403: {
+        description: "The API key does not belong to this organization.",
+        content: {
+          "application/json": { schema: branchMergeErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Project or branch not found.",
+        content: {
+          "application/json": { schema: branchMergeErrorResponseSchema },
+        },
+      },
+      405: {
+        description: "Method not allowed (only POST is accepted).",
+        content: {
+          "application/json": { schema: branchMergeErrorResponseSchema },
+        },
+      },
+      409: {
+        description:
+          "Conflict: some branch keys collide with existing main keys. " +
+          "Resolve the conflicts before retrying.",
+        content: {
+          "application/json": { schema: branchMergeConflictResponseSchema },
         },
       },
     },

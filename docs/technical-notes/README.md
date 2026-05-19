@@ -13,6 +13,7 @@ Detailed technical documentation for the transi-store implementation.
 | [database-schema.md](./database-schema.md)             | Full PostgreSQL schema, constraints, relations, TypeScript types    |
 | [export-api.md](./export-api.md)                       | JSON/XLIFF export API, authentication by key or session             |
 | [import-system.md](./import-system.md)                 | Bulk import, overwrite/skip strategies, validation                  |
+| [branch-merge-api.md](./branch-merge-api.md)           | Branch merge API + CLI, shared `mergeBranch` logic, status codes    |
 | [code-patterns.md](./code-patterns.md)                 | Common patterns (routes, Drizzle queries, forms, auth)              |
 | [code-formatting.md](./code-formatting.md)             | Prettier formatting rules                                           |
 | [traductions.md](./traductions.md)                     | Website translation management (i18next)                            |

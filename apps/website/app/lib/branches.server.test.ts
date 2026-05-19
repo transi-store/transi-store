@@ -407,6 +407,7 @@ describe("mergeBranch with deletions", () => {
 
     expect(result).toEqual({
       success: false,
+      reason: "not_open",
       error: "Branch is not open",
     });
   });
@@ -416,7 +417,27 @@ describe("mergeBranch with deletions", () => {
 
     expect(result).toEqual({
       success: false,
+      reason: "not_found",
       error: "Branch not found",
     });
+  });
+
+  it("persists null mergedBy when called without a user", async () => {
+    await createTranslationKey(db, projectId, "branch.key", { branchId });
+
+    const result = await mergeBranch(branchId, null);
+
+    expect(result).toEqual({
+      success: true,
+      keysMoved: 1,
+      keysDeleted: 0,
+    });
+
+    const merged = await db.query.branches.findFirst({
+      where: { id: branchId },
+    });
+    expect(merged!.status).toBe(BRANCH_STATUS.MERGED);
+    expect(merged!.mergedBy).toBeNull();
+    expect(merged!.mergedAt).not.toBeNull();
   });
 });
