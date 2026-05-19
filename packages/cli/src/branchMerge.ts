@@ -1,6 +1,6 @@
 import { describeFetchError } from "./fetchProjectMetadata.ts";
 
-export type MergeBranchOptions = {
+type MergeBranchOptions = {
   domainRoot: string;
   apiKey: string;
   org: string;
