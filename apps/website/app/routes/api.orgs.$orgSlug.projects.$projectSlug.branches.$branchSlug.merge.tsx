@@ -1,5 +1,6 @@
 import { getProjectBySlug } from "~/lib/projects.server";
 import { getBranchBySlug, mergeBranch } from "~/lib/branches.server";
+import { MERGE_FAILURE_REASON } from "~/lib/branches";
 import { orgContext } from "~/middleware/api-auth.server";
 import { getInstance } from "~/middleware/i18next.server";
 import { apiError } from "~/lib/api-response.server";
@@ -46,21 +47,21 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   }
 
   switch (result.reason) {
-    case "not_found":
+    case MERGE_FAILURE_REASON.NOT_FOUND:
       return apiError(
         404,
         i18next.t("api.branchMerge.branchNotFound", {
           branchSlug: params.branchSlug,
         }),
       );
-    case "not_open":
+    case MERGE_FAILURE_REASON.NOT_OPEN:
       return apiError(
         400,
         i18next.t("api.branchMerge.branchNotOpen", {
           branchSlug: params.branchSlug,
         }),
       );
-    case "conflict":
+    case MERGE_FAILURE_REASON.CONFLICT:
       return Response.json(
         {
           error: result.error,

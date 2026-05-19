@@ -21,7 +21,7 @@ import {
   mergeBranch,
   getBranchKeys,
 } from "./branches.server";
-import { BRANCH_STATUS } from "./branches";
+import { BRANCH_STATUS, MERGE_FAILURE_REASON } from "./branches";
 import type { OAuthProvider } from "./auth-providers";
 
 vi.mock("~/lib/db.server", () => ({
@@ -407,7 +407,7 @@ describe("mergeBranch with deletions", () => {
 
     expect(result).toEqual({
       success: false,
-      reason: "not_open",
+      reason: MERGE_FAILURE_REASON.NOT_OPEN,
       error: "Branch is not open",
     });
   });
@@ -417,7 +417,7 @@ describe("mergeBranch with deletions", () => {
 
     expect(result).toEqual({
       success: false,
-      reason: "not_found",
+      reason: MERGE_FAILURE_REASON.NOT_FOUND,
       error: "Branch not found",
     });
   });

@@ -1,5 +1,5 @@
 import type { Branch, TranslationKey } from "../../drizzle/schema";
-import { BRANCH_STATUS } from "./branches";
+import { BRANCH_STATUS, MERGE_FAILURE_REASON } from "./branches";
 import { db, schema } from "./db.server";
 import { and, eq, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 
@@ -94,7 +94,7 @@ type MergeBranchResult =
   | { success: true; keysMoved: number; keysDeleted: number }
   | {
       success: false;
-      reason: "not_found" | "not_open" | "conflict";
+      reason: MERGE_FAILURE_REASON;
       error: string;
       conflictingKeys?: string[];
     };
@@ -105,11 +105,19 @@ export async function mergeBranch(
 ): Promise<MergeBranchResult> {
   const branch = await getBranchById(branchId);
   if (!branch) {
-    return { success: false, reason: "not_found", error: "Branch not found" };
+    return {
+      success: false,
+      reason: MERGE_FAILURE_REASON.NOT_FOUND,
+      error: "Branch not found",
+    };
   }
 
   if (branch.status !== BRANCH_STATUS.OPEN) {
-    return { success: false, reason: "not_open", error: "Branch is not open" };
+    return {
+      success: false,
+      reason: MERGE_FAILURE_REASON.NOT_OPEN,
+      error: "Branch is not open",
+    };
   }
 
   // Get the keys on this branch
@@ -170,7 +178,7 @@ export async function mergeBranch(
     ) {
       return {
         success: false,
-        reason: "conflict",
+        reason: MERGE_FAILURE_REASON.CONFLICT,
         error: "Conflicting keys exist on main",
         conflictingKeys: branchKeys.map((k) => k.keyName),
       };
