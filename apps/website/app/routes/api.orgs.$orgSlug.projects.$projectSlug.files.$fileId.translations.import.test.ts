@@ -72,6 +72,7 @@ function buildImportRequestWithRawFile(
     format?: SupportedFormat;
     fileName: string;
     contentType: string;
+    branch?: string;
   },
 ) {
   const {
@@ -80,12 +81,16 @@ function buildImportRequestWithRawFile(
     format,
     fileName,
     contentType,
+    branch,
   } = options;
   const formData = new FormData();
   formData.append("locale", locale);
   formData.append("strategy", strategy);
   if (format) {
     formData.append("format", format);
+  }
+  if (branch) {
+    formData.append("branch", branch);
   }
   formData.append("file", new File([content], fileName, { type: contentType }));
 
@@ -758,6 +763,42 @@ describe("Import file-scoped API", () => {
       const data = await response.json();
       expect(data.error).toBe(
         "Format 'markdown' stores one document body per locale and cannot be imported into 'json' key/value files. Use a key/value format instead.",
+      );
+    });
+
+    it("should return 400 when importing a document file with a branch parameter", async () => {
+      const db = getTestDb();
+      const mdxFile = await createProjectFile(db, {
+        projectId: 1,
+        format: SupportedFormat.MDX,
+        filePath: "docs/<lang>/usage.mdx",
+      });
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        mdxFile.id,
+        "# Hello",
+        {
+          locale: "fr",
+          strategy: ImportStrategy.OVERWRITE,
+          format: SupportedFormat.MDX,
+          fileName: "usage.mdx",
+          contentType: "text/mdx",
+          branch: "feature-branch",
+        },
+      );
+
+      const response = await callAction(
+        request,
+        "test-org",
+        "test-project",
+        mdxFile.id,
+      );
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe(
+        "Branch-scoped document imports are not supported by this endpoint.",
       );
     });
   });
