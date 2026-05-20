@@ -25,17 +25,16 @@ The route **does not** look up the calling user. `mergeBranch()` is called with 
 | `403` | `BranchMergeError`                                                 | API key does not belong to the requested organization.    |
 | `404` | `BranchMergeError`                                                 | Project or branch not found.                              |
 | `405` | `BranchMergeError`                                                 | Request method is not `POST`.                             |
-| `409` | `BranchMergeConflict` (`{ error, conflictingKeys[] }`)             | Some branch keys collide with existing main keys.         |
 
-`409` is reserved strictly for the unique-constraint conflict case, so clients can rely on the presence of `conflictingKeys` whenever they receive that status.
+Merging never produces a key conflict by construction: the unique index `unique_project_file_key` on `(project_id, file_id, key_name)` prevents a branch from ever holding a key that already exists on main. There is no `409` case.
 
 ## Discriminated result in `mergeBranch`
 
-`MergeBranchResult` carries a `reason` field on failure (`"not_found" | "not_open" | "conflict"`). The API route maps `reason` to a status code without string-matching on `error`. The UI keeps reading `error` and `conflictingKeys` as before.
+`MergeBranchResult` carries a `reason` field on failure (`"not_found" | "not_open"`). The API route maps `reason` to a status code without string-matching on `error`.
 
 ## CLI
 
-The `transi-store branch:merge` command (in `@transi-store/cli`) wraps this endpoint. `--branch` is required: there is no git auto-detection, since the merge is destructive and the target must be explicit. On `409` the CLI prints every conflicting key on its own line and exits `1`.
+The `transi-store branch:merge` command (in `@transi-store/cli`) wraps this endpoint. `--branch` is required: there is no git auto-detection, since the merge is destructive and the target must be explicit.
 
 ## OpenAPI
 

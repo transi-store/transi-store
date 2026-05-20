@@ -16,7 +16,8 @@ on:
         type: string
 
 jobs:
-  merge:
+  merge-branch:
+    name: Merge transi-store branch
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
 

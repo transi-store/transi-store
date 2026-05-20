@@ -25,3 +25,19 @@ export {
   type BranchMergeSuccessResponse,
   type BranchMergeErrorResponse,
 } from "./branch-merge-schema.ts";
+export {
+  createImportFieldsSchema,
+  createImportStatsSchema,
+  createImportSuccessResponseSchema,
+  createImportErrorResponseSchema,
+  type ImportFields,
+  type ImportStats,
+  type ImportSuccessResponse,
+  type ImportErrorResponse,
+} from "./import-schema.ts";
+export {
+  createExportQuerySchema,
+  createExportErrorResponseSchema,
+  type ExportQuery,
+  type ExportErrorResponse,
+} from "./export-schema.ts";

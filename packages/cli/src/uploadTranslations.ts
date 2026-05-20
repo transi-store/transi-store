@@ -1,8 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { DEFAULT_DOMAIN_ROOT } from "@transi-store/common";
-import { ImportStrategy } from "@transi-store/common";
+import {
+  configSchema,
+  createImportErrorResponseSchema,
+  createImportSuccessResponseSchema,
+  DEFAULT_DOMAIN_ROOT,
+  ImportStrategy,
+} from "@transi-store/common";
 import z from "zod";
 import {
   getDefaultBranch,
@@ -10,12 +15,14 @@ import {
   isGitRepository,
   resolveGitBranch,
 } from "./git.ts";
-import { configSchema } from "@transi-store/common";
 import {
   describeFetchError,
   fetchProjectMetadata,
 } from "./fetchProjectMetadata.ts";
 import { pickFile, resolveFilePath } from "./fileHelper.ts";
+
+const importSuccessResponseSchema = createImportSuccessResponseSchema();
+const importErrorResponseSchema = createImportErrorResponseSchema();
 
 export type UploadOneOptions = {
   domainRoot: string;
@@ -130,30 +137,45 @@ async function uploadTranslations({
     process.exit(1);
   }
 
+  let rawBody: unknown;
   try {
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error(
-        `Failed to import translations: ${response.status} ${response.statusText}\n`,
-        data.error,
-        data.details ? `\nDetails: ${data.details}` : "",
-      );
-      process.exit(1);
-    }
-
-    console.log(
-      `Translations imported for ${logLabel({ project, fileName, locale })}:`,
-    );
-    console.log(`  Total keys: ${data.stats.total}`);
-    console.log(`  Keys created: ${data.stats.keysCreated}`);
-    console.log(`  Translations created: ${data.stats.translationsCreated}`);
-    console.log(`  Translations updated: ${data.stats.translationsUpdated}`);
-    console.log(`  Translations skipped: ${data.stats.translationsSkipped}`);
+    rawBody = await response.json();
   } catch (error) {
     console.error("Error importing translations:", error);
     process.exit(1);
   }
+
+  if (!response.ok) {
+    const parsedError = importErrorResponseSchema.safeParse(rawBody);
+    const errorMessage = parsedError.success
+      ? parsedError.data.error
+      : response.statusText;
+    const details = parsedError.success ? parsedError.data.details : undefined;
+    console.error(
+      `Failed to import translations: ${response.status} ${response.statusText}\n`,
+      errorMessage,
+      details ? `\nDetails: ${details}` : "",
+    );
+    process.exit(1);
+  }
+
+  const parsed = importSuccessResponseSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    console.error(
+      `Unexpected response from import endpoint: ${parsed.error.message}`,
+    );
+    process.exit(1);
+  }
+
+  const { stats } = parsed.data;
+  console.log(
+    `Translations imported for ${logLabel({ project, fileName, locale })}:`,
+  );
+  console.log(`  Total keys: ${stats.total}`);
+  console.log(`  Keys created: ${stats.keysCreated}`);
+  console.log(`  Translations created: ${stats.translationsCreated}`);
+  console.log(`  Translations updated: ${stats.translationsUpdated}`);
+  console.log(`  Translations skipped: ${stats.translationsSkipped}`);
 }
 
 export async function uploadForConfig(
