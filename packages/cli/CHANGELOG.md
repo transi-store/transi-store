@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- [#199](https://github.com/transi-store/transi-store/pull/199) [`2b8926d`](https://github.com/transi-store/transi-store/commit/2b8926ddd4cc01615830dba400b846c49b2ea6b9) Thanks [@jdeniau](https://github.com/jdeniau)! - Add `branch:merge` command to merge a project branch into main from the CLI. The command targets the new `POST /api/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge` endpoint. `--branch` is required (no git auto-detection). On conflict the command exits `1` and prints the colliding keys.
+- [#199](https://github.com/transi-store/transi-store/pull/199) and [#196](https://github.com/transi-store/transi-store/pull/196) [`2b8926d`](https://github.com/transi-store/transi-store/commit/2b8926ddd4cc01615830dba400b846c49b2ea6b9) Thanks [@jdeniau](https://github.com/jdeniau)! - Add `merge` command to merge a project branch into main from the CLI. The command targets the new `POST /api/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge` endpoint. `--branch` is required (no git auto-detection).
 
 ## 2.3.0
 
