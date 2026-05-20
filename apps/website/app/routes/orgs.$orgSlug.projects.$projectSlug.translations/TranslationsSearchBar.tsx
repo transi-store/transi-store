@@ -20,7 +20,7 @@ import {
 import { TranslationFilter, TranslationKeysSort } from "~/lib/sort/keySort";
 import type { FormEvent } from "react";
 
-type Language = { locale: string; isDefault: boolean };
+type Language = { locale: string; isDefault: boolean | null };
 
 type TranslationsSearchBarProps = {
   search?: string;
