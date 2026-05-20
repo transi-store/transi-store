@@ -46,7 +46,7 @@ jobs:
         uses: ./.github/actions/setup-project
 
       - name: Run knip
-        run: yarn knip
+        run: yarn turbo knip
 
   i18next:
     name: i18next Validation

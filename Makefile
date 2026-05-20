@@ -50,7 +50,7 @@ start: ## Start the application in production
 	docker compose exec app yarn start
 
 test: ## Run tests
-	docker compose exec app yarn test --run
+	docker compose exec app yarn test -- --run
 
 lint: ## Check lint
 	docker compose exec app yarn turbo lint
@@ -59,7 +59,7 @@ lint-types: ## Check TypeScript types
 	docker compose exec app yarn lint:types
 
 knip: ## Analyze unused imports/exports
-	docker compose exec app yarn knip
+	docker compose exec app yarn turbo knip
 
 ## Database
 db-generate: ## Generate database migrations

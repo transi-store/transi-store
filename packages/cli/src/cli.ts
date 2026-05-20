@@ -11,6 +11,7 @@ import {
   type UploadOneOptions,
 } from "./uploadTranslations.ts";
 import { mergeBranchCommand } from "./branchMerge.ts";
+import { mergeForConfig } from "./mergeForConfig.ts";
 import {
   DEFAULT_DOMAIN_ROOT,
   ALL_BRANCHES_VALUE,
@@ -147,6 +148,20 @@ program
       validateStrategy(options.strategy),
       options.branch,
     );
+  });
+
+program
+  .command("merge")
+  .description("Merge a translation branch for every project in the config")
+  .addOption(apiKeyOption)
+  .option(
+    "-c, --config <config>",
+    "Path to config file",
+    "transi-store.config.json",
+  )
+  .requiredOption("-b, --branch <branch>", "Branch slug to merge")
+  .action((options) => {
+    mergeForConfig(options.config, options.apiKey, options.branch);
   });
 
 program

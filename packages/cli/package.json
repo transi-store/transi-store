@@ -24,13 +24,15 @@
   "devDependencies": {
     "@transi-store/common": "workspace:^",
     "rolldown": "^1.0.0-rc.12",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.18"
   },
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "rolldown -c && tsc --emitDeclarationOnly && yarn build:schema",
     "build:schema": "node ./scripts/create-json-schema.mjs",
-    "lint:types": "tsc --noEmit"
+    "lint:types": "tsc --noEmit",
+    "test": "vitest"
   },
   "files": [
     "dist"

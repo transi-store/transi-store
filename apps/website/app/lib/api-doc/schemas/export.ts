@@ -2,14 +2,18 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import {
   ALL_BRANCHES_VALUE,
+  createExportErrorResponseSchema,
+  createExportQuerySchema,
   SupportedFormat,
   SUPPORTED_FORMATS_LIST,
 } from "@transi-store/common";
 
+// `.openapi()` is added to ZodType.prototype here, and schemas are instantiated
+// AFTER the patch so the method is available on them.
 extendZodWithOpenApi(z);
 
 export const exportQuerySchema = (localeExample = "fr") =>
-  z.object({
+  createExportQuerySchema().extend({
     format: z.enum(SupportedFormat).openapi({
       description: `Output format. Supported formats: ${SUPPORTED_FORMATS_LIST}.`,
       example: SupportedFormat.JSON,
@@ -28,8 +32,8 @@ export const exportQuerySchema = (localeExample = "fr") =>
       }),
   });
 
-export const exportErrorResponseSchema = z
-  .object({
+export const exportErrorResponseSchema = createExportErrorResponseSchema()
+  .extend({
     error: z.string().openapi({
       description: "Human-readable error message.",
       example: `Invalid format. Use ${SUPPORTED_FORMATS_LIST}`,

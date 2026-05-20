@@ -22,13 +22,27 @@
     "test": {
       "dependsOn": ["^test"],
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "env": ["SESSION_SECRET", "NODE_ENV"]
+    },
+    "react-router-typegen": {
+      "dependsOn": ["^react-router-typegen"]
+    },
+    "//#knip": {
+      "dependsOn": [
+        "@transi-store/common#build",
+        "@transi-store/website#react-router-typegen"
+      ]
     },
     "//#download-translations": {
       "dependsOn": ["@transi-store/cli#build"],
       "env": ["TRANSI_STORE_API_KEY"]
     },
     "//#upload-translations": {
+      "dependsOn": ["@transi-store/cli#build"],
+      "env": ["TRANSI_STORE_API_KEY"]
+    },
+    "//#merge-translation-branch": {
       "dependsOn": ["@transi-store/cli#build"],
       "env": ["TRANSI_STORE_API_KEY"]
     }
