@@ -6,5 +6,4 @@ export enum BRANCH_STATUS {
 export enum MERGE_FAILURE_REASON {
   NOT_FOUND = "not_found",
   NOT_OPEN = "not_open",
-  CONFLICT = "conflict",
 }

@@ -25,16 +25,3 @@ export const branchMergeErrorResponseSchema = z
     }),
   })
   .openapi("BranchMergeError");
-
-export const branchMergeConflictResponseSchema = z
-  .object({
-    error: z.string().openapi({
-      description: "Human-readable error message.",
-      example: "Conflicting keys exist on main",
-    }),
-    conflictingKeys: z.array(z.string()).openapi({
-      description: "Names of the branch keys that collide with main keys.",
-      example: ["home.title", "nav.about"],
-    }),
-  })
-  .openapi("BranchMergeConflict");

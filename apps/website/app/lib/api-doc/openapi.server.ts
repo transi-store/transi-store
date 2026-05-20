@@ -18,7 +18,6 @@ import {
 import {
   branchMergeSuccessResponseSchema,
   branchMergeErrorResponseSchema,
-  branchMergeConflictResponseSchema,
 } from "./schemas/branch-merge";
 import {
   getProjectLanguages,
@@ -339,14 +338,6 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         description: "Method not allowed (only POST is accepted).",
         content: {
           "application/json": { schema: branchMergeErrorResponseSchema },
-        },
-      },
-      409: {
-        description:
-          "Conflict: some branch keys collide with existing main keys. " +
-          "Resolve the conflicts before retrying.",
-        content: {
-          "application/json": { schema: branchMergeConflictResponseSchema },
         },
       },
     },

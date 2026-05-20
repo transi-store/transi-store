@@ -61,13 +61,5 @@ export async function action({ request, params, context }: Route.ActionArgs) {
           branchSlug: params.branchSlug,
         }),
       );
-    case MERGE_FAILURE_REASON.CONFLICT:
-      return Response.json(
-        {
-          error: result.error,
-          conflictingKeys: result.conflictingKeys ?? [],
-        },
-        { status: 409 },
-      );
   }
 }

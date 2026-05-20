@@ -15,7 +15,7 @@ export async function mergeBranchCommand({
   project,
   branch,
 }: MergeBranchOptions): Promise<void> {
-  const url = `${domainRoot}/api/orgs/${org}/projects/${project}/branches/${branch}/merge`;
+  const url = `${domainRoot}/api/orgs/${encodeURIComponent(org)}/projects/${encodeURIComponent(project)}/branches/${encodeURIComponent(branch)}/merge`;
 
   let response: Response;
   try {
@@ -49,20 +49,6 @@ export async function mergeBranchCommand({
       `Branch "${branch}" merged on project "${project}": ${stats?.keysMoved ?? 0} keys moved, ${stats?.keysDeleted ?? 0} deleted.`,
     );
     return;
-  }
-
-  if (response.status === 409) {
-    const conflict = data as {
-      error?: string;
-      conflictingKeys?: string[];
-    } | null;
-    console.error(
-      `Merge conflict: ${conflict?.error ?? "Conflicting keys exist on main"}`,
-    );
-    for (const key of conflict?.conflictingKeys ?? []) {
-      console.error(`  - ${key}`);
-    }
-    process.exit(1);
   }
 
   const errorFromData = (data as { error?: string } | null)?.error;
