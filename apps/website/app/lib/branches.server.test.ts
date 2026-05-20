@@ -21,7 +21,7 @@ import {
   mergeBranch,
   getBranchKeys,
 } from "./branches.server";
-import { BRANCH_STATUS } from "./branches";
+import { BRANCH_STATUS, MERGE_FAILURE_REASON } from "./branches";
 import type { OAuthProvider } from "./auth-providers";
 
 vi.mock("~/lib/db.server", () => ({
@@ -407,6 +407,7 @@ describe("mergeBranch with deletions", () => {
 
     expect(result).toEqual({
       success: false,
+      reason: MERGE_FAILURE_REASON.NOT_OPEN,
       error: "Branch is not open",
     });
   });
@@ -416,7 +417,27 @@ describe("mergeBranch with deletions", () => {
 
     expect(result).toEqual({
       success: false,
+      reason: MERGE_FAILURE_REASON.NOT_FOUND,
       error: "Branch not found",
     });
+  });
+
+  it("persists null mergedBy when called without a user", async () => {
+    await createTranslationKey(db, projectId, "branch.key", { branchId });
+
+    const result = await mergeBranch(branchId, null);
+
+    expect(result).toEqual({
+      success: true,
+      keysMoved: 1,
+      keysDeleted: 0,
+    });
+
+    const merged = await db.query.branches.findFirst({
+      where: { id: branchId },
+    });
+    expect(merged!.status).toBe(BRANCH_STATUS.MERGED);
+    expect(merged!.mergedBy).toBeNull();
+    expect(merged!.mergedAt).not.toBeNull();
   });
 });

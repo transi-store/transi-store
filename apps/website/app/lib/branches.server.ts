@@ -1,5 +1,5 @@
 import type { Branch, TranslationKey } from "../../drizzle/schema";
-import { BRANCH_STATUS } from "./branches";
+import { BRANCH_STATUS, MERGE_FAILURE_REASON } from "./branches";
 import { db, schema } from "./db.server";
 import { and, eq, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 
@@ -92,85 +92,80 @@ export async function getBranchKeyCount(branchId: number): Promise<number> {
 
 type MergeBranchResult =
   | { success: true; keysMoved: number; keysDeleted: number }
-  | { success: false; error: string; conflictingKeys?: string[] };
+  | {
+      success: false;
+      reason: MERGE_FAILURE_REASON;
+      error: string;
+    };
 
+// Merging a branch never produces a key conflict: the unique index
+// `unique_project_file_key` on (project_id, file_id, key_name) prevents a
+// branch from ever holding a key that already exists on main, so setting
+// branchId = NULL at merge time is always safe.
 export async function mergeBranch(
   branchId: number,
-  mergedBy: number,
+  mergedBy: number | null,
 ): Promise<MergeBranchResult> {
   const branch = await getBranchById(branchId);
   if (!branch) {
-    return { success: false, error: "Branch not found" };
+    return {
+      success: false,
+      reason: MERGE_FAILURE_REASON.NOT_FOUND,
+      error: "Branch not found",
+    };
   }
 
   if (branch.status !== BRANCH_STATUS.OPEN) {
-    return { success: false, error: "Branch is not open" };
+    return {
+      success: false,
+      reason: MERGE_FAILURE_REASON.NOT_OPEN,
+      error: "Branch is not open",
+    };
   }
 
-  // Get the keys on this branch
   const branchKeys = await db.query.translationKeys.findMany({
     where: { branchId },
   });
 
-  // Get the key deletions for this branch
   const keyDeletions = await db.query.branchKeyDeletions.findMany({
     where: { branchId },
   });
 
-  // Move keys from branch to main (set branchId = NULL)
-  // The unique constraint (project_id, key_name) ensures no collision
-  try {
-    let keysMoved = 0;
-    let keysDeleted = 0;
+  let keysMoved = 0;
+  let keysDeleted = 0;
 
-    await db.transaction(async (tx) => {
-      if (branchKeys.length > 0) {
-        const [result] = await tx
-          .update(schema.translationKeys)
-          .set({ branchId: null })
-          .where(eq(schema.translationKeys.branchId, branchId))
-          .returning({ id: schema.translationKeys.id });
+  await db.transaction(async (tx) => {
+    if (branchKeys.length > 0) {
+      const [result] = await tx
+        .update(schema.translationKeys)
+        .set({ branchId: null })
+        .where(eq(schema.translationKeys.branchId, branchId))
+        .returning({ id: schema.translationKeys.id });
 
-        keysMoved = result ? branchKeys.length : 0;
-      }
+      keysMoved = result ? branchKeys.length : 0;
+    }
 
-      // Soft-delete keys marked for deletion
-      if (keyDeletions.length > 0) {
-        const deletionKeyIds = keyDeletions.map((d) => d.translationKeyId);
-        await tx
-          .update(schema.translationKeys)
-          .set({ deletedAt: new Date() })
-          .where(inArray(schema.translationKeys.id, deletionKeyIds));
+    if (keyDeletions.length > 0) {
+      const deletionKeyIds = keyDeletions.map((d) => d.translationKeyId);
+      await tx
+        .update(schema.translationKeys)
+        .set({ deletedAt: new Date() })
+        .where(inArray(schema.translationKeys.id, deletionKeyIds));
 
-        keysDeleted = deletionKeyIds.length;
-
-        // Clean up the branch_key_deletions entries
-        await tx
-          .delete(schema.branchKeyDeletions)
-          .where(eq(schema.branchKeyDeletions.branchId, branchId));
-      }
+      keysDeleted = deletionKeyIds.length;
 
       await tx
-        .update(schema.branches)
-        .set({ status: BRANCH_STATUS.MERGED, mergedBy, mergedAt: new Date() })
-        .where(eq(schema.branches.id, branchId));
-    });
-
-    return { success: true, keysMoved, keysDeleted };
-  } catch (error) {
-    // Unique constraint violation = conflict
-    if (
-      error instanceof Error &&
-      error.message.includes("unique_project_key")
-    ) {
-      return {
-        success: false,
-        error: "Conflicting keys exist on main",
-        conflictingKeys: branchKeys.map((k) => k.keyName),
-      };
+        .delete(schema.branchKeyDeletions)
+        .where(eq(schema.branchKeyDeletions.branchId, branchId));
     }
-    throw error;
-  }
+
+    await tx
+      .update(schema.branches)
+      .set({ status: BRANCH_STATUS.MERGED, mergedBy, mergedAt: new Date() })
+      .where(eq(schema.branches.id, branchId));
+  });
+
+  return { success: true, keysMoved, keysDeleted };
 }
 
 // --- Branch Key Deletions ---

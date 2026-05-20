@@ -9,7 +9,6 @@ import {
   Badge,
   Card,
   Code,
-  List,
 } from "@chakra-ui/react";
 import {
   Link,
@@ -69,7 +68,7 @@ export async function action({ params, context }: Route.ActionArgs) {
   const result = await mergeBranch(branch.id, user.userId);
 
   if (!result.success) {
-    return { error: result.error, conflictingKeys: result.conflictingKeys };
+    return { error: result.error };
   }
 
   return redirect(getBranchesUrl(params.orgSlug, params.projectSlug));
@@ -115,13 +114,6 @@ export default function MergeBranch({ loaderData }: Route.ComponentProps) {
               {actionData?.error && (
                 <Box p={4} bg="red.subtle" color="red.fg" borderRadius="md">
                   <Text fontWeight="semibold">{actionData.error}</Text>
-                  {actionData.conflictingKeys && (
-                    <List.Root mt={2}>
-                      {actionData.conflictingKeys.map((key: string) => (
-                        <List.Item key={key}>{key}</List.Item>
-                      ))}
-                    </List.Root>
-                  )}
                 </Box>
               )}
 

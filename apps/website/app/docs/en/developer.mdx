@@ -213,4 +213,21 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Git optimization:** `upload:config` also skips files that have not changed compared to the default branch (`main`/`master`) when running in a git repository, to avoid unnecessary API calls.
 
+### Merging a branch
+
+```bash
+# Merge a branch into main
+transi-store branch:merge --org acme --project webapp --branch feature/my-feature
+```
+
+`--branch` is required (no auto-detection): merging is destructive, so the target branch must be explicit. On success the branch's keys are moved to main and any keys marked for deletion are soft-deleted.
+
+You can also call the underlying endpoint directly (path segments must be URL-encoded, e.g. `/` in a branch slug becomes `%2F`):
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $TRANSI_STORE_API_KEY" \
+  "https://transi-store.com/api/orgs/acme/projects/webapp/branches/feature%2Fmy-feature/merge"
+```
+
 This is ideal for integrating into CI/CD — download translated strings at build time and upload new source strings after developers add them.

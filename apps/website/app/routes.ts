@@ -154,6 +154,10 @@ export default [
         "projects/:projectSlug/translate",
         "routes/api.orgs.$orgSlug.projects.$projectSlug.translate.tsx",
       ),
+      route(
+        "projects/:projectSlug/branches/:branchSlug/merge",
+        "routes/api.orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx",
+      ),
     ]),
   ]),
 
