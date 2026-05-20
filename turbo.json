@@ -22,7 +22,8 @@
     "test": {
       "dependsOn": ["^test"],
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "env": ["SESSION_SECRET", "NODE_ENV"]
     },
     "//#download-translations": {
       "dependsOn": ["@transi-store/cli#build"],
