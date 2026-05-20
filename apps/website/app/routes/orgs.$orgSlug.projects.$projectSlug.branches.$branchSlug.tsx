@@ -115,6 +115,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
       highlight,
       page,
       sort,
+      locale,
+      filter,
       deletionCount: 0,
       keyDeletions: [],
       deletionSearch,
