@@ -32,27 +32,23 @@ export async function mergeBranchCommand({
     process.exit(1);
   }
 
-  const body = await response.text();
-  let data: unknown = null;
-  if (body.length > 0) {
-    try {
-      data = JSON.parse(body);
-    } catch {
-      // Non-JSON body — keep raw text for diagnostics
-    }
+  let data:
+    | { keysMoved?: number; keysDeleted?: number; error?: string }
+    | null = null;
+  try {
+    data = await response.json();
+  } catch {
+    // Empty or non-JSON body — fall back to statusText below.
   }
 
   if (response.ok) {
-    const stats = data as { keysMoved?: number; keysDeleted?: number } | null;
     console.log(
-      `Branch "${branch}" merged on project "${project}": ${stats?.keysMoved ?? 0} keys moved, ${stats?.keysDeleted ?? 0} deleted.`,
+      `Branch "${branch}" merged on project "${project}": ${data?.keysMoved ?? 0} keys moved, ${data?.keysDeleted ?? 0} deleted.`,
     );
     return;
   }
 
-  const errorFromData = (data as { error?: string } | null)?.error;
-  const errorMessage =
-    errorFromData ?? (body.trim() || response.statusText);
+  const errorMessage = data?.error ?? response.statusText;
   console.error(
     `Failed to merge branch (${response.status} ${response.statusText}): ${errorMessage}`,
   );
