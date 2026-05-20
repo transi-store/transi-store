@@ -81,7 +81,7 @@ describe("mergeBranch", () => {
   it("returns the API error message when the response is not ok", async () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse(
-        { error: 'Branch "feature-1" not found' },
+        { success: false, error: 'Branch "feature-1" not found' },
         { status: 404, statusText: "Not Found" },
       ),
     );
