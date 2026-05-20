@@ -19,6 +19,7 @@ export function createBranchMergeSuccessResponseSchema() {
 
 export function createBranchMergeErrorResponseSchema() {
   return z.object({
+    success: z.literal(false),
     error: z.string().describe("Human-readable error message."),
   });
 }

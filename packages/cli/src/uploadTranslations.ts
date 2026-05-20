@@ -137,12 +137,13 @@ async function uploadTranslations({
     process.exit(1);
   }
 
-  let rawBody: unknown;
+  let rawBody: unknown = undefined;
   try {
     rawBody = await response.json();
-  } catch (error) {
-    console.error("Error importing translations:", error);
-    process.exit(1);
+  } catch {
+    // Empty or non-JSON body — fall through; the !response.ok branch will
+    // fall back to statusText, and the success branch will surface a clear
+    // "unexpected response" error via safeParse.
   }
 
   if (!response.ok) {

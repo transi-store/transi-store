@@ -26,7 +26,7 @@ The route **does not** look up the calling user. `mergeBranch()` is called with 
 | `404` | `BranchMergeError`                                                 | Project or branch not found.                              |
 | `405` | `BranchMergeError`                                                 | Request method is not `POST`.                             |
 
-Merging never produces a key conflict by construction: the unique index `unique_project_file_key` on `(project_id, file_id, key_name)` prevents a branch from ever holding a key that already exists on main. There is no `409` case.
+Merging never produces a key conflict by construction: the unique index `unique_project_file_key` on `(project_id, file_id, key_name)` prevents a branch from ever holding a key that already exists on main.
 
 ## Discriminated result in `mergeBranch`
 
@@ -34,7 +34,7 @@ Merging never produces a key conflict by construction: the unique index `unique_
 
 ## CLI
 
-The `transi-store branch:merge` command (in `@transi-store/cli`) wraps this endpoint. `--branch` is required: there is no git auto-detection, since the merge is destructive and the target must be explicit.
+The `transi-store merge` command (in `@transi-store/cli`) wraps this endpoint. `--branch` is required: there is no git auto-detection, since the merge is destructive and the target must be explicit.
 
 ## OpenAPI
 
