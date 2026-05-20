@@ -1,6 +1,6 @@
 import { describeFetchError } from "./fetchProjectMetadata.ts";
 
-type MergeBranchOptions = {
+export type MergeBranchOptions = {
   domainRoot: string;
   apiKey: string;
   org: string;
@@ -8,14 +8,43 @@ type MergeBranchOptions = {
   branch: string;
 };
 
-export async function mergeBranchCommand({
+export type MergeBranchResult =
+  | {
+      ok: true;
+      keysMoved: number;
+      keysDeleted: number;
+    }
+  | {
+      ok: false;
+      error: string;
+    };
+
+type MergeApiResponse = {
+  keysMoved?: number;
+  keysDeleted?: number;
+  error?: string;
+};
+
+export function buildMergeBranchUrl({
+  domainRoot,
+  org,
+  project,
+  branch,
+}: Pick<
+  MergeBranchOptions,
+  "domainRoot" | "org" | "project" | "branch"
+>): string {
+  return `${domainRoot}/api/orgs/${encodeURIComponent(org)}/projects/${encodeURIComponent(project)}/branches/${encodeURIComponent(branch)}/merge`;
+}
+
+export async function mergeBranch({
   domainRoot,
   apiKey,
   org,
   project,
   branch,
-}: MergeBranchOptions): Promise<void> {
-  const url = `${domainRoot}/api/orgs/${encodeURIComponent(org)}/projects/${encodeURIComponent(project)}/branches/${encodeURIComponent(branch)}/merge`;
+}: MergeBranchOptions): Promise<MergeBranchResult> {
+  const url = buildMergeBranchUrl({ domainRoot, org, project, branch });
 
   let response: Response;
   try {
@@ -26,31 +55,46 @@ export async function mergeBranchCommand({
       },
     });
   } catch (error) {
-    console.error(
-      `Failed to merge branch at ${url}: ${describeFetchError(error)}`,
-    );
-    process.exit(1);
+    return {
+      ok: false,
+      error: `Failed to merge branch at ${url}: ${describeFetchError(error)}`,
+    };
   }
 
-  let data:
-    | { keysMoved?: number; keysDeleted?: number; error?: string }
-    | null = null;
+  let data: MergeApiResponse | null = null;
   try {
-    data = await response.json();
+    data = (await response.json()) as MergeApiResponse;
   } catch {
     // Empty or non-JSON body — fall back to statusText below.
   }
 
   if (response.ok) {
+    return {
+      ok: true,
+      keysMoved: data?.keysMoved ?? 0,
+      keysDeleted: data?.keysDeleted ?? 0,
+    };
+  }
+
+  const errorMessage = data?.error ?? response.statusText;
+  return {
+    ok: false,
+    error: `Failed to merge branch (${response.status} ${response.statusText}): ${errorMessage}`,
+  };
+}
+
+export async function mergeBranchCommand(
+  options: MergeBranchOptions,
+): Promise<void> {
+  const result = await mergeBranch(options);
+
+  if (result.ok) {
     console.log(
-      `Branch "${branch}" merged on project "${project}": ${data?.keysMoved ?? 0} keys moved, ${data?.keysDeleted ?? 0} deleted.`,
+      `Branch "${options.branch}" merged on project "${options.project}": ${result.keysMoved} keys moved, ${result.keysDeleted} deleted.`,
     );
     return;
   }
 
-  const errorMessage = data?.error ?? response.statusText;
-  console.error(
-    `Failed to merge branch (${response.status} ${response.statusText}): ${errorMessage}`,
-  );
+  console.error(result.error);
   process.exit(1);
 }

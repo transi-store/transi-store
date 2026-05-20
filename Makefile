@@ -50,7 +50,7 @@ start: ## Start the application in production
 	docker compose exec app yarn start
 
 test: ## Run tests
-	docker compose exec app yarn test --run
+	docker compose exec app yarn test -- --run
 
 lint: ## Check lint
 	docker compose exec app yarn turbo lint

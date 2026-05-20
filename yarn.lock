@@ -4130,6 +4130,7 @@ __metadata:
     rolldown: "npm:^1.0.0-rc.12"
     simple-git: "npm:^3.33.0"
     typescript: "npm:^5.7.3"
+    vitest: "npm:^4.0.18"
     zod: "npm:^4.3.6"
   bin:
     transi-store: ./dist/cli.js

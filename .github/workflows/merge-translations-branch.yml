@@ -39,4 +39,4 @@ jobs:
       - name: Merge translation branch
         env:
           TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
-        run: yarn turbo run merge-translation-banch -- --branch "${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.event.pull_request.head.ref }}"
+        run: yarn turbo run merge-translation-branch -- --branch "${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.event.pull_request.head.ref }}"
