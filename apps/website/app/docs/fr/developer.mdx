@@ -220,14 +220,14 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 transi-store branch:merge --org acme --project webapp --branch feature/my-feature
 ```
 
-`--branch` est obligatoire (pas de détection automatique) : la fusion étant destructive, la branche cible doit être explicite. En cas de succès, les clés de la branche sont déplacées sur main et celles marquées pour suppression sont supprimées (soft delete). Si certaines clés de la branche entrent en conflit avec des clés existantes sur main, la commande retourne avec le code `1` et affiche les clés conflictuelles.
+`--branch` est obligatoire (pas de détection automatique) : la fusion étant destructive, la branche cible doit être explicite. En cas de succès, les clés de la branche sont déplacées sur main et celles marquées pour suppression sont supprimées (soft delete).
 
-Vous pouvez aussi appeler directement l'endpoint :
+Vous pouvez aussi appeler directement l'endpoint (les segments du chemin doivent être encodés en URL, par exemple `/` dans un slug de branche devient `%2F`) :
 
 ```bash
 curl -X POST \
   -H "Authorization: Bearer $TRANSI_STORE_API_KEY" \
-  "https://transi-store.com/api/orgs/acme/projects/webapp/branches/feature/my-feature/merge"
+  "https://transi-store.com/api/orgs/acme/projects/webapp/branches/feature%2Fmy-feature/merge"
 ```
 
 Ceci est idéal pour l'intégration en CI/CD — téléchargez les chaînes traduites au moment de la compilation et téléversez les nouvelles chaînes sources après que les développeurs les aient ajoutées.
