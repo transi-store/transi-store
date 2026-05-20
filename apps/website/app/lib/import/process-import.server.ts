@@ -40,6 +40,13 @@ function buildFormatMismatchError(
   return `Format '${requestedFormat}' does not match the file's format '${fileFormat}'. Omit the 'format' field or set it to '${fileFormat}'.`;
 }
 
+function buildDocumentToKeyValueFormatError(
+  requestedFormat: SupportedFormat,
+  fileFormat: string,
+): string {
+  return `Format '${requestedFormat}' stores one document body per locale and cannot be imported into '${fileFormat}' key/value files. Use a key/value format instead.`;
+}
+
 /**
  * Shared import processing logic used by both the UI action and the API endpoint.
  * Handles all validation (file, locale, strategy, format) and import processing.
@@ -104,15 +111,7 @@ export async function processImport({
     format = detected;
   }
 
-  // 5. Read file content
-  let fileContent: string;
-  try {
-    fileContent = await file.text();
-  } catch (_error) {
-    return { success: false, error: "Unable to read file content" };
-  }
-
-  // 6. Resolve project
+  // 5. Resolve project
   const project = await getProjectBySlug(organizationId, projectSlug);
   if (!project) {
     return { success: false, error: `Project "${projectSlug}" not found` };
@@ -126,7 +125,7 @@ export async function processImport({
     };
   }
 
-  // 6b. Resolve optional branch (create if it doesn't exist)
+  // 6. Resolve optional branch (create if it doesn't exist)
   let branchId: number | undefined;
   if (branchSlug) {
     let branch = await getBranchBySlug(project.id, branchSlug);
@@ -162,25 +161,31 @@ export async function processImport({
     };
   }
 
-  // 8. Parse file based on format
-  if (isDocumentFormat(projectFile.format)) {
-    if (format !== projectFile.format) {
-      return {
-        success: false,
-        error: buildFormatMismatchError(format, projectFile.format),
-      };
-    }
+  const targetIsDocument = isDocumentFormat(projectFile.format);
+  if (targetIsDocument && format !== projectFile.format) {
+    return {
+      success: false,
+      error: buildFormatMismatchError(format, projectFile.format),
+    };
+  }
 
-    if (
-      strategy !== ImportStrategy.OVERWRITE &&
-      strategy !== ImportStrategy.SKIP
-    ) {
-      return {
-        success: false,
-        error: "Invalid 'strategy' field. Use 'overwrite' or 'skip'",
-      };
-    }
+  if (!targetIsDocument && isDocumentFormat(format)) {
+    return {
+      success: false,
+      error: buildDocumentToKeyValueFormatError(format, projectFile.format),
+    };
+  }
 
+  // 8. Read file content (after format compatibility checks)
+  let fileContent: string;
+  try {
+    fileContent = await file.text();
+  } catch (_error) {
+    return { success: false, error: "Unable to read file content" };
+  }
+
+  // 9. Parse file based on format
+  if (targetIsDocument) {
     const existingTranslation = await getDocumentTranslation(fileId, locale);
     if (strategy === ImportStrategy.SKIP && existingTranslation) {
       return {
@@ -214,13 +219,6 @@ export async function processImport({
     };
   }
 
-  if (isDocumentFormat(format)) {
-    return {
-      success: false,
-      error: buildFormatMismatchError(format, projectFile.format),
-    };
-  }
-
   const translator = createTranslationFormat(format);
   const parseResult = translator.parseImport(fileContent);
 
@@ -232,7 +230,7 @@ export async function processImport({
     };
   }
 
-  // 9. Validate data structure
+  // 10. Validate data structure
   const validationErrors = validateImportData(parseResult.data!);
   if (validationErrors.length > 0) {
     return {
@@ -242,7 +240,7 @@ export async function processImport({
     };
   }
 
-  // 10. Import translations
+  // 11. Import translations
   const result = await importTranslations({
     projectId: project.id,
     locale,
