@@ -1,4 +1,12 @@
+import {
+  createBranchMergeErrorResponseSchema,
+  createBranchMergeSuccessResponseSchema,
+} from "@transi-store/common";
 import { describeFetchError } from "./fetchProjectMetadata.ts";
+
+const branchMergeSuccessResponseSchema =
+  createBranchMergeSuccessResponseSchema();
+const branchMergeErrorResponseSchema = createBranchMergeErrorResponseSchema();
 
 export type MergeBranchOptions = {
   domainRoot: string;
@@ -18,12 +26,6 @@ export type MergeBranchResult =
       ok: false;
       error: string;
     };
-
-type MergeApiResponse = {
-  keysMoved?: number;
-  keysDeleted?: number;
-  error?: string;
-};
 
 export function buildMergeBranchUrl({
   domainRoot,
@@ -61,22 +63,32 @@ export async function mergeBranch({
     };
   }
 
-  let data: MergeApiResponse | null = null;
+  let rawBody: unknown = null;
   try {
-    data = (await response.json()) as MergeApiResponse;
+    rawBody = await response.json();
   } catch {
     // Empty or non-JSON body — fall back to statusText below.
   }
 
   if (response.ok) {
+    const parsed = branchMergeSuccessResponseSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: `Unexpected response from merge endpoint: ${parsed.error.message}`,
+      };
+    }
     return {
       ok: true,
-      keysMoved: data?.keysMoved ?? 0,
-      keysDeleted: data?.keysDeleted ?? 0,
+      keysMoved: parsed.data.keysMoved,
+      keysDeleted: parsed.data.keysDeleted,
     };
   }
 
-  const errorMessage = data?.error ?? response.statusText;
+  const parsedError = branchMergeErrorResponseSchema.safeParse(rawBody);
+  const errorMessage = parsedError.success
+    ? parsedError.data.error
+    : response.statusText;
   return {
     ok: false,
     error: `Failed to merge branch (${response.status} ${response.statusText}): ${errorMessage}`,

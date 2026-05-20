@@ -38,7 +38,7 @@ describe("mergeBranch", () => {
 
   it("POSTs to the merge endpoint with the bearer token", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ keysMoved: 3, keysDeleted: 1 }),
+      jsonResponse({ success: true, keysMoved: 3, keysDeleted: 1 }),
     );
 
     const result = await mergeBranch({
@@ -61,7 +61,7 @@ describe("mergeBranch", () => {
     });
   });
 
-  it("defaults missing counters to 0", async () => {
+  it("returns an error when the success response body is malformed", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({}));
 
     const result = await mergeBranch({
@@ -72,7 +72,10 @@ describe("mergeBranch", () => {
       branch: "feature-1",
     });
 
-    expect(result).toEqual({ ok: true, keysMoved: 0, keysDeleted: 0 });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("Unexpected response from merge endpoint");
+    }
   });
 
   it("returns the API error message when the response is not ok", async () => {

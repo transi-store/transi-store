@@ -19,3 +19,9 @@ export {
   type ProjectLanguage,
   type ProjectDetail,
 } from "./project-schema.ts";
+export {
+  createBranchMergeSuccessResponseSchema,
+  createBranchMergeErrorResponseSchema,
+  type BranchMergeSuccessResponse,
+  type BranchMergeErrorResponse,
+} from "./branch-merge-schema.ts";

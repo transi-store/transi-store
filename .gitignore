@@ -38,3 +38,6 @@ Thumbs.db
 test-*.json
 
 .turbo
+
+# Local transi-store config for development
+transi-store.dev.config.json

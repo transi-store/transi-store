@@ -17,15 +17,15 @@ The route **does not** look up the calling user. `mergeBranch()` is called with 
 
 ## Status codes
 
-| Code | Body schema | When |
-|------|-------------|------|
-| `200` | `BranchMergeSuccess` (`{ success: true, keysMoved, keysDeleted }`) | Merge succeeded. |
-| `400` | `BranchMergeError` (`{ error }`) | Branch exists but is not open (already merged or closed). |
-| `401` | `BranchMergeError` | Missing or invalid API key, no session. |
-| `403` | `BranchMergeError` | API key does not belong to the requested organization. |
-| `404` | `BranchMergeError` | Project or branch not found. |
-| `405` | `BranchMergeError` | Request method is not `POST`. |
-| `409` | `BranchMergeConflict` (`{ error, conflictingKeys[] }`) | Some branch keys collide with existing main keys. |
+| Code  | Body schema                                                        | When                                                      |
+| ----- | ------------------------------------------------------------------ | --------------------------------------------------------- |
+| `200` | `BranchMergeSuccess` (`{ success: true, keysMoved, keysDeleted }`) | Merge succeeded.                                          |
+| `400` | `BranchMergeError` (`{ error }`)                                   | Branch exists but is not open (already merged or closed). |
+| `401` | `BranchMergeError`                                                 | Missing or invalid API key, no session.                   |
+| `403` | `BranchMergeError`                                                 | API key does not belong to the requested organization.    |
+| `404` | `BranchMergeError`                                                 | Project or branch not found.                              |
+| `405` | `BranchMergeError`                                                 | Request method is not `POST`.                             |
+| `409` | `BranchMergeConflict` (`{ error, conflictingKeys[] }`)             | Some branch keys collide with existing main keys.         |
 
 `409` is reserved strictly for the unique-constraint conflict case, so clients can rely on the presence of `conflictingKeys` whenever they receive that status.
 
@@ -39,4 +39,4 @@ The `transi-store branch:merge` command (in `@transi-store/cli`) wraps this endp
 
 ## OpenAPI
 
-Schemas live in `apps/website/app/lib/api-doc/schemas/branch-merge.ts` and are registered in `apps/website/app/lib/api-doc/openapi.server.ts` alongside the existing translation endpoints.
+The response schemas are declared as factories in `packages/common/src/branch-merge-schema.ts` (`createBranchMergeSuccessResponseSchema`, `createBranchMergeErrorResponseSchema`) and reused on both sides: `apps/website/app/lib/api-doc/schemas/branch-merge.ts` enriches them with `.openapi()` metadata for the registry, and `@transi-store/cli` validates the API response with the same factory. See [openapi-documentation.md](./openapi-documentation.md#shared-schemas-always-use-packagescommon) for the rule and pattern.
