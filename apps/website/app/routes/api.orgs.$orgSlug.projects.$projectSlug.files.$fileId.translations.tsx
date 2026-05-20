@@ -100,8 +100,27 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     );
   }
 
+  let branchId: number | undefined;
+  const allBranches = branchParam === ALL_BRANCHES_VALUE;
+  if (branchParam && !allBranches) {
+    const branch = await getBranchBySlug(project.id, branchParam);
+    if (branch) {
+      branchId = branch.id;
+    }
+  }
+
   if (isDocumentFormat(file.format)) {
-    const translation = await getDocumentTranslation(file.id, locale);
+    if (allBranches) {
+      return apiError(
+        400,
+        "The 'branch=@all' query value is not supported for document files.",
+      );
+    }
+
+    let translation = await getDocumentTranslation(file.id, locale, branchId);
+    if (!translation && branchId) {
+      translation = await getDocumentTranslation(file.id, locale);
+    }
     if (!translation) {
       return apiError(404, `No translations found for locale '${locale}'`);
     }
@@ -119,15 +138,6 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
-  }
-
-  let branchId: number | undefined;
-  const allBranches = branchParam === ALL_BRANCHES_VALUE;
-  if (branchParam && !allBranches) {
-    const branch = await getBranchBySlug(project.id, branchParam);
-    if (branch) {
-      branchId = branch.id;
-    }
   }
 
   const projectTranslations = await getProjectTranslations(

@@ -766,12 +766,17 @@ describe("Import file-scoped API", () => {
       );
     });
 
-    it("should return 400 when importing a document file with a branch parameter", async () => {
+    it("should import a document file in branch scope without overriding main", async () => {
       const db = getTestDb();
       const mdxFile = await createProjectFile(db, {
         projectId: 1,
         format: SupportedFormat.MDX,
         filePath: "docs/<lang>/usage.mdx",
+      });
+      await db.insert(schema.markdownDocumentTranslations).values({
+        projectFileId: mdxFile.id,
+        locale: "fr",
+        content: "# Main content",
       });
 
       const request = buildImportRequestWithRawFile(
@@ -795,11 +800,41 @@ describe("Import file-scoped API", () => {
         "test-project",
         mdxFile.id,
       );
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data.error).toBe(
-        "Branch-scoped document imports are not supported by this endpoint.",
-      );
+      expect(data.success).toBe(true);
+      expect(data.stats).toEqual({
+        total: 1,
+        keysCreated: 0,
+        translationsCreated: 1,
+        translationsUpdated: 0,
+        translationsSkipped: 0,
+      });
+
+      const branch = await db.query.branches.findFirst({
+        where: { projectId: 1, slug: "feature-branch" },
+      });
+      expect(branch).toBeTruthy();
+
+      const mainTranslation =
+        await db.query.markdownDocumentTranslations.findFirst({
+          where: {
+            projectFileId: mdxFile.id,
+            locale: "fr",
+            branchId: { isNull: true },
+          },
+        });
+      expect(mainTranslation?.content).toBe("# Main content");
+
+      const branchTranslation =
+        await db.query.markdownDocumentTranslations.findFirst({
+          where: {
+            projectFileId: mdxFile.id,
+            locale: "fr",
+            branchId: branch!.id,
+          },
+        });
+      expect(branchTranslation?.content).toBe("# Hello");
     });
   });
 });

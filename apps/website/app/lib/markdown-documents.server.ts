@@ -2,7 +2,7 @@
  * Server-side data access for markdown / MDX translation documents.
  *
  * Storage model: one `markdownDocumentTranslations` row per
- * (projectFileId, locale) — full document body in `content` — and a sidecar
+ * (projectFileId, locale, branchId) — full document body in `content` — and a sidecar
  * `markdownSectionStates` table holding per-section metadata (isFuzzy, last
  * AI translation timestamp), keyed directly by the translation row id.
  * The sidecar is reconciled on every save in the same transaction as the
@@ -28,9 +28,16 @@ function mdxFromFormat(format: string): boolean {
  */
 export async function getProjectFileTranslations(
   projectFileId: number,
+  branchId?: number,
 ): Promise<MarkdownDocumentTranslation[]> {
   return await db.query.markdownDocumentTranslations.findMany({
-    where: { projectFileId },
+    where:
+      branchId === undefined
+        ? {
+            projectFileId,
+            branchId: { isNull: true },
+          }
+        : { projectFileId, branchId },
     orderBy: (t, { asc }) => [asc(t.locale)],
   });
 }
@@ -44,9 +51,17 @@ export async function getProjectFileTranslations(
 export async function getDocumentTranslation(
   projectFileId: number,
   locale: string,
+  branchId?: number,
 ): Promise<MarkdownDocumentTranslation | undefined> {
   return await db.query.markdownDocumentTranslations.findFirst({
-    where: { projectFileId, locale },
+    where:
+      branchId === undefined
+        ? {
+            projectFileId,
+            locale,
+            branchId: { isNull: true },
+          }
+        : { projectFileId, locale, branchId },
   });
 }
 
@@ -64,7 +79,7 @@ export async function getSectionStatesForTranslations(
 }
 
 /**
- * Save the body of a translation for a given (projectFile, locale). In the
+ * Save the body of a translation for a given (projectFile, locale, branch). In the
  * same transaction:
  * 1. Upsert the `markdownDocumentTranslations` row.
  * 2. Reparse the new content to compute the set of valid `structuralPath`s.
@@ -76,6 +91,7 @@ export async function getSectionStatesForTranslations(
 export async function saveDocumentTranslation(params: {
   projectFileId: number;
   locale: string;
+  branchId?: number;
   content: string;
   format: SupportedFormat;
   /** When provided, the upsert is rejected if the row's updatedAt has moved. */
@@ -91,10 +107,18 @@ export async function saveDocumentTranslation(params: {
 
   return await db.transaction(async (tx) => {
     const existing = await tx.query.markdownDocumentTranslations.findFirst({
-      where: {
-        projectFileId: params.projectFileId,
-        locale: params.locale,
-      },
+      where:
+        params.branchId === undefined
+          ? {
+              projectFileId: params.projectFileId,
+              locale: params.locale,
+              branchId: { isNull: true },
+            }
+          : {
+              projectFileId: params.projectFileId,
+              locale: params.locale,
+              branchId: params.branchId,
+            },
     });
 
     if (
@@ -119,6 +143,7 @@ export async function saveDocumentTranslation(params: {
         .insert(schema.markdownDocumentTranslations)
         .values({
           projectFileId: params.projectFileId,
+          branchId: params.branchId ?? null,
           locale: params.locale,
           content: params.content,
         })
