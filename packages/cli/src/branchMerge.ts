@@ -23,7 +23,6 @@ export async function mergeBranchCommand({
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
-        "Content-Length": "0",
       },
     });
   } catch (error) {
