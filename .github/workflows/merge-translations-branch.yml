@@ -26,17 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - run: corepack enable
-
-      - name: setup node
-        uses: actions/setup-node@v6
+      - uses: transi-store/merge-branch-action@v1
         with:
-          node-version: "24"
-          cache: "yarn"
-
-      - run: yarn install
-
-      - name: Merge translation branch
-        env:
-          TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
-        run: yarn turbo run merge-translation-branch -- --branch "${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.event.pull_request.head.ref }}"
+          branch: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.event.pull_request.head.ref }}
+          api-key: ${{ secrets.TRANSI_STORE_API_KEY }}
