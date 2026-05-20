@@ -61,6 +61,43 @@ function buildImportRequest(
   );
 }
 
+function buildImportRequestWithRawFile(
+  orgSlug: string,
+  projectSlug: string,
+  fileId: number,
+  content: string,
+  options: {
+    locale?: string;
+    strategy?: ImportStrategy;
+    format?: SupportedFormat;
+    fileName: string;
+    contentType: string;
+  },
+) {
+  const {
+    locale = "en",
+    strategy = ImportStrategy.OVERWRITE,
+    format,
+    fileName,
+    contentType,
+  } = options;
+  const formData = new FormData();
+  formData.append("locale", locale);
+  formData.append("strategy", strategy);
+  if (format) {
+    formData.append("format", format);
+  }
+  formData.append("file", new File([content], fileName, { type: contentType }));
+
+  return new Request(
+    `https://example.com/api/orgs/${orgSlug}/projects/${projectSlug}/files/${fileId}/translations`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+}
+
 describe("Import file-scoped API", () => {
   let org: schema.Organization;
   let projectFile: schema.ProjectFile;
@@ -560,6 +597,140 @@ describe("Import file-scoped API", () => {
       // With batch operations, both should use roughly the same number of queries.
       // Auth queries are handled by middleware (not counted here).
       expect(smallQueryCount!).toBe(largeQueryCount!);
+    });
+  });
+
+  describe("document format imports", () => {
+    it("should import an mdx translation body for a document file", async () => {
+      const db = getTestDb();
+      const mdxFile = await createProjectFile(db, {
+        projectId: 1,
+        format: SupportedFormat.MDX,
+        filePath: "docs/<lang>/usage.mdx",
+      });
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        mdxFile.id,
+        "# Heading\n\nHello <Callout>world</Callout>",
+        {
+          locale: "fr",
+          strategy: ImportStrategy.OVERWRITE,
+          format: SupportedFormat.MDX,
+          fileName: "usage.mdx",
+          contentType: "text/mdx",
+        },
+      );
+
+      const response = await callAction(
+        request,
+        "test-org",
+        "test-project",
+        mdxFile.id,
+      );
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.stats).toEqual({
+        total: 1,
+        keysCreated: 0,
+        translationsCreated: 1,
+        translationsUpdated: 0,
+        translationsSkipped: 0,
+      });
+
+      const stored = await db.query.markdownDocumentTranslations.findFirst({
+        where: { projectFileId: mdxFile.id, locale: "fr" },
+      });
+      expect(stored?.content).toBe(
+        "# Heading\n\nHello <Callout>world</Callout>",
+      );
+    });
+
+    it("should skip existing document translations with strategy=skip", async () => {
+      const db = getTestDb();
+      const mdxFile = await createProjectFile(db, {
+        projectId: 1,
+        format: SupportedFormat.MDX,
+        filePath: "docs/<lang>/usage.mdx",
+      });
+      await db.insert(schema.markdownDocumentTranslations).values({
+        projectFileId: mdxFile.id,
+        locale: "fr",
+        content: "# Existing",
+      });
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        mdxFile.id,
+        "# Updated but skipped",
+        {
+          locale: "fr",
+          strategy: ImportStrategy.SKIP,
+          format: SupportedFormat.MDX,
+          fileName: "usage.mdx",
+          contentType: "text/mdx",
+        },
+      );
+
+      const response = await callAction(
+        request,
+        "test-org",
+        "test-project",
+        mdxFile.id,
+      );
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.stats).toEqual({
+        total: 1,
+        keysCreated: 0,
+        translationsCreated: 0,
+        translationsUpdated: 0,
+        translationsSkipped: 1,
+      });
+
+      const stored = await db.query.markdownDocumentTranslations.findFirst({
+        where: { projectFileId: mdxFile.id, locale: "fr" },
+      });
+      expect(stored?.content).toBe("# Existing");
+    });
+
+    it("should return 400 when document upload format does not match file format", async () => {
+      const db = getTestDb();
+      const mdxFile = await createProjectFile(db, {
+        projectId: 1,
+        format: SupportedFormat.MDX,
+        filePath: "docs/<lang>/usage.mdx",
+      });
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        mdxFile.id,
+        "# Hello",
+        {
+          locale: "fr",
+          strategy: ImportStrategy.OVERWRITE,
+          format: SupportedFormat.MARKDOWN,
+          fileName: "usage.md",
+          contentType: "text/markdown",
+        },
+      );
+
+      const response = await callAction(
+        request,
+        "test-org",
+        "test-project",
+        mdxFile.id,
+      );
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe(
+        "Format 'markdown' does not match the file's format 'mdx'. Omit the 'format' field or set it to 'mdx'.",
+      );
     });
   });
 });

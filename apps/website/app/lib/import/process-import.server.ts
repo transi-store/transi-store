@@ -1,4 +1,5 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
+import { getProjectFileById } from "~/lib/project-files.server";
 import { getBranchBySlug, createBranch } from "~/lib/branches.server";
 import { validateImportData } from "./validate-import-data.server";
 import { importTranslations } from "./import-translations.server";
@@ -9,8 +10,14 @@ import {
   SupportedFormat,
   SUPPORTED_FORMATS_LIST,
   getFormatFromFilename,
+  isDocumentFormat,
+  ImportStrategy,
 } from "@transi-store/common";
 import { importFieldsSchema } from "../api-doc/schemas/import";
+import {
+  getDocumentTranslation,
+  saveDocumentTranslation,
+} from "../markdown-documents.server";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -104,6 +111,14 @@ export async function processImport({
     return { success: false, error: `Project "${projectSlug}" not found` };
   }
 
+  const projectFile = await getProjectFileById(project.id, fileId);
+  if (!projectFile) {
+    return {
+      success: false,
+      error: `File "${fileId}" not found in project "${projectSlug}"`,
+    };
+  }
+
   // 6b. Resolve optional branch (create if it doesn't exist)
   let branchId: number | undefined;
   if (branchSlug) {
@@ -141,6 +156,54 @@ export async function processImport({
   }
 
   // 8. Parse file based on format
+  if (isDocumentFormat(projectFile.format)) {
+    if (format !== projectFile.format) {
+      return {
+        success: false,
+        error: `Format '${format}' does not match the file's format '${projectFile.format}'. Omit the 'format' field or set it to '${projectFile.format}'.`,
+      };
+    }
+
+    const existingTranslation = await getDocumentTranslation(fileId, locale);
+    if (strategy === ImportStrategy.SKIP && existingTranslation) {
+      return {
+        success: true,
+        importStats: {
+          total: 1,
+          keysCreated: 0,
+          translationsCreated: 0,
+          translationsUpdated: 0,
+          translationsSkipped: 1,
+        },
+      };
+    }
+
+    await saveDocumentTranslation({
+      projectFileId: fileId,
+      locale,
+      content: fileContent,
+      format: projectFile.format,
+    });
+
+    return {
+      success: true,
+      importStats: {
+        total: 1,
+        keysCreated: 0,
+        translationsCreated: existingTranslation ? 0 : 1,
+        translationsUpdated: existingTranslation ? 1 : 0,
+        translationsSkipped: 0,
+      },
+    };
+  }
+
+  if (isDocumentFormat(format)) {
+    return {
+      success: false,
+      error: `Format '${format}' does not match the file's format '${projectFile.format}'. Omit the 'format' field or set it to '${projectFile.format}'.`,
+    };
+  }
+
   const translator = createTranslationFormat(format);
   const parseResult = translator.parseImport(fileContent);
 
