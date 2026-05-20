@@ -33,6 +33,13 @@ type ProcessImportParams = {
   fileId: number;
 };
 
+function buildFormatMismatchError(
+  requestedFormat: SupportedFormat,
+  fileFormat: string,
+): string {
+  return `Format '${requestedFormat}' does not match the file's format '${fileFormat}'. Omit the 'format' field or set it to '${fileFormat}'.`;
+}
+
 /**
  * Shared import processing logic used by both the UI action and the API endpoint.
  * Handles all validation (file, locale, strategy, format) and import processing.
@@ -160,7 +167,17 @@ export async function processImport({
     if (format !== projectFile.format) {
       return {
         success: false,
-        error: `Format '${format}' does not match the file's format '${projectFile.format}'. Omit the 'format' field or set it to '${projectFile.format}'.`,
+        error: buildFormatMismatchError(format, projectFile.format),
+      };
+    }
+
+    if (
+      strategy !== ImportStrategy.OVERWRITE &&
+      strategy !== ImportStrategy.SKIP
+    ) {
+      return {
+        success: false,
+        error: "Invalid 'strategy' field. Use 'overwrite' or 'skip'",
       };
     }
 
@@ -200,7 +217,7 @@ export async function processImport({
   if (isDocumentFormat(format)) {
     return {
       success: false,
-      error: `Format '${format}' does not match the file's format '${projectFile.format}'. Omit the 'format' field or set it to '${projectFile.format}'.`,
+      error: buildFormatMismatchError(format, projectFile.format),
     };
   }
 
