@@ -81,8 +81,20 @@ export async function getTranslationKeys(
   >;
   let count: number;
 
+  const requestedLocale = options?.locale;
+  const validatedRequestedLocale = requestedLocale
+    ? (
+        await db.query.projectLanguages.findFirst({
+          where: {
+            projectId,
+            locale: requestedLocale,
+          },
+        })
+      )?.locale
+    : undefined;
+
   const effectiveLocale =
-    options?.locale ??
+    validatedRequestedLocale ??
     (
       await db.query.projectLanguages.findFirst({
         where: {
