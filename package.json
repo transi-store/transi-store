@@ -16,7 +16,7 @@
     "start": "yarn workspace @transi-store/website start",
     "download-translations": "NODE_OPTIONS='--require dotenv/config' yarn transi-store",
     "upload-translations": "NODE_OPTIONS='--require dotenv/config' yarn transi-store upload:config",
-    "merge-translations": "NODE_OPTIONS='--require dotenv/config' yarn transi-store merge:config",
+    "merge-translation-branch": "NODE_OPTIONS='--require dotenv/config' yarn transi-store merge",
     "lint:eslint": "eslint .",
     "lint:types": "yarn turbo lint:types",
     "knip": "yarn workspace @transi-store/website react-router typegen && knip",
