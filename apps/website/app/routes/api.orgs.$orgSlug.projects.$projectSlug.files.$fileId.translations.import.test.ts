@@ -732,5 +732,33 @@ describe("Import file-scoped API", () => {
         "Format 'markdown' does not match the file's format 'mdx'. Omit the 'format' field or set it to 'mdx'.",
       );
     });
+
+    it("should return 400 when importing document format into a key/value file", async () => {
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        "# Hello",
+        {
+          locale: "fr",
+          strategy: ImportStrategy.OVERWRITE,
+          format: SupportedFormat.MARKDOWN,
+          fileName: "usage.md",
+          contentType: "text/markdown",
+        },
+      );
+
+      const response = await callAction(
+        request,
+        "test-org",
+        "test-project",
+        projectFile.id,
+      );
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe(
+        "Format 'markdown' stores one document body per locale and cannot be imported into 'json' key/value files. Use a key/value format instead.",
+      );
+    });
   });
 });
