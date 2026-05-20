@@ -59,7 +59,7 @@ lint-types: ## Check TypeScript types
 	docker compose exec app yarn lint:types
 
 knip: ## Analyze unused imports/exports
-	docker compose exec app yarn knip
+	docker compose exec app yarn turbo knip
 
 ## Database
 db-generate: ## Generate database migrations
