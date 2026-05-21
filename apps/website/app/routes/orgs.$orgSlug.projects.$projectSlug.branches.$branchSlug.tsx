@@ -50,6 +50,7 @@ import {
 } from "~/lib/branches.server";
 import {
   getTranslationKeys,
+  getTranslationKeyFilterCounts,
   createTranslationKey,
   getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
@@ -67,6 +68,7 @@ import {
   resolveSort,
   resolveFilter,
 } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/loadTranslationKeys.server";
+import { TranslationFilter } from "~/lib/sort/keySort";
 import { getInstance } from "~/middleware/i18next.server";
 import {
   getBranchesUrl,
@@ -121,6 +123,11 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
       sort,
       locale,
       filter,
+      filterCounts: {
+        [TranslationFilter.ALL]: 0,
+        [TranslationFilter.FUZZY]: 0,
+        [TranslationFilter.MISSING]: 0,
+      },
       deletionCount: 0,
       keyDeletions: [],
       deletionSearch,
@@ -147,17 +154,25 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     );
   }
 
-  const keys = await getTranslationKeys(project.id, {
-    search,
-    limit: LIMIT,
-    offset,
-    sort,
-    branchId: branch.id,
-    branchOnly: true,
-    fileId: selectedFile.id,
-    locale,
-    filter,
-  });
+  const [keys, filterCounts] = await Promise.all([
+    getTranslationKeys(project.id, {
+      search,
+      limit: LIMIT,
+      offset,
+      sort,
+      branchId: branch.id,
+      branchOnly: true,
+      fileId: selectedFile.id,
+      locale,
+      filter,
+    }),
+    getTranslationKeyFilterCounts(project.id, {
+      branchId: branch.id,
+      branchOnly: true,
+      fileId: selectedFile.id,
+      locale,
+    }),
+  ]);
 
   const deletionCount = await getBranchKeyDeletionCount(branch.id, {
     fileId: selectedFile.id,
@@ -188,6 +203,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     sort,
     locale,
     filter,
+    filterCounts,
     deletionCount,
     keyDeletions,
     deletionSearch,
@@ -306,6 +322,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
     sort,
     locale,
     filter,
+    filterCounts,
     deletionCount,
     keyDeletions,
     deletionSearch,
@@ -532,52 +549,48 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                   align={{ base: "stretch", sm: "center" }}
                   gap={3}
                 >
-                  <HStack gap={3} align="center" flexWrap="wrap">
-                    {languages.length > 0 && (
-                      <TranslationsToolbar
-                        languages={languages}
-                        effectiveLocale={effectiveLocale}
-                        filter={filter}
-                        onLocaleChange={(newLocale) =>
-                          navigate(
-                            getBranchUrl(
-                              organization.slug,
-                              project.slug,
-                              branch.slug,
-                              {
-                                fileId: selectedFileId ?? undefined,
-                                search,
-                                sort,
-                                highlight,
-                                locale: newLocale,
-                                filter,
-                              },
-                            ),
-                          )
-                        }
-                        onFilterChange={(newFilter) =>
-                          navigate(
-                            getBranchUrl(
-                              organization.slug,
-                              project.slug,
-                              branch.slug,
-                              {
-                                fileId: selectedFileId ?? undefined,
-                                search,
-                                sort,
-                                highlight,
-                                locale,
-                                filter: newFilter,
-                              },
-                            ),
-                          )
-                        }
-                      />
-                    )}
-                    <Text color="gray">
-                      {t("translations.count", { count })}
-                    </Text>
-                  </HStack>
+                  {languages.length > 0 && (
+                    <TranslationsToolbar
+                      languages={languages}
+                      effectiveLocale={effectiveLocale}
+                      filter={filter}
+                      filterCounts={filterCounts}
+                      onLocaleChange={(newLocale) =>
+                        navigate(
+                          getBranchUrl(
+                            organization.slug,
+                            project.slug,
+                            branch.slug,
+                            {
+                              fileId: selectedFileId ?? undefined,
+                              search,
+                              sort,
+                              highlight,
+                              locale: newLocale,
+                              filter,
+                            },
+                          ),
+                        )
+                      }
+                      onFilterChange={(newFilter) =>
+                        navigate(
+                          getBranchUrl(
+                            organization.slug,
+                            project.slug,
+                            branch.slug,
+                            {
+                              fileId: selectedFileId ?? undefined,
+                              search,
+                              sort,
+                              highlight,
+                              locale,
+                              filter: newFilter,
+                            },
+                          ),
+                        )
+                      }
+                    />
+                  )}
                   {languages.length > 0 && projectFiles.length > 0 && (
                     <Button
                       colorPalette="accent"

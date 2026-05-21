@@ -1,12 +1,4 @@
-import {
-  Heading,
-  HStack,
-  VStack,
-  Button,
-  Box,
-  Text,
-  Stack,
-} from "@chakra-ui/react";
+import { Heading, VStack, Button, Box, Text, Stack } from "@chakra-ui/react";
 import { Link, useActionData, useNavigate, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
@@ -49,6 +41,7 @@ export function TranslationKeysView({ data, context }: Props) {
     sort,
     locale,
     filter,
+    filterCounts,
   } = data;
   const { organization, project, languages } = context;
   const actionData = useActionData<KeyActionData | undefined>();
@@ -68,7 +61,6 @@ export function TranslationKeysView({ data, context }: Props) {
   }, []);
 
   const totalLanguages = languages.length;
-  const count = keys.count;
   const effectiveLocale =
     locale ??
     languages.find((l) => l.isDefault)?.locale ??
@@ -119,6 +111,8 @@ export function TranslationKeysView({ data, context }: Props) {
     navigate,
     highlight,
     selectedFileId,
+    locale,
+    filter,
   ]);
 
   const createKeyError =
@@ -139,38 +133,36 @@ export function TranslationKeysView({ data, context }: Props) {
         align={{ base: "stretch", sm: "center" }}
         gap={{ base: 3, sm: 0 }}
       >
-        <HStack gap={3} align="center" flexWrap="wrap">
-          {languages.length > 0 && (
-            <TranslationsToolbar
-              languages={languages}
-              effectiveLocale={effectiveLocale}
-              filter={filter}
-              onLocaleChange={(newLocale) =>
-                navigate(
-                  getTranslationsUrl(organization.slug, project.slug, {
-                    search,
-                    sort,
-                    fileId: selectedFileId ?? undefined,
-                    locale: newLocale,
-                    filter,
-                  }),
-                )
-              }
-              onFilterChange={(newFilter) =>
-                navigate(
-                  getTranslationsUrl(organization.slug, project.slug, {
-                    search,
-                    sort,
-                    fileId: selectedFileId ?? undefined,
-                    locale,
-                    filter: newFilter,
-                  }),
-                )
-              }
-            />
-          )}
-          <Text color="gray">{t("translations.count", { count })}</Text>
-        </HStack>
+        {languages.length > 0 && (
+          <TranslationsToolbar
+            languages={languages}
+            effectiveLocale={effectiveLocale}
+            filter={filter}
+            filterCounts={filterCounts}
+            onLocaleChange={(newLocale) =>
+              navigate(
+                getTranslationsUrl(organization.slug, project.slug, {
+                  search,
+                  sort,
+                  fileId: selectedFileId ?? undefined,
+                  locale: newLocale,
+                  filter,
+                }),
+              )
+            }
+            onFilterChange={(newFilter) =>
+              navigate(
+                getTranslationsUrl(organization.slug, project.slug, {
+                  search,
+                  sort,
+                  fileId: selectedFileId ?? undefined,
+                  locale,
+                  filter: newFilter,
+                }),
+              )
+            }
+          />
+        )}
         {languages.length > 0 && (
           <Button
             colorPalette="accent"

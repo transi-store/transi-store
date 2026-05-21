@@ -3,6 +3,7 @@ import {
   Portal,
   SegmentGroup,
   Select,
+  Text,
   createListCollection,
 } from "@chakra-ui/react";
 import type { JSX } from "react";
@@ -15,6 +16,7 @@ type TranslationsToolbarProps = {
   languages: Language[];
   effectiveLocale: string;
   filter: TranslationFilter;
+  filterCounts: Record<TranslationFilter, number>;
   onLocaleChange: (locale: string) => void;
   onFilterChange: (filter: TranslationFilter) => void;
 };
@@ -23,6 +25,7 @@ export function TranslationsToolbar({
   languages,
   effectiveLocale,
   filter,
+  filterCounts,
   onLocaleChange,
   onFilterChange,
 }: TranslationsToolbarProps): JSX.Element | null {
@@ -40,7 +43,14 @@ export function TranslationsToolbar({
   });
 
   const filterItems = Object.values(TranslationFilter).map((filterValue) => ({
-    label: t("translations.filter", { filterValue }),
+    label: (
+      <HStack gap={1.5} as="span">
+        <span>{t("translations.filter", { filterValue })}</span>
+        <Text as="span" color="fg.muted" fontSize="xs">
+          {filterCounts[filterValue]}
+        </Text>
+      </HStack>
+    ),
     value: filterValue,
   }));
 

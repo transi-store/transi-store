@@ -223,6 +223,78 @@ export async function getTranslationKeys(
   };
 }
 
+export async function getTranslationKeyFilterCounts(
+  projectId: number,
+  options?: {
+    branchId?: number;
+    branchOnly?: boolean;
+    fileId?: number;
+    locale?: string;
+  },
+): Promise<Record<TranslationFilter, number>> {
+  const requestedLocale = options?.locale;
+  const validatedRequestedLocale = requestedLocale
+    ? (
+        await db.query.projectLanguages.findFirst({
+          where: { projectId, locale: requestedLocale },
+        })
+      )?.locale
+    : undefined;
+
+  const effectiveLocale =
+    validatedRequestedLocale ??
+    (
+      await db.query.projectLanguages.findFirst({
+        where: { projectId, isDefault: true },
+      })
+    )?.locale;
+
+  const whereCondition = and(
+    eq(schema.translationKeys.projectId, projectId),
+    branchFilter({
+      branchId: options?.branchId,
+      branchOnly: options?.branchOnly,
+    }),
+    options?.fileId !== undefined
+      ? eq(schema.translationKeys.fileId, options.fileId)
+      : undefined,
+  );
+
+  if (!effectiveLocale) {
+    const allCount = await db.$count(schema.translationKeys, whereCondition);
+    return {
+      [TranslationFilter.ALL]: allCount,
+      [TranslationFilter.FUZZY]: 0,
+      [TranslationFilter.MISSING]: 0,
+    };
+  }
+
+  const missingCondition = sql`NOT EXISTS (
+    SELECT 1 FROM ${schema.translations}
+    WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+      AND ${schema.translations.locale} = ${effectiveLocale}
+  )`;
+
+  const fuzzyCondition = sql`EXISTS (
+    SELECT 1 FROM ${schema.translations}
+    WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+      AND ${schema.translations.locale} = ${effectiveLocale}
+      AND ${schema.translations.isFuzzy} IS TRUE
+  )`;
+
+  const [allCount, missingCount, fuzzyCount] = await Promise.all([
+    db.$count(schema.translationKeys, whereCondition),
+    db.$count(schema.translationKeys, and(whereCondition, missingCondition)),
+    db.$count(schema.translationKeys, and(whereCondition, fuzzyCondition)),
+  ]);
+
+  return {
+    [TranslationFilter.ALL]: allCount,
+    [TranslationFilter.FUZZY]: fuzzyCount,
+    [TranslationFilter.MISSING]: missingCount,
+  };
+}
+
 export async function getTranslationKeyById(keyId: number) {
   return await db.query.translationKeys.findFirst({
     where: { id: keyId },
