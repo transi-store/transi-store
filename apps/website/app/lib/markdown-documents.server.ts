@@ -66,6 +66,20 @@ export async function getDocumentTranslation(
 }
 
 /**
+ * Fetch all document rows for a single (projectFile, locale) across main and
+ * every branch, newest first.
+ */
+export async function getDocumentTranslationsAcrossBranches(
+  projectFileId: number,
+  locale: string,
+): Promise<MarkdownDocumentTranslation[]> {
+  return await db.query.markdownDocumentTranslations.findMany({
+    where: { projectFileId, locale },
+    orderBy: (t, { desc }) => [desc(t.updatedAt), desc(t.id)],
+  });
+}
+
+/**
  * Bulk-fetch the section states for a list of translation rows. Returns an
  * empty array when the list is empty.
  */

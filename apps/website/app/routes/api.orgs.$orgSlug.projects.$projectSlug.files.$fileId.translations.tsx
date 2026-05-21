@@ -8,7 +8,10 @@ import { getProjectFileById } from "~/lib/project-files.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
-import { getDocumentTranslation } from "~/lib/markdown-documents.server";
+import {
+  getDocumentTranslation,
+  getDocumentTranslationsAcrossBranches,
+} from "~/lib/markdown-documents.server";
 import { orgContext } from "~/middleware/api-auth.server";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
@@ -110,14 +113,17 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   if (isDocumentFormat(file.format)) {
+    let translation;
     if (allBranches) {
-      return apiError(
-        400,
-        "The 'branch=@all' query value is not supported for document files.",
+      const translations = await getDocumentTranslationsAcrossBranches(
+        file.id,
+        locale,
       );
+      translation = translations[0];
+    } else {
+      translation = await getDocumentTranslation(file.id, locale, branchId);
     }
 
-    let translation = await getDocumentTranslation(file.id, locale, branchId);
     if (!translation && branchId) {
       translation = await getDocumentTranslation(file.id, locale);
     }
