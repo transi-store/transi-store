@@ -67,7 +67,8 @@ export async function getDocumentTranslation(
 
 /**
  * Fetch all document rows for a single (projectFile, locale) across main and
- * every branch, newest first.
+ * every branch, newest first. `id DESC` is used as a stable tie-breaker when
+ * `updatedAt` timestamps are equal.
  */
 export async function getDocumentTranslationsAcrossBranches(
   projectFileId: number,
