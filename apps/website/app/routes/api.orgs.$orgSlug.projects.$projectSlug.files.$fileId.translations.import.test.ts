@@ -5,7 +5,6 @@ import { action } from "./api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.
 import { orgContext } from "~/middleware/api-auth.server";
 import {
   cleanupDb,
-  createBranch,
   createApiKey,
   createOrganization,
   createProject,
@@ -767,17 +766,12 @@ describe("Import file-scoped API", () => {
       );
     });
 
-    it("should import a document file in branch scope without overriding main", async () => {
+    it("should return 400 when importing a document file with a branch parameter", async () => {
       const db = getTestDb();
       const mdxFile = await createProjectFile(db, {
         projectId: 1,
         format: SupportedFormat.MDX,
         filePath: "docs/<lang>/usage.mdx",
-      });
-      await db.insert(schema.markdownDocumentTranslations).values({
-        projectFileId: mdxFile.id,
-        locale: "fr",
-        content: "# Main content",
       });
 
       const request = buildImportRequestWithRawFile(
@@ -801,117 +795,11 @@ describe("Import file-scoped API", () => {
         "test-project",
         mdxFile.id,
       );
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(400);
       const data = await response.json();
-      expect(data.success).toBe(true);
-      expect(data.stats).toEqual({
-        total: 1,
-        keysCreated: 0,
-        translationsCreated: 1,
-        translationsUpdated: 0,
-        translationsSkipped: 0,
-      });
-
-      const branch = await db.query.branches.findFirst({
-        where: { projectId: 1, slug: "feature-branch" },
-      });
-      expect(branch).toBeTruthy();
-
-      const mainTranslation =
-        await db.query.markdownDocumentTranslations.findFirst({
-          where: {
-            projectFileId: mdxFile.id,
-            locale: "fr",
-            branchId: { isNull: true },
-          },
-        });
-      expect(mainTranslation?.content).toBe("# Main content");
-
-      const branchTranslation =
-        await db.query.markdownDocumentTranslations.findFirst({
-          where: {
-            projectFileId: mdxFile.id,
-            locale: "fr",
-            branchId: branch!.id,
-          },
-        });
-      expect(branchTranslation?.content).toBe("# Hello");
-    });
-
-    it("should skip existing branch-scoped document translations with strategy=skip", async () => {
-      const db = getTestDb();
-      const mdxFile = await createProjectFile(db, {
-        projectId: 1,
-        format: SupportedFormat.MDX,
-        filePath: "docs/<lang>/usage.mdx",
-      });
-      const branch = await createBranch(db, 1, {
-        name: "feature-branch",
-        slug: "feature-branch",
-      });
-
-      await db.insert(schema.markdownDocumentTranslations).values({
-        projectFileId: mdxFile.id,
-        locale: "fr",
-        content: "# Main content",
-      });
-      await db.insert(schema.markdownDocumentTranslations).values({
-        projectFileId: mdxFile.id,
-        branchId: branch.id,
-        locale: "fr",
-        content: "# Existing branch content",
-      });
-
-      const request = buildImportRequestWithRawFile(
-        "test-org",
-        "test-project",
-        mdxFile.id,
-        "# Updated but skipped",
-        {
-          locale: "fr",
-          strategy: ImportStrategy.SKIP,
-          format: SupportedFormat.MDX,
-          fileName: "usage.mdx",
-          contentType: "text/mdx",
-          branch: "feature-branch",
-        },
+      expect(data.error).toBe(
+        "Branch-scoped document imports are not supported by this endpoint.",
       );
-
-      const response = await callAction(
-        request,
-        "test-org",
-        "test-project",
-        mdxFile.id,
-      );
-      expect(response.status).toBe(200);
-      const data = await response.json();
-      expect(data.stats).toEqual({
-        total: 1,
-        keysCreated: 0,
-        translationsCreated: 0,
-        translationsUpdated: 0,
-        translationsSkipped: 1,
-      });
-
-      const mainTranslation =
-        await db.query.markdownDocumentTranslations.findFirst({
-          where: {
-            projectFileId: mdxFile.id,
-            locale: "fr",
-            branchId: { isNull: true },
-          },
-        });
-      expect(mainTranslation?.content).toBe("# Main content");
-
-      const branchTranslation =
-        await db.query.markdownDocumentTranslations.findFirst({
-          where: {
-            projectFileId: mdxFile.id,
-            locale: "fr",
-            branchId: branch.id,
-          },
-        });
-      expect(branchTranslation?.content).toBe("# Existing branch content");
     });
   });
 });

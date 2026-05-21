@@ -21,7 +21,11 @@ import {
   redirect,
   Form,
 } from "react-router";
-import { FORMAT_LABELS, type SupportedFormat } from "@transi-store/common";
+import {
+  FORMAT_LABELS,
+  isDocumentFormat,
+  SupportedFormat,
+} from "@transi-store/common";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
 import { useTranslation } from "react-i18next";
 import {
@@ -55,7 +59,9 @@ import {
   getTranslationKeyByName,
 } from "~/lib/translation-keys.server";
 import { getProjectFiles } from "~/lib/project-files.server";
+import { getProjectFileTranslations } from "~/lib/markdown-documents.server";
 import { TranslationKeyDrawer } from "~/components/translation-key";
+import { MarkdownTranslateReadOnly } from "~/components/markdown-translate/MarkdownTranslateReadOnly";
 import {
   TranslationKeyModal,
   TRANSLATIONS_KEY_MODEL_MODE,
@@ -110,6 +116,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   if (projectFiles.length === 0) {
     return {
+      mode: "keys" as const,
       organization,
       project,
       branch,
@@ -154,6 +161,29 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     );
   }
 
+  if (isDocumentFormat(selectedFile.format)) {
+    // Documents are stored only on main; the branch view shows main content
+    // read-only. Editing requires leaving the branch.
+    const translations = await getProjectFileTranslations(selectedFile.id);
+    const contentByLocale: Record<string, string> = {};
+    for (const lang of languages) {
+      contentByLocale[lang.locale] = "";
+    }
+    for (const tr of translations) {
+      contentByLocale[tr.locale] = tr.content;
+    }
+    return {
+      mode: "document" as const,
+      organization,
+      project,
+      branch,
+      languages,
+      projectFiles,
+      selectedFile,
+      contentByLocale,
+    };
+  }
+
   const [keys, filterCounts] = await Promise.all([
     getTranslationKeys(project.id, {
       search,
@@ -190,6 +220,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     : { data: [], count: 0 };
 
   return {
+    mode: "keys" as const,
     organization,
     project,
     branch,
@@ -308,6 +339,22 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function BranchDetail({ loaderData }: Route.ComponentProps) {
+  if (loaderData.mode === "document") {
+    return <BranchDocumentDetail loaderData={loaderData} />;
+  }
+  return <BranchKeysDetail loaderData={loaderData} />;
+}
+
+type KeysLoaderData = Extract<
+  Route.ComponentProps["loaderData"],
+  { mode: "keys" }
+>;
+type DocumentLoaderData = Extract<
+  Route.ComponentProps["loaderData"],
+  { mode: "document" }
+>;
+
+function BranchKeysDetail({ loaderData }: { loaderData: KeysLoaderData }) {
   const {
     organization,
     project,
@@ -510,8 +557,7 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                 >
                   <Code fontSize="xs">{file.filePath}</Code>
                   <Badge size="xs" ml={2}>
-                    {FORMAT_LABELS[file.format as SupportedFormat] ??
-                      file.format}
+                    {FORMAT_LABELS[file.format] ?? file.format}
                   </Badge>
                 </Tabs.Trigger>
               ))}
@@ -879,6 +925,145 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
             fileId={selectedFileId}
           />
         )}
+      </VStack>
+    </Container>
+  );
+}
+
+function BranchDocumentDetail({
+  loaderData,
+}: {
+  loaderData: DocumentLoaderData;
+}) {
+  const {
+    organization,
+    project,
+    branch,
+    languages,
+    projectFiles,
+    selectedFile,
+    contentByLocale,
+  } = loaderData;
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const navigate = useNavigate();
+  const isSubmitting = navigation.state === "submitting";
+
+  const currentUrl = getBranchUrl(
+    organization.slug,
+    project.slug,
+    branch.slug,
+    { fileId: selectedFile.id },
+  );
+
+  const isMdx = selectedFile.format === SupportedFormat.MDX;
+  const normalizedLanguages = languages.map((l) => ({
+    locale: l.locale,
+    isDefault: l.isDefault ?? false,
+  }));
+
+  return (
+    <Container maxW="container.xl" py={5}>
+      <VStack gap={6} align="stretch">
+        <ProjectBreadcrumb
+          organizationSlug={organization.slug}
+          organizationName={organization.name}
+          projectSlug={project.slug}
+          projectName={project.name}
+          items={[
+            {
+              label: t("branches.title"),
+              to: getBranchesUrl(organization.slug, project.slug),
+            },
+            { label: branch.name, to: currentUrl },
+          ]}
+        />
+
+        <Stack
+          direction={{ base: "column", sm: "row" }}
+          justify="space-between"
+          align={{ base: "stretch", sm: "center" }}
+          gap={{ base: 3, sm: 0 }}
+        >
+          <Box>
+            <HStack>
+              <LuGitBranch />
+              <Heading as="h2" size="lg">
+                {branch.name}
+              </Heading>
+              <Badge colorPalette="green" size="sm">
+                {t("branches.status.open")}
+              </Badge>
+            </HStack>
+            {branch.description && (
+              <Text color="fg.muted" mt={1}>
+                {branch.description}
+              </Text>
+            )}
+          </Box>
+          <HStack gap={2} flexWrap="wrap">
+            <Button asChild size="sm" colorPalette="purple" variant="outline">
+              <Link
+                to={getBranchMergeUrl(
+                  organization.slug,
+                  project.slug,
+                  branch.slug,
+                )}
+              >
+                <LuGitMerge /> {t("branches.merge")}
+              </Link>
+            </Button>
+            <Form method="post">
+              <input type="hidden" name="_action" value={BranchAction.Close} />
+              <Button
+                type="submit"
+                size="sm"
+                colorPalette="red"
+                variant="outline"
+                loading={isSubmitting}
+                onClick={(e) => {
+                  if (!confirm(t("branches.close.confirm"))) {
+                    e.preventDefault();
+                  }
+                }}
+              >
+                <LuTrash2 /> {t("branches.close")}
+              </Button>
+            </Form>
+          </HStack>
+        </Stack>
+
+        <Tabs.Root value={String(selectedFile.id)} variant="line" size="sm">
+          <Tabs.List>
+            {projectFiles.map((file) => (
+              <Tabs.Trigger
+                key={file.id}
+                value={String(file.id)}
+                cursor="pointer"
+                onClick={() => {
+                  if (file.id === selectedFile.id) return;
+                  navigate(
+                    getBranchUrl(organization.slug, project.slug, branch.slug, {
+                      fileId: file.id,
+                    }),
+                  );
+                }}
+              >
+                <Code fontSize="xs">{file.filePath}</Code>
+                <Badge size="xs" ml={2}>
+                  {FORMAT_LABELS[file.format as SupportedFormat] ?? file.format}
+                </Badge>
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+        </Tabs.Root>
+
+        <MarkdownTranslateReadOnly
+          filePath={selectedFile.filePath}
+          isMdx={isMdx}
+          languages={normalizedLanguages}
+          contentByLocale={contentByLocale}
+        />
       </VStack>
     </Container>
   );

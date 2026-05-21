@@ -126,6 +126,13 @@ export async function processImport({
   }
 
   const targetIsDocument = isDocumentFormat(projectFile.format);
+  if (targetIsDocument && branchSlug) {
+    return {
+      success: false,
+      error:
+        "Branch-scoped document imports are not supported by this endpoint.",
+    };
+  }
 
   // 6. Resolve optional branch (create if it doesn't exist)
   let branchId: number | undefined;
@@ -187,11 +194,7 @@ export async function processImport({
 
   // 9. Parse file based on format
   if (targetIsDocument) {
-    const existingTranslation = await getDocumentTranslation(
-      fileId,
-      locale,
-      branchId,
-    );
+    const existingTranslation = await getDocumentTranslation(fileId, locale);
     if (strategy === ImportStrategy.SKIP && existingTranslation) {
       return {
         success: true,
@@ -208,7 +211,6 @@ export async function processImport({
     await saveDocumentTranslation({
       projectFileId: fileId,
       locale,
-      branchId,
       content: fileContent,
       format: projectFile.format,
     });

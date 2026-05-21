@@ -261,7 +261,7 @@ Notes:
 
 - Markdown and MDX files store one document body per locale; the response is the raw body.
 - The `format` query parameter is optional. When set, it must equal the file's stored format (`markdown` or `mdx`); requesting `json`, `yaml`, etc. on a markdown/mdx file returns 400, and requesting `markdown`/`mdx` on a key/value file also returns 400.
-- `branch=@all` is accepted for markdown/mdx files and returns the most recently updated saved body for that locale across main + branch-scoped rows.
+- The `branch` query parameter is accepted but ignored: document content lives on main and is returned regardless of the branch value.
 - A 404 is returned only when the locale is configured on the project but no document body has been saved yet for it.
 
 ## Response headers
