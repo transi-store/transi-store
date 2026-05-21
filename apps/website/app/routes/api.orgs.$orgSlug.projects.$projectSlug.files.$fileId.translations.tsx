@@ -8,7 +8,10 @@ import { getProjectFileById } from "~/lib/project-files.server";
 import { getProjectTranslations } from "~/lib/translation-keys.server";
 import { getBranchBySlug } from "~/lib/branches.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
-import { getDocumentTranslation } from "~/lib/markdown-documents.server";
+import {
+  getDocumentTranslation,
+  getDocumentTranslationsAcrossBranches,
+} from "~/lib/markdown-documents.server";
 import { orgContext } from "~/middleware/api-auth.server";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.files.$fileId.translations";
 import { exportQuerySchema } from "~/lib/api-doc/schemas/export";
@@ -100,8 +103,30 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     );
   }
 
+  let branchId: number | undefined;
+  const allBranches = branchParam === ALL_BRANCHES_VALUE;
+  if (branchParam && !allBranches) {
+    const branch = await getBranchBySlug(project.id, branchParam);
+    if (branch) {
+      branchId = branch.id;
+    }
+  }
+
   if (isDocumentFormat(file.format)) {
-    const translation = await getDocumentTranslation(file.id, locale);
+    let translation;
+    if (allBranches) {
+      const translations = await getDocumentTranslationsAcrossBranches(
+        file.id,
+        locale,
+      );
+      translation = translations[0];
+    } else {
+      translation = await getDocumentTranslation(file.id, locale, branchId);
+    }
+
+    if (!translation && branchId) {
+      translation = await getDocumentTranslation(file.id, locale);
+    }
     if (!translation) {
       return apiError(404, `No translations found for locale '${locale}'`);
     }
@@ -119,15 +144,6 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
-  }
-
-  let branchId: number | undefined;
-  const allBranches = branchParam === ALL_BRANCHES_VALUE;
-  if (branchParam && !allBranches) {
-    const branch = await getBranchBySlug(project.id, branchParam);
-    if (branch) {
-      branchId = branch.id;
-    }
   }
 
   const projectTranslations = await getProjectTranslations(

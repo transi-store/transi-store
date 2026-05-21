@@ -2,7 +2,7 @@
 
 ## Overview
 
-The import system lets you bulk-load translations from files. Supported formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, and PHP. It supports two strategies: overwrite existing translations or preserve them.
+The import system lets you bulk-load translations from files. Supported formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, PHP, Markdown, and MDX. It supports two strategies: overwrite existing translations or preserve them.
 
 ## Supported formats
 
@@ -98,6 +98,15 @@ return [
 ];
 ```
 
+### Markdown / MDX documents
+
+Document-format files (`.md`, `.markdown`, `.mdx`) are imported as a single
+document body per locale into `markdown_document_translations` (not as
+key/value pairs). The import strategy still applies:
+
+- **overwrite** updates the stored document body for the locale
+- **skip** keeps the existing body when a locale row already exists
+
 ## User interface
 
 Route: `/orgs/:orgSlug/projects/:projectSlug/import-export`
@@ -156,7 +165,7 @@ After:
 ### 1. Validation
 
 - File size: max 5 MB
-- Format detection: explicit `format` param, or inferred from file extension (`.json`, `.xliff`, `.xlf`, `.yaml`, `.yml`, `.csv`, `.po`, `.ini`, `.php`)
+- Format detection: explicit `format` param, or inferred from file extension (`.json`, `.xliff`, `.xlf`, `.yaml`, `.yml`, `.csv`, `.po`, `.ini`, `.php`, `.md`, `.markdown`, `.mdx`)
 - Parse file content
 - Structure: flat object only (JSON), or valid XLIFF 2.0
 - Keys: non-empty strings, max 500 chars
@@ -197,6 +206,7 @@ All operations run in a single transaction:
 - **Import orchestrator**: `apps/website/app/lib/import/process-import.server.ts`
 - **Validation**: `apps/website/app/lib/import/validate-import-data.server.ts`
 - **DB import logic**: `apps/website/app/lib/import/import-translations.server.ts`
+- **Document import persistence**: `apps/website/app/lib/markdown-documents.server.ts`
 - **Format classes**: `apps/website/app/lib/format/json-format.server.ts`, `apps/website/app/lib/format/xliff-format.server.ts`, `apps/website/app/lib/format/yaml-format.server.ts`, `apps/website/app/lib/format/csv-format.server.ts`, `apps/website/app/lib/format/po-format.server.ts`, `apps/website/app/lib/format/ini-format.server.ts`, `apps/website/app/lib/format/php-format.server.ts`
 - **Factory**: `apps/website/app/lib/format/format-factory.server.ts`
 

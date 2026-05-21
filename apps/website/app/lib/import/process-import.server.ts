@@ -1,4 +1,5 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
+import { getProjectFileById } from "~/lib/project-files.server";
 import { getBranchBySlug, createBranch } from "~/lib/branches.server";
 import { validateImportData } from "./validate-import-data.server";
 import { importTranslations } from "./import-translations.server";
@@ -9,8 +10,14 @@ import {
   SupportedFormat,
   SUPPORTED_FORMATS_LIST,
   getFormatFromFilename,
+  isDocumentFormat,
+  ImportStrategy,
 } from "@transi-store/common";
 import { importFieldsSchema } from "../api-doc/schemas/import";
+import {
+  getDocumentTranslation,
+  saveDocumentTranslation,
+} from "../markdown-documents.server";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -25,6 +32,20 @@ type ProcessImportParams = {
   branchSlug?: string;
   fileId: number;
 };
+
+function buildFormatMismatchError(
+  requestedFormat: SupportedFormat,
+  fileFormat: string,
+): string {
+  return `Format '${requestedFormat}' does not match the file's format '${fileFormat}'. Omit the 'format' field or set it to '${fileFormat}'.`;
+}
+
+function buildDocumentToKeyValueFormatError(
+  requestedFormat: SupportedFormat,
+  fileFormat: string,
+): string {
+  return `Format '${requestedFormat}' stores one document body per locale and cannot be imported into '${fileFormat}' key/value files. Use a key/value format instead.`;
+}
 
 /**
  * Shared import processing logic used by both the UI action and the API endpoint.
@@ -90,21 +111,23 @@ export async function processImport({
     format = detected;
   }
 
-  // 5. Read file content
-  let fileContent: string;
-  try {
-    fileContent = await file.text();
-  } catch (_error) {
-    return { success: false, error: "Unable to read file content" };
-  }
-
-  // 6. Resolve project
+  // 5. Resolve project
   const project = await getProjectBySlug(organizationId, projectSlug);
   if (!project) {
     return { success: false, error: `Project "${projectSlug}" not found` };
   }
 
-  // 6b. Resolve optional branch (create if it doesn't exist)
+  const projectFile = await getProjectFileById(project.id, fileId);
+  if (!projectFile) {
+    return {
+      success: false,
+      error: `File "${fileId}" not found in project "${projectSlug}"`,
+    };
+  }
+
+  const targetIsDocument = isDocumentFormat(projectFile.format);
+
+  // 6. Resolve optional branch (create if it doesn't exist)
   let branchId: number | undefined;
   if (branchSlug) {
     let branch = await getBranchBySlug(project.id, branchSlug);
@@ -140,7 +163,68 @@ export async function processImport({
     };
   }
 
-  // 8. Parse file based on format
+  if (targetIsDocument && format !== projectFile.format) {
+    return {
+      success: false,
+      error: buildFormatMismatchError(format, projectFile.format),
+    };
+  }
+
+  if (!targetIsDocument && isDocumentFormat(format)) {
+    return {
+      success: false,
+      error: buildDocumentToKeyValueFormatError(format, projectFile.format),
+    };
+  }
+
+  // 8. Read file content (after format compatibility checks)
+  let fileContent: string;
+  try {
+    fileContent = await file.text();
+  } catch (_error) {
+    return { success: false, error: "Unable to read file content" };
+  }
+
+  // 9. Parse file based on format
+  if (targetIsDocument) {
+    const existingTranslation = await getDocumentTranslation(
+      fileId,
+      locale,
+      branchId,
+    );
+    if (strategy === ImportStrategy.SKIP && existingTranslation) {
+      return {
+        success: true,
+        importStats: {
+          total: 1,
+          keysCreated: 0,
+          translationsCreated: 0,
+          translationsUpdated: 0,
+          translationsSkipped: 1,
+        },
+      };
+    }
+
+    await saveDocumentTranslation({
+      projectFileId: fileId,
+      locale,
+      branchId,
+      content: fileContent,
+      format: projectFile.format,
+    });
+
+    return {
+      success: true,
+      importStats: {
+        total: 1,
+        keysCreated: 0,
+        translationsCreated: existingTranslation ? 0 : 1,
+        translationsUpdated: existingTranslation ? 1 : 0,
+        translationsSkipped: 0,
+      },
+    };
+  }
+
   const translator = createTranslationFormat(format);
   const parseResult = translator.parseImport(fileContent);
 
@@ -152,7 +236,7 @@ export async function processImport({
     };
   }
 
-  // 9. Validate data structure
+  // 10. Validate data structure
   const validationErrors = validateImportData(parseResult.data!);
   if (validationErrors.length > 0) {
     return {
@@ -162,7 +246,7 @@ export async function processImport({
     };
   }
 
-  // 10. Import translations
+  // 11. Import translations
   const result = await importTranslations({
     projectId: project.id,
     locale,

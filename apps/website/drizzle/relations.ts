@@ -129,6 +129,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.markdownDocumentTranslations.projectFileId,
       to: r.projectFiles.id,
     }),
+    branch: r.one.branches({
+      from: r.markdownDocumentTranslations.branchId,
+      to: r.branches.id,
+    }),
     sectionStates: r.many.markdownSectionStates(),
   },
 
