@@ -9,7 +9,6 @@ import {
   serial,
   integer,
   customType,
-  unique,
 } from "drizzle-orm/pg-core";
 import { AI_PROVIDERS } from "~/lib/ai-providers";
 import { BRANCH_STATUS } from "~/lib/branches";
@@ -308,18 +307,16 @@ export const markdownDocumentTranslations = pgTable(
     projectFileId: integer("project_file_id")
       .notNull()
       .references(() => projectFiles.id, { onDelete: "cascade" }),
-    branchId: integer("branch_id").references(() => branches.id, {
-      onDelete: "cascade",
-    }),
     locale: varchar("locale", { length: 10 }).notNull(),
     content: text("content").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    unique("unique_md_translation_file_locale_branch")
-      .on(table.projectFileId, table.locale, table.branchId)
-      .nullsNotDistinct(),
+    uniqueIndex("unique_md_translation_file_locale").on(
+      table.projectFileId,
+      table.locale,
+    ),
   ],
 );
 

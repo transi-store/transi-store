@@ -286,16 +286,10 @@ describe("Export file-scoped loader", () => {
       projectFileId: number,
       locale: string,
       content: string,
-      branchId?: number,
     ): Promise<void> {
       await getTestDb()
         .insert(schema.markdownDocumentTranslations)
-        .values({
-          projectFileId,
-          locale,
-          content,
-          branchId: branchId ?? null,
-        });
+        .values({ projectFileId, locale, content });
     }
 
     it("should return the markdown document body for the requested locale", async () => {
@@ -426,33 +420,23 @@ describe("Export file-scoped loader", () => {
       expect(data.error).toBe("No translations found for locale 'es'");
     });
 
-    it("should allow branch=@all on document files and return the newest content", async () => {
+    it("should ignore the branch query parameter on document files and return the main content", async () => {
       const db = getTestDb();
       await createProjectLanguage(db, 1);
       const file = await createMarkdownFile(
         SupportedFormat.MARKDOWN,
         "docs/<lang>/intro.md",
       );
-      const branch = await createBranch(db, 1, {
-        name: "feat",
-        slug: "feat",
-      });
-
+      await createBranch(db, 1, { name: "feat", slug: "feat" });
       await saveDocumentTranslation(file.id, "en", "# Main");
-      await saveDocumentTranslation(
-        file.id,
-        "en",
-        "# Branch latest",
-        branch.id,
-      );
 
       const response = await callLoader(
-        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=en&branch=@all`,
+        `https://example.com/api/orgs/test-org/projects/test-project/files/${file.id}/translations?locale=en&branch=feat`,
         file.id,
       );
 
       expect(response.status).toBe(200);
-      expect(await response.text()).toBe("# Branch latest");
+      expect(await response.text()).toBe("# Main");
     });
   });
 
