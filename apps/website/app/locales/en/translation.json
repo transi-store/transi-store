@@ -1,4 +1,6 @@
 {
+  "api.branchMerge.branchNotFound": "Branch \"{branchSlug}\" not found",
+  "api.branchMerge.branchNotOpen": "Branch \"{branchSlug}\" is already merged or closed",
   "api.methodNotAllowed": "Method not allowed",
   "api.methodNotAllowed (copy)": "Method not allowed",
   "api.translate.keyNotFound": "Key not found",
