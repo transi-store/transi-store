@@ -16,8 +16,10 @@ import {
   getTranslationsUrl,
   removeUndefinedValues,
 } from "~/lib/routes-helpers";
-import { TranslationKeysSort } from "~/lib/sort/keySort";
+import { TranslationFilter, TranslationKeysSort } from "~/lib/sort/keySort";
 import type { FormEvent } from "react";
+
+type Language = { locale: string; isDefault: boolean | null };
 
 type TranslationsSearchBarProps = {
   search?: string;
@@ -26,6 +28,9 @@ type TranslationsSearchBarProps = {
   projectSlug: string;
   branchSlug?: string;
   fileId?: number;
+  languages: Language[];
+  selectedLocale?: string;
+  filter: TranslationFilter;
 };
 
 export function TranslationsSearchBar({
@@ -35,16 +40,33 @@ export function TranslationsSearchBar({
   projectSlug,
   branchSlug,
   fileId,
+  languages,
+  selectedLocale,
+  filter,
 }: TranslationsSearchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const submit = useSubmit();
 
+  // Resolve which locale is currently displayed (URL param or project default)
+  const defaultLocale =
+    languages.find((l) => l.isDefault)?.locale ?? languages[0]?.locale;
+  const activeLocale = selectedLocale ?? defaultLocale;
+
   const buildUrl = (queryParams?: {
     search?: string | null;
     sort?: string | null;
+    locale?: string | null;
+    filter?: string | null;
   }) => {
-    const params = { ...queryParams, fileId };
+    const params = {
+      search,
+      sort,
+      locale: activeLocale,
+      filter,
+      ...queryParams,
+      fileId,
+    };
     if (branchSlug) {
       return getBranchUrl(organizationSlug, projectSlug, branchSlug, params);
     }
@@ -76,9 +98,7 @@ export function TranslationsSearchBar({
       (option) => search || option.value !== TranslationKeysSort.RELEVANCE,
     ); // Do not display "Relevance" in the sort options, as it is an implicit sort when a search is performed
 
-  const sortCollection = createListCollection({
-    items: sortOptions,
-  });
+  const sortCollection = createListCollection({ items: sortOptions });
 
   return (
     <Form method="get" onSubmit={handleFormSubmit}>
@@ -92,6 +112,7 @@ export function TranslationsSearchBar({
                   onClick={() => {
                     navigate(
                       buildUrl({
+                        search: null,
                         sort:
                           sort === TranslationKeysSort.RELEVANCE
                             ? undefined
@@ -124,6 +145,8 @@ export function TranslationsSearchBar({
                   search,
                   sort: e.value[0],
                   fileId,
+                  locale: activeLocale,
+                  filter,
                 }),
                 {
                   method: "get",
@@ -140,7 +163,6 @@ export function TranslationsSearchBar({
               <Select.Trigger>
                 <Select.ValueText />
               </Select.Trigger>
-
               <Select.IndicatorGroup>
                 <Select.Indicator />
               </Select.IndicatorGroup>

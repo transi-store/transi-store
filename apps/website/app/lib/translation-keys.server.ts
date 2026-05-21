@@ -7,11 +7,12 @@ import {
   isNull,
   notInArray,
   or,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
-import { TranslationKeysSort } from "./sort/keySort";
+import { TranslationFilter, TranslationKeysSort } from "./sort/keySort";
 import type { TranslationKey } from "../../drizzle/schema";
 
 type TranslationKeysReturnType = {
@@ -28,6 +29,33 @@ type TranslationKeysReturnType = {
  *
  * Always excludes soft-deleted keys (deletedAt IS NULL).
  */
+/**
+ * Build a correlated subquery condition that selects translation keys matching
+ * the given filter for the given locale. Returns undefined for the ALL filter.
+ * Uses EXISTS / NOT EXISTS to avoid large IN (...) lists.
+ */
+function translationFilterCondition(
+  filter: TranslationFilter,
+  locale: string,
+): SQL | undefined {
+  if (filter === TranslationFilter.MISSING) {
+    return sql`NOT EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${locale}
+    )`;
+  }
+  if (filter === TranslationFilter.FUZZY) {
+    return sql`EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${locale}
+        AND ${schema.translations.isFuzzy} IS TRUE
+    )`;
+  }
+  return undefined;
+}
+
 function branchFilter({
   branchId,
   branchOnly,
@@ -68,6 +96,8 @@ export async function getTranslationKeys(
     branchId?: number;
     branchOnly?: boolean;
     fileId?: number;
+    locale?: string;
+    filter?: TranslationFilter;
   },
 ): Promise<TranslationKeysReturnType> {
   let keys: Array<
@@ -78,12 +108,33 @@ export async function getTranslationKeys(
   >;
   let count: number;
 
-  const defaultLocale = await db.query.projectLanguages.findFirst({
-    where: {
-      projectId,
-      isDefault: true,
-    },
-  });
+  const requestedLocale = options?.locale;
+  const validatedRequestedLocale = requestedLocale
+    ? (
+        await db.query.projectLanguages.findFirst({
+          where: {
+            projectId,
+            locale: requestedLocale,
+          },
+        })
+      )?.locale
+    : undefined;
+
+  const effectiveLocale =
+    validatedRequestedLocale ??
+    (
+      await db.query.projectLanguages.findFirst({
+        where: {
+          projectId,
+          isDefault: true,
+        },
+      })
+    )?.locale;
+
+  const filterCondition =
+    options?.filter && effectiveLocale
+      ? translationFilterCondition(options.filter, effectiveLocale)
+      : undefined;
 
   const branchCondition = branchFilter({
     branchId: options?.branchId,
@@ -102,6 +153,7 @@ export async function getTranslationKeys(
         branchId: options?.branchId,
         branchOnly: options?.branchOnly,
         fileId: options?.fileId,
+        filterCondition,
       },
     );
     keys = keysWithSimilarity.map(
@@ -123,6 +175,7 @@ export async function getTranslationKeys(
       options?.fileId !== undefined
         ? eq(schema.translationKeys.fileId, options.fileId)
         : undefined,
+      filterCondition,
     );
 
     keys = await db
@@ -175,9 +228,80 @@ export async function getTranslationKeys(
         : [],
       defaultTranslation:
         translationsByKey[key.id]?.find(
-          (t) => t.keyId === key.id && t.locale === defaultLocale?.locale,
+          (t) => t.keyId === key.id && t.locale === effectiveLocale,
         )?.value ?? null,
     })),
+  };
+}
+
+export async function getTranslationKeyFilterCounts(
+  projectId: number,
+  options?: {
+    branchId?: number;
+    branchOnly?: boolean;
+    fileId?: number;
+    locale?: string;
+  },
+): Promise<Record<TranslationFilter, number>> {
+  const requestedLocale = options?.locale;
+  const validatedRequestedLocale = requestedLocale
+    ? (
+        await db.query.projectLanguages.findFirst({
+          where: { projectId, locale: requestedLocale },
+        })
+      )?.locale
+    : undefined;
+
+  const effectiveLocale =
+    validatedRequestedLocale ??
+    (
+      await db.query.projectLanguages.findFirst({
+        where: { projectId, isDefault: true },
+      })
+    )?.locale;
+
+  const whereCondition = and(
+    eq(schema.translationKeys.projectId, projectId),
+    branchFilter({
+      branchId: options?.branchId,
+      branchOnly: options?.branchOnly,
+    }),
+    options?.fileId !== undefined
+      ? eq(schema.translationKeys.fileId, options.fileId)
+      : undefined,
+  );
+
+  if (!effectiveLocale) {
+    const allCount = await db.$count(schema.translationKeys, whereCondition);
+    return {
+      [TranslationFilter.ALL]: allCount,
+      [TranslationFilter.FUZZY]: 0,
+      [TranslationFilter.MISSING]: 0,
+    };
+  }
+
+  const [allCount, missingCount, fuzzyCount] = await Promise.all([
+    db.$count(schema.translationKeys, whereCondition),
+    db.$count(
+      schema.translationKeys,
+      and(
+        whereCondition,
+        translationFilterCondition(TranslationFilter.MISSING, effectiveLocale),
+      ),
+    ),
+    db.$count(
+      schema.translationKeys,
+      and(
+        whereCondition,
+        translationFilterCondition(TranslationFilter.FUZZY, effectiveLocale),
+      ),
+    ),
+  ]);
+
+  return {
+    [TranslationFilter.ALL]: allCount,
+    [TranslationFilter.FUZZY]: fuzzyCount,
+    [TranslationFilter.MISSING]: missingCount,
   };
 }
 

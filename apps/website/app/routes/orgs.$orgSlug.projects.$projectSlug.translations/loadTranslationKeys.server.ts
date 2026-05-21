@@ -1,8 +1,13 @@
-import { getTranslationKeys } from "~/lib/translation-keys.server";
-import { TranslationKeysSort } from "~/lib/sort/keySort";
+import {
+  getTranslationKeyFilterCounts,
+  getTranslationKeys,
+} from "~/lib/translation-keys.server";
+import { TranslationFilter, TranslationKeysSort } from "~/lib/sort/keySort";
 import { TRANSLATIONS_LIMIT } from "./constants";
 import type { ProjectFile } from "../../../drizzle/schema";
 import { DocumentMode } from "./constants";
+
+export { resolveFilter } from "~/lib/sort/keySort";
 
 export function resolveSort(
   sortParam: string | null,
@@ -33,6 +38,9 @@ export type TranslationKeysLoaderData = {
   highlight: string | undefined;
   page: number;
   sort: TranslationKeysSort;
+  locale: string | undefined;
+  filter: TranslationFilter;
+  filterCounts: Record<TranslationFilter, number>;
 };
 
 export async function translationKeysLoader(args: {
@@ -43,6 +51,8 @@ export async function translationKeysLoader(args: {
   highlight: string | undefined;
   page: number;
   sort: TranslationKeysSort;
+  locale: string | undefined;
+  filter: TranslationFilter;
 }): Promise<TranslationKeysLoaderData> {
   const {
     projectId,
@@ -52,16 +62,26 @@ export async function translationKeysLoader(args: {
     highlight,
     page,
     sort,
+    locale,
+    filter,
   } = args;
   const offset = (page - 1) * TRANSLATIONS_LIMIT;
 
-  const keys = await getTranslationKeys(projectId, {
-    search,
-    limit: TRANSLATIONS_LIMIT,
-    offset,
-    sort,
-    fileId: selectedFileId,
-  });
+  const [keys, filterCounts] = await Promise.all([
+    getTranslationKeys(projectId, {
+      search,
+      limit: TRANSLATIONS_LIMIT,
+      offset,
+      sort,
+      fileId: selectedFileId,
+      locale,
+      filter,
+    }),
+    getTranslationKeyFilterCounts(projectId, {
+      fileId: selectedFileId,
+      locale,
+    }),
+  ]);
 
   return {
     mode: DocumentMode.TranslationKeys,
@@ -72,5 +92,8 @@ export async function translationKeysLoader(args: {
     highlight,
     page,
     sort,
+    locale,
+    filter,
+    filterCounts,
   };
 }

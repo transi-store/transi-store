@@ -8,6 +8,7 @@ import { KeyAction } from "~/components/translation-key/KeyAction";
 import { getTranslationsUrl } from "~/lib/routes-helpers";
 import { TranslationKeysSort } from "~/lib/sort/keySort";
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
+import { TranslationsToolbar } from "./TranslationsToolbar";
 import { TranslationsTable } from "./TranslationsTable";
 import { TranslationsPagination } from "./TranslationsPagination";
 import {
@@ -31,7 +32,17 @@ type Props = {
 
 export function TranslationKeysView({ data, context }: Props) {
   const { t } = useTranslation();
-  const { keys, selectedFileId, search, highlight, page, sort } = data;
+  const {
+    keys,
+    selectedFileId,
+    search,
+    highlight,
+    page,
+    sort,
+    locale,
+    filter,
+    filterCounts,
+  } = data;
   const { organization, project, languages } = context;
   const actionData = useActionData<KeyActionData | undefined>();
   const navigation = useNavigation();
@@ -50,13 +61,19 @@ export function TranslationKeysView({ data, context }: Props) {
   }, []);
 
   const totalLanguages = languages.length;
-  const count = keys.count;
+  const effectiveLocale =
+    locale ??
+    languages.find((l) => l.isDefault)?.locale ??
+    languages[0]?.locale ??
+    "";
 
   const currentUrl = getTranslationsUrl(organization.slug, project.slug, {
     search,
     sort,
     highlight,
     fileId: selectedFileId,
+    locale,
+    filter,
   });
 
   useEffect(() => {
@@ -77,6 +94,8 @@ export function TranslationKeysView({ data, context }: Props) {
           highlight: highlight
             ? `${highlight},${actionData.keyName}`
             : actionData.keyName,
+          locale,
+          filter,
         }),
       );
 
@@ -92,6 +111,8 @@ export function TranslationKeysView({ data, context }: Props) {
     navigate,
     highlight,
     selectedFileId,
+    locale,
+    filter,
   ]);
 
   const createKeyError =
@@ -103,20 +124,45 @@ export function TranslationKeysView({ data, context }: Props) {
 
   return (
     <VStack gap={6} align="stretch">
+      <Heading as="h2" size="lg">
+        {t("translations.title")}
+      </Heading>
       <Stack
         direction={{ base: "column", sm: "row" }}
         justify="space-between"
         align={{ base: "stretch", sm: "center" }}
         gap={{ base: 3, sm: 0 }}
       >
-        <Box>
-          <Heading as="h2" size="lg">
-            {t("translations.title")}
-          </Heading>
-          <Text color="gray" mt={2}>
-            {t("translations.count", { count })}
-          </Text>
-        </Box>
+        {languages.length > 0 && (
+          <TranslationsToolbar
+            languages={languages}
+            effectiveLocale={effectiveLocale}
+            filter={filter}
+            filterCounts={filterCounts}
+            onLocaleChange={(newLocale) =>
+              navigate(
+                getTranslationsUrl(organization.slug, project.slug, {
+                  search,
+                  sort,
+                  fileId: selectedFileId ?? undefined,
+                  locale: newLocale,
+                  filter,
+                }),
+              )
+            }
+            onFilterChange={(newFilter) =>
+              navigate(
+                getTranslationsUrl(organization.slug, project.slug, {
+                  search,
+                  sort,
+                  fileId: selectedFileId ?? undefined,
+                  locale,
+                  filter: newFilter,
+                }),
+              )
+            }
+          />
+        )}
         {languages.length > 0 && (
           <Button
             colorPalette="accent"
@@ -134,6 +180,9 @@ export function TranslationKeysView({ data, context }: Props) {
         organizationSlug={organization.slug}
         projectSlug={project.slug}
         fileId={selectedFileId ?? undefined}
+        languages={languages}
+        selectedLocale={locale}
+        filter={filter}
       />
 
       {languages.length === 0 ? (
@@ -167,6 +216,7 @@ export function TranslationKeysView({ data, context }: Props) {
             projectSlug={project.slug}
             currentUrl={currentUrl}
             onEditInDrawer={handleEditInDrawer}
+            selectedLocale={effectiveLocale}
           />
 
           <TranslationsPagination
@@ -178,6 +228,8 @@ export function TranslationKeysView({ data, context }: Props) {
             organizationSlug={organization.slug}
             projectSlug={project.slug}
             fileId={selectedFileId ?? undefined}
+            locale={locale}
+            filter={filter}
           />
         </>
       )}
