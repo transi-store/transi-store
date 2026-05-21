@@ -213,21 +213,4 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Optimización de Git:** `upload:config` también omite los archivos que no han cambiado en comparación con la rama predeterminada (`main`/`master`) al ejecutarse en un repositorio git, para evitar llamadas innecesarias a la API.
 
-### Fusionar una rama
-
-```bash
-# Fusionar una rama en main
-transi-store branch:merge --org acme --project webapp --branch feature/my-feature
-```
-
-`--branch` es obligatorio (no hay detección automática): la fusión es destructiva, por lo que la rama objetivo debe ser explícita. Si la operación tiene éxito, las claves de la rama se trasladan a main y aquellas marcadas para eliminación se eliminan (soft delete).
-
-También puedes llamar directamente al endpoint (los segmentos de la ruta deben estar codificados en URL, por ejemplo `/` en un slug de rama se convierte en `%2F`):
-
-```bash
-curl -X POST \
-  -H "Authorization: Bearer $TRANSI_STORE_API_KEY" \
-  "https://transi-store.com/api/orgs/acme/projects/webapp/branches/feature%2Fmy-feature/merge"
-```
-
 Esto es ideal para integrar en CI/CD: descargue cadenas traducidas durante el tiempo de compilación y cargue nuevas cadenas de origen después de que los desarrolladores las añadan.

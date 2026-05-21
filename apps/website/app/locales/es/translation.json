@@ -1,6 +1,4 @@
 {
-  "api.branchMerge.branchNotFound": "Rama \"{branchSlug}\" no encontrada",
-  "api.branchMerge.branchNotOpen": "La rama \"{branchSlug}\" ya está fusionada o cerrada",
   "api.methodNotAllowed": "Método no permitido",
   "api.methodNotAllowed (copy)": "Método no permitido",
   "api.translate.keyNotFound": "Clave no encontrada",
