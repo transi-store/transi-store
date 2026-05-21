@@ -10,5 +10,6 @@ Use this workflow when preparing a pull request:
 3. Do not include AI watermarks, attribution banners, or generated-by notices in the pull request title or description.
 4. Mention only the most relevant user-facing or reviewer-facing changes.
 5. If the repository has issue links or follow-up notes that matter, include them briefly instead of writing a long narrative.
+6. If the diff includes any `.md` or `.mdx` file, add a short warning in the description noting that these files are normally edited through the transi-store UI and that the direct edit is intentional. Skip this for `CHANGELOG.md`, `.changeset/*.md`, and AI-facing instructions (`AGENTS.md`, `CLAUDE.md`, `.agents/**`, `.github/**`, `.claude/**`).
 
 When using `gh pr create`, prefer an explicit title and body over verbose auto-generated content.
