@@ -1,4 +1,12 @@
-import { Heading, VStack, Button, Box, Text, Stack } from "@chakra-ui/react";
+import {
+  Heading,
+  HStack,
+  VStack,
+  Button,
+  Box,
+  Text,
+  Stack,
+} from "@chakra-ui/react";
 import { Link, useActionData, useNavigate, useNavigation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus } from "react-icons/lu";
@@ -8,6 +16,7 @@ import { KeyAction } from "~/components/translation-key/KeyAction";
 import { getTranslationsUrl } from "~/lib/routes-helpers";
 import { TranslationKeysSort } from "~/lib/sort/keySort";
 import { TranslationsSearchBar } from "./TranslationsSearchBar";
+import { TranslationsToolbar } from "./TranslationsToolbar";
 import { TranslationsTable } from "./TranslationsTable";
 import { TranslationsPagination } from "./TranslationsPagination";
 import {
@@ -121,20 +130,47 @@ export function TranslationKeysView({ data, context }: Props) {
 
   return (
     <VStack gap={6} align="stretch">
+      <Heading as="h2" size="lg">
+        {t("translations.title")}
+      </Heading>
       <Stack
         direction={{ base: "column", sm: "row" }}
         justify="space-between"
         align={{ base: "stretch", sm: "center" }}
         gap={{ base: 3, sm: 0 }}
       >
-        <Box>
-          <Heading as="h2" size="lg">
-            {t("translations.title")}
-          </Heading>
-          <Text color="gray" mt={2}>
-            {t("translations.count", { count })}
-          </Text>
-        </Box>
+        <HStack gap={3} align="center" flexWrap="wrap">
+          {languages.length > 0 && (
+            <TranslationsToolbar
+              languages={languages}
+              effectiveLocale={effectiveLocale}
+              filter={filter}
+              onLocaleChange={(newLocale) =>
+                navigate(
+                  getTranslationsUrl(organization.slug, project.slug, {
+                    search,
+                    sort,
+                    fileId: selectedFileId ?? undefined,
+                    locale: newLocale,
+                    filter,
+                  }),
+                )
+              }
+              onFilterChange={(newFilter) =>
+                navigate(
+                  getTranslationsUrl(organization.slug, project.slug, {
+                    search,
+                    sort,
+                    fileId: selectedFileId ?? undefined,
+                    locale,
+                    filter: newFilter,
+                  }),
+                )
+              }
+            />
+          )}
+          <Text color="gray">{t("translations.count", { count })}</Text>
+        </HStack>
         {languages.length > 0 && (
           <Button
             colorPalette="accent"

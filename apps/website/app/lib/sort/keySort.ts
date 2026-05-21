@@ -9,8 +9,8 @@ export type TranslationKeysSort =
 
 export const TranslationFilter = {
   ALL: "all",
-  MISSING: "missing",
   FUZZY: "fuzzy",
+  MISSING: "missing",
 } as const;
 
 export type TranslationFilter =

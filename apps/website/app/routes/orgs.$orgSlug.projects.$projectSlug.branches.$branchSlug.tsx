@@ -62,7 +62,11 @@ import {
 import { TranslationsTable } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsTable";
 import { TranslationsPagination } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsPagination";
 import { TranslationsSearchBar } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsSearchBar";
-import { resolveSort, resolveFilter } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/loadTranslationKeys.server";
+import { TranslationsToolbar } from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/TranslationsToolbar";
+import {
+  resolveSort,
+  resolveFilter,
+} from "~/routes/orgs.$orgSlug.projects.$projectSlug.translations/loadTranslationKeys.server";
 import { getInstance } from "~/middleware/i18next.server";
 import {
   getBranchesUrl,
@@ -524,23 +528,56 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
               <VStack gap={4} align="stretch" pt={4}>
                 <Stack
                   direction={{ base: "column", sm: "row" }}
-                  align={{ base: "stretch", sm: "start" }}
                   justify="space-between"
+                  align={{ base: "stretch", sm: "center" }}
                   gap={3}
                 >
-                  <Box flex="1">
-                    <TranslationsSearchBar
-                      search={search}
-                      sort={sort}
-                      organizationSlug={organization.slug}
-                      projectSlug={project.slug}
-                      branchSlug={branch.slug}
-                      fileId={selectedFileId ?? undefined}
-                      languages={languages}
-                      selectedLocale={locale}
-                      filter={filter}
-                    />
-                  </Box>
+                  <HStack gap={3} align="center" flexWrap="wrap">
+                    {languages.length > 0 && (
+                      <TranslationsToolbar
+                        languages={languages}
+                        effectiveLocale={effectiveLocale}
+                        filter={filter}
+                        onLocaleChange={(newLocale) =>
+                          navigate(
+                            getBranchUrl(
+                              organization.slug,
+                              project.slug,
+                              branch.slug,
+                              {
+                                fileId: selectedFileId ?? undefined,
+                                search,
+                                sort,
+                                highlight,
+                                locale: newLocale,
+                                filter,
+                              },
+                            ),
+                          )
+                        }
+                        onFilterChange={(newFilter) =>
+                          navigate(
+                            getBranchUrl(
+                              organization.slug,
+                              project.slug,
+                              branch.slug,
+                              {
+                                fileId: selectedFileId ?? undefined,
+                                search,
+                                sort,
+                                highlight,
+                                locale,
+                                filter: newFilter,
+                              },
+                            ),
+                          )
+                        }
+                      />
+                    )}
+                    <Text color="gray">
+                      {t("translations.count", { count })}
+                    </Text>
+                  </HStack>
                   {languages.length > 0 && projectFiles.length > 0 && (
                     <Button
                       colorPalette="accent"
@@ -552,6 +589,18 @@ export default function BranchDetail({ loaderData }: Route.ComponentProps) {
                     </Button>
                   )}
                 </Stack>
+
+                <TranslationsSearchBar
+                  search={search}
+                  sort={sort}
+                  organizationSlug={organization.slug}
+                  projectSlug={project.slug}
+                  branchSlug={branch.slug}
+                  fileId={selectedFileId ?? undefined}
+                  languages={languages}
+                  selectedLocale={locale}
+                  filter={filter}
+                />
 
                 {languages.length === 0 ? (
                   <Box
