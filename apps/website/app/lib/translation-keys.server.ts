@@ -29,6 +29,33 @@ type TranslationKeysReturnType = {
  *
  * Always excludes soft-deleted keys (deletedAt IS NULL).
  */
+/**
+ * Build a correlated subquery condition that selects translation keys matching
+ * the given filter for the given locale. Returns undefined for the ALL filter.
+ * Uses EXISTS / NOT EXISTS to avoid large IN (...) lists.
+ */
+function translationFilterCondition(
+  filter: TranslationFilter,
+  locale: string,
+): SQL | undefined {
+  if (filter === TranslationFilter.MISSING) {
+    return sql`NOT EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${locale}
+    )`;
+  }
+  if (filter === TranslationFilter.FUZZY) {
+    return sql`EXISTS (
+      SELECT 1 FROM ${schema.translations}
+      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
+        AND ${schema.translations.locale} = ${locale}
+        AND ${schema.translations.isFuzzy} IS TRUE
+    )`;
+  }
+  return undefined;
+}
+
 function branchFilter({
   branchId,
   branchOnly,
@@ -104,26 +131,10 @@ export async function getTranslationKeys(
       })
     )?.locale;
 
-  // Build the filter condition (missing / fuzzy) using correlated subqueries
-  // to avoid large IN (...) lists that hurt performance and may exceed DB limits.
-  let filterCondition: SQL | undefined;
-
-  if (options?.filter === TranslationFilter.MISSING && effectiveLocale) {
-    // Keys with no translation for the selected locale
-    filterCondition = sql`NOT EXISTS (
-      SELECT 1 FROM ${schema.translations}
-      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
-        AND ${schema.translations.locale} = ${effectiveLocale}
-    )`;
-  } else if (options?.filter === TranslationFilter.FUZZY && effectiveLocale) {
-    // Keys that have a fuzzy translation for the selected locale
-    filterCondition = sql`EXISTS (
-      SELECT 1 FROM ${schema.translations}
-      WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
-        AND ${schema.translations.locale} = ${effectiveLocale}
-        AND ${schema.translations.isFuzzy} IS TRUE
-    )`;
-  }
+  const filterCondition =
+    options?.filter && effectiveLocale
+      ? translationFilterCondition(options.filter, effectiveLocale)
+      : undefined;
 
   const branchCondition = branchFilter({
     branchId: options?.branchId,
@@ -269,23 +280,22 @@ export async function getTranslationKeyFilterCounts(
     };
   }
 
-  const missingCondition = sql`NOT EXISTS (
-    SELECT 1 FROM ${schema.translations}
-    WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
-      AND ${schema.translations.locale} = ${effectiveLocale}
-  )`;
-
-  const fuzzyCondition = sql`EXISTS (
-    SELECT 1 FROM ${schema.translations}
-    WHERE ${schema.translations.keyId} = ${schema.translationKeys.id}
-      AND ${schema.translations.locale} = ${effectiveLocale}
-      AND ${schema.translations.isFuzzy} IS TRUE
-  )`;
-
   const [allCount, missingCount, fuzzyCount] = await Promise.all([
     db.$count(schema.translationKeys, whereCondition),
-    db.$count(schema.translationKeys, and(whereCondition, missingCondition)),
-    db.$count(schema.translationKeys, and(whereCondition, fuzzyCondition)),
+    db.$count(
+      schema.translationKeys,
+      and(
+        whereCondition,
+        translationFilterCondition(TranslationFilter.MISSING, effectiveLocale),
+      ),
+    ),
+    db.$count(
+      schema.translationKeys,
+      and(
+        whereCondition,
+        translationFilterCondition(TranslationFilter.FUZZY, effectiveLocale),
+      ),
+    ),
   ]);
 
   return {
