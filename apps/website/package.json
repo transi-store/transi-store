@@ -43,7 +43,7 @@
     "codemirror": "^6.0.2",
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.7.0",
-    "drizzle-orm": "1.0.0-beta.12-a5629fb",
+    "drizzle-orm": "1.0.0-beta.20",
     "fast-xml-builder": "^1.1.5",
     "fast-xml-parser": "^5.7.1",
     "gettext-parser": "^9.0.2",
@@ -89,7 +89,7 @@
     "dotenv": "^17.2.3",
     "drizzle-kit": "1.0.0-beta.12-a5629fb",
     "i18next-cli": "^1.42.6",
-    "vite": "^6.4.2",
+    "vite": "^8.0.14",
     "vitest": "^4.0.18"
   }
 }
