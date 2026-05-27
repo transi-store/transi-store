@@ -60,8 +60,9 @@ describe("Branch merge API", () => {
     );
     return action({
       request,
+      url: new URL(request.url),
       params: { orgSlug, projectSlug, branchSlug },
-      unstable_pattern:
+      pattern:
         "/api/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge",
       context: createOrgContext(),
     });
