@@ -149,8 +149,9 @@ describe("Import file-scoped API", () => {
   ) {
     return action({
       request,
+      url: new URL(request.url),
       params: { orgSlug, projectSlug, fileId: String(fileId) },
-      unstable_pattern:
+      pattern:
         "/api/orgs/:orgSlug/projects/:projectSlug/files/:fileId/translations",
       context: createOrgContext(),
     });

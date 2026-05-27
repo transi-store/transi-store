@@ -60,14 +60,16 @@ describe("Export file-scoped loader", () => {
     fileId: string | number = projectFile.id,
     projectSlug = "test-project",
   ) {
+    const request = new Request(url);
     return loader({
-      request: new Request(url),
+      request,
+      url: new URL(request.url),
       params: {
         orgSlug: "test-org",
         projectSlug,
         fileId: String(fileId),
       },
-      unstable_pattern:
+      pattern:
         "/api/orgs/:orgSlug/projects/:projectSlug/files/:fileId/translations",
       context: createOrgContext(),
     });

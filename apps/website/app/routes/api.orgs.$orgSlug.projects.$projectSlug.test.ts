@@ -42,8 +42,9 @@ describe("Project detail loader", () => {
     );
     const response = await loader({
       request,
+      url: new URL(request.url),
       params: { orgSlug: "test-org", projectSlug: "missing" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug",
+      pattern: "/api/orgs/:orgSlug/projects/:projectSlug",
       context: createOrgContext(),
     });
 
@@ -80,8 +81,9 @@ describe("Project detail loader", () => {
     );
     const response = await loader({
       request,
+      url: new URL(request.url),
       params: { orgSlug: "test-org", projectSlug: "my-project" },
-      unstable_pattern: "/api/orgs/:orgSlug/projects/:projectSlug",
+      pattern: "/api/orgs/:orgSlug/projects/:projectSlug",
       context: createOrgContext(),
     });
 
