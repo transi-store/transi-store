@@ -725,9 +725,24 @@ function BranchKeysDetail({ loaderData }: { loaderData: KeysLoaderData }) {
                     {t("branches.deletions.searchMainKeys")}
                   </Text>
                   <Form method="get">
-                    {/* Preserve existing search params */}
+                    {/* Preserve the params the loader needs: without fileId it
+                        redirects and drops deletionSearch, so the search would
+                        always return nothing. Keep sort/filter/locale too so the
+                        additions tab state survives a deletion search. */}
                     {search && (
                       <input type="hidden" name="search" value={search} />
+                    )}
+                    {selectedFileId !== null && (
+                      <input
+                        type="hidden"
+                        name="fileId"
+                        value={String(selectedFileId)}
+                      />
+                    )}
+                    <input type="hidden" name="sort" value={sort} />
+                    <input type="hidden" name="filter" value={filter} />
+                    {locale && (
+                      <input type="hidden" name="locale" value={locale} />
                     )}
                     <HStack>
                       <Input
