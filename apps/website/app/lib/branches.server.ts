@@ -1,7 +1,17 @@
 import type { Branch, TranslationKey } from "../../drizzle/schema";
 import { BRANCH_STATUS, MERGE_FAILURE_REASON } from "./branches";
 import { db, schema } from "./db.server";
-import { and, eq, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  notInArray,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 
 export async function getBranchesByProject(projectId: number) {
   return await db.query.branches.findMany({
@@ -298,6 +308,10 @@ export async function searchMainKeysForDeletion(
     conditions.push(notInArray(schema.translationKeys.id, alreadyMarkedIds));
   }
 
+  // A deletion search always carries a query, so results are ordered by
+  // relevance. The query-less path (filtering unit tests only) needs no order.
+  let relevanceOrder: SQL | undefined;
+
   if (options?.search) {
     const searchQuery = options.search;
     const SIMILARITY_THRESHOLD = 0.3;
@@ -315,13 +329,24 @@ export async function searchMainKeysForDeletion(
         sql`${maxSimilarity(schema.translationKeys.description)} > ${SIMILARITY_THRESHOLD}`,
       )!,
     );
+
+    // Sort by best match first (highest similarity across keyName/description).
+    relevanceOrder = desc(sql`GREATEST(
+      ${maxSimilarity(schema.translationKeys.keyName)},
+      ${maxSimilarity(schema.translationKeys.description)}
+    )`);
   }
 
   const data = await db
     .select()
     .from(schema.translationKeys)
     .where(and(...conditions))
-    .orderBy(schema.translationKeys.keyName)
+    .orderBy(
+      // Relevance first; keyName only breaks ties between equal scores.
+      ...(relevanceOrder
+        ? [relevanceOrder, schema.translationKeys.keyName]
+        : []),
+    )
     .limit(limit)
     .offset(offset);
 
