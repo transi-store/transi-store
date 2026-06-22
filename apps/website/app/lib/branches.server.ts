@@ -345,7 +345,7 @@ export async function searchMainKeysForDeletion(
       // Relevance first; keyName only breaks ties between equal scores.
       ...(relevanceOrder
         ? [relevanceOrder, schema.translationKeys.keyName]
-        : []),
+        : [schema.translationKeys.keyName]),
     )
     .limit(limit)
     .offset(offset);
