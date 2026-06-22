@@ -1,4 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
+import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { drizzle } from "drizzle-orm/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
 import { getTableName, is, sql } from "drizzle-orm";
@@ -14,7 +15,7 @@ export type TestDb = Awaited<ReturnType<typeof initTestDb>>;
 let _db: TestDb | null = null;
 
 export async function initTestDb() {
-  const client = new PGlite();
+  const client = new PGlite({ extensions: { pg_trgm } });
   const db = drizzle({
     client,
     relations,
@@ -27,6 +28,10 @@ export async function initTestDb() {
 
   const { apply } = await pushSchema(schema, db);
   await apply();
+
+  // Enable fuzzy search so similarity()/word_similarity() queries work in
+  // tests, mirroring the production database (see scripts/enable-fuzzy-search.sh).
+  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
 
   _db = db;
   return db;

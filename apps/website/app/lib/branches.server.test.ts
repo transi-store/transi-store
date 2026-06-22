@@ -252,6 +252,22 @@ describe("Branch Key Deletions", () => {
       expect(result.data).toHaveLength(1);
       expect(result.data[0].keyName).toBe("file-one.key");
     });
+
+    it("orders search results by relevance, not alphabetically", async () => {
+      // "welcom" sorts before "welcome" alphabetically, but "welcome" is the
+      // closer match to the query and must therefore come first.
+      await createTranslationKey(db, projectId, "welcom");
+      await createTranslationKey(db, projectId, "welcome");
+
+      const result = await searchMainKeysForDeletion(
+        projectId,
+        branchId,
+        fileId,
+        { search: "welcome" },
+      );
+
+      expect(result.data.map((d) => d.keyName)).toEqual(["welcome", "welcom"]);
+    });
   });
 
   describe("getBranchKeyDeletions / getBranchKeyDeletionCount with fileId", () => {
