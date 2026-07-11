@@ -117,9 +117,7 @@ describe("Branch merge API", () => {
     expect(response.status).toBe(404);
     const body = await response.json();
     expect(body).toEqual({
-      success: false,
       error: 'Branch "missing-branch" not found',
-      reason: "not_found",
     });
   });
 
@@ -136,6 +134,8 @@ describe("Branch merge API", () => {
     expect(body.error).toBe(
       'Branch "feature-branch" is already merged or closed',
     );
-    expect(body.reason).toBe("not_open");
+    expect(body).toEqual({
+      error: 'Branch "feature-branch" is already merged or closed',
+    });
   });
 });

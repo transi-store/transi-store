@@ -74,7 +74,7 @@ export async function runMergeForConfig(
 
   const succeeded = results.filter((r) => r.result.ok).length;
   const skipped = results.filter(
-    (r) => !r.result.ok && r.result.reason === "not_found",
+    (r) => !r.result.ok && r.result.status === 404,
   ).length;
   return {
     total: results.length,
@@ -113,7 +113,7 @@ export async function mergeForConfig(
           `→ ${result.keysMoved} keys moved, ${result.keysDeleted} deleted`,
         )}`,
       );
-    } else if (result.reason === "not_found") {
+    } else if (result.status === 404) {
       console.log(
         `  ${styleText("dim", "-")} ${styleText("bold", project)} — ${styleText(
           "dim",

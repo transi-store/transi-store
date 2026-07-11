@@ -101,7 +101,7 @@ describe("runMergeForConfig", () => {
           return {
             ok: false,
             error: "branch not found",
-            reason: "not_found",
+            status: 404,
           };
         }
         return { ok: true, keysMoved: 1, keysDeleted: 0 };

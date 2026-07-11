@@ -25,7 +25,7 @@ export type MergeBranchResult =
   | {
       ok: false;
       error: string;
-      reason?: "not_found" | "not_open";
+      status?: number;
     };
 
 export function buildMergeBranchUrl({
@@ -93,9 +93,7 @@ export async function mergeBranch({
   return {
     ok: false,
     error: `Failed to merge branch (${response.status} ${response.statusText}): ${errorMessage}`,
-    ...(parsedError.success && parsedError.data.reason
-      ? { reason: parsedError.data.reason }
-      : {}),
+    status: response.status,
   };
 }
 
