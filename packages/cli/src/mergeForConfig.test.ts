@@ -38,6 +38,7 @@ describe("runMergeForConfig", () => {
       branch: "feature-1",
     });
     expect(summary).toMatchObject({ total: 2, succeeded: 2, failed: 0 });
+    expect(summary.skipped).toBe(0);
   });
 
   it("uses the domainRoot from the config when provided", async () => {
@@ -89,7 +90,43 @@ describe("runMergeForConfig", () => {
     expect(summary.total).toBe(2);
     expect(summary.succeeded).toBe(1);
     expect(summary.failed).toBe(1);
+    expect(summary.skipped).toBe(0);
     expect(summary.results[1]!.result).toEqual({ ok: false, error: "boom" });
+  });
+
+  it("skips projects where the branch does not exist", async () => {
+    const merge = vi.fn(
+      async (options: MergeBranchOptions): Promise<MergeBranchResult> => {
+        if (options.project === "mobile") {
+          return {
+            ok: false,
+            error: "branch not found",
+            status: 404,
+          };
+        }
+        return { ok: true, keysMoved: 1, keysDeleted: 0 };
+      },
+    );
+
+    const summary = await runMergeForConfig(
+      "transi-store.config.json",
+      "api-key",
+      "feature-1",
+      {
+        readConfig: async () => ({
+          org: "acme",
+          projects: [{ project: "website" }, { project: "mobile" }],
+        }),
+        merge,
+      },
+    );
+
+    expect(summary).toMatchObject({
+      total: 2,
+      succeeded: 1,
+      skipped: 1,
+      failed: 0,
+    });
   });
 
   it("throws when the config does not match the schema", async () => {

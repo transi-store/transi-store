@@ -19,6 +19,7 @@ type ProjectResult = {
 type MergeForConfigSummary = {
   total: number;
   succeeded: number;
+  skipped: number;
   failed: number;
   results: Array<ProjectResult>;
 };
@@ -72,10 +73,14 @@ export async function runMergeForConfig(
   }
 
   const succeeded = results.filter((r) => r.result.ok).length;
+  const skipped = results.filter(
+    (r) => !r.result.ok && r.result.status === 404,
+  ).length;
   return {
     total: results.length,
     succeeded,
-    failed: results.length - succeeded,
+    skipped,
+    failed: results.length - succeeded - skipped,
     results,
   };
 }
@@ -108,6 +113,13 @@ export async function mergeForConfig(
           `→ ${result.keysMoved} keys moved, ${result.keysDeleted} deleted`,
         )}`,
       );
+    } else if (result.status === 404) {
+      console.log(
+        `  ${styleText("dim", "-")} ${styleText("bold", project)} — ${styleText(
+          "dim",
+          "branch not found (skipped)",
+        )}`,
+      );
     } else {
       console.log(
         `  ${styleText("red", "✗")} ${styleText("bold", project)} — ${styleText(
@@ -123,7 +135,7 @@ export async function mergeForConfig(
     console.log(
       styleText(
         ["green", "bold"],
-        `✓ Branch "${branch}" merged on ${summary.total} project${summary.total > 1 ? "s" : ""}`,
+        `✓ Branch "${branch}": ${summary.succeeded} project${summary.succeeded > 1 ? "s" : ""} merged${summary.skipped > 0 ? `, ${summary.skipped} skipped` : ""}`,
       ),
     );
   } else {

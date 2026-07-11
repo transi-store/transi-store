@@ -81,7 +81,7 @@ describe("mergeBranch", () => {
   it("returns the API error message when the response is not ok", async () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse(
-        { success: false, error: 'Branch "feature-1" not found' },
+        { error: 'Branch "feature-1" not found' },
         { status: 404, statusText: "Not Found" },
       ),
     );
@@ -98,6 +98,7 @@ describe("mergeBranch", () => {
       ok: false,
       error:
         'Failed to merge branch (404 Not Found): Branch "feature-1" not found',
+      status: 404,
     });
   });
 
@@ -121,6 +122,7 @@ describe("mergeBranch", () => {
       ok: false,
       error:
         "Failed to merge branch (500 Internal Server Error): Internal Server Error",
+      status: 500,
     });
   });
 

@@ -28,9 +28,9 @@ The route **does not** look up the calling user. `mergeBranch()` is called with 
 
 Merging never produces a key conflict by construction: the unique index `unique_project_file_key` on `(project_id, file_id, key_name)` prevents a branch from ever holding a key that already exists on main.
 
-## Discriminated result in `mergeBranch`
+## Error responses in `mergeBranch`
 
-`MergeBranchResult` carries a `reason` field on failure (`"not_found" | "not_open"`). The API route maps `reason` to a status code without string-matching on `error`.
+The API returns the common `{ error }` envelope for failures. The CLI preserves the HTTP status in `MergeBranchResult` and treats `404` as a missing branch when processing multiple configured projects.
 
 ## CLI
 
