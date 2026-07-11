@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.4.1
+
+### Patch Changes
+
+- [#221](https://github.com/transi-store/transi-store/pull/221) [`43c5138`](https://github.com/transi-store/transi-store/commit/43c5138f0147dace9df9f589d1312873d9b76de7) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Skip missing translation branches during CLI merge.
+
 ## 2.4.0
 
 ### Minor Changes
