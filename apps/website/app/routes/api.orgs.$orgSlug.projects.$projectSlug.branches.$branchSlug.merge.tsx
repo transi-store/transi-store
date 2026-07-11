@@ -27,12 +27,15 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   const branch = await getBranchBySlug(project.id, params.branchSlug);
   if (!branch) {
-    return apiError(
-      404,
-      i18next.t("api.branchMerge.branchNotFound", {
-        branchSlug: params.branchSlug,
-      }),
-      { reason: MERGE_FAILURE_REASON.NOT_FOUND },
+    return Response.json(
+      {
+        success: false as const,
+        error: i18next.t("api.branchMerge.branchNotFound", {
+          branchSlug: params.branchSlug,
+        }),
+        reason: MERGE_FAILURE_REASON.NOT_FOUND,
+      },
+      { status: 404 },
     );
   }
 
@@ -49,20 +52,26 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   switch (result.reason) {
     case MERGE_FAILURE_REASON.NOT_FOUND:
-      return apiError(
-        404,
-        i18next.t("api.branchMerge.branchNotFound", {
-          branchSlug: params.branchSlug,
-        }),
-        { reason: MERGE_FAILURE_REASON.NOT_FOUND },
+      return Response.json(
+        {
+          success: false as const,
+          error: i18next.t("api.branchMerge.branchNotFound", {
+            branchSlug: params.branchSlug,
+          }),
+          reason: MERGE_FAILURE_REASON.NOT_FOUND,
+        },
+        { status: 404 },
       );
     case MERGE_FAILURE_REASON.NOT_OPEN:
-      return apiError(
-        400,
-        i18next.t("api.branchMerge.branchNotOpen", {
-          branchSlug: params.branchSlug,
-        }),
-        { reason: MERGE_FAILURE_REASON.NOT_OPEN },
+      return Response.json(
+        {
+          success: false as const,
+          error: i18next.t("api.branchMerge.branchNotOpen", {
+            branchSlug: params.branchSlug,
+          }),
+          reason: MERGE_FAILURE_REASON.NOT_OPEN,
+        },
+        { status: 400 },
       );
   }
 }
