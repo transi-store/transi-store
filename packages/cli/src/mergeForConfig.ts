@@ -135,7 +135,7 @@ export async function mergeForConfig(
     console.log(
       styleText(
         ["green", "bold"],
-        `✓ Branch "${branch}" merged on ${summary.succeeded} project${summary.succeeded > 1 ? "s" : ""}${summary.skipped > 0 ? ` (${summary.skipped} skipped)` : ""}`,
+        `✓ Branch "${branch}": ${summary.succeeded} project${summary.succeeded > 1 ? "s" : ""} merged${summary.skipped > 0 ? `, ${summary.skipped} skipped` : ""}`,
       ),
     );
   } else {
