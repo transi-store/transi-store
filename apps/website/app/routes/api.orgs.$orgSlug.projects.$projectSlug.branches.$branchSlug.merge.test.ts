@@ -116,7 +116,11 @@ describe("Branch merge API", () => {
 
     expect(response.status).toBe(404);
     const body = await response.json();
-    expect(body.error).toBe('Branch "missing-branch" not found');
+    expect(body).toEqual({
+      success: false,
+      error: 'Branch "missing-branch" not found',
+      reason: "not_found",
+    });
   });
 
   it("returns 400 when the branch is already merged", async () => {
@@ -132,5 +136,6 @@ describe("Branch merge API", () => {
     expect(body.error).toBe(
       'Branch "feature-branch" is already merged or closed',
     );
+    expect(body.reason).toBe("not_open");
   });
 });

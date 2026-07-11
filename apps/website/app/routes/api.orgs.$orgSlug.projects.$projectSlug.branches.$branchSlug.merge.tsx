@@ -32,6 +32,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       i18next.t("api.branchMerge.branchNotFound", {
         branchSlug: params.branchSlug,
       }),
+      { reason: MERGE_FAILURE_REASON.NOT_FOUND },
     );
   }
 
@@ -53,6 +54,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         i18next.t("api.branchMerge.branchNotFound", {
           branchSlug: params.branchSlug,
         }),
+        { reason: MERGE_FAILURE_REASON.NOT_FOUND },
       );
     case MERGE_FAILURE_REASON.NOT_OPEN:
       return apiError(
@@ -60,6 +62,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         i18next.t("api.branchMerge.branchNotOpen", {
           branchSlug: params.branchSlug,
         }),
+        { reason: MERGE_FAILURE_REASON.NOT_OPEN },
       );
   }
 }

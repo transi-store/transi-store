@@ -21,6 +21,10 @@ export function createBranchMergeErrorResponseSchema() {
   return z.object({
     success: z.literal(false),
     error: z.string().describe("Human-readable error message."),
+    reason: z
+      .enum(["not_found", "not_open"])
+      .optional()
+      .describe("Machine-readable reason for the merge failure."),
   });
 }
 
