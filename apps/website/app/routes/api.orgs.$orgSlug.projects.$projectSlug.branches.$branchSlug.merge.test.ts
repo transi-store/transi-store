@@ -131,9 +131,6 @@ describe("Branch merge API", () => {
 
     expect(response.status).toBe(400);
     const body = await response.json();
-    expect(body.error).toBe(
-      'Branch "feature-branch" is already merged or closed',
-    );
     expect(body).toEqual({
       error: 'Branch "feature-branch" is already merged or closed',
     });
