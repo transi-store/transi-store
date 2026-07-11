@@ -122,6 +122,7 @@ describe("mergeBranch", () => {
       ok: false,
       error:
         "Failed to merge branch (500 Internal Server Error): Internal Server Error",
+      status: 500,
     });
   });
 
