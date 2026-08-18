@@ -16,6 +16,7 @@ import {
 } from "../../tests/test-db";
 import { withQueryCounter, getQueryCount } from "~/lib/query-counter.server";
 import { SupportedFormat } from "~/lib/format/types";
+import { BRANCH_STATUS } from "~/lib/branches";
 import { ImportStrategy } from "@transi-store/common";
 
 vi.mock("~/lib/db.server", () => ({
@@ -603,6 +604,197 @@ describe("Import file-scoped API", () => {
       // With batch operations, both should use roughly the same number of queries.
       // Auth queries are handled by middleware (not counted here).
       expect(smallQueryCount!).toBe(largeQueryCount!);
+    });
+  });
+
+  describe("branch handling", () => {
+    it("should create the branch when the import adds new keys", async () => {
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        JSON.stringify({ "home.title": "Home" }),
+        {
+          locale: "en",
+          strategy: ImportStrategy.OVERWRITE,
+          fileName: "translations.json",
+          contentType: "application/json",
+          branch: "feature-branch",
+        },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+
+      const db = getTestDb();
+      const branch = await db.query.branches.findFirst({
+        where: { projectId: 1, slug: "feature-branch" },
+      });
+      expect(branch).toBeDefined();
+
+      const key = await db.query.translationKeys.findFirst({
+        where: { projectId: 1, keyName: "home.title" },
+      });
+      expect(key?.branchId).toBe(branch!.id);
+    });
+
+    it("should not create the branch when every translation already exists (skip strategy)", async () => {
+      const db = getTestDb();
+      const key = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
+      await createTranslation(db, key.id, "en", "Home");
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        JSON.stringify({ "home.title": "Home" }),
+        {
+          locale: "en",
+          strategy: ImportStrategy.SKIP,
+          fileName: "translations.json",
+          contentType: "application/json",
+          branch: "feature-branch",
+        },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.stats.translationsSkipped).toBe(1);
+
+      const branch = await db.query.branches.findFirst({
+        where: { projectId: 1, slug: "feature-branch" },
+      });
+      expect(branch).toBeUndefined();
+    });
+
+    it("should not create the branch when all keys already exist (overwrite strategy)", async () => {
+      const db = getTestDb();
+      const key = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
+      await createTranslation(db, key.id, "en", "Old Home");
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        JSON.stringify({ "home.title": "New Home" }),
+        {
+          locale: "en",
+          strategy: ImportStrategy.OVERWRITE,
+          fileName: "translations.json",
+          contentType: "application/json",
+          branch: "feature-branch",
+        },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.stats.translationsUpdated).toBe(1);
+
+      const branch = await db.query.branches.findFirst({
+        where: { projectId: 1, slug: "feature-branch" },
+      });
+      expect(branch).toBeUndefined();
+    });
+
+    it("should not create the branch when the file contains no entries", async () => {
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        JSON.stringify({}),
+        {
+          locale: "en",
+          strategy: ImportStrategy.OVERWRITE,
+          fileName: "translations.json",
+          contentType: "application/json",
+          branch: "feature-branch",
+        },
+      );
+
+      // Empty files are rejected before any branch is touched
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(400);
+
+      const db = getTestDb();
+      const branch = await db.query.branches.findFirst({
+        where: { projectId: 1, slug: "feature-branch" },
+      });
+      expect(branch).toBeUndefined();
+    });
+
+    it("should import translations without creating keys when the branch does not exist and all keys exist", async () => {
+      const db = getTestDb();
+      await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        JSON.stringify({ "home.title": "Home" }),
+        {
+          locale: "en",
+          strategy: ImportStrategy.OVERWRITE,
+          fileName: "translations.json",
+          contentType: "application/json",
+          branch: "feature-branch",
+        },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.stats.keysCreated).toBe(0);
+      expect(data.stats.translationsCreated).toBe(1);
+
+      const branch = await db.query.branches.findFirst({
+        where: { projectId: 1, slug: "feature-branch" },
+      });
+      expect(branch).toBeUndefined();
+    });
+
+    it("should return 400 when the branch exists but is not open, even without new keys", async () => {
+      const db = getTestDb();
+      const key = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
+      await createTranslation(db, key.id, "en", "Home");
+      const [mergedBranch] = await db
+        .insert(schema.branches)
+        .values({
+          projectId: 1,
+          name: "feature-branch",
+          slug: "feature-branch",
+          status: BRANCH_STATUS.MERGED,
+        })
+        .returning();
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        JSON.stringify({ "home.title": "Home" }),
+        {
+          locale: "en",
+          strategy: ImportStrategy.SKIP,
+          fileName: "translations.json",
+          contentType: "application/json",
+          branch: mergedBranch.slug,
+        },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Import failed");
+      expect(data.details).toBe("Branch 'feature-branch' is not open");
     });
   });
 

@@ -1,11 +1,9 @@
 import { getProjectBySlug, getProjectLanguages } from "~/lib/projects.server";
 import { getProjectFileById } from "~/lib/project-files.server";
-import { getBranchBySlug, createBranch } from "~/lib/branches.server";
 import { validateImportData } from "./validate-import-data.server";
 import { importTranslations } from "./import-translations.server";
 import type { ImportStats } from "./import-translations.server";
 import { createTranslationFormat } from "~/lib/format/format-factory.server";
-import { BRANCH_STATUS } from "../branches";
 import {
   SupportedFormat,
   SUPPORTED_FORMATS_LIST,
@@ -134,32 +132,9 @@ export async function processImport({
     };
   }
 
-  // 6. Resolve optional branch (create if it doesn't exist)
-  let branchId: number | undefined;
-  if (branchSlug) {
-    let branch = await getBranchBySlug(project.id, branchSlug);
-    if (!branch) {
-      try {
-        branch = await createBranch({
-          projectId: project.id,
-          name: branchSlug,
-          slug: branchSlug,
-        });
-      } catch (_error) {
-        return {
-          success: false,
-          error: `Branch '${branchSlug}' not found and could not be created`,
-        };
-      }
-    }
-    if (branch.status !== BRANCH_STATUS.OPEN) {
-      return {
-        success: false,
-        error: `Branch '${branchSlug}' is not open`,
-      };
-    }
-    branchId = branch.id;
-  }
+  // 6. The optional branch is resolved lazily by importTranslations: it is
+  // only created when the import actually adds new keys, so imports with
+  // nothing new to insert never leave empty branches behind.
 
   // 7. Verify locale exists in project
   const languages = await getProjectLanguages(project.id);
@@ -254,7 +229,7 @@ export async function processImport({
     locale,
     data: parseResult.data!,
     strategy,
-    branchId,
+    branchSlug,
     fileId,
   });
 

@@ -1,13 +1,14 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { ImportStrategy } from "@transi-store/common";
 import { db, schema } from "~/lib/db.server";
+import { BRANCH_STATUS } from "../branches";
 
 type ImportParams = {
   projectId: number;
   locale: string;
   data: Record<string, string>;
   strategy: ImportStrategy;
-  branchId?: number;
+  branchSlug?: string;
   fileId: number;
 };
 
@@ -25,6 +26,9 @@ type ImportResult = {
   errors: Array<string>;
 };
 
+/** Error thrown inside the import transaction to surface a clean message. */
+class ImportError extends Error {}
+
 /** PostgreSQL has a limit on the number of parameters in a single query */
 const BATCH_SIZE = 500;
 
@@ -38,7 +42,7 @@ export async function importTranslations({
   locale,
   data,
   strategy,
-  branchId,
+  branchSlug,
   fileId,
 }: ImportParams): Promise<ImportResult> {
   const stats: ImportStats = {
@@ -79,8 +83,51 @@ export async function importTranslations({
         existingKeys.map((k) => [k.keyName, k.id]),
       );
 
-      // 2. Batch insert new keys (ON CONFLICT DO NOTHING)
+      // 2. Resolve the target branch only when new keys need it.
+      // A branch-scoped import creates a branch key for every new key, so a
+      // branch is only created when the import actually adds keys — this
+      // avoids leaving empty branches behind (e.g. a `upload:config` run
+      // where every translation already exists).
+      let branchId: number | undefined;
       const newKeyNames = keyNames.filter((name) => !existingKeyMap.has(name));
+
+      if (branchSlug) {
+        const existingBranch = await tx.query.branches.findFirst({
+          where: { projectId, slug: branchSlug },
+        });
+
+        if (existingBranch) {
+          if (existingBranch.status !== BRANCH_STATUS.OPEN) {
+            throw new ImportError(`Branch '${branchSlug}' is not open`);
+          }
+          branchId = existingBranch.id;
+        } else if (newKeyNames.length > 0) {
+          const [createdBranch] = await tx
+            .insert(schema.branches)
+            .values({ projectId, name: branchSlug, slug: branchSlug })
+            .onConflictDoNothing({
+              target: [schema.branches.projectId, schema.branches.slug],
+            })
+            .returning();
+
+          // ON CONFLICT DO NOTHING covers a concurrent import creating the
+          // same branch first; re-fetch it in that case.
+          branchId = (
+            createdBranch ??
+            (await tx.query.branches.findFirst({
+              where: { projectId, slug: branchSlug },
+            }))
+          )?.id;
+
+          if (branchId === undefined) {
+            throw new ImportError(
+              `Branch '${branchSlug}' not found and could not be created`,
+            );
+          }
+        }
+      }
+
+      // 3. Batch insert new keys (ON CONFLICT DO NOTHING)
 
       if (newKeyNames.length > 0) {
         for (let i = 0; i < newKeyNames.length; i += BATCH_SIZE) {
@@ -115,7 +162,7 @@ export async function importTranslations({
         stats.keysCreated = newKeyNames.length;
       }
 
-      // 3. Build the keyName → keyId map (all keys should now exist)
+      // 4. Build the keyName → keyId map (all keys should now exist)
       // If some keys were skipped by ON CONFLICT DO NOTHING (race condition),
       // re-fetch them
       const missingKeys = keyNames.filter((name) => !existingKeyMap.has(name));
@@ -138,7 +185,7 @@ export async function importTranslations({
         }
       }
 
-      // 4. Fetch existing translations for these keys + locale in one query
+      // 5. Fetch existing translations for these keys + locale in one query
       const allKeyIds = [...existingKeyMap.values()];
       const existingTranslations = await tx
         .select({ keyId: schema.translations.keyId })
@@ -154,7 +201,7 @@ export async function importTranslations({
         existingTranslations.map((t) => t.keyId),
       );
 
-      // 5. Batch upsert translations based on strategy
+      // 6. Batch upsert translations based on strategy
       // Filter out empty string values: empty translations are not meaningful
       const translationValues = entries
         .filter(([, value]) => value !== "")
