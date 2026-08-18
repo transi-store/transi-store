@@ -175,7 +175,12 @@ After:
 
 All operations run in a single transaction:
 
-1. For each key-value pair:
+1. If a `branch` slug is provided, the branch is resolved lazily: an existing
+   branch must be open, and a missing branch is only created when the import
+   actually adds new keys. An import that inserts nothing (e.g. every
+   translation already exists with the `skip` strategy) never leaves an empty
+   branch behind.
+2. For each key-value pair:
    - Upsert `translation_keys` (create or update `updatedAt`)
    - Insert or update `translations` based on strategy:
      - **overwrite**: `onConflictDoUpdate`
