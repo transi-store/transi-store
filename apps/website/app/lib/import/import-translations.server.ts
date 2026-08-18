@@ -112,18 +112,21 @@ export async function importTranslations({
 
           // ON CONFLICT DO NOTHING covers a concurrent import creating the
           // same branch first; re-fetch it in that case.
-          branchId = (
+          const branch =
             createdBranch ??
             (await tx.query.branches.findFirst({
               where: { projectId, slug: branchSlug },
-            }))
-          )?.id;
+            }));
 
-          if (branchId === undefined) {
+          if (!branch) {
             throw new ImportError(
               `Branch '${branchSlug}' not found and could not be created`,
             );
           }
+          if (branch.status !== BRANCH_STATUS.OPEN) {
+            throw new ImportError(`Branch '${branchSlug}' is not open`);
+          }
+          branchId = branch.id;
         }
       }
 
