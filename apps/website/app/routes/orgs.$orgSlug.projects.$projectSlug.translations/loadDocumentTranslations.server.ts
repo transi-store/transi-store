@@ -64,7 +64,6 @@ export async function loadDocumentTranslations(args: {
     for (const state of sectionStates) {
       const locale = localeByTranslationId.get(state.documentTranslationId);
       if (!locale) continue;
-      if (!fuzzyByLocale[locale]) fuzzyByLocale[locale] = {};
       fuzzyByLocale[locale][state.structuralPath] = state.isFuzzy;
     }
   }
