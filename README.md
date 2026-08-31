@@ -71,6 +71,16 @@ DATABASE_URL=postgresql://transi-store:transi-store@localhost:5432/transi-store
 SESSION_SECRET=a-long-random-secret-string
 ENCRYPTION_KEY=a-64-character-hexadecimal-key # generate one with `openssl rand -hex 32`
 
+# Optional admin email notifications (SMTP)
+# If ADMIN_NOTIFICATION_EMAIL is empty, no notification is sent.
+# SMTP_HOST, SMTP_USER and SMTP_PASSWORD are required when enabled.
+ADMIN_NOTIFICATION_EMAIL=
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+EMAIL_FROM=
+
 # At least one OAuth provider is required for authentication.
 # Google OAuth (optional)
 # Get your credentials at: https://console.cloud.google.com/apis/credentials > Create Credentials > OAuth 2.0 Client IDs > Authorized redirect URIs: your-domain-root:your-port/auth/google/callback
