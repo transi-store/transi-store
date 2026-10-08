@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2.5.0
+
+### Minor Changes
+
+- [#225](https://github.com/transi-store/transi-store/pull/225) [`99d208d`](https://github.com/transi-store/transi-store/commit/99d208d55b25b9ea724c953cdd5e6d8222215989) Thanks [@jdeniau](https://github.com/jdeniau)! - `upload:config` now stages for deletion the keys removed on a branch. On a branch, the default language files are compared with their version at the git merge-base with `main`/`master`, and the removed keys are marked "to delete" on the transi-store branch. Keys previously uploaded to the branch and since removed from the file are deleted from the branch (keys created from the UI are kept). This requires the default branch (`main`/`master`) to be available in the git repository.
+
+### Patch Changes
+
+- [#225](https://github.com/transi-store/transi-store/pull/225) [`e1d052a`](https://github.com/transi-store/transi-store/commit/e1d052aa249ab7f5fd409890a3b8a1a6f7618deb) Thanks [@jdeniau](https://github.com/jdeniau)! - `upload:config` now skips Markdown/MDX documents on a branch instead of failing: documents can only be uploaded to the main project.
+
 ## 2.4.1
 
 ### Patch Changes
