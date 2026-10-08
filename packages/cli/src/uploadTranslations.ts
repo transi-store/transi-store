@@ -7,10 +7,13 @@ import {
   createImportSuccessResponseSchema,
   DEFAULT_DOMAIN_ROOT,
   ImportStrategy,
+  isDocumentFormat,
 } from "@transi-store/common";
 import z from "zod";
 import {
   getDefaultBranch,
+  getFileContentAtRef,
+  getMergeBase,
   getModifiedFiles,
   isGitRepository,
   resolveGitBranch,
@@ -48,6 +51,11 @@ type UploadConfig = {
   format?: string | undefined;
   branch?: string | undefined;
   fileName?: string;
+  /**
+   * Previous version of the file: keys present in it but missing from the
+   * uploaded file are marked for deletion on the branch.
+   */
+  baseFileContent?: string | undefined;
 };
 
 function logLabel({
@@ -95,6 +103,7 @@ async function uploadTranslations({
   format,
   branch,
   fileName,
+  baseFileContent,
 }: UploadConfig): Promise<void> {
   const url = `${domainRoot}/api/orgs/${org}/projects/${project}/files/${fileId}/translations`;
 
@@ -119,6 +128,10 @@ async function uploadTranslations({
 
   if (branch) {
     formData.append("branch", branch);
+  }
+
+  if (baseFileContent !== undefined) {
+    formData.append("baseFile", new Blob([baseFileContent]), uploadFileName);
   }
 
   let response: Response;
@@ -177,6 +190,17 @@ async function uploadTranslations({
   console.log(`  Translations created: ${stats.translationsCreated}`);
   console.log(`  Translations updated: ${stats.translationsUpdated}`);
   console.log(`  Translations skipped: ${stats.translationsSkipped}`);
+  if (stats.keysMarkedForDeletion !== undefined) {
+    console.log(`  Keys marked for deletion: ${stats.keysMarkedForDeletion}`);
+  }
+  if (stats.keysUnmarkedForDeletion !== undefined) {
+    console.log(
+      `  Pending deletions cancelled: ${stats.keysUnmarkedForDeletion}`,
+    );
+  }
+  if (stats.branchKeysDeleted !== undefined) {
+    console.log(`  Branch keys deleted: ${stats.branchKeysDeleted}`);
+  }
 }
 
 export async function uploadForConfig(
@@ -225,6 +249,11 @@ export async function uploadForConfig(
   // Determine if we can use git to skip unchanged files
   let modifiedFiles: Set<string> | null = null;
 
+  // Commit the branch was forked from. The default locale files at this
+  // commit are sent as base files, so that the keys removed on the branch
+  // are marked for deletion.
+  let mergeBase: string | null = null;
+
   if (await isGitRepository()) {
     const defaultBranch = await getDefaultBranch();
 
@@ -236,8 +265,24 @@ export async function uploadForConfig(
       console.log(
         `Git optimization enabled: only uploading files modified compared to "${defaultBranch}"`,
       );
+
+      if (resolvedBranch) {
+        mergeBase = await getMergeBase(defaultBranch);
+
+        if (mergeBase) {
+          console.log(
+            `Git: keys removed since the merge-base with "${defaultBranch}" will be marked for deletion`,
+          );
+        } else {
+          console.warn(
+            `Git: unable to find the merge-base with "${defaultBranch}" (shallow clone?), keys removed on this branch will not be marked for deletion`,
+          );
+        }
+      }
     }
   }
+
+  const uploadBranch = isMainBranch ? undefined : resolvedBranch;
 
   for (const configItem of result.data.projects) {
     let metadata;
@@ -270,13 +315,33 @@ export async function uploadForConfig(
       continue;
     }
 
+    // The default locale file is the reference for the list of keys
+    const defaultLocale = metadata.languages.find(
+      (lang) => lang.isDefault,
+    )?.locale;
+
+    if (mergeBase && !defaultLocale) {
+      console.warn(
+        `Project "${configItem.project}" has no default language, keys removed on this branch will not be marked for deletion`,
+      );
+    }
+
     for (const file of metadata.files) {
       const fileName = path.basename(file.filePath);
+
+      // Documents (Markdown/MDX) can only be imported into the main project
+      if (uploadBranch && isDocumentFormat(file.format)) {
+        console.log(
+          `Skipping project "${configItem.project}" file "${fileName}": documents cannot be uploaded to a branch`,
+        );
+        continue;
+      }
 
       for (const lang of metadata.languages) {
         const locale = lang.locale;
         const input = resolveFilePath(file.filePath, locale);
         const resolvedInput = path.resolve(cwd, input);
+        const deletionBaseRef = locale === defaultLocale ? mergeBase : null;
 
         if (!fs.existsSync(resolvedInput)) {
           console.log(
@@ -285,12 +350,22 @@ export async function uploadForConfig(
           continue;
         }
 
-        if (modifiedFiles && !modifiedFiles.has(resolvedInput)) {
+        // A file reverted to its main version may still have pending
+        // deletions to cancel, so the default locale file is always uploaded.
+        if (
+          modifiedFiles &&
+          !modifiedFiles.has(resolvedInput) &&
+          !deletionBaseRef
+        ) {
           console.log(
             `Skipping ${logLabel({ project: configItem.project, fileName, locale })}: file not modified`,
           );
           continue;
         }
+
+        const baseFileContent = deletionBaseRef
+          ? await getFileContentAtRef(deletionBaseRef, resolvedInput)
+          : null;
 
         await uploadTranslations({
           domainRoot,
@@ -302,8 +377,9 @@ export async function uploadForConfig(
           locale,
           input,
           strategy,
-          branch: isMainBranch ? undefined : resolvedBranch,
+          branch: uploadBranch,
           fileName,
+          baseFileContent: baseFileContent ?? undefined,
         });
       }
     }

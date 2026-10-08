@@ -78,6 +78,7 @@ transi-store uses **PostgreSQL 18** with **Drizzle ORM v1.0.0-beta**.
 Branches allow isolating translation changes (additions and deletions) before merging them to main.
 
 - **Additions**: Translation keys have a nullable `branchId` field. `NULL` = main, value = branch.
+- **Key origin**: `createdBySource` (`TranslationKeySource` enum) is `import` for keys created by a file import, `website` for keys created from the UI, and `NULL` for keys created before it was tracked. A branch import with a `baseFile` deletes the imported branch keys that are no longer in the file (see [import-system.md](./import-system.md#branch-deletions-from-a-base-file)).
 - **Deletions**: The `branch_key_deletions` table stores main keys marked for deletion in a branch.
 - **Merge**: Moves additions to main (`branchId = NULL`) and soft-deletes marked keys (`deletedAt = now()`).
 - **Soft-delete**: Keys with a non-null `deletedAt` are excluded from exports, search, and the main view.

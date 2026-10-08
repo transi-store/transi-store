@@ -11,6 +11,7 @@ export function buildProjectTranslations(
       projectId: 1,
       keyName,
       description: descriptions?.[keyName] ?? null,
+      createdBySource: null,
       branchId: null,
       fileId: 1,
       deletedAt: null,

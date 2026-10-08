@@ -26,6 +26,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history so that the CLI can find the merge-base with main and
+          # mark the keys removed on the branch for deletion
+          fetch-depth: 0
 
       - run: corepack enable
 

@@ -209,8 +209,10 @@ transi-store upload:config --branch feature/my-feature
 transi-store upload --org acme --project webapp --locale fr --input ./locales/fr.json
 ```
 
-> **Detección automática de rama de Git:** cuando no se proporciona `--branch`, la CLI detecta automáticamente la rama de git actual y la utiliza. En `main`/`master`, no se aplica ningún filtro de rama (las claves se cargan en el proyecto principal).
+> **Detección automática de rama de Git:** cuando no se proporciona `--branch`, la CLI detecta automáticamente la rama de git actual y la utiliza. En `main`/`master`, no se aplica ningún filtro de rama (las claves se cargan en el proyecto principal). En cualquier otra rama, `upload:config` omite los documentos Markdown/MDX: solo se pueden subir al proyecto principal.
 
 > **Optimización de Git:** `upload:config` también omite los archivos que no han cambiado en comparación con la rama predeterminada (`main`/`master`) al ejecutarse en un repositorio git, para evitar llamadas innecesarias a la API.
+
+> **Eliminaciones en una rama:** en una rama, `upload:config` también compara los archivos del idioma predeterminado con su versión en el merge-base con `main`/`master`. Las claves eliminadas en la rama se ponen en espera de eliminación en la rama de transi-store (y se eliminan del proyecto principal al fusionar la rama). Las claves subidas previamente a la rama y eliminadas después del archivo se eliminan de la rama; las claves creadas desde la interfaz se conservan. Una eliminación en espera se cancela si la clave vuelve a aparecer en el archivo. Por ello, los archivos del idioma predeterminado siempre se suben en una rama, aunque no hayan cambiado. Esto requiere que la rama predeterminada (`main`/`master`) esté disponible en el repositorio git; de lo contrario, se muestra una advertencia y no se pone en espera ninguna eliminación.
 
 Esto es ideal para integrar en CI/CD: descargue cadenas traducidas durante el tiempo de compilación y cargue nuevas cadenas de origen después de que los desarrolladores las añadan.
