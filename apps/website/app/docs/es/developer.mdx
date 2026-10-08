@@ -213,4 +213,6 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Optimización de Git:** `upload:config` también omite los archivos que no han cambiado en comparación con la rama predeterminada (`main`/`master`) al ejecutarse en un repositorio git, para evitar llamadas innecesarias a la API.
 
+> **Eliminaciones en una rama:** en una rama, `upload:config` también compara los archivos del idioma predeterminado con su versión en el merge-base con `main`/`master`. Las claves eliminadas en la rama se ponen en espera de eliminación en la rama de transi-store (y se eliminan del proyecto principal al fusionar la rama). Una eliminación en espera se cancela si la clave vuelve a aparecer en el archivo. Por ello, los archivos del idioma predeterminado siempre se suben en una rama, aunque no hayan cambiado. Esto requiere el historial completo de git: en CI, utilice `fetch-depth: 0` con `actions/checkout`; de lo contrario, se muestra una advertencia y no se pone en espera ninguna eliminación.
+
 Esto es ideal para integrar en CI/CD: descargue cadenas traducidas durante el tiempo de compilación y cargue nuevas cadenas de origen después de que los desarrolladores las añadan.

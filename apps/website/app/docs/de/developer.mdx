@@ -213,4 +213,6 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Git-Optimierung:** `upload:config` überspringt zudem Dateien, die sich im Vergleich zum Standard-Branch (`main`/`master`) nicht geändert haben, wenn sie in einem Git-Repository ausgeführt werden, um unnötige API-Aufrufe zu vermeiden.
 
+> **Löschungen auf einem Branch:** Auf einem Branch vergleicht `upload:config` außerdem die Dateien der Standardsprache mit ihrer Version an der Merge-Base mit `main`/`master`. Auf dem Branch entfernte Schlüssel werden im transi-store-Branch für die Löschung vorgesehen (und beim Zusammenführen des Branches aus dem Hauptprojekt gelöscht). Eine vorgesehene Löschung wird aufgehoben, sobald der Schlüssel wieder in der Datei steht. Deshalb werden die Dateien der Standardsprache auf einem Branch immer hochgeladen, auch wenn sie sich nicht geändert haben. Dafür wird die vollständige Git-Historie benötigt: Verwenden Sie in der CI `fetch-depth: 0` mit `actions/checkout`, andernfalls wird eine Warnung angezeigt und keine Löschung vorgesehen.
+
 Dies ist ideal für die Integration in CI/CD — laden Sie übersetzte Strings zur Build-Zeit herunter und laden Sie neue Quell-Strings hoch, nachdem Entwickler sie hinzugefügt haben.

@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { ImportStrategy } from "@transi-store/common";
 import { db, schema } from "~/lib/db.server";
 import { BRANCH_STATUS } from "../branches";
@@ -10,6 +10,12 @@ type ImportParams = {
   strategy: ImportStrategy;
   branchSlug?: string;
   fileId: number;
+  /**
+   * Keys removed from the file since its base version. When provided on a
+   * branch import, the matching main keys are marked for deletion on the
+   * branch, and pending deletions of keys present in `data` are cancelled.
+   */
+  removedKeyNames?: Array<string>;
 };
 
 export type ImportStats = {
@@ -18,6 +24,10 @@ export type ImportStats = {
   translationsCreated: number;
   translationsUpdated: number;
   translationsSkipped: number;
+  /** Only set when `removedKeyNames` is provided. */
+  keysMarkedForDeletion?: number;
+  /** Only set when `removedKeyNames` is provided. */
+  keysUnmarkedForDeletion?: number;
 };
 
 type ImportResult = {
@@ -44,6 +54,7 @@ export async function importTranslations({
   strategy,
   branchSlug,
   fileId,
+  removedKeyNames,
 }: ImportParams): Promise<ImportResult> {
   const stats: ImportStats = {
     total: 0,
@@ -51,13 +62,17 @@ export async function importTranslations({
     translationsCreated: 0,
     translationsUpdated: 0,
     translationsSkipped: 0,
+    ...(removedKeyNames && {
+      keysMarkedForDeletion: 0,
+      keysUnmarkedForDeletion: 0,
+    }),
   };
 
   try {
     const entries = Object.entries(data);
     stats.total = entries.length;
 
-    if (entries.length === 0) {
+    if (entries.length === 0 && !removedKeyNames?.length) {
       return { success: true, stats, errors: [] };
     }
 
@@ -83,11 +98,31 @@ export async function importTranslations({
         existingKeys.map((k) => [k.keyName, k.id]),
       );
 
-      // 2. Resolve the target branch only when new keys need it.
+      // 2. Main keys removed from the file since its base version: they
+      // will be marked for deletion on the branch.
+      const keyIdsToMarkForDeletion =
+        branchSlug && removedKeyNames?.length
+          ? (
+              await tx
+                .select({ id: schema.translationKeys.id })
+                .from(schema.translationKeys)
+                .where(
+                  and(
+                    eq(schema.translationKeys.projectId, projectId),
+                    eq(schema.translationKeys.fileId, fileId),
+                    isNull(schema.translationKeys.branchId),
+                    isNull(schema.translationKeys.deletedAt),
+                    inArray(schema.translationKeys.keyName, removedKeyNames),
+                  ),
+                )
+            ).map((k) => k.id)
+          : [];
+
+      // 3. Resolve the target branch only when new keys or deletions need it.
       // A branch-scoped import creates a branch key for every new key, so a
-      // branch is only created when the import actually adds keys — this
-      // avoids leaving empty branches behind (e.g. a `upload:config` run
-      // where every translation already exists).
+      // branch is only created when the import actually adds or deletes keys
+      // — this avoids leaving empty branches behind (e.g. a `upload:config`
+      // run where every translation already exists).
       let branchId: number | undefined;
       const newKeyNames = keyNames.filter((name) => !existingKeyMap.has(name));
 
@@ -101,7 +136,10 @@ export async function importTranslations({
             throw new ImportError(`Branch '${branchSlug}' is not open`);
           }
           branchId = existingBranch.id;
-        } else if (newKeyNames.length > 0) {
+        } else if (
+          newKeyNames.length > 0 ||
+          keyIdsToMarkForDeletion.length > 0
+        ) {
           const [createdBranch] = await tx
             .insert(schema.branches)
             .values({ projectId, name: branchSlug, slug: branchSlug })
@@ -130,7 +168,7 @@ export async function importTranslations({
         }
       }
 
-      // 3. Batch insert new keys (ON CONFLICT DO NOTHING)
+      // 4. Batch insert new keys (ON CONFLICT DO NOTHING)
 
       if (newKeyNames.length > 0) {
         for (let i = 0; i < newKeyNames.length; i += BATCH_SIZE) {
@@ -165,7 +203,7 @@ export async function importTranslations({
         stats.keysCreated = newKeyNames.length;
       }
 
-      // 4. Build the keyName → keyId map (all keys should now exist)
+      // 5. Build the keyName → keyId map (all keys should now exist)
       // If some keys were skipped by ON CONFLICT DO NOTHING (race condition),
       // re-fetch them
       const missingKeys = keyNames.filter((name) => !existingKeyMap.has(name));
@@ -188,7 +226,7 @@ export async function importTranslations({
         }
       }
 
-      // 5. Fetch existing translations for these keys + locale in one query
+      // 6. Fetch existing translations for these keys + locale in one query
       const allKeyIds = [...existingKeyMap.values()];
       const existingTranslations = await tx
         .select({ keyId: schema.translations.keyId })
@@ -204,7 +242,7 @@ export async function importTranslations({
         existingTranslations.map((t) => t.keyId),
       );
 
-      // 6. Batch upsert translations based on strategy
+      // 7. Batch upsert translations based on strategy
       // Filter out empty string values: empty translations are not meaningful
       const translationValues = entries
         .filter(([, value]) => value !== "")
@@ -261,6 +299,39 @@ export async function importTranslations({
 
         stats.translationsCreated = newTranslations.length;
         stats.translationsSkipped = entries.length - newTranslations.length;
+      }
+
+      // 8. Sync the branch deletions with the file: mark the removed keys,
+      // and cancel the pending deletion of keys that are back in the file.
+      if (removedKeyNames && branchId !== undefined) {
+        let keysMarkedForDeletion = 0;
+        for (let i = 0; i < keyIdsToMarkForDeletion.length; i += BATCH_SIZE) {
+          const batch = keyIdsToMarkForDeletion.slice(i, i + BATCH_SIZE);
+          const marked = await tx
+            .insert(schema.branchKeyDeletions)
+            .values(
+              batch.map((translationKeyId) => ({ branchId, translationKeyId })),
+            )
+            .onConflictDoNothing()
+            .returning({ id: schema.branchKeyDeletions.id });
+
+          keysMarkedForDeletion += marked.length;
+        }
+        stats.keysMarkedForDeletion = keysMarkedForDeletion;
+
+        if (allKeyIds.length > 0) {
+          const unmarked = await tx
+            .delete(schema.branchKeyDeletions)
+            .where(
+              and(
+                eq(schema.branchKeyDeletions.branchId, branchId),
+                inArray(schema.branchKeyDeletions.translationKeyId, allKeyIds),
+              ),
+            )
+            .returning({ id: schema.branchKeyDeletions.id });
+
+          stats.keysUnmarkedForDeletion = unmarked.length;
+        }
       }
     });
 

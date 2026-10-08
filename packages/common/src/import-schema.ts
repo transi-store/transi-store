@@ -51,6 +51,18 @@ export function createImportStatsSchema() {
       .describe(
         "Number of existing translations left untouched (only with 'skip' strategy).",
       ),
+    keysMarkedForDeletion: z
+      .number()
+      .optional()
+      .describe(
+        "Number of main keys newly marked for deletion on the branch (only when 'baseFile' is provided).",
+      ),
+    keysUnmarkedForDeletion: z
+      .number()
+      .optional()
+      .describe(
+        "Number of keys whose pending deletion on the branch was cancelled because they are present in the file again (only when 'baseFile' is provided).",
+      ),
   });
 }
 

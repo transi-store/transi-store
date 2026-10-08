@@ -177,14 +177,16 @@ All operations run in a single transaction:
 
 1. If a `branch` slug is provided, the branch is resolved lazily: an existing
    branch must be open, and a missing branch is only created when the import
-   actually adds new keys. An import that inserts nothing (e.g. every
-   translation already exists with the `skip` strategy) never leaves an empty
-   branch behind.
+   actually adds new keys or marks keys for deletion. An import that changes
+   nothing (e.g. every translation already exists with the `skip` strategy)
+   never leaves an empty branch behind.
 2. For each key-value pair:
    - Upsert `translation_keys` (create or update `updatedAt`)
    - Insert or update `translations` based on strategy:
      - **overwrite**: `onConflictDoUpdate`
      - **skip**: `onConflictDoNothing`
+3. If a `baseFile` is provided, the branch deletions are synced with the file
+   (see [Branch deletions from a base file](#branch-deletions-from-a-base-file)).
 
 ### 3. Statistics
 
@@ -200,6 +202,35 @@ All operations run in a single transaction:
   }
 }
 ```
+
+`keysMarkedForDeletion` and `keysUnmarkedForDeletion` are added to the stats only when a `baseFile` is provided.
+
+## Branch deletions from a base file
+
+A branch import can carry an optional `baseFile` multipart field: the previous
+version of the same file, in the same format. It requires `branch` (and is
+therefore not available for document formats).
+
+- Keys present in `baseFile` but missing from `file` are considered removed on
+  the branch. The matching **live main keys** of the file (`branchId IS NULL`,
+  `deletedAt IS NULL`) are inserted into `branch_key_deletions`, i.e. staged
+  for deletion until the branch is merged (see
+  [ADR-018](../decisions/ADR-018-suppression-traductions-branches.md)).
+- Pending deletions of keys present in `file` are cancelled: the file is the
+  source of truth, so a key that comes back (e.g. a reverted removal) is not
+  deleted at merge time. This also cancels a deletion staged from the UI if
+  the key is still in the file.
+
+Only keys removed relative to `baseFile` are marked, never "every main key
+missing from the file": a branch that is not rebased on main must not delete
+the keys added to main after it was forked.
+
+`upload:config` (`packages/cli/src/uploadTranslations.ts`) sends the default
+language file at the git merge-base with `main`/`master` as `baseFile`, on a
+branch only. Default language files are then always uploaded, even when the
+git optimization would skip them, so that pending deletions can be cancelled.
+When the merge-base cannot be computed (shallow clone), the CLI prints a
+warning and sends no `baseFile`.
 
 ## Implementation
 

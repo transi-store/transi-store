@@ -65,6 +65,16 @@ export async function processImport({
     return { success: false, error: "File is too large (maximum 5 MB)" };
   }
 
+  // Optional previous version of the file, used to detect removed keys
+  const baseFile = formData.get("baseFile");
+  if (baseFile !== null && !(baseFile instanceof File)) {
+    return { success: false, error: "'baseFile' must be a file" };
+  }
+
+  if (baseFile && baseFile.size > MAX_FILE_SIZE) {
+    return { success: false, error: "Base file is too large (maximum 5 MB)" };
+  }
+
   // 2. Validate text fields with shared Zod schema
   const fieldsResult = importFieldsSchema().safeParse({
     locale: formData.get("locale"),
@@ -88,6 +98,14 @@ export async function processImport({
     format: formatParam,
     branch: branchSlug,
   } = fieldsResult.data;
+
+  if (baseFile && !branchSlug) {
+    return {
+      success: false,
+      error:
+        "'baseFile' requires 'branch': deletions can only be marked on a branch",
+    };
+  }
 
   // 4. Detect format from explicit parameter or file extension
   let format: SupportedFormat;
@@ -223,7 +241,32 @@ export async function processImport({
     };
   }
 
-  // 11. Import translations
+  // 11. Keys present in the base file but missing from the uploaded file
+  // were removed on the branch: they will be marked for deletion.
+  let removedKeyNames: Array<string> | undefined;
+  if (baseFile) {
+    let baseFileContent: string;
+    try {
+      baseFileContent = await baseFile.text();
+    } catch (_error) {
+      return { success: false, error: "Unable to read base file content" };
+    }
+
+    const baseParseResult = translator.parseImport(baseFileContent);
+    if (!baseParseResult.success) {
+      return {
+        success: false,
+        error: "Unable to parse 'baseFile'",
+        details: baseParseResult.error,
+      };
+    }
+
+    removedKeyNames = Object.keys(baseParseResult.data!).filter(
+      (keyName) => !Object.hasOwn(parseResult.data!, keyName),
+    );
+  }
+
+  // 12. Import translations
   const result = await importTranslations({
     projectId: project.id,
     locale,
@@ -231,6 +274,7 @@ export async function processImport({
     strategy,
     branchSlug,
     fileId,
+    removedKeyNames,
   });
 
   if (!result.success) {

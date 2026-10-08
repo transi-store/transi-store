@@ -88,6 +88,16 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         "Translation file to import (JSON or XLIFF 2.0). Maximum size: 5 MB.",
       format: "binary",
     }),
+    baseFile: z
+      .string()
+      .optional()
+      .openapi({
+        description:
+          "Previous version of the same file, in the same format (e.g. the file at the git merge-base of the branch). Requires `branch`. " +
+          "Main keys present in `baseFile` but missing from `file` are marked for deletion on the branch, " +
+          "and pending deletions of keys present in `file` are cancelled. Maximum size: 5 MB.",
+        format: "binary",
+      }),
   });
 
   // -- Project detail endpoint --
@@ -227,7 +237,8 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
     description:
       "Upload a translation file for a single locale, scoped to one project file. " +
       "New keys are created under that file. " +
-      "Use the `strategy` field to control whether existing translations are updated or skipped.",
+      "Use the `strategy` field to control whether existing translations are updated or skipped. " +
+      "On a branch, send the previous version of the file as `baseFile` to mark the keys removed from it for deletion.",
     tags: ["Translations"],
     security: [{ BearerApiKey: [] }],
     request: {

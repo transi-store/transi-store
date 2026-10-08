@@ -1,3 +1,4 @@
+import path from "node:path";
 import { simpleGit, type SimpleGit } from "simple-git";
 
 let gitInstance: SimpleGit | undefined;
@@ -158,4 +159,38 @@ export async function getModifiedFiles(baseRef: string): Promise<Set<string>> {
   }
 
   return modified;
+}
+
+/**
+ * Returns the commit where HEAD diverged from the given base ref, or null
+ * when it cannot be computed (e.g. a shallow clone missing the shared history).
+ */
+export async function getMergeBase(baseRef: string): Promise<string | null> {
+  try {
+    const mergeBase = await getGit().raw(["merge-base", baseRef, "HEAD"]);
+    return mergeBase.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns the content of a file at the given ref, or null when the file does
+ * not exist at that ref.
+ */
+export async function getFileContentAtRef(
+  ref: string,
+  absolutePath: string,
+): Promise<string | null> {
+  // `<ref>:./<path>` resolves the path relative to the current directory
+  const relativePath = path
+    .relative(process.cwd(), absolutePath)
+    .split(path.sep)
+    .join("/");
+
+  try {
+    return await getGit().show([`${ref}:./${relativePath}`]);
+  } catch {
+    return null;
+  }
 }

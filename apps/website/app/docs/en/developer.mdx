@@ -213,4 +213,6 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Git optimization:** `upload:config` also skips files that have not changed compared to the default branch (`main`/`master`) when running in a git repository, to avoid unnecessary API calls.
 
+> **Deletions on a branch:** on a branch, `upload:config` also compares the default language files with their version at the merge-base with `main`/`master`. Keys removed on the branch are staged for deletion on the transi-store branch (and deleted from the main project when the branch is merged). A staged deletion is cancelled when the key comes back in the file. For this reason, default language files are always uploaded on a branch, even when unchanged. This requires the full git history: in CI, use `fetch-depth: 0` with `actions/checkout`, otherwise a warning is displayed and no deletion is staged.
+
 This is ideal for integrating into CI/CD — download translated strings at build time and upload new source strings after developers add them.

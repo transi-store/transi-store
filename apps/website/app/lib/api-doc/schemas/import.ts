@@ -65,6 +65,16 @@ export const importSuccessResponseSchema = createImportSuccessResponseSchema()
             "Number of existing translations left untouched (only with 'skip' strategy).",
           example: 0,
         }),
+        keysMarkedForDeletion: z.number().optional().openapi({
+          description:
+            "Number of main keys newly marked for deletion on the branch. Only present when 'baseFile' is provided.",
+          example: 2,
+        }),
+        keysUnmarkedForDeletion: z.number().optional().openapi({
+          description:
+            "Number of keys whose pending deletion on the branch was cancelled because they are present in the file again. Only present when 'baseFile' is provided.",
+          example: 0,
+        }),
       })
       .openapi("ImportStats"),
   })
