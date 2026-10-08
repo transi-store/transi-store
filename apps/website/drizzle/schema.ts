@@ -242,6 +242,9 @@ export const translationKeys = pgTable(
       }),
     keyName: textC("key_name", { length: 500 }).notNull(),
     description: text("description"),
+    // Created by a file import (vs. from the UI). On a branch, such keys are
+    // deleted once they are no longer in the uploaded file.
+    createdByImport: boolean("created_by_import").default(false).notNull(),
     deletedAt: timestamp("deleted_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

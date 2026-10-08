@@ -70,6 +70,7 @@ describe("getProjectTranslations", () => {
         fileId: key.fileId,
         description: null,
         keyName: "hello.world",
+        createdByImport: false,
         createdAt: NOW,
         updatedAt: NOW,
         translations: [

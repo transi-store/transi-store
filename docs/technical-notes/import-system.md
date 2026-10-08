@@ -203,7 +203,7 @@ All operations run in a single transaction:
 }
 ```
 
-`keysMarkedForDeletion` and `keysUnmarkedForDeletion` are added to the stats only when a `baseFile` is provided.
+`keysMarkedForDeletion`, `keysUnmarkedForDeletion` and `branchKeysDeleted` are added to the stats only when a `baseFile` is provided.
 
 ## Branch deletions from a base file
 
@@ -220,6 +220,11 @@ therefore not available for document formats).
   source of truth, so a key that comes back (e.g. a reverted removal) is not
   deleted at merge time. This also cancels a deletion staged from the UI if
   the key is still in the file.
+- Branch keys of the file created by an import (`createdByImport = true`) and
+  missing from `file` are deleted right away, with their translations: they
+  were added by a previous upload and removed from the code since, and never
+  reached main. Keys created from the UI (`createdByImport = false`) are kept,
+  as they may not have been added to the code yet.
 
 Only keys removed relative to `baseFile` are marked, never "every main key
 missing from the file": a branch that is not rebased on main must not delete
@@ -227,8 +232,10 @@ the keys added to main after it was forked.
 
 `upload:config` (`packages/cli/src/uploadTranslations.ts`) sends the default
 language file at the git merge-base with `main`/`master` as `baseFile`, on a
-branch only. Default language files are then always uploaded, even when the
-git optimization would skip them, so that pending deletions can be cancelled.
+branch only. Default language key/value files are then always uploaded, even
+when the git optimization would skip them, so that pending deletions can be
+cancelled. Document files (Markdown/MDX) are excluded: they have no keys, and
+branch-scoped document imports are rejected.
 When the merge-base cannot be computed (shallow clone), the CLI prints a
 warning and sends no `baseFile`.
 

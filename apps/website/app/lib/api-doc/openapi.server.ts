@@ -95,7 +95,8 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         description:
           "Previous version of the same file, in the same format (e.g. the file at the git merge-base of the branch). Requires `branch`. " +
           "Main keys present in `baseFile` but missing from `file` are marked for deletion on the branch, " +
-          "and pending deletions of keys present in `file` are cancelled. Maximum size: 5 MB.",
+          "pending deletions of keys present in `file` are cancelled, " +
+          "and keys previously imported into the branch but missing from `file` are deleted. Maximum size: 5 MB.",
         format: "binary",
       }),
   });

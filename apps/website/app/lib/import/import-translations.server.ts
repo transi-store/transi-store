@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { ImportStrategy } from "@transi-store/common";
 import { db, schema } from "~/lib/db.server";
 import { BRANCH_STATUS } from "../branches";
@@ -13,7 +13,9 @@ type ImportParams = {
   /**
    * Keys removed from the file since its base version. When provided on a
    * branch import, the matching main keys are marked for deletion on the
-   * branch, and pending deletions of keys present in `data` are cancelled.
+   * branch, pending deletions of keys present in `data` are cancelled, and
+   * keys previously imported into the branch but missing from `data` are
+   * deleted.
    */
   removedKeyNames?: Array<string>;
 };
@@ -28,6 +30,8 @@ export type ImportStats = {
   keysMarkedForDeletion?: number;
   /** Only set when `removedKeyNames` is provided. */
   keysUnmarkedForDeletion?: number;
+  /** Only set when `removedKeyNames` is provided. */
+  branchKeysDeleted?: number;
 };
 
 type ImportResult = {
@@ -65,6 +69,7 @@ export async function importTranslations({
     ...(removedKeyNames && {
       keysMarkedForDeletion: 0,
       keysUnmarkedForDeletion: 0,
+      branchKeysDeleted: 0,
     }),
   };
 
@@ -181,6 +186,7 @@ export async function importTranslations({
                 keyName,
                 branchId: branchId ?? null,
                 fileId,
+                createdByImport: true,
               })),
             )
             .onConflictDoNothing({
@@ -302,7 +308,9 @@ export async function importTranslations({
       }
 
       // 8. Sync the branch deletions with the file: mark the removed keys,
-      // and cancel the pending deletion of keys that are back in the file.
+      // cancel the pending deletion of keys that are back in the file, and
+      // delete the keys previously imported into the branch that are no
+      // longer in the file.
       if (removedKeyNames && branchId !== undefined) {
         let keysMarkedForDeletion = 0;
         for (let i = 0; i < keyIdsToMarkForDeletion.length; i += BATCH_SIZE) {
@@ -332,6 +340,24 @@ export async function importTranslations({
 
           stats.keysUnmarkedForDeletion = unmarked.length;
         }
+
+        // These keys never reached main, so they are deleted right away (with
+        // their translations). Keys created from the UI are kept: they may
+        // not have been added to the file yet.
+        const deletedBranchKeys = await tx
+          .delete(schema.translationKeys)
+          .where(
+            and(
+              eq(schema.translationKeys.projectId, projectId),
+              eq(schema.translationKeys.fileId, fileId),
+              eq(schema.translationKeys.branchId, branchId),
+              eq(schema.translationKeys.createdByImport, true),
+              notInArray(schema.translationKeys.keyName, keyNames),
+            ),
+          )
+          .returning({ id: schema.translationKeys.id });
+
+        stats.branchKeysDeleted = deletedBranchKeys.length;
       }
     });
 

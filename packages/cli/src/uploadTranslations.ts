@@ -7,6 +7,7 @@ import {
   createImportSuccessResponseSchema,
   DEFAULT_DOMAIN_ROOT,
   ImportStrategy,
+  isDocumentFormat,
 } from "@transi-store/common";
 import z from "zod";
 import {
@@ -197,6 +198,9 @@ async function uploadTranslations({
       `  Pending deletions cancelled: ${stats.keysUnmarkedForDeletion}`,
     );
   }
+  if (stats.branchKeysDeleted !== undefined) {
+    console.log(`  Branch keys deleted: ${stats.branchKeysDeleted}`);
+  }
 }
 
 export async function uploadForConfig(
@@ -327,7 +331,11 @@ export async function uploadForConfig(
         const locale = lang.locale;
         const input = resolveFilePath(file.filePath, locale);
         const resolvedInput = path.resolve(cwd, input);
-        const deletionBaseRef = locale === defaultLocale ? mergeBase : null;
+        // Document files (Markdown/MDX) have no keys to delete
+        const deletionBaseRef =
+          locale === defaultLocale && !isDocumentFormat(file.format)
+            ? mergeBase
+            : null;
 
         if (!fs.existsSync(resolvedInput)) {
           console.log(

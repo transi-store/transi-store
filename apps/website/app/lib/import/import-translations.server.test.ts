@@ -180,6 +180,74 @@ describe("importTranslations - branch deletions", () => {
     expect(await getMarkedKeyNames(branch.id)).toEqual(["still.removed"]);
   });
 
+  it("deletes keys previously imported into the branch that are no longer in the file", async () => {
+    await createTranslationKey(db, projectId, "kept", { fileId });
+    const firstImport = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { kept: "Kept", "added.then.removed": "Removed" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: "feature-branch",
+      fileId,
+      removedKeyNames: [],
+    });
+    expect(firstImport.stats.keysCreated).toBe(1);
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { kept: "Kept" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: "feature-branch",
+      fileId,
+      removedKeyNames: [],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats.branchKeysDeleted).toBe(1);
+    const key = await db.query.translationKeys.findFirst({
+      where: { projectId, keyName: "added.then.removed" },
+    });
+    expect(key).toBeUndefined();
+  });
+
+  it("keeps branch keys created from the UI and keys of other branches", async () => {
+    const branch = await createBranch(db, projectId);
+    const otherBranch = await createBranch(db, projectId, {
+      name: "other",
+      slug: "other",
+    });
+    await createTranslationKey(db, projectId, "kept", { fileId });
+    await createTranslationKey(db, projectId, "created.from.ui", {
+      fileId,
+      branchId: branch.id,
+    });
+    await createTranslationKey(db, projectId, "imported.on.other.branch", {
+      fileId,
+      branchId: otherBranch.id,
+      createdByImport: true,
+    });
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { kept: "Kept" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: branch.slug,
+      fileId,
+      removedKeyNames: [],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats.branchKeysDeleted).toBe(0);
+    const keyNames = (
+      await db.query.translationKeys.findMany({ where: { projectId } })
+    ).map((key) => key.keyName);
+    expect(keyNames).toEqual(
+      expect.arrayContaining(["created.from.ui", "imported.on.other.branch"]),
+    );
+  });
+
   it("leaves branch deletions untouched without removedKeyNames", async () => {
     const branch = await createBranch(db, projectId);
     const key = await createTranslationKey(db, projectId, "marked", {
@@ -199,6 +267,31 @@ describe("importTranslations - branch deletions", () => {
     expect(result.success).toBe(true);
     expect(result.stats).not.toHaveProperty("keysMarkedForDeletion");
     expect(result.stats).not.toHaveProperty("keysUnmarkedForDeletion");
+    expect(result.stats).not.toHaveProperty("branchKeysDeleted");
     expect(await getMarkedKeyNames(branch.id)).toEqual(["marked"]);
+  });
+
+  it("keeps keys previously imported into the branch without removedKeyNames", async () => {
+    const branch = await createBranch(db, projectId);
+    await createTranslationKey(db, projectId, "imported", {
+      fileId,
+      branchId: branch.id,
+      createdByImport: true,
+    });
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { other: "Other" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: branch.slug,
+      fileId,
+    });
+
+    expect(result.success).toBe(true);
+    const key = await db.query.translationKeys.findFirst({
+      where: { projectId, keyName: "imported" },
+    });
+    expect(key).toBeDefined();
   });
 });

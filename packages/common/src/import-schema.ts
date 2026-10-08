@@ -63,6 +63,12 @@ export function createImportStatsSchema() {
       .describe(
         "Number of keys whose pending deletion on the branch was cancelled because they are present in the file again (only when 'baseFile' is provided).",
       ),
+    branchKeysDeleted: z
+      .number()
+      .optional()
+      .describe(
+        "Number of keys previously imported into the branch and deleted because they are no longer in the file (only when 'baseFile' is provided).",
+      ),
   });
 }
 

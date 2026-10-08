@@ -75,6 +75,11 @@ export const importSuccessResponseSchema = createImportSuccessResponseSchema()
             "Number of keys whose pending deletion on the branch was cancelled because they are present in the file again. Only present when 'baseFile' is provided.",
           example: 0,
         }),
+        branchKeysDeleted: z.number().optional().openapi({
+          description:
+            "Number of keys previously imported into the branch and deleted because they are no longer in the file. Keys created from the UI are never deleted. Only present when 'baseFile' is provided.",
+          example: 1,
+        }),
       })
       .openapi("ImportStats"),
   })
