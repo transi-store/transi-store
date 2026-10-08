@@ -232,10 +232,10 @@ the keys added to main after it was forked.
 
 `upload:config` (`packages/cli/src/uploadTranslations.ts`) sends the default
 language file at the git merge-base with `main`/`master` as `baseFile`, on a
-branch only. Default language key/value files are then always uploaded, even
-when the git optimization would skip them, so that pending deletions can be
-cancelled. Document files (Markdown/MDX) are excluded: they have no keys, and
-branch-scoped document imports are rejected.
+branch only. Default language files are then always uploaded, even when the
+git optimization would skip them, so that pending deletions can be cancelled.
+On a branch, `upload:config` skips document files (Markdown/MDX) altogether,
+since branch-scoped document imports are rejected.
 When the merge-base cannot be computed (shallow clone), the CLI prints a
 warning and sends no `baseFile`.
 

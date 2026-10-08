@@ -282,6 +282,8 @@ export async function uploadForConfig(
     }
   }
 
+  const uploadBranch = isMainBranch ? undefined : resolvedBranch;
+
   for (const configItem of result.data.projects) {
     let metadata;
     try {
@@ -327,15 +329,19 @@ export async function uploadForConfig(
     for (const file of metadata.files) {
       const fileName = path.basename(file.filePath);
 
+      // Documents (Markdown/MDX) can only be imported into the main project
+      if (uploadBranch && isDocumentFormat(file.format)) {
+        console.log(
+          `Skipping project "${configItem.project}" file "${fileName}": documents cannot be uploaded to a branch`,
+        );
+        continue;
+      }
+
       for (const lang of metadata.languages) {
         const locale = lang.locale;
         const input = resolveFilePath(file.filePath, locale);
         const resolvedInput = path.resolve(cwd, input);
-        // Document files (Markdown/MDX) have no keys to delete
-        const deletionBaseRef =
-          locale === defaultLocale && !isDocumentFormat(file.format)
-            ? mergeBase
-            : null;
+        const deletionBaseRef = locale === defaultLocale ? mergeBase : null;
 
         if (!fs.existsSync(resolvedInput)) {
           console.log(
@@ -371,7 +377,7 @@ export async function uploadForConfig(
           locale,
           input,
           strategy,
-          branch: isMainBranch ? undefined : resolvedBranch,
+          branch: uploadBranch,
           fileName,
           baseFileContent: baseFileContent ?? undefined,
         });
