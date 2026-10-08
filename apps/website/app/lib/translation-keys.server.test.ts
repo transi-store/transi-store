@@ -12,10 +12,12 @@ import {
   type TestDb,
 } from "../../tests/test-db";
 import {
+  createTranslationKey as createTranslationKeyFromWebsite,
   getProjectTranslations,
   getTranslationKeys,
 } from "./translation-keys.server";
 import { addKeyDeletionsToBranch } from "./branches.server";
+import { TranslationKeySource } from "./translation-key-source";
 
 vi.mock("~/lib/db.server", () => ({
   get db() {
@@ -70,7 +72,7 @@ describe("getProjectTranslations", () => {
         fileId: key.fileId,
         description: null,
         keyName: "hello.world",
-        createdByImport: false,
+        createdBySource: null,
         createdAt: NOW,
         updatedAt: NOW,
         translations: [
@@ -349,5 +351,29 @@ describe("getTranslationKeys fileId filter", () => {
     expect(resultA.data[0].keyName).toBe("a.key");
     expect(resultB.count).toBe(1);
     expect(resultB.data[0].keyName).toBe("b.key");
+  });
+});
+
+describe("createTranslationKey", () => {
+  it("records the website as the key source", async () => {
+    const db = getTestDb();
+    const org = await createOrganization(db);
+    const project = await createProject(db, org.id);
+    const file = await createProjectFile(db, {
+      projectId: project.id,
+      format: SupportedFormat.JSON,
+      filePath: "locales/<lang>/common.json",
+    });
+
+    const keyId = await createTranslationKeyFromWebsite({
+      projectId: project.id,
+      keyName: "home.title",
+      fileId: file.id,
+    });
+
+    const key = await db.query.translationKeys.findFirst({
+      where: { id: keyId },
+    });
+    expect(key?.createdBySource).toBe(TranslationKeySource.WEBSITE);
   });
 });

@@ -13,6 +13,7 @@ import {
 import { AI_PROVIDERS } from "~/lib/ai-providers";
 import { BRANCH_STATUS } from "~/lib/branches";
 import { ProjectVisibility } from "~/lib/project-visibility";
+import { TranslationKeySource } from "~/lib/translation-key-source";
 import { SupportedFormat } from "@transi-store/common";
 import { OAuthProvider } from "~/lib/auth-providers";
 
@@ -242,9 +243,13 @@ export const translationKeys = pgTable(
       }),
     keyName: textC("key_name", { length: 500 }).notNull(),
     description: text("description"),
-    // Created by a file import (vs. from the UI). On a branch, such keys are
-    // deleted once they are no longer in the uploaded file.
-    createdByImport: boolean("created_by_import").default(false).notNull(),
+    // Where the key was created (NULL for keys created before this was
+    // tracked). On a branch, keys created by an import are deleted once they
+    // are no longer in the uploaded file.
+    createdBySource: varchar("created_by_source", {
+      length: 20,
+      enum: ensureOneItem(Object.values(TranslationKeySource)),
+    }),
     deletedAt: timestamp("deleted_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

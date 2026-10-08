@@ -15,6 +15,7 @@ import {
   addKeyDeletionsToBranch,
   getBranchKeyDeletions,
 } from "../branches.server";
+import { TranslationKeySource } from "../translation-key-source";
 import { importTranslations } from "./import-translations.server";
 
 vi.mock("~/lib/db.server", () => ({
@@ -211,7 +212,7 @@ describe("importTranslations - branch deletions", () => {
     expect(key).toBeUndefined();
   });
 
-  it("keeps branch keys created from the UI and keys of other branches", async () => {
+  it("keeps branch keys not created by an import and keys of other branches", async () => {
     const branch = await createBranch(db, projectId);
     const otherBranch = await createBranch(db, projectId, {
       name: "other",
@@ -221,11 +222,17 @@ describe("importTranslations - branch deletions", () => {
     await createTranslationKey(db, projectId, "created.from.ui", {
       fileId,
       branchId: branch.id,
+      createdBySource: TranslationKeySource.WEBSITE,
+    });
+    // Created before the source was tracked
+    await createTranslationKey(db, projectId, "unknown.source", {
+      fileId,
+      branchId: branch.id,
     });
     await createTranslationKey(db, projectId, "imported.on.other.branch", {
       fileId,
       branchId: otherBranch.id,
-      createdByImport: true,
+      createdBySource: TranslationKeySource.IMPORT,
     });
 
     const result = await importTranslations({
@@ -244,7 +251,11 @@ describe("importTranslations - branch deletions", () => {
       await db.query.translationKeys.findMany({ where: { projectId } })
     ).map((key) => key.keyName);
     expect(keyNames).toEqual(
-      expect.arrayContaining(["created.from.ui", "imported.on.other.branch"]),
+      expect.arrayContaining([
+        "created.from.ui",
+        "unknown.source",
+        "imported.on.other.branch",
+      ]),
     );
   });
 
@@ -276,7 +287,7 @@ describe("importTranslations - branch deletions", () => {
     await createTranslationKey(db, projectId, "imported", {
       fileId,
       branchId: branch.id,
-      createdByImport: true,
+      createdBySource: TranslationKeySource.IMPORT,
     });
 
     const result = await importTranslations({

@@ -13,6 +13,7 @@ import {
 import { searchTranslationKeys } from "./search-utils.server";
 import { type RegularDataRow, type SearchDataRow } from "./translation-helper";
 import { TranslationFilter, TranslationKeysSort } from "./sort/keySort";
+import { TranslationKeySource } from "./translation-key-source";
 import type { TranslationKey } from "../../drizzle/schema";
 
 type TranslationKeysReturnType = {
@@ -344,6 +345,7 @@ export async function createTranslationKey({
       description,
       branchId,
       fileId,
+      createdBySource: TranslationKeySource.WEBSITE,
     })
     .returning();
 

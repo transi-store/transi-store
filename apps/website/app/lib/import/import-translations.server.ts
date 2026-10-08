@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { ImportStrategy } from "@transi-store/common";
 import { db, schema } from "~/lib/db.server";
 import { BRANCH_STATUS } from "../branches";
+import { TranslationKeySource } from "../translation-key-source";
 
 type ImportParams = {
   projectId: number;
@@ -186,7 +187,7 @@ export async function importTranslations({
                 keyName,
                 branchId: branchId ?? null,
                 fileId,
-                createdByImport: true,
+                createdBySource: TranslationKeySource.IMPORT,
               })),
             )
             .onConflictDoNothing({
@@ -351,7 +352,10 @@ export async function importTranslations({
               eq(schema.translationKeys.projectId, projectId),
               eq(schema.translationKeys.fileId, fileId),
               eq(schema.translationKeys.branchId, branchId),
-              eq(schema.translationKeys.createdByImport, true),
+              eq(
+                schema.translationKeys.createdBySource,
+                TranslationKeySource.IMPORT,
+              ),
               notInArray(schema.translationKeys.keyName, keyNames),
             ),
           )

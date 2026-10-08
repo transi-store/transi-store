@@ -220,11 +220,11 @@ therefore not available for document formats).
   source of truth, so a key that comes back (e.g. a reverted removal) is not
   deleted at merge time. This also cancels a deletion staged from the UI if
   the key is still in the file.
-- Branch keys of the file created by an import (`createdByImport = true`) and
-  missing from `file` are deleted right away, with their translations: they
-  were added by a previous upload and removed from the code since, and never
-  reached main. Keys created from the UI (`createdByImport = false`) are kept,
-  as they may not have been added to the code yet.
+- Branch keys of the file created by an import (`createdBySource = 'import'`)
+  and missing from `file` are deleted right away, with their translations:
+  they were added by a previous upload and removed from the code since, and
+  never reached main. Other keys (created from the UI, or with an unknown
+  source) are kept, as they may not have been added to the code yet.
 
 Only keys removed relative to `baseFile` are marked, never "every main key
 missing from the file": a branch that is not rebased on main must not delete
