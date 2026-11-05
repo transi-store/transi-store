@@ -361,8 +361,8 @@ describe("importTranslations - translation updates on a branch", () => {
       total: 3,
       keysCreated: 1,
       translationsCreated: 1,
-      translationsUpdated: 1,
-      translationsSkipped: 1,
+      translationsUpdated: 2,
+      translationsSkipped: 0,
     });
     expect(await getValue(changed.id)).toBe("New");
     expect(await getValue(unchanged.id)).toBe("Same");

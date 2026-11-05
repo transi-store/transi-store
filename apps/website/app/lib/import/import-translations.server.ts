@@ -175,15 +175,6 @@ export async function importTranslations({
         }
       }
 
-      // Existing keys created on the target branch (see OVERWRITE_BRANCH)
-      const branchKeyIds = new Set(
-        branchId === undefined
-          ? []
-          : existingKeys
-              .filter((k) => k.branchId === branchId)
-              .map((k) => k.id),
-      );
-
       // 4. Batch insert new keys (ON CONFLICT DO NOTHING)
 
       if (newKeyNames.length > 0) {
@@ -246,10 +237,7 @@ export async function importTranslations({
       // 6. Fetch existing translations for these keys + locale in one query
       const allKeyIds = [...existingKeyMap.values()];
       const existingTranslations = await tx
-        .select({
-          keyId: schema.translations.keyId,
-          value: schema.translations.value,
-        })
+        .select({ keyId: schema.translations.keyId })
         .from(schema.translations)
         .where(
           and(
@@ -258,15 +246,11 @@ export async function importTranslations({
           ),
         );
 
-      const existingTranslationMap = new Map(
-        existingTranslations.map((t) => [t.keyId, t.value]),
+      const existingTranslationKeyIds = new Set(
+        existingTranslations.map((t) => t.keyId),
       );
 
-      // 7. Batch upsert translations based on strategy.
-      // OVERWRITE_BRANCH updates the keys created on the target branch: they
-      // are not on main yet, so the uploaded file is their source of truth.
-      // Other keys are skipped, since translations are not branch-scoped and
-      // updating them from a branch would change main before the merge.
+      // 7. Batch upsert translations based on strategy
       // Filter out empty string values: empty translations are not meaningful
       const translationValues = entries
         .filter(([, value]) => value !== "")
@@ -277,30 +261,29 @@ export async function importTranslations({
           isFuzzy: false,
         }));
 
-      const toUpsert = translationValues.filter((t) => {
-        if (strategy === ImportStrategy.OVERWRITE) {
-          return true;
-        }
+      // OVERWRITE_BRANCH overwrites the keys created on the target branch:
+      // they are not on main yet, so the file is their source of truth. Other
+      // keys are skipped: translations are not branch-scoped, so updating
+      // them from a branch would change main before the branch is merged.
+      const branchKeyIds = new Set(
+        existingKeys
+          .filter((k) => branchId !== undefined && k.branchId === branchId)
+          .map((k) => k.id),
+      );
+      const isOverwritten = (keyId: number) =>
+        strategy === ImportStrategy.OVERWRITE ||
+        (strategy === ImportStrategy.OVERWRITE_BRANCH &&
+          branchKeyIds.has(keyId));
+      const overwrittenValues = translationValues.filter((t) =>
+        isOverwritten(t.keyId),
+      );
+      const skippedValues = translationValues.filter(
+        (t) => !isOverwritten(t.keyId),
+      );
 
-        // Only the changed translations of branch keys are updated, new
-        // translations are created below.
-        const existingValue = existingTranslationMap.get(t.keyId);
-        return (
-          strategy === ImportStrategy.OVERWRITE_BRANCH &&
-          existingValue !== undefined &&
-          existingValue !== t.value &&
-          branchKeyIds.has(t.keyId)
-        );
-      });
-      const toInsert =
-        strategy === ImportStrategy.OVERWRITE
-          ? []
-          : translationValues.filter(
-              (t) => !existingTranslationMap.has(t.keyId),
-            );
-
-      for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
-        const batch = toUpsert.slice(i, i + BATCH_SIZE);
+      // INSERT ... ON CONFLICT DO UPDATE for the overwritten entries
+      for (let i = 0; i < overwrittenValues.length; i += BATCH_SIZE) {
+        const batch = overwrittenValues.slice(i, i + BATCH_SIZE);
         await tx
           .insert(schema.translations)
           .values(batch)
@@ -313,28 +296,36 @@ export async function importTranslations({
           });
       }
 
-      for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
-        const batch = toInsert.slice(i, i + BATCH_SIZE);
-        await tx
-          .insert(schema.translations)
-          .values(batch)
-          .onConflictDoNothing({
-            target: [schema.translations.keyId, schema.translations.locale],
-          });
-      }
-
       // Count stats based on what existed before
-      for (const t of toUpsert) {
-        if (existingTranslationMap.has(t.keyId)) {
+      for (const { keyId } of overwrittenValues) {
+        if (existingTranslationKeyIds.has(keyId)) {
           stats.translationsUpdated++;
         } else {
           stats.translationsCreated++;
         }
       }
-      stats.translationsCreated += toInsert.length;
+
       if (strategy !== ImportStrategy.OVERWRITE) {
+        // INSERT ... ON CONFLICT DO NOTHING for the others (only create new)
+        const newTranslations = skippedValues.filter(
+          (t) => !existingTranslationKeyIds.has(t.keyId),
+        );
+
+        if (newTranslations.length > 0) {
+          for (let i = 0; i < newTranslations.length; i += BATCH_SIZE) {
+            const batch = newTranslations.slice(i, i + BATCH_SIZE);
+            await tx
+              .insert(schema.translations)
+              .values(batch)
+              .onConflictDoNothing({
+                target: [schema.translations.keyId, schema.translations.locale],
+              });
+          }
+        }
+
+        stats.translationsCreated += newTranslations.length;
         stats.translationsSkipped =
-          entries.length - toInsert.length - toUpsert.length;
+          entries.length - overwrittenValues.length - newTranslations.length;
       }
 
       // 8. Sync the branch deletions with the file: mark the removed keys,

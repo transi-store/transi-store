@@ -6,6 +6,7 @@ import { orgContext } from "~/middleware/api-auth.server";
 import {
   cleanupDb,
   createApiKey,
+  createBranch,
   createOrganization,
   createProject,
   createProjectFile,
@@ -636,6 +637,58 @@ describe("Import file-scoped API", () => {
         where: { projectId: 1, keyName: "home.title" },
       });
       expect(key?.branchId).toBe(branch!.id);
+    });
+
+    it("should update branch keys and keep main keys (overwrite-branch strategy)", async () => {
+      const db = getTestDb();
+      const branch = await createBranch(db, 1, {
+        name: "feature-branch",
+        slug: "feature-branch",
+      });
+      const branchKey = await createTranslationKey(db, 1, "feature.title", {
+        fileId: projectFile.id,
+        branchId: branch.id,
+      });
+      await createTranslation(db, branchKey.id, "en", "Old feature");
+      const mainKey = await createTranslationKey(db, 1, "home.title", {
+        fileId: projectFile.id,
+      });
+      await createTranslation(db, mainKey.id, "en", "Home");
+
+      const request = buildImportRequestWithRawFile(
+        "test-org",
+        "test-project",
+        projectFile.id,
+        JSON.stringify({
+          "feature.title": "New feature",
+          "home.title": "Home from the branch",
+        }),
+        {
+          locale: "en",
+          strategy: ImportStrategy.OVERWRITE_BRANCH,
+          fileName: "translations.json",
+          contentType: "application/json",
+          branch: "feature-branch",
+        },
+      );
+
+      const response = await callAction(request, "test-org", "test-project");
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.stats).toMatchObject({
+        translationsCreated: 0,
+        translationsUpdated: 1,
+        translationsSkipped: 1,
+      });
+
+      const branchTranslation = await db.query.translations.findFirst({
+        where: { keyId: branchKey.id, locale: "en" },
+      });
+      expect(branchTranslation?.value).toBe("New feature");
+      const mainTranslation = await db.query.translations.findFirst({
+        where: { keyId: mainKey.id, locale: "en" },
+      });
+      expect(mainTranslation?.value).toBe("Home");
     });
 
     it("should not create the branch when every translation already exists (skip strategy)", async () => {
