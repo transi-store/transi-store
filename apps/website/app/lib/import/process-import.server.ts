@@ -188,7 +188,8 @@ export async function processImport({
   // 9. Parse file based on format
   if (targetIsDocument) {
     const existingTranslation = await getDocumentTranslation(fileId, locale);
-    if (strategy === ImportStrategy.SKIP && existingTranslation) {
+    // Documents cannot be imported into a branch: OVERWRITE_BRANCH skips
+    if (strategy !== ImportStrategy.OVERWRITE && existingTranslation) {
       return {
         success: true,
         importStats: {

@@ -9,12 +9,13 @@ on:
   workflow_dispatch:
     inputs:
       strategy:
-        description: "Import strategy: 'skip' (default) or 'overwrite' existing translations"
+        description: "Import strategy: 'skip' (default), 'overwrite-branch' or 'overwrite' existing translations"
         required: false
         default: "skip"
         type: choice
         options:
           - skip
+          - overwrite-branch
           - overwrite
 
 jobs:

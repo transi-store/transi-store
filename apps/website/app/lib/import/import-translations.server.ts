@@ -175,7 +175,7 @@ export async function importTranslations({
         }
       }
 
-      // Existing keys created on the target branch (see step 7)
+      // Existing keys created on the target branch (see OVERWRITE_BRANCH)
       const branchKeyIds = new Set(
         branchId === undefined
           ? []
@@ -263,11 +263,10 @@ export async function importTranslations({
       );
 
       // 7. Batch upsert translations based on strategy.
-      // Keys created on the target branch are not on main yet: the uploaded
-      // file is their source of truth, so their translations are always
-      // updated, whatever the strategy. Main keys follow the strategy, since
-      // translations are not branch-scoped and updating them from a branch
-      // would change main before the branch is merged.
+      // OVERWRITE_BRANCH updates the keys created on the target branch: they
+      // are not on main yet, so the uploaded file is their source of truth.
+      // Other keys are skipped, since translations are not branch-scoped and
+      // updating them from a branch would change main before the merge.
       // Filter out empty string values: empty translations are not meaningful
       const translationValues = entries
         .filter(([, value]) => value !== "")
@@ -283,10 +282,11 @@ export async function importTranslations({
           return true;
         }
 
-        // Skip strategy: only the changed translations of branch keys are
-        // updated, new translations are created below.
+        // Only the changed translations of branch keys are updated, new
+        // translations are created below.
         const existingValue = existingTranslationMap.get(t.keyId);
         return (
+          strategy === ImportStrategy.OVERWRITE_BRANCH &&
           existingValue !== undefined &&
           existingValue !== t.value &&
           branchKeyIds.has(t.keyId)
@@ -332,7 +332,7 @@ export async function importTranslations({
         }
       }
       stats.translationsCreated += toInsert.length;
-      if (strategy === ImportStrategy.SKIP) {
+      if (strategy !== ImportStrategy.OVERWRITE) {
         stats.translationsSkipped =
           entries.length - toInsert.length - toUpsert.length;
       }

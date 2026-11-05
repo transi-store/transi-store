@@ -334,7 +334,7 @@ describe("importTranslations - translation updates on a branch", () => {
     return translation?.value;
   }
 
-  it("updates the translations of branch keys with the skip strategy", async () => {
+  it("updates the translations of branch keys with the overwrite-branch strategy", async () => {
     const branch = await createBranch(db, projectId);
     const changed = await createTranslationKey(db, projectId, "changed", {
       fileId,
@@ -351,7 +351,7 @@ describe("importTranslations - translation updates on a branch", () => {
       projectId,
       locale: "en",
       data: { changed: "New", unchanged: "Same", added: "Added" },
-      strategy: ImportStrategy.SKIP,
+      strategy: ImportStrategy.OVERWRITE_BRANCH,
       branchSlug: branch.slug,
       fileId,
     });
@@ -368,7 +368,30 @@ describe("importTranslations - translation updates on a branch", () => {
     expect(await getValue(unchanged.id)).toBe("Same");
   });
 
-  it("keeps main translations with the skip strategy", async () => {
+  it("keeps the translations of branch keys with the skip strategy", async () => {
+    const branch = await createBranch(db, projectId);
+    const branchKey = await createTranslationKey(db, projectId, "branch.key", {
+      fileId,
+      branchId: branch.id,
+    });
+    await createTranslation(db, branchKey.id, "en", "Old");
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { "branch.key": "New" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: branch.slug,
+      fileId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats.translationsUpdated).toBe(0);
+    expect(result.stats.translationsSkipped).toBe(1);
+    expect(await getValue(branchKey.id)).toBe("Old");
+  });
+
+  it("keeps main translations with the overwrite-branch strategy", async () => {
     const branch = await createBranch(db, projectId);
     const mainKey = await createTranslationKey(db, projectId, "main.key", {
       fileId,
@@ -379,7 +402,7 @@ describe("importTranslations - translation updates on a branch", () => {
       projectId,
       locale: "en",
       data: { "main.key": "Branch value" },
-      strategy: ImportStrategy.SKIP,
+      strategy: ImportStrategy.OVERWRITE_BRANCH,
       branchSlug: branch.slug,
       fileId,
     });
@@ -390,7 +413,7 @@ describe("importTranslations - translation updates on a branch", () => {
     expect(await getValue(mainKey.id)).toBe("Main value");
   });
 
-  it("keeps the translations of keys of another branch with the skip strategy", async () => {
+  it("keeps the translations of keys of another branch with the overwrite-branch strategy", async () => {
     const branch = await createBranch(db, projectId);
     const otherBranch = await createBranch(db, projectId, {
       name: "other",
@@ -406,7 +429,7 @@ describe("importTranslations - translation updates on a branch", () => {
       projectId,
       locale: "en",
       data: { "other.key": "Branch value" },
-      strategy: ImportStrategy.SKIP,
+      strategy: ImportStrategy.OVERWRITE_BRANCH,
       branchSlug: branch.slug,
       fileId,
     });
@@ -416,25 +439,34 @@ describe("importTranslations - translation updates on a branch", () => {
     expect(await getValue(otherKey.id)).toBe("Other value");
   });
 
-  it("keeps branch translations with the skip strategy outside of the branch", async () => {
+  it("behaves like skip with the overwrite-branch strategy outside of a branch", async () => {
     const branch = await createBranch(db, projectId);
     const branchKey = await createTranslationKey(db, projectId, "branch.key", {
       fileId,
       branchId: branch.id,
     });
+    const mainKey = await createTranslationKey(db, projectId, "main.key", {
+      fileId,
+    });
     await createTranslation(db, branchKey.id, "en", "Branch value");
+    await createTranslation(db, mainKey.id, "en", "Main value");
 
     const result = await importTranslations({
       projectId,
       locale: "en",
-      data: { "branch.key": "Main value" },
-      strategy: ImportStrategy.SKIP,
+      data: { "branch.key": "New", "main.key": "New", added: "Added" },
+      strategy: ImportStrategy.OVERWRITE_BRANCH,
       fileId,
     });
 
     expect(result.success).toBe(true);
-    expect(result.stats.translationsSkipped).toBe(1);
+    expect(result.stats).toMatchObject({
+      translationsCreated: 1,
+      translationsUpdated: 0,
+      translationsSkipped: 2,
+    });
     expect(await getValue(branchKey.id)).toBe("Branch value");
+    expect(await getValue(mainKey.id)).toBe("Main value");
   });
 
   it("updates main translations with the overwrite strategy", async () => {

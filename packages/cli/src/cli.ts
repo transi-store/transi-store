@@ -28,16 +28,13 @@ const apiKeyOption = new Option(
   .makeOptionMandatory();
 
 function validateStrategy(strategy: string): ImportStrategy {
-  if (
-    strategy !== ImportStrategy.OVERWRITE &&
-    strategy !== ImportStrategy.SKIP
-  ) {
+  if (!Object.values<string>(ImportStrategy).includes(strategy)) {
     console.error(
-      `Invalid strategy. Use '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
+      `Invalid strategy. Use '${ImportStrategy.OVERWRITE_BRANCH}', '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'.`,
     );
     process.exit(1);
   }
-  return strategy;
+  return strategy as ImportStrategy;
 }
 
 program
@@ -91,8 +88,8 @@ program
   )
   .option(
     "-s, --strategy <strategy>",
-    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations (on a branch, the keys created on that branch are always updated)`,
-    ImportStrategy.SKIP,
+    `Import strategy for existing translations: '${ImportStrategy.OVERWRITE_BRANCH}' (overwrite the keys created on the branch, skip the others), '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'`,
+    ImportStrategy.OVERWRITE_BRANCH,
   )
   .option(
     "-b, --branch <branch>",
@@ -137,8 +134,8 @@ program
   )
   .option(
     "-s, --strategy <strategy>",
-    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations (on a branch, the keys created on that branch are always updated)`,
-    ImportStrategy.SKIP,
+    `Import strategy for existing translations: '${ImportStrategy.OVERWRITE_BRANCH}' (overwrite the keys created on the branch, skip the others), '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}'`,
+    ImportStrategy.OVERWRITE_BRANCH,
   )
   .addOption(apiKeyOption)
   .action((options) => {
