@@ -78,7 +78,7 @@ transi-store upload --org <orgSlug> \
 Optional parameters:
 
 - `--domain-root`: The root directory for the domain. This is used to determine the domain of the translations based on the input file path. Defaults to "https://transi-store.com".
-- `--strategy`: eiher "overwrite" (default) or "skip". Determines how to handle existing translations. "overwrite" will replace existing translations with the new ones, while "skip" will keep existing translations and only add new ones.
+- `--strategy`: either "skip" (default) or "overwrite". Determines how to handle existing translations. "overwrite" will replace existing translations with the new ones, while "skip" will keep existing translations and only add new ones. On a branch, the translations of the keys created on that branch are always updated, whatever the strategy.
 - `--branch`: The branch to upload the translations to. Defaults to "main".
 
 You must also provide the `TRANSI_STORE_API_KEY` environment variable with your Transi-Store API key to authenticate the requests.

@@ -90,6 +90,7 @@ export async function importTranslations({
         .select({
           id: schema.translationKeys.id,
           keyName: schema.translationKeys.keyName,
+          branchId: schema.translationKeys.branchId,
         })
         .from(schema.translationKeys)
         .where(
@@ -174,6 +175,15 @@ export async function importTranslations({
         }
       }
 
+      // Existing keys created on the target branch (see step 7)
+      const branchKeyIds = new Set(
+        branchId === undefined
+          ? []
+          : existingKeys
+              .filter((k) => k.branchId === branchId)
+              .map((k) => k.id),
+      );
+
       // 4. Batch insert new keys (ON CONFLICT DO NOTHING)
 
       if (newKeyNames.length > 0) {
@@ -236,7 +246,10 @@ export async function importTranslations({
       // 6. Fetch existing translations for these keys + locale in one query
       const allKeyIds = [...existingKeyMap.values()];
       const existingTranslations = await tx
-        .select({ keyId: schema.translations.keyId })
+        .select({
+          keyId: schema.translations.keyId,
+          value: schema.translations.value,
+        })
         .from(schema.translations)
         .where(
           and(
@@ -245,11 +258,16 @@ export async function importTranslations({
           ),
         );
 
-      const existingTranslationKeyIds = new Set(
-        existingTranslations.map((t) => t.keyId),
+      const existingTranslationMap = new Map(
+        existingTranslations.map((t) => [t.keyId, t.value]),
       );
 
-      // 7. Batch upsert translations based on strategy
+      // 7. Batch upsert translations based on strategy.
+      // Keys created on the target branch are not on main yet: the uploaded
+      // file is their source of truth, so their translations are always
+      // updated, whatever the strategy. Main keys follow the strategy, since
+      // translations are not branch-scoped and updating them from a branch
+      // would change main before the branch is merged.
       // Filter out empty string values: empty translations are not meaningful
       const translationValues = entries
         .filter(([, value]) => value !== "")
@@ -260,52 +278,63 @@ export async function importTranslations({
           isFuzzy: false,
         }));
 
-      if (strategy === ImportStrategy.OVERWRITE) {
-        // INSERT ... ON CONFLICT DO UPDATE for all entries
-        for (let i = 0; i < translationValues.length; i += BATCH_SIZE) {
-          const batch = translationValues.slice(i, i + BATCH_SIZE);
-          await tx
-            .insert(schema.translations)
-            .values(batch)
-            .onConflictDoUpdate({
-              target: [schema.translations.keyId, schema.translations.locale],
-              set: {
-                value: sql`excluded.value`,
-                updatedAt: sql`now()`,
-              },
-            });
+      const toUpsert = translationValues.filter((t) => {
+        if (strategy === ImportStrategy.OVERWRITE) {
+          return true;
         }
 
-        // Count stats based on what existed before (skip empty values)
-        for (const [keyName, value] of entries) {
-          if (value === "") continue;
-          const keyId = existingKeyMap.get(keyName)!;
-          if (existingTranslationKeyIds.has(keyId)) {
-            stats.translationsUpdated++;
-          } else {
-            stats.translationsCreated++;
-          }
-        }
-      } else {
-        // SKIP strategy: INSERT ... ON CONFLICT DO NOTHING (only create new)
-        const newTranslations = translationValues.filter(
-          (t) => !existingTranslationKeyIds.has(t.keyId),
+        // Skip strategy: only the changed translations of branch keys are
+        // updated, new translations are created below.
+        const existingValue = existingTranslationMap.get(t.keyId);
+        return (
+          existingValue !== undefined &&
+          existingValue !== t.value &&
+          branchKeyIds.has(t.keyId)
         );
+      });
+      const toInsert =
+        strategy === ImportStrategy.OVERWRITE
+          ? []
+          : translationValues.filter(
+              (t) => !existingTranslationMap.has(t.keyId),
+            );
 
-        if (newTranslations.length > 0) {
-          for (let i = 0; i < newTranslations.length; i += BATCH_SIZE) {
-            const batch = newTranslations.slice(i, i + BATCH_SIZE);
-            await tx
-              .insert(schema.translations)
-              .values(batch)
-              .onConflictDoNothing({
-                target: [schema.translations.keyId, schema.translations.locale],
-              });
-          }
+      for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+        const batch = toUpsert.slice(i, i + BATCH_SIZE);
+        await tx
+          .insert(schema.translations)
+          .values(batch)
+          .onConflictDoUpdate({
+            target: [schema.translations.keyId, schema.translations.locale],
+            set: {
+              value: sql`excluded.value`,
+              updatedAt: sql`now()`,
+            },
+          });
+      }
+
+      for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+        const batch = toInsert.slice(i, i + BATCH_SIZE);
+        await tx
+          .insert(schema.translations)
+          .values(batch)
+          .onConflictDoNothing({
+            target: [schema.translations.keyId, schema.translations.locale],
+          });
+      }
+
+      // Count stats based on what existed before
+      for (const t of toUpsert) {
+        if (existingTranslationMap.has(t.keyId)) {
+          stats.translationsUpdated++;
+        } else {
+          stats.translationsCreated++;
         }
-
-        stats.translationsCreated = newTranslations.length;
-        stats.translationsSkipped = entries.length - newTranslations.length;
+      }
+      stats.translationsCreated += toInsert.length;
+      if (strategy === ImportStrategy.SKIP) {
+        stats.translationsSkipped =
+          entries.length - toInsert.length - toUpsert.length;
       }
 
       // 8. Sync the branch deletions with the file: mark the removed keys,

@@ -9,6 +9,7 @@ import {
   createProjectFile,
   createBranch,
   createTranslationKey,
+  createTranslation,
   type TestDb,
 } from "../../../tests/test-db";
 import {
@@ -304,5 +305,156 @@ describe("importTranslations - branch deletions", () => {
       where: { projectId, keyName: "imported" },
     });
     expect(key).toBeDefined();
+  });
+});
+
+describe("importTranslations - translation updates on a branch", () => {
+  let db: TestDb;
+  let projectId: number;
+  let fileId: number;
+
+  beforeEach(async () => {
+    await cleanupDb();
+    db = getTestDb();
+    const org = await createOrganization(db);
+    const project = await createProject(db, org.id);
+    projectId = project.id;
+    const file = await createProjectFile(db, {
+      projectId,
+      format: SupportedFormat.JSON,
+      filePath: "locales/<lang>/common.json",
+    });
+    fileId = file.id;
+  });
+
+  async function getValue(keyId: number): Promise<string | undefined> {
+    const translation = await db.query.translations.findFirst({
+      where: { keyId, locale: "en" },
+    });
+    return translation?.value;
+  }
+
+  it("updates the translations of branch keys with the skip strategy", async () => {
+    const branch = await createBranch(db, projectId);
+    const changed = await createTranslationKey(db, projectId, "changed", {
+      fileId,
+      branchId: branch.id,
+    });
+    const unchanged = await createTranslationKey(db, projectId, "unchanged", {
+      fileId,
+      branchId: branch.id,
+    });
+    await createTranslation(db, changed.id, "en", "Old");
+    await createTranslation(db, unchanged.id, "en", "Same");
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { changed: "New", unchanged: "Same", added: "Added" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: branch.slug,
+      fileId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats).toMatchObject({
+      total: 3,
+      keysCreated: 1,
+      translationsCreated: 1,
+      translationsUpdated: 1,
+      translationsSkipped: 1,
+    });
+    expect(await getValue(changed.id)).toBe("New");
+    expect(await getValue(unchanged.id)).toBe("Same");
+  });
+
+  it("keeps main translations with the skip strategy", async () => {
+    const branch = await createBranch(db, projectId);
+    const mainKey = await createTranslationKey(db, projectId, "main.key", {
+      fileId,
+    });
+    await createTranslation(db, mainKey.id, "en", "Main value");
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { "main.key": "Branch value" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: branch.slug,
+      fileId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats.translationsUpdated).toBe(0);
+    expect(result.stats.translationsSkipped).toBe(1);
+    expect(await getValue(mainKey.id)).toBe("Main value");
+  });
+
+  it("keeps the translations of keys of another branch with the skip strategy", async () => {
+    const branch = await createBranch(db, projectId);
+    const otherBranch = await createBranch(db, projectId, {
+      name: "other",
+      slug: "other",
+    });
+    const otherKey = await createTranslationKey(db, projectId, "other.key", {
+      fileId,
+      branchId: otherBranch.id,
+    });
+    await createTranslation(db, otherKey.id, "en", "Other value");
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { "other.key": "Branch value" },
+      strategy: ImportStrategy.SKIP,
+      branchSlug: branch.slug,
+      fileId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats.translationsSkipped).toBe(1);
+    expect(await getValue(otherKey.id)).toBe("Other value");
+  });
+
+  it("keeps branch translations with the skip strategy outside of the branch", async () => {
+    const branch = await createBranch(db, projectId);
+    const branchKey = await createTranslationKey(db, projectId, "branch.key", {
+      fileId,
+      branchId: branch.id,
+    });
+    await createTranslation(db, branchKey.id, "en", "Branch value");
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { "branch.key": "Main value" },
+      strategy: ImportStrategy.SKIP,
+      fileId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats.translationsSkipped).toBe(1);
+    expect(await getValue(branchKey.id)).toBe("Branch value");
+  });
+
+  it("updates main translations with the overwrite strategy", async () => {
+    const branch = await createBranch(db, projectId);
+    const mainKey = await createTranslationKey(db, projectId, "main.key", {
+      fileId,
+    });
+    await createTranslation(db, mainKey.id, "en", "Main value");
+
+    const result = await importTranslations({
+      projectId,
+      locale: "en",
+      data: { "main.key": "Branch value" },
+      strategy: ImportStrategy.OVERWRITE,
+      branchSlug: branch.slug,
+      fileId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.stats.translationsUpdated).toBe(1);
+    expect(await getValue(mainKey.id)).toBe("Branch value");
   });
 });

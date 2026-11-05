@@ -91,7 +91,7 @@ program
   )
   .option(
     "-s, --strategy <strategy>",
-    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
+    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations (on a branch, the keys created on that branch are always updated)`,
     ImportStrategy.SKIP,
   )
   .option(
@@ -137,7 +137,7 @@ program
   )
   .option(
     "-s, --strategy <strategy>",
-    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations`,
+    `Import strategy: '${ImportStrategy.OVERWRITE}' or '${ImportStrategy.SKIP}' existing translations (on a branch, the keys created on that branch are always updated)`,
     ImportStrategy.SKIP,
   )
   .addOption(apiKeyOption)

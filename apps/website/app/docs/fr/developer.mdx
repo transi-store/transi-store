@@ -213,4 +213,6 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Optimisation Git :** `upload:config` ignore également les fichiers qui n'ont pas changé par rapport à la branche par défaut (`main`/`master`) lors de l'exécution dans un dépôt git, afin d'éviter les appels API inutiles.
 
+> **Clés de branche :** sur une branche, les traductions des clés créées sur cette branche sont mises à jour avec les valeurs des fichiers téléversés, quelle que soit la stratégie. Les traductions des clés déjà présentes dans le projet principal ne sont mises à jour qu'avec `--strategy overwrite`, qui les modifie immédiatement dans le projet principal.
+
 Ceci est idéal pour l'intégration en CI/CD — téléchargez les chaînes traduites au moment de la compilation et téléversez les nouvelles chaînes sources après que les développeurs les aient ajoutées.

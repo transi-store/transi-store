@@ -239,6 +239,7 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
       "Upload a translation file for a single locale, scoped to one project file. " +
       "New keys are created under that file. " +
       "Use the `strategy` field to control whether existing translations are updated or skipped. " +
+      "On a branch, the translations of the keys created on that branch are updated whatever the strategy. " +
       "On a branch, send the previous version of the file as `baseFile` to mark the keys removed from it for deletion.",
     tags: ["Translations"],
     security: [{ BearerApiKey: [] }],

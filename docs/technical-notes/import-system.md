@@ -160,6 +160,19 @@ After:
   contact.email (fr) = "Email"    ← created
 ```
 
+### Branch keys are always updated
+
+On a branch import, the translations of the keys created on **that branch**
+(`translation_keys.branch_id` = the target branch) are updated whatever the
+strategy: these keys are not on main yet, so the uploaded file is their source
+of truth. With `skip`, only translations whose value changed are updated (and
+counted in `translationsUpdated`), identical ones are counted as skipped.
+
+Main keys, and keys of other branches, keep following the strategy.
+Translations are not branch-scoped: updating a main translation from a branch
+would change main before the branch is merged, so `skip` (the CLI default)
+leaves them untouched.
+
 ## Import flow
 
 ### 1. Validation
@@ -184,7 +197,9 @@ All operations run in a single transaction:
    - Upsert `translation_keys` (create or update `updatedAt`)
    - Insert or update `translations` based on strategy:
      - **overwrite**: `onConflictDoUpdate`
-     - **skip**: `onConflictDoNothing`
+     - **skip**: `onConflictDoNothing`, except for the changed translations
+       of the target branch keys, updated with `onConflictDoUpdate` (see
+       [Branch keys are always updated](#branch-keys-are-always-updated))
 3. If a `baseFile` is provided, the branch deletions are synced with the file
    (see [Branch deletions from a base file](#branch-deletions-from-a-base-file)).
 

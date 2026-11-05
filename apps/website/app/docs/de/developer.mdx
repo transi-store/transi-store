@@ -213,4 +213,6 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Git-Optimierung:** `upload:config` überspringt zudem Dateien, die sich im Vergleich zum Standard-Branch (`main`/`master`) nicht geändert haben, wenn sie in einem Git-Repository ausgeführt werden, um unnötige API-Aufrufe zu vermeiden.
 
+> **Branch-Schlüssel:** Auf einem Branch werden die Übersetzungen der auf diesem Branch erstellten Schlüssel unabhängig von der Strategie mit den Werten der hochgeladenen Dateien aktualisiert. Übersetzungen von Schlüsseln, die bereits im Hauptprojekt vorhanden sind, werden nur mit `--strategy overwrite` aktualisiert, wodurch sie sofort im Hauptprojekt geändert werden.
+
 Dies ist ideal für die Integration in CI/CD — laden Sie übersetzte Strings zur Build-Zeit herunter und laden Sie neue Quell-Strings hoch, nachdem Entwickler sie hinzugefügt haben.

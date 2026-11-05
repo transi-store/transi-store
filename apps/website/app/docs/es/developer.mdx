@@ -213,4 +213,6 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Optimización de Git:** `upload:config` también omite los archivos que no han cambiado en comparación con la rama predeterminada (`main`/`master`) al ejecutarse en un repositorio git, para evitar llamadas innecesarias a la API.
 
+> **Claves de rama:** en una rama, las traducciones de las claves creadas en esa rama se actualizan con los valores de los archivos subidos, sea cual sea la estrategia. Las traducciones de las claves que ya existen en el proyecto principal solo se actualizan con `--strategy overwrite`, que las modifica inmediatamente en el proyecto principal.
+
 Esto es ideal para integrar en CI/CD: descargue cadenas traducidas durante el tiempo de compilación y cargue nuevas cadenas de origen después de que los desarrolladores las añadan.
