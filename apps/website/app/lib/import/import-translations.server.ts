@@ -237,7 +237,10 @@ export async function importTranslations({
       // 6. Fetch existing translations for these keys + locale in one query
       const allKeyIds = [...existingKeyMap.values()];
       const existingTranslations = await tx
-        .select({ keyId: schema.translations.keyId })
+        .select({
+          keyId: schema.translations.keyId,
+          value: schema.translations.value,
+        })
         .from(schema.translations)
         .where(
           and(
@@ -246,8 +249,8 @@ export async function importTranslations({
           ),
         );
 
-      const existingTranslationKeyIds = new Set(
-        existingTranslations.map((t) => t.keyId),
+      const existingTranslationValues = new Map(
+        existingTranslations.map((t) => [t.keyId, t.value]),
       );
 
       // 7. Batch upsert translations based on strategy
@@ -265,21 +268,20 @@ export async function importTranslations({
       // they are not on main yet, so the file is their source of truth. Other
       // keys are skipped: translations are not branch-scoped, so updating
       // them from a branch would change main before the branch is merged.
+      // Unchanged branch translations are skipped, so that the stats and
+      // `updatedAt` only reflect the translations actually changed.
       const branchKeyIds = new Set(
         existingKeys
           .filter((k) => branchId !== undefined && k.branchId === branchId)
           .map((k) => k.id),
       );
-      const isOverwritten = (keyId: number) =>
+      const isOverwritten = (t: (typeof translationValues)[number]) =>
         strategy === ImportStrategy.OVERWRITE ||
         (strategy === ImportStrategy.OVERWRITE_BRANCH &&
-          branchKeyIds.has(keyId));
-      const overwrittenValues = translationValues.filter((t) =>
-        isOverwritten(t.keyId),
-      );
-      const skippedValues = translationValues.filter(
-        (t) => !isOverwritten(t.keyId),
-      );
+          branchKeyIds.has(t.keyId) &&
+          existingTranslationValues.get(t.keyId) !== t.value);
+      const overwrittenValues = translationValues.filter(isOverwritten);
+      const skippedValues = translationValues.filter((t) => !isOverwritten(t));
 
       // INSERT ... ON CONFLICT DO UPDATE for the overwritten entries
       for (let i = 0; i < overwrittenValues.length; i += BATCH_SIZE) {
@@ -298,7 +300,7 @@ export async function importTranslations({
 
       // Count stats based on what existed before
       for (const { keyId } of overwrittenValues) {
-        if (existingTranslationKeyIds.has(keyId)) {
+        if (existingTranslationValues.has(keyId)) {
           stats.translationsUpdated++;
         } else {
           stats.translationsCreated++;
@@ -308,7 +310,7 @@ export async function importTranslations({
       if (strategy !== ImportStrategy.OVERWRITE) {
         // INSERT ... ON CONFLICT DO NOTHING for the others (only create new)
         const newTranslations = skippedValues.filter(
-          (t) => !existingTranslationKeyIds.has(t.keyId),
+          (t) => !existingTranslationValues.has(t.keyId),
         );
 
         if (newTranslations.length > 0) {

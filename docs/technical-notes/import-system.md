@@ -164,8 +164,10 @@ After:
 
 - Creates new keys
 - **Updates** the translations of the keys created on the target branch
-  (`translation_keys.branch_id` = the target branch), like `overwrite`: these
-  keys are not on main yet, so the uploaded file is their source of truth.
+  (`translation_keys.branch_id` = the target branch): these keys are not on
+  main yet, so the uploaded file is their source of truth. Only translations
+  whose value changed are updated (and counted in `translationsUpdated`, with
+  a new `updatedAt`), identical ones are counted as skipped.
 - **Ignores** the existing translations of main keys and of keys of other
   branches. Translations are not branch-scoped: updating a main translation
   from a branch would change main before the branch is merged.
@@ -215,8 +217,8 @@ All operations run in a single transaction:
    - Insert or update `translations` based on strategy:
      - **overwrite**: `onConflictDoUpdate`
      - **skip**: `onConflictDoNothing`
-     - **overwrite-branch**: `onConflictDoUpdate` for the target branch keys,
-       `onConflictDoNothing` for the others
+     - **overwrite-branch**: `onConflictDoUpdate` for the changed translations
+       of the target branch keys, `onConflictDoNothing` for the others
 3. If a `baseFile` is provided, the branch deletions are synced with the file
    (see [Branch deletions from a base file](#branch-deletions-from-a-base-file)).
 
