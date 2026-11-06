@@ -2,7 +2,7 @@
 
 ## Overview
 
-The import system lets you bulk-load translations from files. Supported formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, PHP, Markdown, and MDX. It supports two strategies: overwrite existing translations or preserve them.
+The import system lets you bulk-load translations from files. Supported formats: JSON, XLIFF 2.0, YAML, CSV, Gettext PO, INI, PHP, Markdown, and MDX. It supports three strategies: overwrite existing translations, preserve them, or overwrite only the keys created on the target branch.
 
 ## Supported formats
 
@@ -111,7 +111,7 @@ key/value pairs). The import strategy still applies:
 
 Route: `/orgs/:orgSlug/projects/:projectSlug/import-export`
 
-The import form accepts a file (auto-detected from extension: `.json`, `.xliff`, `.xlf`, `.yaml`, `.yml`, `.csv`, `.po`, `.ini`, `.php`), a target locale, and an import strategy.
+The import form accepts a file (auto-detected from extension: `.json`, `.xliff`, `.xlf`, `.yaml`, `.yml`, `.csv`, `.po`, `.ini`, `.php`), a target locale, and an import strategy (`overwrite` or `skip`: the UI does not import into a branch).
 
 ## Import strategies
 
@@ -160,6 +160,38 @@ After:
   contact.email (fr) = "Email"    ← created
 ```
 
+### 3. Overwrite branch (`overwrite-branch`)
+
+- Creates new keys
+- **Updates** the translations of the keys created on the target branch
+  (`translation_keys.branch_id` = the target branch): these keys are not on
+  main yet, so the uploaded file is their source of truth. Only translations
+  whose value changed are updated (and counted in `translationsUpdated`, with
+  a new `updatedAt`), identical ones are counted as skipped.
+- **Ignores** the existing translations of main keys and of keys of other
+  branches. Translations are not branch-scoped: updating a main translation
+  from a branch would change main before the branch is merged.
+
+Without a branch, it behaves exactly like `skip`. It is the CLI default, so
+that a wording changed while working on a branch is updated by `upload:config`
+without touching main.
+
+**Example** (import into branch `feature`):
+
+```
+Before:
+  home.title (fr) = "Accueil"           (main key)
+  feature.title (fr) = "Nouveauté"      (key created on `feature`)
+
+Imported file (fr):
+  home.title = "Page d'accueil"
+  feature.title = "Nouvelle fonctionnalité"
+
+After:
+  home.title (fr) = "Accueil"                    ← preserved (main key)
+  feature.title (fr) = "Nouvelle fonctionnalité" ← overwritten (branch key)
+```
+
 ## Import flow
 
 ### 1. Validation
@@ -185,6 +217,8 @@ All operations run in a single transaction:
    - Insert or update `translations` based on strategy:
      - **overwrite**: `onConflictDoUpdate`
      - **skip**: `onConflictDoNothing`
+     - **overwrite-branch**: `onConflictDoUpdate` for the changed translations
+       of the target branch keys, `onConflictDoNothing` for the others
 3. If a `baseFile` is provided, the branch deletions are synced with the file
    (see [Branch deletions from a base file](#branch-deletions-from-a-base-file)).
 
@@ -303,16 +337,16 @@ To add a new format, implement this interface, register it in the factory (`form
 
 ## Error handling
 
-| Cause                  | Error message                                                            |
-| ---------------------- | ------------------------------------------------------------------------ |
-| Missing file field     | `"Missing 'file' field"`                                                 |
-| Missing locale field   | `"Missing 'locale' field"`                                               |
-| Invalid strategy       | `"Invalid 'strategy' field. Use 'overwrite' or 'skip'"`                  |
-| Unknown file format    | `"Unsupported file format. Use JSON, XLIFF, YAML, CSV, PO, INI, or PHP"` |
-| Parse error            | Format-specific parse error message                                      |
-| Invalid data structure | `"Invalid data"` + validation details                                    |
-| Locale not in project  | `"Language '{locale}' not found in this project"`                        |
-| DB error               | `"Import failed"` + error details                                        |
+| Cause                  | Error message                                                               |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Missing file field     | `"Missing 'file' field"`                                                    |
+| Missing locale field   | `"Missing 'locale' field"`                                                  |
+| Invalid strategy       | `"Invalid 'strategy' field. Use 'overwrite', 'overwrite-branch' or 'skip'"` |
+| Unknown file format    | `"Unsupported file format. Use JSON, XLIFF, YAML, CSV, PO, INI, or PHP"`    |
+| Parse error            | Format-specific parse error message                                         |
+| Invalid data structure | `"Invalid data"` + validation details                                       |
+| Locale not in project  | `"Language '{locale}' not found in this project"`                           |
+| DB error               | `"Import failed"` + error details                                           |
 
 ## Limitations
 

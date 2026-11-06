@@ -22,7 +22,7 @@ export const importFieldsSchema = (localeExample = "fr") =>
     }),
     strategy: z.enum(ImportStrategy).openapi({
       description:
-        "Import strategy. 'overwrite' updates existing translations. 'skip' only creates missing translations and leaves existing ones untouched.",
+        "Import strategy. 'overwrite' updates existing translations. 'skip' only creates missing translations and leaves existing ones untouched. 'overwrite-branch' updates the translations of the keys created on the target branch and leaves the others untouched (same as 'skip' without a branch).",
       example: ImportStrategy.OVERWRITE,
     }),
     format: z
@@ -57,12 +57,12 @@ export const importSuccessResponseSchema = createImportSuccessResponseSchema()
         }),
         translationsUpdated: z.number().openapi({
           description:
-            "Number of existing translations updated (only with 'overwrite' strategy).",
+            "Number of existing translations updated (with the 'overwrite' strategy, or for the keys created on the target branch with 'overwrite-branch').",
           example: 3,
         }),
         translationsSkipped: z.number().openapi({
           description:
-            "Number of existing translations left untouched (only with 'skip' strategy).",
+            "Number of existing translations left untouched (with the 'skip' or 'overwrite-branch' strategy).",
           example: 0,
         }),
         keysMarkedForDeletion: z.number().optional().openapi({
