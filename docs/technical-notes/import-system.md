@@ -337,16 +337,16 @@ To add a new format, implement this interface, register it in the factory (`form
 
 ## Error handling
 
-| Cause                  | Error message                                                               |
-| ---------------------- | --------------------------------------------------------------------------- |
-| Missing file field     | `"Missing 'file' field"`                                                    |
-| Missing locale field   | `"Missing 'locale' field"`                                                  |
-| Invalid strategy       | `"Invalid 'strategy' field. Use 'overwrite', 'overwrite-branch' or 'skip'"` |
-| Unknown file format    | `"Unsupported file format. Use JSON, XLIFF, YAML, CSV, PO, INI, or PHP"`    |
-| Parse error            | Format-specific parse error message                                         |
-| Invalid data structure | `"Invalid data"` + validation details                                       |
-| Locale not in project  | `"Language '{locale}' not found in this project"`                           |
-| DB error               | `"Import failed"` + error details                                           |
+| Cause                  | Error message                                                            |
+| ---------------------- | ------------------------------------------------------------------------ |
+| Missing file field     | `"Missing 'file' field"`                                                 |
+| Missing locale field   | `"locale: "` + Zod error message                                         |
+| Invalid strategy       | `"strategy: "` + Zod error message                                       |
+| Unknown file format    | `"Unsupported file format. Use JSON, XLIFF, YAML, CSV, PO, INI, or PHP"` |
+| Parse error            | Format-specific parse error message                                      |
+| Invalid data structure | `"Invalid data"` + validation details                                    |
+| Locale not in project  | `"Language '{locale}' not found in this project"`                        |
+| DB error               | `"Import failed"` + error details                                        |
 
 ## Limitations
 
