@@ -15,7 +15,7 @@ export function createImportFieldsSchema() {
     strategy: z
       .enum(ImportStrategy)
       .describe(
-        "Import strategy. 'overwrite' updates existing translations. 'skip' only creates missing translations and leaves existing ones untouched.",
+        "Import strategy. 'overwrite' updates existing translations. 'skip' only creates missing translations and leaves existing ones untouched. 'overwrite-branch' updates the translations of the keys created on the target branch and leaves the others untouched (same as 'skip' without a branch).",
       ),
     format: z
       .enum(SupportedFormat)
@@ -44,12 +44,12 @@ export function createImportStatsSchema() {
     translationsUpdated: z
       .number()
       .describe(
-        "Number of existing translations updated (only with 'overwrite' strategy).",
+        "Number of existing translations updated (with the 'overwrite' strategy, or for the keys created on the target branch with 'overwrite-branch').",
       ),
     translationsSkipped: z
       .number()
       .describe(
-        "Number of existing translations left untouched (only with 'skip' strategy).",
+        "Number of existing translations left untouched (with the 'skip' or 'overwrite-branch' strategy).",
       ),
     keysMarkedForDeletion: z
       .number()

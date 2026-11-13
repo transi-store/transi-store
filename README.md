@@ -35,7 +35,7 @@ Managing translations across multiple projects and teams is painful. Most tools 
 ### 🔌 Integrations
 
 - **Export API** — download translations in multiple formats: JSON, XLIFF, YAML, CSV, Gettext PO, INI, PHP
-- **Import API** — bulk-upload translations with `overwrite` or `skip` strategies
+- **Import API** — bulk-upload translations with `overwrite`, `overwrite-branch` or `skip` strategies
 - **API keys** — Bearer token auth for CI/CD pipelines, with usage tracking
 - **CLI** — `@transi-store/cli` package to sync translations in your build pipeline
 

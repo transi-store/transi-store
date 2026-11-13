@@ -9,11 +9,12 @@ on:
   workflow_dispatch:
     inputs:
       strategy:
-        description: "Import strategy: 'skip' (default) or 'overwrite' existing translations"
+        description: "Import strategy: 'overwrite-branch' (default: overwrite the keys created on the branch, skip the others), 'skip' or 'overwrite' existing translations"
         required: false
-        default: "skip"
+        default: "overwrite-branch"
         type: choice
         options:
+          - overwrite-branch
           - skip
           - overwrite
 
@@ -44,4 +45,4 @@ jobs:
       - name: Upload translations
         env:
           TRANSI_STORE_API_KEY: ${{ secrets.TRANSI_STORE_API_KEY }}
-        run: yarn turbo run upload-translations -- --branch ${{ github.ref_name }} --strategy ${{ inputs.strategy || 'skip' }}
+        run: yarn turbo run upload-translations -- --branch ${{ github.ref_name }} --strategy ${{ inputs.strategy || 'overwrite-branch' }}
