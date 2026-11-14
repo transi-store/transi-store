@@ -10,6 +10,7 @@ import {
   getGithubUserInfo,
 } from "./auth-providers.server";
 import { OAuthProvider } from "./auth-providers";
+import { emitAppEvent } from "./events.server";
 
 type CallbackParams = {
   code: string;
@@ -174,10 +175,17 @@ async function upsertUser(params: UpsertUserParams) {
     })
     .returning();
 
+  await emitAppEvent("user.joined_platform", {
+    userId: newUser.id,
+    email: newUser.email,
+    name: newUser.name,
+    oauthProvider: newUser.oauthProvider,
+  });
+
   return {
     id: newUser.id,
-    email: params.email,
-    name: params.name, // Pour nouveau user, retourner le name du param (undefined si nouveau)
+    email: newUser.email,
+    name: newUser.name,
   };
 }
 
