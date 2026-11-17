@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { OAuthProvider } from "./auth-providers";
 
 // Configuration OAuth2 générique (existant)
-const MAPADO_AUTHORIZATION_URL = "https://oauth2.mapado.com/oauth/v2/auth";
+const MAPADO_AUTHORIZATION_URL = "https://accounts.mapado.com/oauth/v2/auth";
 const MAPADO_TOKEN_URL = "https://oauth2.mapado.com/oauth/v2/token";
 const MAPADO_CLIENT_ID = process.env.MAPADO_CLIENT_ID;
 const MAPADO_CLIENT_SECRET = process.env.MAPADO_CLIENT_SECRET;
