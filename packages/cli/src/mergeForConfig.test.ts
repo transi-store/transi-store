@@ -9,6 +9,7 @@ describe("runMergeForConfig", () => {
         ok: true,
         keysMoved: 2,
         keysDeleted: 0,
+        into: null,
       }),
     );
 
@@ -16,6 +17,7 @@ describe("runMergeForConfig", () => {
       "transi-store.config.json",
       "api-key",
       "feature-1",
+      undefined,
       {
         readConfig: async () => ({
           org: "acme",
@@ -47,21 +49,58 @@ describe("runMergeForConfig", () => {
         ok: true,
         keysMoved: 0,
         keysDeleted: 0,
+        into: null,
       }),
     );
 
-    await runMergeForConfig("transi-store.config.json", "api-key", "branch-x", {
-      readConfig: async () => ({
-        domainRoot: "https://staging.transi-store.com",
-        org: "acme",
-        projects: [{ project: "website" }],
-      }),
-      merge,
-    });
+    await runMergeForConfig(
+      "transi-store.config.json",
+      "api-key",
+      "branch-x",
+      undefined,
+      {
+        readConfig: async () => ({
+          domainRoot: "https://staging.transi-store.com",
+          org: "acme",
+          projects: [{ project: "website" }],
+        }),
+        merge,
+      },
+    );
 
     expect(merge.mock.calls[0]![0]).toMatchObject({
       domainRoot: "https://staging.transi-store.com",
     });
+  });
+
+  it("passes the target branch to every merge", async () => {
+    const merge = vi.fn(
+      async (_options: MergeBranchOptions): Promise<MergeBranchResult> => ({
+        ok: true,
+        keysMoved: 1,
+        keysDeleted: 0,
+        into: "parent",
+      }),
+    );
+
+    await runMergeForConfig(
+      "transi-store.config.json",
+      "api-key",
+      "child",
+      "parent",
+      {
+        readConfig: async () => ({
+          org: "acme",
+          projects: [{ project: "website" }, { project: "mobile" }],
+        }),
+        merge,
+      },
+    );
+
+    expect(merge.mock.calls.map(([options]) => options.into)).toEqual([
+      "parent",
+      "parent",
+    ]);
   });
 
   it("collects failures without throwing and reports them in the summary", async () => {
@@ -70,7 +109,7 @@ describe("runMergeForConfig", () => {
         if (options.project === "mobile") {
           return { ok: false, error: "boom" };
         }
-        return { ok: true, keysMoved: 1, keysDeleted: 0 };
+        return { ok: true, keysMoved: 1, keysDeleted: 0, into: null };
       },
     );
 
@@ -78,6 +117,7 @@ describe("runMergeForConfig", () => {
       "transi-store.config.json",
       "api-key",
       "feature-1",
+      undefined,
       {
         readConfig: async () => ({
           org: "acme",
@@ -104,7 +144,7 @@ describe("runMergeForConfig", () => {
             status: 404,
           };
         }
-        return { ok: true, keysMoved: 1, keysDeleted: 0 };
+        return { ok: true, keysMoved: 1, keysDeleted: 0, into: null };
       },
     );
 
@@ -112,6 +152,7 @@ describe("runMergeForConfig", () => {
       "transi-store.config.json",
       "api-key",
       "feature-1",
+      undefined,
       {
         readConfig: async () => ({
           org: "acme",
@@ -131,10 +172,16 @@ describe("runMergeForConfig", () => {
 
   it("throws when the config does not match the schema", async () => {
     await expect(
-      runMergeForConfig("transi-store.config.json", "api-key", "feature-1", {
-        readConfig: async () => ({ projects: [] }),
-        merge: vi.fn(),
-      }),
+      runMergeForConfig(
+        "transi-store.config.json",
+        "api-key",
+        "feature-1",
+        undefined,
+        {
+          readConfig: async () => ({ projects: [] }),
+          merge: vi.fn(),
+        },
+      ),
     ).rejects.toThrow(/Config validation error/);
   });
 });

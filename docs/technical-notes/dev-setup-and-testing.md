@@ -15,3 +15,13 @@ yarn test --run path/to/file.test.ts
 ```
 
 The project uses **vitest** with an in-memory PGlite database (see `apps/website/tests/setup-db.ts` and `apps/website/tests/test-db.ts`).
+
+Website tests run in the container, through the vitest binary (`yarn workspace … test` does not find it there):
+
+```bash
+docker compose exec -w /app/apps/website app /app/node_modules/.bin/vitest run path/to/file.test.ts
+```
+
+On the host, they fail on `.react-router/types`, which the container writes as root.
+CLI tests run on the host, from `packages/cli`: `../../node_modules/.bin/vitest run`.
+The CLI reads `@transi-store/common` from its `dist`: rebuild it (`tsc` in `packages/common`) after changing a shared schema.

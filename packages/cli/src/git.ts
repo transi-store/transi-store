@@ -100,7 +100,7 @@ type ResolvedBranch = {
   isMainBranch?: boolean;
 };
 
-function isMainBranch(branch: string | undefined): branch is MainBranch {
+export function isMainBranch(branch: string | undefined): branch is MainBranch {
   return (Object.values(MainBranch) as Array<string | undefined>).includes(
     branch,
   );

@@ -10,7 +10,7 @@ import {
   uploadOne,
   type UploadOneOptions,
 } from "./uploadTranslations.ts";
-import { mergeBranchCommand } from "./branchMerge.ts";
+import { mergeBranchCommand, parseMergeTarget } from "./branchMerge.ts";
 import { mergeForConfig } from "./mergeForConfig.ts";
 import {
   DEFAULT_DOMAIN_ROOT,
@@ -26,6 +26,11 @@ const apiKeyOption = new Option(
 )
   .env("TRANSI_STORE_API_KEY")
   .makeOptionMandatory();
+
+const intoOption = new Option(
+  "--into <into>",
+  "Branch slug to merge into (default: main)",
+);
 
 function validateStrategy(strategy: string): ImportStrategy {
   if (!Object.values<string>(ImportStrategy).includes(strategy)) {
@@ -157,13 +162,19 @@ program
     "transi-store.config.json",
   )
   .requiredOption("-b, --branch <branch>", "Branch slug to merge")
+  .addOption(intoOption)
   .action((options) => {
-    mergeForConfig(options.config, options.apiKey, options.branch);
+    mergeForConfig(
+      options.config,
+      options.apiKey,
+      options.branch,
+      parseMergeTarget(options.into),
+    );
   });
 
 program
   .command("branch:merge")
-  .description("Merge a project branch into main")
+  .description("Merge a project branch into main or into another branch")
   .addOption(apiKeyOption)
   .requiredOption(
     "-d, --domain-root <domainRoot>",
@@ -173,6 +184,7 @@ program
   .requiredOption("-o, --org <org>", "Organization slug")
   .requiredOption("-p, --project <project>", "Project slug")
   .requiredOption("-b, --branch <branch>", "Branch slug to merge")
+  .addOption(intoOption)
   .action((options) => {
     mergeBranchCommand({
       domainRoot: options.domainRoot,
@@ -180,6 +192,7 @@ program
       org: options.org,
       project: options.project,
       branch: options.branch,
+      into: parseMergeTarget(options.into),
     });
   });
 

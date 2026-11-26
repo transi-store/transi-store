@@ -83,6 +83,30 @@ Optional parameters:
 
 You must also provide the `TRANSI_STORE_API_KEY` environment variable with your Transi-Store API key to authenticate the requests.
 
+## Merge a branch
+
+To merge a branch for every project of the configuration file, run:
+
+```bash
+transi-store merge --branch <branchSlug>
+```
+
+To merge a branch of a single project, run:
+
+```bash
+transi-store branch:merge --org <orgSlug> \
+  --project <projectSlug> \
+  --branch <branchSlug>
+```
+
+Optional parameters:
+
+- `--into`: The branch to merge into, e.g. when a pull request is merged into the branch of another pull request. Defaults to main, as does an empty value, `main` or `master`.
+- `--config` (`merge` only): Path to the configuration file. Defaults to "transi-store.config.json".
+- `--domain-root` (`branch:merge` only): The root domain of the Transi-Store instance. Defaults to "https://transi-store.com".
+
+You must also provide the `TRANSI_STORE_API_KEY` environment variable with your Transi-Store API key to authenticate the requests.
+
 ## Contributing
 
 ### Publish package

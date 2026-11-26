@@ -48,14 +48,16 @@ describe("Branch merge API", () => {
     projectSlug = "test-project",
     branchSlug = "feature-branch",
     method = "POST",
+    query = "",
   }: {
     orgSlug?: string;
     projectSlug?: string;
     branchSlug?: string;
     method?: string;
+    query?: string;
   } = {}) {
     const request = new Request(
-      `https://example.com/api/orgs/${orgSlug}/projects/${projectSlug}/branches/${branchSlug}/merge`,
+      `https://example.com/api/orgs/${orgSlug}/projects/${projectSlug}/branches/${branchSlug}/merge${query}`,
       { method },
     );
     return action({
@@ -82,6 +84,7 @@ describe("Branch merge API", () => {
       success: true,
       keysMoved: 1,
       keysDeleted: 0,
+      into: null,
     });
 
     const [merged] = await getTestDb()
@@ -133,6 +136,54 @@ describe("Branch merge API", () => {
     const body = await response.json();
     expect(body).toEqual({
       error: 'Branch "feature-branch" is already merged or closed',
+    });
+  });
+
+  it("merges into the branch given by the into query parameter", async () => {
+    const branch = await createBranch(getTestDb(), project.id);
+    const key = await createTranslationKey(getTestDb(), project.id, "key", {
+      branchId: branch.id,
+    });
+
+    const response = await callAction({ query: "?into=parent-branch" });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      success: true,
+      keysMoved: 1,
+      keysDeleted: 0,
+      into: "parent-branch",
+    });
+
+    const parent = await getTestDb().query.branches.findFirst({
+      where: { projectId: project.id, slug: "parent-branch" },
+    });
+    const [movedKey] = await getTestDb()
+      .select()
+      .from(schema.translationKeys)
+      .where(eq(schema.translationKeys.id, key.id));
+    expect(movedKey.branchId).toBe(parent!.id);
+  });
+
+  it("returns 400 when into is empty", async () => {
+    await createBranch(getTestDb(), project.id);
+
+    const response = await callAction({ query: "?into=" });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: 'The "into" parameter must be a branch slug',
+    });
+  });
+
+  it("returns 400 when into is the merged branch itself", async () => {
+    await createBranch(getTestDb(), project.id);
+
+    const response = await callAction({ query: "?into=feature-branch" });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: 'Branch "feature-branch" cannot be merged into itself',
     });
   });
 });

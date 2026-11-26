@@ -101,20 +101,67 @@ export async function getBranchKeyCount(branchId: number): Promise<number> {
 }
 
 type MergeBranchResult =
-  | { success: true; keysMoved: number; keysDeleted: number }
+  | {
+      success: true;
+      keysMoved: number;
+      keysDeleted: number;
+      into: string | null;
+    }
   | {
       success: false;
       reason: MERGE_FAILURE_REASON;
       error: string;
     };
 
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Returns the open branch a merge into `slug` lands on, or null for main:
+// a missing branch is created, and a merged branch is followed down to the
+// branch it was merged into. Two concurrent merges of two branches into each
+// other can leave a cycle of merged branches, reported as an error.
+async function resolveMergeTarget(
+  tx: Transaction,
+  projectId: number,
+  slug: string,
+): Promise<Branch | null> {
+  await tx
+    .insert(schema.branches)
+    .values({ projectId, name: slug, slug })
+    .onConflictDoNothing({
+      target: [schema.branches.projectId, schema.branches.slug],
+    });
+
+  let target = await tx.query.branches.findFirst({
+    where: { projectId, slug },
+  });
+
+  const visited = new Set<number>();
+  while (target?.status === BRANCH_STATUS.MERGED) {
+    if (visited.has(target.id)) {
+      throw new Error(`Branch "${slug}" is merged into a cycle of branches`);
+    }
+    visited.add(target.id);
+    target =
+      target.mergedIntoBranchId === null
+        ? undefined
+        : await tx.query.branches.findFirst({
+            where: { id: target.mergedIntoBranchId },
+          });
+  }
+
+  return target ?? null;
+}
+
+// Merges the branch into main, or into the branch `into` when given: its keys
+// move to the target, and its pending deletions are applied on main or carried
+// over to the target branch.
 // Merging a branch never produces a key conflict: the unique index
-// `unique_project_file_key` on (project_id, file_id, key_name) prevents a
-// branch from ever holding a key that already exists on main, so setting
-// branchId = NULL at merge time is always safe.
+// `unique_project_file_key` on (project_id, file_id, key_name) prevents two
+// branches, or a branch and main, from holding the same key.
 export async function mergeBranch(
   branchId: number,
   mergedBy: number | null,
+  into?: string,
 ): Promise<MergeBranchResult> {
   const branch = await getBranchById(branchId);
   if (!branch) {
@@ -133,49 +180,78 @@ export async function mergeBranch(
     };
   }
 
-  const branchKeys = await db.query.translationKeys.findMany({
-    where: { branchId },
-  });
+  const merged = await db.transaction(async (tx) => {
+    const target =
+      into === undefined
+        ? null
+        : await resolveMergeTarget(tx, branch.projectId, into);
 
-  const keyDeletions = await db.query.branchKeyDeletions.findMany({
-    where: { branchId },
-  });
-
-  let keysMoved = 0;
-  let keysDeleted = 0;
-
-  await db.transaction(async (tx) => {
-    if (branchKeys.length > 0) {
-      const [result] = await tx
-        .update(schema.translationKeys)
-        .set({ branchId: null })
-        .where(eq(schema.translationKeys.branchId, branchId))
-        .returning({ id: schema.translationKeys.id });
-
-      keysMoved = result ? branchKeys.length : 0;
+    if (target?.id === branchId) {
+      return null;
     }
 
-    if (keyDeletions.length > 0) {
-      const deletionKeyIds = keyDeletions.map((d) => d.translationKeyId);
-      await tx
-        .update(schema.translationKeys)
-        .set({ deletedAt: new Date() })
-        .where(inArray(schema.translationKeys.id, deletionKeyIds));
+    const targetBranchId = target?.id ?? null;
 
-      keysDeleted = deletionKeyIds.length;
+    const movedKeys = await tx
+      .update(schema.translationKeys)
+      .set({ branchId: targetBranchId })
+      .where(eq(schema.translationKeys.branchId, branchId))
+      .returning({ id: schema.translationKeys.id });
 
-      await tx
-        .delete(schema.branchKeyDeletions)
-        .where(eq(schema.branchKeyDeletions.branchId, branchId));
+    const deletions = await tx
+      .delete(schema.branchKeyDeletions)
+      .where(eq(schema.branchKeyDeletions.branchId, branchId))
+      .returning({
+        translationKeyId: schema.branchKeyDeletions.translationKeyId,
+      });
+
+    if (deletions.length > 0) {
+      const deletionKeyIds = deletions.map((d) => d.translationKeyId);
+
+      if (targetBranchId === null) {
+        await tx
+          .update(schema.translationKeys)
+          .set({ deletedAt: new Date() })
+          .where(inArray(schema.translationKeys.id, deletionKeyIds));
+      } else {
+        await tx
+          .insert(schema.branchKeyDeletions)
+          .values(
+            deletionKeyIds.map((translationKeyId) => ({
+              branchId: targetBranchId,
+              translationKeyId,
+            })),
+          )
+          .onConflictDoNothing();
+      }
     }
 
     await tx
       .update(schema.branches)
-      .set({ status: BRANCH_STATUS.MERGED, mergedBy, mergedAt: new Date() })
+      .set({
+        status: BRANCH_STATUS.MERGED,
+        mergedBy,
+        mergedAt: new Date(),
+        mergedIntoBranchId: targetBranchId,
+      })
       .where(eq(schema.branches.id, branchId));
+
+    return {
+      keysMoved: movedKeys.length,
+      keysDeleted: deletions.length,
+      into: target?.slug ?? null,
+    };
   });
 
-  return { success: true, keysMoved, keysDeleted };
+  if (!merged) {
+    return {
+      success: false,
+      reason: MERGE_FAILURE_REASON.INTO_ITSELF,
+      error: "A branch cannot be merged into itself",
+    };
+  }
+
+  return { success: true, ...merged };
 }
 
 // --- Branch Key Deletions ---

@@ -213,4 +213,16 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Git optimization:** `upload:config` also skips files that have not changed compared to the default branch (`main`/`master`) when running in a git repository, to avoid unnecessary API calls.
 
+### Merging a branch
+
+```bash
+# Merge a branch into main for every project of the config file
+transi-store merge --branch feature/my-feature
+
+# Merge a branch into another branch
+transi-store merge --branch feature/my-feature --into feature/parent
+```
+
+> `--into` merges into another branch, e.g. when a pull request is merged into the branch of another pull request. An empty `--into`, `main` or `master` merges into the main project.
+
 This is ideal for integrating into CI/CD — download translated strings at build time and upload new source strings after developers add them.

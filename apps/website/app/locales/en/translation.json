@@ -1,6 +1,8 @@
 {
   "api.branchMerge.branchNotFound": "Branch \"{branchSlug}\" not found",
   "api.branchMerge.branchNotOpen": "Branch \"{branchSlug}\" is already merged or closed",
+  "api.branchMerge.intoItself": "Branch \"{branchSlug}\" cannot be merged into itself",
+  "api.branchMerge.invalidInto": "The \"into\" parameter must be a branch slug",
   "api.methodNotAllowed": "Method not allowed",
   "api.methodNotAllowed (copy)": "Method not allowed",
   "api.translate.keyNotFound": "Key not found",

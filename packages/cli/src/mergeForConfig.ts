@@ -4,7 +4,12 @@ import { pathToFileURL } from "node:url";
 import { styleText } from "node:util";
 import { DEFAULT_DOMAIN_ROOT, configSchema } from "@transi-store/common";
 import z from "zod";
-import { mergeBranch, type MergeBranchResult } from "./branchMerge.ts";
+import {
+  describeMergeTarget,
+  formatMergeStats,
+  mergeBranch,
+  type MergeBranchResult,
+} from "./branchMerge.ts";
 
 type MergeForConfigDeps = {
   readConfig?: (configPath: string) => Promise<unknown>;
@@ -45,6 +50,7 @@ export async function runMergeForConfig(
   configPath: string,
   apiKey: string,
   branch: string,
+  into: string | undefined,
   deps: MergeForConfigDeps = {},
 ): Promise<MergeForConfigSummary> {
   const readConfig = deps.readConfig ?? defaultReadConfig;
@@ -68,6 +74,7 @@ export async function runMergeForConfig(
       org: parsed.data.org,
       project: item.project,
       branch,
+      into,
     });
     results.push({ project: item.project, result });
   }
@@ -89,10 +96,11 @@ export async function mergeForConfig(
   configPath: string,
   apiKey: string,
   branch: string,
+  into: string | undefined,
 ): Promise<void> {
   let summary: MergeForConfigSummary;
   try {
-    summary = await runMergeForConfig(configPath, apiKey, branch);
+    summary = await runMergeForConfig(configPath, apiKey, branch, into);
   } catch (error) {
     console.error(
       styleText("red", error instanceof Error ? error.message : String(error)),
@@ -103,6 +111,7 @@ export async function mergeForConfig(
   console.log();
   console.log(styleText(["bold", "cyan"], "↳ Merging translation branch"));
   console.log(styleText("dim", `  Branch : ${branch}`));
+  console.log(styleText("dim", `  Into   : ${into ?? "main"}`));
   console.log();
 
   for (const { project, result } of summary.results) {
@@ -110,7 +119,7 @@ export async function mergeForConfig(
       console.log(
         `  ${styleText("green", "✓")} ${styleText("bold", project)} ${styleText(
           "dim",
-          `→ ${result.keysMoved} keys moved, ${result.keysDeleted} deleted`,
+          `→ ${describeMergeTarget(result.into)}: ${formatMergeStats(result)}`,
         )}`,
       );
     } else if (result.status === 404) {

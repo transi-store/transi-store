@@ -213,4 +213,16 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Optimisation Git :** `upload:config` ignore également les fichiers qui n'ont pas changé par rapport à la branche par défaut (`main`/`master`) lors de l'exécution dans un dépôt git, afin d'éviter les appels API inutiles.
 
+### Fusion d'une branche
+
+```bash
+# Fusionner une branche dans main pour chaque projet du fichier de configuration
+transi-store merge --branch feature/my-feature
+
+# Fusionner une branche dans une autre branche
+transi-store merge --branch feature/my-feature --into feature/parent
+```
+
+> `--into` fusionne dans une autre branche, par exemple quand une pull request est fusionnée dans la branche d'une autre pull request. Un `--into` vide, `main` ou `master` fusionne dans le projet principal.
+
 Ceci est idéal pour l'intégration en CI/CD — téléchargez les chaînes traduites au moment de la compilation et téléversez les nouvelles chaînes sources après que les développeurs les aient ajoutées.
