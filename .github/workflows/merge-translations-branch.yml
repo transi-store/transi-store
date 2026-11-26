@@ -1,18 +1,21 @@
 name: Merge translations branch
 
-# When a PR is merged into main, merge the matching transi-store branch into main.
+# When a PR is merged, merge the matching transi-store branch into the transi-store branch of its base,
+# or into main when the PR is merged into main: the keys of stacked PRs reach main with the bottom of the stack.
 # Fork PRs: head.ref may not exist in transi-store; adjust with a same-repo guard if needed.
 on:
   pull_request:
     types: [closed]
-    branches:
-      - main
 
   workflow_dispatch:
     inputs:
       branch:
         description: "Git branch slug matching the transi-store branch to merge"
         required: true
+        type: string
+      into:
+        description: "Git branch slug of the transi-store branch to merge into (default: main)"
+        required: false
         type: string
 
 jobs:
@@ -30,4 +33,5 @@ jobs:
       - uses: transi-store/merge-branch-action@v1
         with:
           branch: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.event.pull_request.head.ref }}
+          into: ${{ github.event_name == 'workflow_dispatch' && inputs.into || github.event.pull_request.base.ref }}
           api-key: ${{ secrets.TRANSI_STORE_API_KEY }}
