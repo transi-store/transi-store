@@ -16,6 +16,7 @@ import {
   projectDetailErrorResponseSchema,
 } from "./schemas/project-detail";
 import {
+  branchMergeQuerySchema,
   branchMergeSuccessResponseSchema,
   branchMergeErrorResponseSchema,
 } from "./schemas/branch-merge";
@@ -302,9 +303,11 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
   registry.registerPath({
     method: "post",
     path: "/api/orgs/{orgSlug}/projects/{projectSlug}/branches/{branchSlug}/merge",
-    summary: "Merge a project branch into main",
+    summary: "Merge a project branch into main or into another branch",
     description:
       "Merge the branch's keys into the main branch and apply any pending key deletions. " +
+      "With `into`, the keys and the pending key deletions move to that branch instead, " +
+      "e.g. to follow a pull request merged into another pull request's branch. " +
       "The branch's status is set to `merged` on success. " +
       "When the API is called with an API key, the merge is not attributed to a specific user.",
     tags: ["Branches"],
@@ -315,6 +318,7 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         projectSlug: projectSlugParam,
         branchSlug: branchSlugParam,
       }),
+      query: branchMergeQuerySchema,
     },
     responses: {
       200: {
@@ -324,7 +328,8 @@ export async function generateOpenApiDocument(user?: SessionData | null) {
         },
       },
       400: {
-        description: "Branch is already merged or closed.",
+        description:
+          "Branch is already merged or closed, `into` is invalid, or `into` resolves to the merged branch itself.",
         content: {
           "application/json": { schema: branchMergeErrorResponseSchema },
         },

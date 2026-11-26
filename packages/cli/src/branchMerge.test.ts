@@ -14,6 +14,20 @@ describe("buildMergeBranchUrl", () => {
       "https://transi-store.com/api/orgs/my%20org/projects/my%20project/branches/feature%2Fbranch/merge",
     );
   });
+
+  it("adds the URL-encoded target branch as the into query parameter", () => {
+    expect(
+      buildMergeBranchUrl({
+        domainRoot: "https://transi-store.com",
+        org: "acme",
+        project: "website",
+        branch: "child",
+        into: "feature/parent",
+      }),
+    ).toBe(
+      "https://transi-store.com/api/orgs/acme/projects/website/branches/child/merge?into=feature%2Fparent",
+    );
+  });
 });
 
 describe("mergeBranch", () => {
@@ -38,7 +52,7 @@ describe("mergeBranch", () => {
 
   it("POSTs to the merge endpoint with the bearer token", async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ success: true, keysMoved: 3, keysDeleted: 1 }),
+      jsonResponse({ success: true, keysMoved: 3, keysDeleted: 1, into: null }),
     );
 
     const result = await mergeBranch({
@@ -49,7 +63,12 @@ describe("mergeBranch", () => {
       branch: "feature-1",
     });
 
-    expect(result).toEqual({ ok: true, keysMoved: 3, keysDeleted: 1 });
+    expect(result).toEqual({
+      ok: true,
+      keysMoved: 3,
+      keysDeleted: 1,
+      into: null,
+    });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(
@@ -59,6 +78,50 @@ describe("mergeBranch", () => {
       method: "POST",
       headers: { Authorization: "Bearer secret" },
     });
+  });
+
+  it("returns the branch the merge landed on", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        success: true,
+        keysMoved: 2,
+        keysDeleted: 1,
+        into: "grand-parent",
+      }),
+    );
+
+    const result = await mergeBranch({
+      domainRoot: "https://transi-store.com",
+      apiKey: "secret",
+      org: "acme",
+      project: "website",
+      branch: "child",
+      into: "parent",
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      keysMoved: 2,
+      keysDeleted: 1,
+      into: "grand-parent",
+    });
+  });
+
+  it("rejects an empty target branch without calling the API", async () => {
+    const result = await mergeBranch({
+      domainRoot: "https://transi-store.com",
+      apiKey: "secret",
+      org: "acme",
+      project: "website",
+      branch: "child",
+      into: "",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("Invalid --into");
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("returns an error when the success response body is malformed", async () => {

@@ -20,6 +20,7 @@ import {
   searchMainKeysForDeletion,
   mergeBranch,
   getBranchKeys,
+  getBranchKeyCount,
 } from "./branches.server";
 import { BRANCH_STATUS, MERGE_FAILURE_REASON } from "./branches";
 import type { OAuthProvider } from "./auth-providers";
@@ -359,6 +360,7 @@ describe("mergeBranch with deletions", () => {
       success: true,
       keysMoved: 0,
       keysDeleted: 1,
+      into: null,
     });
 
     // Verify key has deletedAt set
@@ -393,6 +395,7 @@ describe("mergeBranch with deletions", () => {
       success: true,
       keysMoved: 1,
       keysDeleted: 1,
+      into: null,
     });
 
     // The new key is now on main
@@ -405,6 +408,29 @@ describe("mergeBranch with deletions", () => {
       .from(schema.translationKeys)
       .where(eq(schema.translationKeys.id, mainKey.id));
     expect(deletedKey.deletedAt).not.toBeNull();
+  });
+
+  it("counts every moved key and every applied deletion", async () => {
+    // Sequential: the helper creates the project file on its first call.
+    const mainKeys = [
+      await createTranslationKey(db, projectId, "old.one"),
+      await createTranslationKey(db, projectId, "old.two"),
+    ];
+    await addKeyDeletionsToBranch(
+      branchId,
+      mainKeys.map((key) => key.id),
+    );
+    await createTranslationKey(db, projectId, "new.one", { branchId });
+    await createTranslationKey(db, projectId, "new.two", { branchId });
+
+    const result = await mergeBranch(branchId, userId);
+
+    expect(result).toEqual({
+      success: true,
+      keysMoved: 2,
+      keysDeleted: 2,
+      into: null,
+    });
   });
 
   it("sets branch status to merged", async () => {
@@ -447,6 +473,7 @@ describe("mergeBranch with deletions", () => {
       success: true,
       keysMoved: 1,
       keysDeleted: 0,
+      into: null,
     });
 
     const merged = await db.query.branches.findFirst({
@@ -455,5 +482,189 @@ describe("mergeBranch with deletions", () => {
     expect(merged!.status).toBe(BRANCH_STATUS.MERGED);
     expect(merged!.mergedBy).toBeNull();
     expect(merged!.mergedAt).not.toBeNull();
+  });
+});
+
+describe("mergeBranch into another branch", () => {
+  let db: TestDb;
+  let projectId: number;
+  let childId: number;
+
+  beforeEach(async () => {
+    await cleanupDb();
+    db = getTestDb();
+
+    const org = await createOrganization(db);
+    const project = await createProject(db, org.id);
+    projectId = project.id;
+    const child = await createBranch(db, projectId, {
+      name: "child",
+      slug: "child",
+    });
+    childId = child.id;
+  });
+
+  async function getKey(keyId: number) {
+    return await db.query.translationKeys.findFirst({
+      where: { id: keyId },
+    });
+  }
+
+  async function getBranch(slug: string) {
+    return await db.query.branches.findFirst({ where: { projectId, slug } });
+  }
+
+  it("moves the keys and the pending deletions to the target branch", async () => {
+    const parent = await createBranch(db, projectId, {
+      name: "parent",
+      slug: "parent",
+    });
+    const childKey = await createTranslationKey(db, projectId, "child.key", {
+      branchId: childId,
+    });
+    const mainKey = await createTranslationKey(db, projectId, "main.key");
+    await addKeyDeletionsToBranch(childId, [mainKey.id]);
+
+    const result = await mergeBranch(childId, null, "parent");
+
+    expect(result).toEqual({
+      success: true,
+      keysMoved: 1,
+      keysDeleted: 1,
+      into: "parent",
+    });
+    expect((await getKey(childKey.id))!.branchId).toBe(parent.id);
+    expect((await getKey(mainKey.id))!.deletedAt).toBeNull();
+    expect(await getBranchKeyDeletionCount(childId)).toBe(0);
+    expect(
+      (await getBranchKeyDeletions(parent.id)).map((key) => key.id),
+    ).toEqual([mainKey.id]);
+
+    const child = await getBranch("child");
+    expect(child!.status).toBe(BRANCH_STATUS.MERGED);
+    expect(child!.mergedIntoBranchId).toBe(parent.id);
+  });
+
+  it("counts every moved key and every carried over deletion", async () => {
+    const parent = await createBranch(db, projectId, {
+      name: "parent",
+      slug: "parent",
+    });
+    // Sequential: the helper creates the project file on its first call.
+    const mainKeys = [
+      await createTranslationKey(db, projectId, "main.one"),
+      await createTranslationKey(db, projectId, "main.two"),
+    ];
+    await addKeyDeletionsToBranch(
+      childId,
+      mainKeys.map((key) => key.id),
+    );
+    await createTranslationKey(db, projectId, "child.one", {
+      branchId: childId,
+    });
+    await createTranslationKey(db, projectId, "child.two", {
+      branchId: childId,
+    });
+
+    const result = await mergeBranch(childId, null, "parent");
+
+    expect(result).toEqual({
+      success: true,
+      keysMoved: 2,
+      keysDeleted: 2,
+      into: "parent",
+    });
+    expect(await getBranchKeyCount(parent.id)).toBe(2);
+    expect(await getBranchKeyDeletionCount(parent.id)).toBe(2);
+  });
+
+  it("keeps a deletion already pending on the target branch", async () => {
+    const parent = await createBranch(db, projectId, {
+      name: "parent",
+      slug: "parent",
+    });
+    const mainKey = await createTranslationKey(db, projectId, "main.key");
+    await addKeyDeletionsToBranch(childId, [mainKey.id]);
+    await addKeyDeletionsToBranch(parent.id, [mainKey.id]);
+
+    const result = await mergeBranch(childId, null, "parent");
+
+    expect(result).toMatchObject({ success: true, keysDeleted: 1 });
+    expect(await getBranchKeyDeletionCount(parent.id)).toBe(1);
+  });
+
+  it("creates the target branch when it does not exist", async () => {
+    const childKey = await createTranslationKey(db, projectId, "child.key", {
+      branchId: childId,
+    });
+
+    const result = await mergeBranch(childId, null, "parent");
+
+    expect(result).toMatchObject({ success: true, into: "parent" });
+    const parent = await getBranch("parent");
+    expect(parent!.status).toBe(BRANCH_STATUS.OPEN);
+    expect((await getKey(childKey.id))!.branchId).toBe(parent!.id);
+  });
+
+  it("follows a merged target branch down to the open branch it was merged into", async () => {
+    const grandParent = await createBranch(db, projectId, {
+      name: "grand-parent",
+      slug: "grand-parent",
+    });
+    const parent = await createBranch(db, projectId, {
+      name: "parent",
+      slug: "parent",
+    });
+    await mergeBranch(parent.id, null, "grand-parent");
+    const childKey = await createTranslationKey(db, projectId, "child.key", {
+      branchId: childId,
+    });
+
+    const result = await mergeBranch(childId, null, "parent");
+
+    expect(result).toMatchObject({ success: true, into: "grand-parent" });
+    expect((await getKey(childKey.id))!.branchId).toBe(grandParent.id);
+    expect((await getBranch("child"))!.mergedIntoBranchId).toBe(grandParent.id);
+  });
+
+  it("merges into main when the target branch was merged into main", async () => {
+    const parent = await createBranch(db, projectId, {
+      name: "parent",
+      slug: "parent",
+    });
+    await mergeBranch(parent.id, null);
+    const childKey = await createTranslationKey(db, projectId, "child.key", {
+      branchId: childId,
+    });
+    const mainKey = await createTranslationKey(db, projectId, "main.key");
+    await addKeyDeletionsToBranch(childId, [mainKey.id]);
+
+    const result = await mergeBranch(childId, null, "parent");
+
+    expect(result).toEqual({
+      success: true,
+      keysMoved: 1,
+      keysDeleted: 1,
+      into: null,
+    });
+    expect((await getKey(childKey.id))!.branchId).toBeNull();
+    expect((await getKey(mainKey.id))!.deletedAt).not.toBeNull();
+    expect((await getBranch("child"))!.mergedIntoBranchId).toBeNull();
+  });
+
+  it("fails when the target resolves to the merged branch itself", async () => {
+    const childKey = await createTranslationKey(db, projectId, "child.key", {
+      branchId: childId,
+    });
+
+    const result = await mergeBranch(childId, null, "child");
+
+    expect(result).toEqual({
+      success: false,
+      reason: MERGE_FAILURE_REASON.INTO_ITSELF,
+      error: "A branch cannot be merged into itself",
+    });
+    expect((await getKey(childKey.id))!.branchId).toBe(childId);
+    expect((await getBranch("child"))!.status).toBe(BRANCH_STATUS.OPEN);
   });
 });

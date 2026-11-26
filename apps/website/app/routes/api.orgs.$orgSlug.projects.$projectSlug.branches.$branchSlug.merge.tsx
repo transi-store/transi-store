@@ -4,6 +4,7 @@ import { MERGE_FAILURE_REASON } from "~/lib/branches";
 import { orgContext } from "~/middleware/api-auth.server";
 import { getInstance } from "~/middleware/i18next.server";
 import { apiError } from "~/lib/api-response.server";
+import { branchMergeQuerySchema } from "~/lib/api-doc/schemas/branch-merge";
 import type { Route } from "./+types/api.orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge";
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -35,14 +36,22 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     );
   }
 
+  const query = branchMergeQuerySchema.safeParse({
+    into: new URL(request.url).searchParams.get("into") ?? undefined,
+  });
+  if (!query.success) {
+    return apiError(400, i18next.t("api.branchMerge.invalidInto"));
+  }
+
   // API merges are not attributed to a specific user — `mergedBy` is always null.
-  const result = await mergeBranch(branch.id, null);
+  const result = await mergeBranch(branch.id, null, query.data.into);
 
   if (result.success) {
     return Response.json({
       success: true as const,
       keysMoved: result.keysMoved,
       keysDeleted: result.keysDeleted,
+      into: result.into,
     });
   }
 
@@ -58,6 +67,13 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       return apiError(
         400,
         i18next.t("api.branchMerge.branchNotOpen", {
+          branchSlug: params.branchSlug,
+        }),
+      );
+    case MERGE_FAILURE_REASON.INTO_ITSELF:
+      return apiError(
+        400,
+        i18next.t("api.branchMerge.intoItself", {
           branchSlug: params.branchSlug,
         }),
       );

@@ -213,4 +213,16 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Optimización de Git:** `upload:config` también omite los archivos que no han cambiado en comparación con la rama predeterminada (`main`/`master`) al ejecutarse en un repositorio git, para evitar llamadas innecesarias a la API.
 
+### Fusión de una rama
+
+```bash
+# Fusionar una rama en main para cada proyecto del archivo de configuración
+transi-store merge --branch feature/my-feature
+
+# Fusionar una rama en otra rama
+transi-store merge --branch feature/my-feature --into feature/parent
+```
+
+> `--into` fusiona en otra rama, por ejemplo cuando una pull request se fusiona en la rama de otra pull request. Un `--into` vacío fusiona en el proyecto principal.
+
 Esto es ideal para integrar en CI/CD: descargue cadenas traducidas durante el tiempo de compilación y cargue nuevas cadenas de origen después de que los desarrolladores las añadan.

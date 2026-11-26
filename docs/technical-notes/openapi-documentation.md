@@ -95,7 +95,7 @@ if (!parsed.success) {
 ### Existing shared schemas (examples to follow)
 
 - `createProjectFileSchema`, `createProjectLanguageSchema`, `createProjectDetailSchema` — project detail endpoint
-- `createBranchMergeSuccessResponseSchema`, `createBranchMergeErrorResponseSchema` — branch merge endpoint
+- `createBranchMergeQuerySchema`, `createBranchMergeSuccessResponseSchema`, `createBranchMergeErrorResponseSchema` — branch merge endpoint
 - `configSchema` — CLI config file (used by CLI + JSON Schema generator)
 
 ### Handlers Using Schemas

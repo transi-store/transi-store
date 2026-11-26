@@ -1,9 +1,12 @@
 import {
   createBranchMergeErrorResponseSchema,
+  createBranchMergeQuerySchema,
   createBranchMergeSuccessResponseSchema,
 } from "@transi-store/common";
+import z from "zod";
 import { describeFetchError } from "./fetchProjectMetadata.ts";
 
+const branchMergeQuerySchema = createBranchMergeQuerySchema();
 const branchMergeSuccessResponseSchema =
   createBranchMergeSuccessResponseSchema();
 const branchMergeErrorResponseSchema = createBranchMergeErrorResponseSchema();
@@ -14,6 +17,8 @@ export type MergeBranchOptions = {
   org: string;
   project: string;
   branch: string;
+  // Slug of the branch to merge into; main when undefined.
+  into?: string | undefined;
 };
 
 export type MergeBranchResult =
@@ -21,6 +26,7 @@ export type MergeBranchResult =
       ok: true;
       keysMoved: number;
       keysDeleted: number;
+      into: string | null;
     }
   | {
       ok: false;
@@ -33,11 +39,16 @@ export function buildMergeBranchUrl({
   org,
   project,
   branch,
+  into,
 }: Pick<
   MergeBranchOptions,
-  "domainRoot" | "org" | "project" | "branch"
+  "domainRoot" | "org" | "project" | "branch" | "into"
 >): string {
-  return `${domainRoot}/api/orgs/${encodeURIComponent(org)}/projects/${encodeURIComponent(project)}/branches/${encodeURIComponent(branch)}/merge`;
+  const url = `${domainRoot}/api/orgs/${encodeURIComponent(org)}/projects/${encodeURIComponent(project)}/branches/${encodeURIComponent(branch)}/merge`;
+
+  return into === undefined
+    ? url
+    : `${url}?${new URLSearchParams({ into }).toString()}`;
 }
 
 export async function mergeBranch({
@@ -46,8 +57,23 @@ export async function mergeBranch({
   org,
   project,
   branch,
+  into,
 }: MergeBranchOptions): Promise<MergeBranchResult> {
-  const url = buildMergeBranchUrl({ domainRoot, org, project, branch });
+  const query = branchMergeQuerySchema.safeParse({ into });
+  if (!query.success) {
+    return {
+      ok: false,
+      error: `Invalid --into: ${z.prettifyError(query.error)}`,
+    };
+  }
+
+  const url = buildMergeBranchUrl({
+    domainRoot,
+    org,
+    project,
+    branch,
+    into: query.data.into,
+  });
 
   let response: Response;
   try {
@@ -83,6 +109,7 @@ export async function mergeBranch({
       ok: true,
       keysMoved: parsed.data.keysMoved,
       keysDeleted: parsed.data.keysDeleted,
+      into: parsed.data.into,
     };
   }
 
@@ -97,6 +124,20 @@ export async function mergeBranch({
   };
 }
 
+export function describeMergeTarget(into: string | null): string {
+  return into === null ? "main" : `branch "${into}"`;
+}
+
+export function formatMergeStats({
+  keysMoved,
+  keysDeleted,
+  into,
+}: Extract<MergeBranchResult, { ok: true }>): string {
+  return into === null
+    ? `${keysMoved} keys moved, ${keysDeleted} deleted`
+    : `${keysMoved} keys moved, ${keysDeleted} deletions carried over`;
+}
+
 export async function mergeBranchCommand(
   options: MergeBranchOptions,
 ): Promise<void> {
@@ -104,7 +145,7 @@ export async function mergeBranchCommand(
 
   if (result.ok) {
     console.log(
-      `Branch "${options.branch}" merged on project "${options.project}": ${result.keysMoved} keys moved, ${result.keysDeleted} deleted.`,
+      `Branch "${options.branch}" merged into ${describeMergeTarget(result.into)} on project "${options.project}": ${formatMergeStats(result)}.`,
     );
     return;
   }

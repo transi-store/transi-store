@@ -1,6 +1,8 @@
 {
   "api.branchMerge.branchNotFound": "Rama \"{branchSlug}\" no encontrada",
   "api.branchMerge.branchNotOpen": "La rama \"{branchSlug}\" ya está fusionada o cerrada",
+  "api.branchMerge.intoItself": "La rama \"{branchSlug}\" no se puede fusionar en sí misma",
+  "api.branchMerge.invalidInto": "El parámetro \"into\" debe ser el slug de una rama",
   "api.methodNotAllowed": "Método no permitido",
   "api.methodNotAllowed (copy)": "Método no permitido",
   "api.translate.keyNotFound": "Clave no encontrada",

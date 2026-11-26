@@ -213,4 +213,16 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 
 > **Git-Optimierung:** `upload:config` überspringt zudem Dateien, die sich im Vergleich zum Standard-Branch (`main`/`master`) nicht geändert haben, wenn sie in einem Git-Repository ausgeführt werden, um unnötige API-Aufrufe zu vermeiden.
 
+### Zusammenführen eines Branch
+
+```bash
+# Einen Branch für jedes Projekt der Konfigurationsdatei in main zusammenführen
+transi-store merge --branch feature/my-feature
+
+# Einen Branch in einen anderen Branch zusammenführen
+transi-store merge --branch feature/my-feature --into feature/parent
+```
+
+> `--into` führt in einen anderen Branch zusammen, zum Beispiel wenn ein Pull Request in den Branch eines anderen Pull Requests zusammengeführt wird. Ein leeres `--into` führt in das Hauptprojekt zusammen.
+
 Dies ist ideal für die Integration in CI/CD — laden Sie übersetzte Strings zur Build-Zeit herunter und laden Sie neue Quell-Strings hoch, nachdem Entwickler sie hinzugefügt haben.

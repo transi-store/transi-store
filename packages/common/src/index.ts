@@ -20,10 +20,9 @@ export {
   type ProjectDetail,
 } from "./project-schema.ts";
 export {
+  createBranchMergeQuerySchema,
   createBranchMergeSuccessResponseSchema,
   createBranchMergeErrorResponseSchema,
-  type BranchMergeSuccessResponse,
-  type BranchMergeErrorResponse,
 } from "./branch-merge-schema.ts";
 export {
   createImportFieldsSchema,

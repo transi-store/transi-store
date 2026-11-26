@@ -27,6 +27,17 @@ const apiKeyOption = new Option(
   .env("TRANSI_STORE_API_KEY")
   .makeOptionMandatory();
 
+const intoOption = new Option(
+  "--into <into>",
+  "Branch slug to merge into (default: main)",
+);
+
+// An empty `--into` merges into main, so that a CI can always pass the base
+// branch of a pull request, empty when the base is the default branch.
+function parseInto(into: string | undefined): string | undefined {
+  return into || undefined;
+}
+
 function validateStrategy(strategy: string): ImportStrategy {
   if (!Object.values<string>(ImportStrategy).includes(strategy)) {
     console.error(
@@ -157,13 +168,19 @@ program
     "transi-store.config.json",
   )
   .requiredOption("-b, --branch <branch>", "Branch slug to merge")
+  .addOption(intoOption)
   .action((options) => {
-    mergeForConfig(options.config, options.apiKey, options.branch);
+    mergeForConfig(
+      options.config,
+      options.apiKey,
+      options.branch,
+      parseInto(options.into),
+    );
   });
 
 program
   .command("branch:merge")
-  .description("Merge a project branch into main")
+  .description("Merge a project branch into main or into another branch")
   .addOption(apiKeyOption)
   .requiredOption(
     "-d, --domain-root <domainRoot>",
@@ -173,6 +190,7 @@ program
   .requiredOption("-o, --org <org>", "Organization slug")
   .requiredOption("-p, --project <project>", "Project slug")
   .requiredOption("-b, --branch <branch>", "Branch slug to merge")
+  .addOption(intoOption)
   .action((options) => {
     mergeBranchCommand({
       domainRoot: options.domainRoot,
@@ -180,6 +198,7 @@ program
       org: options.org,
       project: options.project,
       branch: options.branch,
+      into: parseInto(options.into),
     });
   });
 

@@ -1,6 +1,8 @@
 {
   "api.branchMerge.branchNotFound": "Branche \"{branchSlug}\" non trouvée",
   "api.branchMerge.branchNotOpen": "La branche \"{branchSlug}\" est déjà fusionnée ou fermée",
+  "api.branchMerge.intoItself": "La branche \"{branchSlug}\" ne peut pas être fusionnée dans elle-même",
+  "api.branchMerge.invalidInto": "Le paramètre \"into\" doit être le slug d'une branche",
   "api.methodNotAllowed": "Méthode non autorisée",
   "api.methodNotAllowed (copy)": "Méthode non autorisée",
   "api.translate.keyNotFound": "Clé non trouvée",

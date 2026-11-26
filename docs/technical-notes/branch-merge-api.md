@@ -2,9 +2,9 @@
 
 ## Endpoint
 
-`POST /api/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge`
+`POST /api/orgs/:orgSlug/projects/:projectSlug/branches/:branchSlug/merge[?into=<branchSlug>]`
 
-Merges an open branch into main. The business logic lives in `mergeBranch()` (`apps/website/app/lib/branches.server.ts`) and is shared with the UI route at `routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx`.
+Merges an open branch into main, or into the branch given by `into`. The business logic lives in `mergeBranch()` (`apps/website/app/lib/branches.server.ts`) and is shared with the UI route at `routes/orgs.$orgSlug.projects.$projectSlug.branches.$branchSlug.merge.tsx`.
 
 ## Authentication
 
@@ -15,16 +15,22 @@ The route sits under the `api/orgs/:orgSlug` layout, so it goes through the stan
 
 The route **does not** look up the calling user. `mergeBranch()` is called with `mergedBy = null` regardless of the auth mode. This is intentional: the API entry point is primarily used by automation (CI/CD via `@transi-store/cli`), and we don't want to surface a partial actor identity (API key id vs. user id) on the merge record. Only the UI action attributes the merge to a specific user.
 
+## Merging into another branch
+
+With `into`, the keys and the pending deletions of the branch move to that branch instead of main, and the merged branch stores it in `mergedIntoBranchId`.
+A CI uses it for stacked pull requests: a pull request merged into the branch of another one merges its transi-store branch into that branch.
+A missing target branch is created, and a merged one is followed through `mergedIntoBranchId` down to an open branch or main, so the merges of a stack can run in any order.
+
 ## Status codes
 
-| Code  | Body schema                                                        | When                                                      |
-| ----- | ------------------------------------------------------------------ | --------------------------------------------------------- |
-| `200` | `BranchMergeSuccess` (`{ success: true, keysMoved, keysDeleted }`) | Merge succeeded.                                          |
-| `400` | `BranchMergeError` (`{ error }`)                                   | Branch exists but is not open (already merged or closed). |
-| `401` | `BranchMergeError`                                                 | Missing or invalid API key, no session.                   |
-| `403` | `BranchMergeError`                                                 | API key does not belong to the requested organization.    |
-| `404` | `BranchMergeError`                                                 | Project or branch not found.                              |
-| `405` | `BranchMergeError`                                                 | Request method is not `POST`.                             |
+| Code  | Body schema                                                              | When                                                                                                                       |
+| ----- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `200` | `BranchMergeSuccess` (`{ success: true, keysMoved, keysDeleted, into }`) | Merge succeeded.                                                                                                           |
+| `400` | `BranchMergeError` (`{ error }`)                                         | Branch exists but is not open (already merged or closed), `into` is empty, or `into` resolves to the merged branch itself. |
+| `401` | `BranchMergeError`                                                       | Missing or invalid API key, no session.                                                                                    |
+| `403` | `BranchMergeError`                                                       | API key does not belong to the requested organization.                                                                     |
+| `404` | `BranchMergeError`                                                       | Project or branch not found.                                                                                               |
+| `405` | `BranchMergeError`                                                       | Request method is not `POST`.                                                                                              |
 
 Merging never produces a key conflict by construction: the unique index `unique_project_file_key` on `(project_id, file_id, key_name)` prevents a branch from ever holding a key that already exists on main.
 
@@ -35,6 +41,8 @@ The API returns the common `{ error }` envelope for failures. The CLI preserves 
 ## CLI
 
 The `transi-store merge` command (in `@transi-store/cli`) wraps this endpoint. `--branch` is required: there is no git auto-detection, since the merge is destructive and the target must be explicit.
+
+`--into` sets the `into` query parameter; an empty value merges into main, so that a CI can always pass the base branch of a pull request.
 
 ## OpenAPI
 

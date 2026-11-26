@@ -9,6 +9,7 @@ import {
   serial,
   integer,
   customType,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { AI_PROVIDERS } from "~/lib/ai-providers";
 import { BRANCH_STATUS } from "~/lib/branches";
@@ -196,6 +197,11 @@ export const branches = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     mergedAt: timestamp("merged_at"),
+    // NULL on a merged branch means it was merged into main.
+    mergedIntoBranchId: integer("merged_into_branch_id").references(
+      (): AnyPgColumn => branches.id,
+      { onDelete: "set null" },
+    ),
   },
   (table) => [
     uniqueIndex("unique_project_branch_slug").on(table.projectId, table.slug),
