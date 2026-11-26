@@ -10,7 +10,7 @@ import {
   uploadOne,
   type UploadOneOptions,
 } from "./uploadTranslations.ts";
-import { mergeBranchCommand } from "./branchMerge.ts";
+import { mergeBranchCommand, parseMergeTarget } from "./branchMerge.ts";
 import { mergeForConfig } from "./mergeForConfig.ts";
 import {
   DEFAULT_DOMAIN_ROOT,
@@ -31,12 +31,6 @@ const intoOption = new Option(
   "--into <into>",
   "Branch slug to merge into (default: main)",
 );
-
-// An empty `--into` merges into main, so that a CI can always pass the base
-// branch of a pull request, empty when the base is the default branch.
-function parseInto(into: string | undefined): string | undefined {
-  return into || undefined;
-}
 
 function validateStrategy(strategy: string): ImportStrategy {
   if (!Object.values<string>(ImportStrategy).includes(strategy)) {
@@ -174,7 +168,7 @@ program
       options.config,
       options.apiKey,
       options.branch,
-      parseInto(options.into),
+      parseMergeTarget(options.into),
     );
   });
 
@@ -198,7 +192,7 @@ program
       org: options.org,
       project: options.project,
       branch: options.branch,
-      into: parseInto(options.into),
+      into: parseMergeTarget(options.into),
     });
   });
 

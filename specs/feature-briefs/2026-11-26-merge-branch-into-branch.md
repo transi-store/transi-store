@@ -16,31 +16,15 @@ required_docs:
   - docs/technical-notes/openapi-documentation.md
 ---
 
-Status: in-progress
-
-## Tracking
-
-Next step: review the diff and commit (nothing committed yet), then step 9 after the CLI release.
-
-- [x] 1. `branches.merged_into_branch_id` column, applied with `make db-push` (2026-11-26, not committed)
-- [x] 2. `mergeBranch(branchId, mergedBy, into?)` in `branches.server.ts`, with tests (2026-11-26, not committed)
-- [x] 3. `into` query parameter on the merge API route, i18n error messages, route tests (2026-11-26, not committed)
-- [x] 4. OpenAPI: `into` query parameter and `into` response field (2026-11-26, not committed)
-- [x] 5. Shared schemas (`packages/common`): `into` query parameter, required `into` response field (2026-11-26, not committed)
-- [x] 6. CLI: `--into` on `merge` and `branch:merge`, with tests (2026-11-26, not committed)
-- [x] 7. Docs: `branch-merge-api.md`, `database-schema.md`, `openapi-documentation.md`, CLI README, `developer.mdx` (en, fr, de, es); no ADR for this small feature (2026-11-26, not committed)
-- [x] 8. Changeset for `@transi-store/cli` (`@transi-store/common` is private) (2026-11-26, not committed)
-- [ ] 9. Outside this repository (separate sessions, after the release): `into` input on `transi-store/merge-branch-action`, `merge-translations-branch.yml` in the consumer repositories
-
-Decisions:
+## Decisions
 
 - `into` is a query parameter: the endpoint takes no body today, and a query parameter keeps a call without it unchanged.
 - A missing target branch is created, like the import does: in a stack of PRs, the intermediate branches often have no key of their own.
 - A merged target branch is resolved through its `mergedIntoBranchId` chain, down to an open branch or main.
 - No Drizzle relation for `mergedIntoBranchId`: nothing reads it through the relational API.
-- No backward compatibility with older servers (2026-11-26 review): `into` is required in the response, and the CLI no longer handles a server that ignores the parameter.
+- No backward compatibility with older servers: `into` is required in the response, and the CLI fails against a server that ignores the parameter.
 - The unused inferred types of the branch merge schemas are removed; the CLI validates `into` with the shared query schema before calling the API.
-- An empty `--into` merges into main, so that a CI can pass the base branch of a pull request without a condition.
+- An empty `--into`, `main` or `master` merges into main, so that a CI can pass the base branch of a pull request without a condition.
 
 ## Context
 
@@ -120,10 +104,6 @@ The CLI validates `into` with the shared query schema before calling the API, an
 - `branches.server.test.ts`, the merge route test, `branchMerge.test.ts` and `mergeForConfig.test.ts`
 - `make lint-types`, `make knip`
 
-## Findings
+## Follow-up
 
-- In the container, `yarn workspace … test` fails with "command not found: vitest"; `docker compose exec -w /app/apps/website app /app/node_modules/.bin/vitest run <file>` works.
-- On the host, website tests fail on the root-owned `.react-router/types` written by the container; CLI tests run fine on the host (`../../node_modules/.bin/vitest run` from `packages/cli`).
-- The CLI type-check reads `@transi-store/common` from its `dist`: rebuild it (`tsc` in `packages/common`) after changing a shared schema.
-- With an `argParser` returning `undefined` for an empty value, commander still passed `""` to the action: the empty `--into` is normalized in the action instead.
-- Prettier already reports the MDX docs as unformatted on main; they are not in `lint-staged`.
+Outside this repository, after the CLI release: an `into` input on `transi-store/merge-branch-action`, and `merge-translations-branch.yml` in the consumer repositories passing the base branch of the pull request.

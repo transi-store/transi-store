@@ -5,11 +5,18 @@ import {
 } from "@transi-store/common";
 import z from "zod";
 import { describeFetchError } from "./fetchProjectMetadata.ts";
+import { isMainBranch } from "./git.ts";
 
 const branchMergeQuerySchema = createBranchMergeQuerySchema();
 const branchMergeSuccessResponseSchema =
   createBranchMergeSuccessResponseSchema();
 const branchMergeErrorResponseSchema = createBranchMergeErrorResponseSchema();
+
+// An empty `--into`, `main` or `master` merges into main, so that a CI can
+// always pass the base branch of a pull request.
+export function parseMergeTarget(into: string | undefined): string | undefined {
+  return into && !isMainBranch(into) ? into : undefined;
+}
 
 export type MergeBranchOptions = {
   domainRoot: string;

@@ -1,5 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buildMergeBranchUrl, mergeBranch } from "./branchMerge.ts";
+import {
+  buildMergeBranchUrl,
+  mergeBranch,
+  parseMergeTarget,
+} from "./branchMerge.ts";
+
+describe("parseMergeTarget", () => {
+  it.each([undefined, "", "main", "master"])(
+    "merges into main for %j",
+    (into) => {
+      expect(parseMergeTarget(into)).toBeUndefined();
+    },
+  );
+
+  it("keeps any other branch", () => {
+    expect(parseMergeTarget("feature/parent")).toBe("feature/parent");
+  });
+});
 
 describe("buildMergeBranchUrl", () => {
   it("URL-encodes org, project and branch slugs", () => {

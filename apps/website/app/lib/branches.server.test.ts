@@ -652,6 +652,30 @@ describe("mergeBranch into another branch", () => {
     expect((await getBranch("child"))!.mergedIntoBranchId).toBeNull();
   });
 
+  it("throws when the merged target branches form a cycle", async () => {
+    const parent = await createBranch(db, projectId, {
+      name: "parent",
+      slug: "parent",
+    });
+    const other = await createBranch(db, projectId, {
+      name: "other",
+      slug: "other",
+    });
+    await db
+      .update(schema.branches)
+      .set({ status: BRANCH_STATUS.MERGED, mergedIntoBranchId: other.id })
+      .where(eq(schema.branches.id, parent.id));
+    await db
+      .update(schema.branches)
+      .set({ status: BRANCH_STATUS.MERGED, mergedIntoBranchId: parent.id })
+      .where(eq(schema.branches.id, other.id));
+
+    await expect(mergeBranch(childId, null, "parent")).rejects.toThrow(
+      'Branch "parent" is merged into a cycle of branches',
+    );
+    expect((await getBranch("child"))!.status).toBe(BRANCH_STATUS.OPEN);
+  });
+
   it("fails when the target resolves to the merged branch itself", async () => {
     const childKey = await createTranslationKey(db, projectId, "child.key", {
       branchId: childId,

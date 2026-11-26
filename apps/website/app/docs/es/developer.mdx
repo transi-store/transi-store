@@ -223,6 +223,6 @@ transi-store merge --branch feature/my-feature
 transi-store merge --branch feature/my-feature --into feature/parent
 ```
 
-> `--into` fusiona en otra rama, por ejemplo cuando una pull request se fusiona en la rama de otra pull request. Un `--into` vacío fusiona en el proyecto principal.
+> `--into` fusiona en otra rama, por ejemplo cuando una pull request se fusiona en la rama de otra pull request. Un `--into` vacío, `main` o `master` fusiona en el proyecto principal.
 
 Esto es ideal para integrar en CI/CD: descargue cadenas traducidas durante el tiempo de compilación y cargue nuevas cadenas de origen después de que los desarrolladores las añadan.

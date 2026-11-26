@@ -117,7 +117,8 @@ type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 // Returns the open branch a merge into `slug` lands on, or null for main:
 // a missing branch is created, and a merged branch is followed down to the
-// branch it was merged into.
+// branch it was merged into. Two concurrent merges of two branches into each
+// other can leave a cycle of merged branches, reported as an error.
 async function resolveMergeTarget(
   tx: Transaction,
   projectId: number,
@@ -134,7 +135,12 @@ async function resolveMergeTarget(
     where: { projectId, slug },
   });
 
+  const visited = new Set<number>();
   while (target?.status === BRANCH_STATUS.MERGED) {
+    if (visited.has(target.id)) {
+      throw new Error(`Branch "${slug}" is merged into a cycle of branches`);
+    }
+    visited.add(target.id);
     target =
       target.mergedIntoBranchId === null
         ? undefined

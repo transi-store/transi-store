@@ -20,6 +20,8 @@ The route **does not** look up the calling user. `mergeBranch()` is called with 
 With `into`, the keys and the pending deletions of the branch move to that branch instead of main, and the merged branch stores it in `mergedIntoBranchId`.
 A CI uses it for stacked pull requests: a pull request merged into the branch of another one merges its transi-store branch into that branch.
 A missing target branch is created, and a merged one is followed through `mergedIntoBranchId` down to an open branch or main, so the merges of a stack can run in any order.
+Closing a branch in the UI deletes it, and `mergedIntoBranchId` of the branches merged into it becomes `NULL`:
+a later merge into one of them then lands on main.
 
 ## Status codes
 
@@ -42,7 +44,7 @@ The API returns the common `{ error }` envelope for failures. The CLI preserves 
 
 The `transi-store merge` command (in `@transi-store/cli`) wraps this endpoint. `--branch` is required: there is no git auto-detection, since the merge is destructive and the target must be explicit.
 
-`--into` sets the `into` query parameter; an empty value merges into main, so that a CI can always pass the base branch of a pull request.
+`--into` sets the `into` query parameter; an empty value, `main` or `master` merges into main, so that a CI can always pass the base branch of a pull request.
 
 ## OpenAPI
 
