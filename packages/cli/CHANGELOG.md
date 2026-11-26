@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.7.0
+
+### Minor Changes
+
+- [#232](https://github.com/transi-store/transi-store/pull/232) [`254aca1`](https://github.com/transi-store/transi-store/commit/254aca11e778c0dc7cecaddb7ed59c61999f777b) Thanks [@jdeniau](https://github.com/jdeniau)! - Add the `--into` option to `merge` and `branch:merge`, to merge a branch into another branch instead of main: its keys and pending deletions move to that branch, and reach main when that branch is merged. Merging the translation branch of a pull request into the translation branch of its base keeps the keys of stacked pull requests from being lost. An empty `--into`, `main` or `master` merges into main.
+
+  The merge commands now require a transi-store server that returns `into` in the merge response.
+
 ## 2.6.0
 
 ### Minor Changes
