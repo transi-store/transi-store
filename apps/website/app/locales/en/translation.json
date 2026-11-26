@@ -47,6 +47,7 @@
   "branches.errors.slugTaken": "Slug \"{slug}\" is already used in this project",
   "branches.keysBadge": "{count, plural, one {# key} other {# keys}}",
   "branches.list.empty": "No branches. Create one to start isolating your translations per feature.",
+  "branches.list.emptyMerged": "No merged branches yet.",
   "branches.listBadge": "{addCount, plural, one {# addition} other {# additions}}, {deleteCount, plural, one {# deletion} other {# deletions}}",
   "branches.merge": "Merge into main",
   "branches.merge.confirm": "Keys from this branch will be moved to main.",

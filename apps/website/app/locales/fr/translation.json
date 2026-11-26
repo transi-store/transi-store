@@ -47,6 +47,7 @@
   "branches.errors.slugTaken": "Le slug \"{slug}\" est déjà utilisé dans ce projet",
   "branches.keysBadge": "{count, plural, one {# clé} other {# clés}}",
   "branches.list.empty": "Aucune branche. Créez-en une pour commencer à isoler vos traductions par feature.",
+  "branches.list.emptyMerged": "Aucune branche fusionnée pour le moment.",
   "branches.listBadge": "{addCount, plural, one {# ajout} other {# ajouts}}, {deleteCount, plural, one {# suppression} other {# suppressions}}",
   "branches.merge": "Fusionner dans main",
   "branches.merge.confirm": "Les clés de cette branche seront déplacées vers main.",

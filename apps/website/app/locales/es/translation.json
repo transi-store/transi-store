@@ -47,6 +47,7 @@
   "branches.errors.slugTaken": "El slug \"{slug}\" ya existe en este proyecto",
   "branches.keysBadge": "{count, plural, one {# llave} other {# llaves}}",
   "branches.list.empty": "No hay ramas. Crea una para empezar a aislar tus traducciones por funcionalidad.",
+  "branches.list.emptyMerged": "Todavía no hay ramas fusionadas.",
   "branches.listBadge": "{addCount, plural, one {# adición} other {# adiciones}}, {deleteCount, plural, one {# eliminación} other {# eliminaciones}}",
   "branches.merge.deletions.empty": "No hay claves para eliminar",
   "branches.merge.deletions.preview": "Claves que se eliminarán de main:",
