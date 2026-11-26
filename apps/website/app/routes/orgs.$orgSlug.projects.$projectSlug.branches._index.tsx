@@ -7,8 +7,9 @@ import {
   Text,
   HStack,
   Stack,
+  SegmentGroup,
 } from "@chakra-ui/react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LuPlus, LuGitBranch } from "react-icons/lu";
 import { ProjectBreadcrumb } from "~/components/navigation/ProjectBreadcrumb";
@@ -28,12 +29,26 @@ import { createNewBranchUrl, getBranchesUrl } from "~/lib/routes-helpers";
 import { BRANCH_STATUS } from "~/lib/branches";
 import { BranchList } from "~/components/branches/BranchList";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const organization = context.get(organizationContext);
   const project = context.get(projectContext);
   const projectAccessRole = context.get(projectAccessRoleContext);
 
-  const branches = await getBranchesByProject(project.id);
+  const status =
+    new URL(request.url).searchParams.get("status") === BRANCH_STATUS.MERGED
+      ? BRANCH_STATUS.MERGED
+      : BRANCH_STATUS.OPEN;
+
+  const allBranches = await getBranchesByProject(project.id);
+  const branches = allBranches.filter((branch) => branch.status === status);
+  const statusCounts: Record<BRANCH_STATUS, number> = {
+    [BRANCH_STATUS.OPEN]: allBranches.filter(
+      (branch) => branch.status === BRANCH_STATUS.OPEN,
+    ).length,
+    [BRANCH_STATUS.MERGED]: allBranches.filter(
+      (branch) => branch.status === BRANCH_STATUS.MERGED,
+    ).length,
+  };
 
   // Get key counts for each open branch
   const branchesWithCounts = await Promise.all(
@@ -54,13 +69,38 @@ export async function loader({ context }: Route.LoaderArgs) {
     organization,
     project,
     branches: branchesWithCounts,
+    status,
+    statusCounts,
     projectAccessRole,
   };
 }
 
 export default function BranchesList({ loaderData }: Route.ComponentProps) {
-  const { organization, project, branches, projectAccessRole } = loaderData;
+  const {
+    organization,
+    project,
+    branches,
+    status,
+    statusCounts,
+    projectAccessRole,
+  } = loaderData;
   const { t } = useTranslation();
+  const [, setSearchParams] = useSearchParams();
+
+  const statusItems = [
+    { value: BRANCH_STATUS.OPEN, label: t("branches.status.open") },
+    { value: BRANCH_STATUS.MERGED, label: t("branches.status.merged") },
+  ].map(({ value, label }) => ({
+    value,
+    label: (
+      <HStack gap={1.5} as="span">
+        <span>{label}</span>
+        <Text as="span" color="fg.muted" fontSize="xs">
+          {statusCounts[value]}
+        </Text>
+      </HStack>
+    ),
+  }));
 
   return (
     <Container maxW="container.xl" py={5}>
@@ -122,9 +162,27 @@ export default function BranchesList({ loaderData }: Route.ComponentProps) {
           </Button>
         </Stack>
 
+        <SegmentGroup.Root
+          size="sm"
+          alignSelf="flex-start"
+          value={status}
+          onValueChange={(e) =>
+            setSearchParams(
+              e.value === BRANCH_STATUS.MERGED ? { status: e.value } : {},
+            )
+          }
+        >
+          <SegmentGroup.Indicator />
+          <SegmentGroup.Items items={statusItems} />
+        </SegmentGroup.Root>
+
         {branches.length === 0 ? (
           <Box p={8} textAlign="center" bg="bg.subtle" borderRadius="md">
-            <Text color="fg.muted">{t("branches.list.empty")}</Text>
+            <Text color="fg.muted">
+              {status === BRANCH_STATUS.MERGED
+                ? t("branches.list.emptyMerged")
+                : t("branches.list.empty")}
+            </Text>
           </Box>
         ) : (
           <BranchList

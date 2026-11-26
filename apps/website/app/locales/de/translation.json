@@ -47,6 +47,7 @@
   "branches.errors.slugTaken": "Der Slug \"{slug}\" wird in diesem Projekt bereits verwendet",
   "branches.keysBadge": "{count, plural, one {# Schlüssel} other {# Schlüssel}}",
   "branches.list.empty": "Keine Branches vorhanden. Erstellen Sie einen, um Ihre Übersetzungen nach Feature zu isolieren.",
+  "branches.list.emptyMerged": "Noch keine zusammengeführten Branches.",
   "branches.listBadge": "{addCount, plural, one {# Hinzufügung} other {# Hinzufügungen}}, {deleteCount, plural, one {# Löschung} other {# Löschungen}}",
   "branches.merge": "In Main zusammenführen",
   "branches.merge.confirm": "Die Schlüssel dieses Branches werden in den Main-Branch verschoben.",
