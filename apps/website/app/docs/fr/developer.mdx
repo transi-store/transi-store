@@ -212,7 +212,6 @@ transi-store upload --org acme --project webapp --locale fr --input ./locales/fr
 > **Détection automatique de branche Git :** lorsque `--branch` n'est pas fourni, le CLI détecte automatiquement la branche git actuelle et l'utilise. Sur `main`/`master`, aucun filtre de branche n'est appliqué (les clés sont téléversées vers le projet principal).
 
 > **Optimisation Git :** `upload:config` ignore également les fichiers qui n'ont pas changé par rapport à la branche par défaut (`main`/`master`) lors de l'exécution dans un dépôt git, afin d'éviter les appels API inutiles.
-
 ### Fusion d'une branche
 
 ```bash
